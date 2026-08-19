@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install dependencies separately so Docker can reuse this layer until package files change.
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Build the Next.js standalone output using the full source tree.
