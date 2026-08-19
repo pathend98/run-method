@@ -1,0 +1,11 @@
+.next
+node_modules
+coverage
+build
+out
+pnpm-lock.yaml
+
+# User-authored planning and agent guidance docs are preserved as-is.
+ADRs.md
+AGENTS.md
+PLAN.md
