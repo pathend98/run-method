@@ -28,12 +28,9 @@ Maintain explicit internal boundaries:
 
 ```text
 src/
+  api-client/   # Typed HTTP client
   app/          # Next.js pages and HTTP routes
   components/   # UI
-  domain/       # Business rules and calculations
-  application/  # Use cases
-  schemas/      # Zod API contracts
-  api-client/   # Typed HTTP client
   db/           # Persistence
 ```
 

@@ -4,23 +4,23 @@ The tasks below are ordered so that each stage leaves the codebase in a usable s
 
 ## 1. Bootstrap the repository
 
-* [ ] Create the single-package Next.js application using Node.js 24, pnpm, TypeScript, and the App Router.
-* [ ] Enable strict TypeScript.
-* [ ] Configure ESLint and Prettier.
-* [ ] Remove the initial boilerplate code from the Next.js application which isn't required for this app.
-* [ ] Establish the initial `src/app`, `domain`, `application`, `schemas`, `api-client`, `db`, and `components` boundaries.
-* [ ] Add the basic production Dockerfile.
+* [x] Create the single-package Next.js application using Node.js 24, pnpm, TypeScript, and the App Router.
+* [x] Enable strict TypeScript.
+* [x] Configure ESLint and Prettier.
+* [x] Remove the initial boilerplate code from the Next.js application which isn't required for this app.
+* [x] Establish the initial `src/app`, `domain`, `application`, `schemas`, `api-client`, `db`, and `components` boundaries.
+* [x] Add the basic production Dockerfile.
 
 **Exit condition:** an empty application can be built locally as a Docker image.
 
 ## 2. Establish PostgreSQL infrastructure
 
-* [ ] Add `pg`, Drizzle ORM, and Drizzle Kit.
-* [ ] Configure the bounded PostgreSQL connection pool.
-* [ ] Configure Drizzle migration generation and execution.
-* [ ] Define how `DATABASE_URL` is supplied locally, in tests, and in deployment.
-* [ ] Add a local PostgreSQL development workflow.
-* [ ] Establish the rule that migrations are committed SQL artifacts and are not automatically applied by application startup.
+* [x] Add `pg`, Drizzle ORM, and Drizzle Kit.
+* [x] Configure the bounded PostgreSQL connection pool.
+* [x] Configure Drizzle migration generation and execution.
+* [x] Define how `DATABASE_URL` is supplied locally, in tests, and in deployment.
+* [x] Add a local PostgreSQL development workflow.
+* [x] Establish the rule that migrations are committed SQL artifacts and are not automatically applied by application startup.
 
 **Exit condition:** the application can connect to PostgreSQL and a migration can be generated and applied successfully.
 

@@ -19,6 +19,25 @@ Install dependencies:
 pnpm install
 ```
 
+Create a local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Start PostgreSQL:
+
+```bash
+pnpm db:up
+```
+
+Apply committed migrations and verify connectivity:
+
+```bash
+pnpm db:migrate
+pnpm db:check
+```
+
 Start the development server:
 
 ```bash
@@ -33,6 +52,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 pnpm lint
 pnpm format:check
 pnpm build
+pnpm db:up
+pnpm db:migrate
+pnpm db:check
 pnpm start
 ```
 

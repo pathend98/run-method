@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18.6-alpine
+    container_name: training-brain-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: training_brain
+      POSTGRES_USER: training_brain
+      POSTGRES_PASSWORD: training_brain
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U training_brain -d training_brain"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
