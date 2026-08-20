@@ -17,17 +17,17 @@ const env = cleanEnv(process.env, {
   MAX_DATABASE_CONNECTIONS: num({
     desc: "Maximum number of database connections which can be open at once",
     example: "5",
-    default: 5
+    default: 5,
   }),
   DATABASE_IDLE_CONNECTION_TIMEOUT_MS: num({
     desc: "Maximum number of milliseconds a database connection can be idle before being closed",
     example: "30000",
-    default: 30_000
+    default: 30_000,
   }),
   DATABASE_CONNECTION_TIMEOUT_MS: num({
     desc: "Maximum number of milliseconds to wait for a database connection to be established before timing out",
     example: "5000",
-    default: 5_000
+    default: 5_000,
   }),
 });
 
