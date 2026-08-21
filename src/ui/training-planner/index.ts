@@ -1,8 +1,9 @@
 export {
   getCurrentWeekRange,
   groupSessionsByWeekday,
-  TrainingPlannerContainer,
-} from "./training-planner-container";
+  weekdays,
+} from "./training-planner-service";
+export { TrainingPlannerContainer } from "./training-planner-container";
 export { TrainingPlanner } from "./training-planner";
 export type {
   TimeOfDay,

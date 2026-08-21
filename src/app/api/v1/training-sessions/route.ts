@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { trainingSessionsService } from "@/server/server";
-import { TrainingSessionsValidationError } from "@/server/training-sessions/training-sessions-service";
+import { BadRequestError } from "@/server/server-errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,12 +13,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sessions);
   } catch (error) {
-    if (error instanceof TrainingSessionsValidationError) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
+    if (error instanceof BadRequestError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     return NextResponse.json(
-      { message: "Unable to fetch training sessions" },
+      { error: "Unable to fetch training sessions" },
       { status: 500 },
     );
   }

@@ -1,38 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
-import {
-  getCurrentWeekRange,
-  groupSessionsByWeekday,
-  TrainingPlannerContainer,
-} from "./training-planner-container";
-
-test("getCurrentWeekRange returns browser-local Monday through Sunday", () => {
-  expect(getCurrentWeekRange(new Date("2026-08-21T12:00:00"))).toEqual({
-    from: "2026-08-17",
-    to: "2026-08-23",
-  });
-});
-
-test("groupSessionsByWeekday groups API sessions into planner days", () => {
-  const week = groupSessionsByWeekday([
-    {
-      id: "11111111-1111-4111-8111-111111111111",
-      title: "Long run",
-      activityType: "Run",
-      date: "2026-08-22",
-      timeOfDay: "AM",
-      description: "90 minutes",
-      sortOrder: 0,
-    },
-  ]);
-
-  expect(week).toHaveLength(7);
-  expect(week[5]).toMatchObject({
-    day: "Saturday",
-    activities: [{ title: "Long run" }],
-  });
-});
+import { TrainingPlannerContainer } from "./training-planner-container";
 
 test("TrainingPlannerContainer renders loading state", () => {
   vi.stubGlobal(
@@ -86,7 +55,7 @@ test("TrainingPlannerContainer renders error state", async () => {
     vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
-      json: vi.fn().mockResolvedValue({ message: "Nope" }),
+      json: vi.fn().mockResolvedValue({ error: "Nope" }),
     }),
   );
 

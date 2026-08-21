@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 
 import { GET } from "./route";
 import { trainingSessionsService } from "@/server/server";
-import { TrainingSessionsValidationError } from "@/server/training-sessions/training-sessions-service";
+import { TrainingSessionsValidationError } from "@/server/training-sessions/training-sessions-errors";
 
 vi.mock("@/server/server", () => ({
   trainingSessionsService: {
@@ -38,7 +38,17 @@ test("returns sessions as JSON", async () => {
     ),
   );
 
-  await expect(response.json()).resolves.toMatchObject([{ title: "Easy run" }]);
+  await expect(response.json()).resolves.toEqual([
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      title: "Easy run",
+      activityType: "Run",
+      date: "2026-08-17",
+      timeOfDay: "AM",
+      description: null,
+      sortOrder: 0,
+    },
+  ]);
   expect(response.status).toBe(200);
   expect(service.findBetweenDates).toHaveBeenCalledWith(
     "2026-08-17",
@@ -57,7 +67,7 @@ test("returns validation errors with 400 status", async () => {
     ),
   );
 
-  await expect(response.json()).resolves.toEqual({ message: "Invalid range" });
+  await expect(response.json()).resolves.toEqual({ error: "Invalid range" });
   expect(response.status).toBe(400);
 });
 
@@ -71,7 +81,7 @@ test("returns stable server errors with 500 status", async () => {
   );
 
   await expect(response.json()).resolves.toEqual({
-    message: "Unable to fetch training sessions",
+    error: "Unable to fetch training sessions",
   });
   expect(response.status).toBe(500);
 });

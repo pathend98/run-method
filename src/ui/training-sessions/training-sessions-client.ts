@@ -3,16 +3,7 @@ import {
   type TrainingSession,
   type TrainingSessionDateRange,
 } from "@/domain/training-sessions";
-
-export class TrainingSessionsApiError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-  ) {
-    super(message);
-    this.name = "TrainingSessionsApiError";
-  }
-}
+import { TrainingSessionsApiError } from "./training-sessions-errors";
 
 export async function fetchTrainingSessions({
   from,
@@ -28,9 +19,9 @@ export async function fetchTrainingSessions({
     const message =
       typeof body === "object" &&
       body !== null &&
-      "message" in body &&
-      typeof body.message === "string"
-        ? body.message
+      "error" in body &&
+      typeof body.error === "string"
+        ? body.error
         : "Unable to fetch training sessions";
 
     throw new TrainingSessionsApiError(message, response.status);

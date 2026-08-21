@@ -1,17 +1,9 @@
 import { differenceInCalendarDays } from "date-fns";
 
-import {
-  parseDateParam,
-  type TrainingSession,
-} from "@/domain/training-sessions";
+import { parseDateFromString } from "@/core/date/date-parsing";
+import type { TrainingSession } from "@/domain/training-sessions";
+import { TrainingSessionsValidationError } from "./training-sessions-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
-
-export class TrainingSessionsValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TrainingSessionsValidationError";
-  }
-}
 
 export interface TrainingSessionsService {
   findBetweenDates(
@@ -33,8 +25,8 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
       );
     }
 
-    const fromDate = parseDateParam(from);
-    const toDate = parseDateParam(to);
+    const fromDate = parseDateFromString(from);
+    const toDate = parseDateFromString(to);
 
     if (!fromDate || !toDate) {
       throw new TrainingSessionsValidationError(

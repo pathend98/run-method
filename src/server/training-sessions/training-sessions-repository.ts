@@ -1,7 +1,7 @@
 import { asc, between, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
-import { trainingSessions } from "../../../db/schema";
+import { trainingSessions } from "@db/schema";
 import type { TrainingSession } from "@/domain/training-sessions";
 
 export interface TrainingSessionsRepository {

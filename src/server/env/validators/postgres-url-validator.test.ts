@@ -1,4 +1,5 @@
 import { cleanEnv } from "envalid";
+import { InvalidPostgresUrlError } from "./postgres-url-errors";
 import { postgresUrlValidator } from "./postgres-url-validator";
 
 const readDatabaseUrl = (DATABASE_URL: string) =>
@@ -18,7 +19,9 @@ test.each([
 test("rejects connection strings that do not use a PostgreSQL protocol", () => {
   expect(() =>
     readDatabaseUrl("mysql://training_brain:training_brain@localhost/db"),
-  ).toThrow(
-    "DATABASE_URL must use the postgres:// or postgresql:// protocol",
-  );
+  ).toThrow(InvalidPostgresUrlError);
+});
+
+test("rejects malformed connection strings with the PostgreSQL URL error", () => {
+  expect(() => readDatabaseUrl("not a url")).toThrow(InvalidPostgresUrlError);
 });

@@ -1,7 +1,5 @@
-import {
-  fetchTrainingSessions,
-  TrainingSessionsApiError,
-} from "./training-sessions-client";
+import { fetchTrainingSessions } from "./training-sessions-client";
+import { TrainingSessionsApiError } from "./training-sessions-errors";
 
 test("fetchTrainingSessions calls the API and parses sessions", async () => {
   vi.stubGlobal(
@@ -24,7 +22,17 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
 
   await expect(
     fetchTrainingSessions({ from: "2026-08-17", to: "2026-08-23" }),
-  ).resolves.toHaveLength(1);
+  ).resolves.toEqual([
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      title: "Easy run",
+      activityType: "Run",
+      date: "2026-08-17",
+      timeOfDay: "AM",
+      description: null,
+      sortOrder: 0,
+    },
+  ]);
   expect(fetch).toHaveBeenCalledWith(
     "/api/v1/training-sessions?from=2026-08-17&to=2026-08-23",
   );
@@ -36,10 +44,16 @@ test("fetchTrainingSessions throws stable API errors", async () => {
     vi.fn().mockResolvedValue({
       ok: false,
       status: 400,
-      json: vi.fn().mockResolvedValue({ message: "Invalid range" }),
+      json: vi.fn().mockResolvedValue({ error: "Invalid range" }),
     }),
   );
 
+  await expect(
+    fetchTrainingSessions({ from: "bad", to: "2026-08-23" }),
+  ).rejects.toMatchObject({
+    message: "Invalid range",
+    status: 400,
+  });
   await expect(
     fetchTrainingSessions({ from: "bad", to: "2026-08-23" }),
   ).rejects.toBeInstanceOf(TrainingSessionsApiError);

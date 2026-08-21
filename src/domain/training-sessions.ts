@@ -1,4 +1,3 @@
-import { format, isValid, parseISO } from "date-fns";
 import { z } from "zod";
 
 export const timeOfDaySchema = z.union([
@@ -26,13 +25,3 @@ export type TrainingSessionDateRange = {
   from: string;
   to: string;
 };
-
-export function parseDateParam(value: string): Date | null {
-  const parsed = parseISO(value);
-
-  if (!isValid(parsed) || format(parsed, "yyyy-MM-dd") !== value) {
-    return null;
-  }
-
-  return parsed;
-}
