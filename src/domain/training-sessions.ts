@@ -88,16 +88,6 @@ export const trainingSessionSchema = rawTrainingSessionSchema.refine(
   },
 );
 
-export const legacyTrainingSessionSchema = z.object({
-  id: z.uuid(),
-  title: z.string().min(1),
-  activityType: activityTypeSchema,
-  date: z.iso.date(),
-  timeOfDay: timeOfDaySchema,
-  description: z.string().min(1).nullable(),
-  sortOrder: z.number().int().nonnegative(),
-});
-
 export const trainingSessionsResponseSchema = z.array(trainingSessionSchema);
 
 export type TimeOfDay = z.infer<typeof timeOfDaySchema>;
