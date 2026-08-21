@@ -1,0 +1,134 @@
+{
+  "id": "9e6f86fc-72da-491e-9d30-e13bc6b7a787",
+  "prevId": "d3797b99-f9db-4572-851e-93dfea56b163",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.training_sessions": {
+      "name": "training_sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activity_type": {
+          "name": "activity_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "time_of_day": {
+          "name": "time_of_day",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "training_sessions_date_time_sort_idx": {
+          "name": "training_sessions_date_time_sort_idx",
+          "columns": [
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "time_of_day",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sort_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "training_sessions_title_not_empty": {
+          "name": "training_sessions_title_not_empty",
+          "value": "length(trim(\"training_sessions\".\"title\")) > 0"
+        },
+        "training_sessions_activity_type_not_empty": {
+          "name": "training_sessions_activity_type_not_empty",
+          "value": "length(trim(\"training_sessions\".\"activity_type\")) > 0"
+        },
+        "training_sessions_time_of_day_valid": {
+          "name": "training_sessions_time_of_day_valid",
+          "value": "\"training_sessions\".\"time_of_day\" is null or \"training_sessions\".\"time_of_day\" in ('AM', 'PM')"
+        },
+        "training_sessions_sort_order_non_negative": {
+          "name": "training_sessions_sort_order_non_negative",
+          "value": "\"training_sessions\".\"sort_order\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

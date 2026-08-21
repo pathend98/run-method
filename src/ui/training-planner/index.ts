@@ -1,4 +1,8 @@
-export { sampleWeek } from "./sample-week";
+export {
+  getCurrentWeekRange,
+  groupSessionsByWeekday,
+  TrainingPlannerContainer,
+} from "./training-planner-container";
 export { TrainingPlanner } from "./training-planner";
 export type {
   TimeOfDay,

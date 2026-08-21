@@ -86,14 +86,18 @@ export function DayColumn({ day }: DayColumnProps) {
       </header>
 
       <div className="flex flex-1 flex-col gap-3 p-3">
-        {populatedTimeSections.map((section) => (
-          <TimeOfDaySection
-            key={section.label}
-            activities={section.activities}
-            day={day.day}
-            label={section.label}
-          />
-        ))}
+        {populatedTimeSections.length > 0 ? (
+          populatedTimeSections.map((section) => (
+            <TimeOfDaySection
+              key={section.label}
+              activities={section.activities}
+              day={day.day}
+              label={section.label}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-zinc-500">No activity scheduled</p>
+        )}
       </div>
     </article>
   );

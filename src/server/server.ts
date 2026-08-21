@@ -2,6 +2,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import { databaseEnv } from "./env/database-env";
+import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
+import { DefaultTrainingSessionsService } from "./training-sessions/training-sessions-service";
 
 const pool = new Pool({
   connectionString: databaseEnv.DATABASE_URL,
@@ -10,4 +12,9 @@ const pool = new Pool({
   connectionTimeoutMillis: databaseEnv.DATABASE_CONNECTION_TIMEOUT_MS,
 });
 
-const db = drizzle(pool);
+export const db = drizzle(pool);
+const trainingSessionsRepository = new DrizzleTrainingSessionsRepository(db);
+
+export const trainingSessionsService = new DefaultTrainingSessionsService(
+  trainingSessionsRepository,
+);
