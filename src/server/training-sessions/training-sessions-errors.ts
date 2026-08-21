@@ -6,3 +6,10 @@ export class TrainingSessionsValidationError extends BadRequestError {
     this.name = "TrainingSessionsValidationError";
   }
 }
+
+export class TrainingSessionsDataIntegrityError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TrainingSessionsDataIntegrityError";
+  }
+}

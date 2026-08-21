@@ -15,6 +15,13 @@
       "when": 1787301884721,
       "tag": "0001_superb_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787338800000,
+      "tag": "0002_activity_details",
+      "breakpoints": true
     }
   ]
 }

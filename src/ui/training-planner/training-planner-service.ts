@@ -33,14 +33,8 @@ export function groupSessionsByWeekday(
     const day = format(date, "EEEE") as Weekday;
     const activities = daysByDate.get(day) ?? [];
     activities.push({
-      id: session.id,
-      title: session.title,
-      activityType: session.activityType,
+      ...session,
       day,
-      timeOfDay: session.timeOfDay,
-      description: session.description,
-      date: session.date,
-      sortOrder: session.sortOrder,
     });
     daysByDate.set(day, activities);
   }

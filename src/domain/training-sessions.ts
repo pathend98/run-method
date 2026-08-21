@@ -6,10 +6,92 @@ export const timeOfDaySchema = z.union([
   z.null(),
 ]);
 
-export const trainingSessionSchema = z.object({
+export const activityTypeSchema = z.union([
+  z.literal("RUN"),
+  z.literal("STRENGTH"),
+]);
+
+export const trainingSessionStatusSchema = z.union([
+  z.literal("SCHEDULED"),
+  z.literal("COMPLETED"),
+  z.literal("SKIPPED"),
+]);
+
+const positiveIntegerSchema = z.number().int().positive();
+const runActualsSchema = z.object({
+  actualDistanceMetres: positiveIntegerSchema.nullable(),
+  actualDurationSeconds: positiveIntegerSchema.nullable(),
+});
+
+export const baseTrainingSessionSchema = z.object({
   id: z.uuid(),
   title: z.string().min(1),
-  activityType: z.string().min(1),
+  status: trainingSessionStatusSchema,
+  date: z.iso.date(),
+  timeOfDay: timeOfDaySchema,
+  description: z.string().min(1).nullable(),
+  sortOrder: z.number().int().nonnegative(),
+  skipReason: z.string().min(1).nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+export const runTrainingSessionSchema = z.discriminatedUnion("targetType", [
+  baseTrainingSessionSchema
+    .extend({
+      activityType: z.literal("RUN"),
+      targetType: z.literal("DISTANCE_DURATION"),
+      targetDistanceMetres: positiveIntegerSchema,
+      targetDurationSeconds: positiveIntegerSchema,
+      targetPaceSecondsPerKilometre: z.null(),
+    })
+    .extend(runActualsSchema.shape),
+  baseTrainingSessionSchema
+    .extend({
+      activityType: z.literal("RUN"),
+      targetType: z.literal("DISTANCE_PACE"),
+      targetDistanceMetres: positiveIntegerSchema,
+      targetDurationSeconds: z.null(),
+      targetPaceSecondsPerKilometre: positiveIntegerSchema,
+    })
+    .extend(runActualsSchema.shape),
+  baseTrainingSessionSchema
+    .extend({
+      activityType: z.literal("RUN"),
+      targetType: z.literal("DURATION_PACE"),
+      targetDistanceMetres: z.null(),
+      targetDurationSeconds: positiveIntegerSchema,
+      targetPaceSecondsPerKilometre: positiveIntegerSchema,
+    })
+    .extend(runActualsSchema.shape),
+]);
+
+export const strengthTrainingSessionSchema = baseTrainingSessionSchema.extend({
+  activityType: z.literal("STRENGTH"),
+  targetDurationSeconds: positiveIntegerSchema.nullable(),
+  actualDurationSeconds: positiveIntegerSchema.nullable(),
+});
+
+const rawTrainingSessionSchema = z.union([
+  runTrainingSessionSchema,
+  strengthTrainingSessionSchema,
+]);
+
+export const trainingSessionSchema = rawTrainingSessionSchema.refine(
+  (session) =>
+    session.status === "SKIPPED"
+      ? session.skipReason !== null
+      : session.skipReason === null,
+  {
+    message: "skipReason is required only for skipped sessions",
+    path: ["skipReason"],
+  },
+);
+
+export const legacyTrainingSessionSchema = z.object({
+  id: z.uuid(),
+  title: z.string().min(1),
+  activityType: activityTypeSchema,
   date: z.iso.date(),
   timeOfDay: timeOfDaySchema,
   description: z.string().min(1).nullable(),
@@ -19,7 +101,12 @@ export const trainingSessionSchema = z.object({
 export const trainingSessionsResponseSchema = z.array(trainingSessionSchema);
 
 export type TimeOfDay = z.infer<typeof timeOfDaySchema>;
+export type TrainingSessionStatus = z.infer<typeof trainingSessionStatusSchema>;
 export type TrainingSession = z.infer<typeof trainingSessionSchema>;
+export type RunTrainingSession = z.infer<typeof runTrainingSessionSchema>;
+export type StrengthTrainingSession = z.infer<
+  typeof strengthTrainingSessionSchema
+>;
 
 export type TrainingSessionDateRange = {
   from: string;

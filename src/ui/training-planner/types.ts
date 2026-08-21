@@ -1,4 +1,6 @@
-export type TimeOfDay = "AM" | "PM" | null;
+import type { TimeOfDay, TrainingSession } from "@/domain/training-sessions";
+
+export type { TimeOfDay };
 
 export type Weekday =
   | "Monday"
@@ -9,15 +11,8 @@ export type Weekday =
   | "Saturday"
   | "Sunday";
 
-export type TrainingActivity = {
-  id: string;
-  title: string;
-  activityType: string;
+export type TrainingActivity = TrainingSession & {
   day: Weekday;
-  timeOfDay: TimeOfDay;
-  description?: string | null;
-  date?: string;
-  sortOrder?: number;
 };
 
 export type TrainingDay = {
