@@ -1,4 +1,4 @@
-import { sampleWeek, TrainingPlanner } from "@/components/training-planner";
+import { sampleWeek, TrainingPlanner } from "@/ui/training-planner";
 
 export default function Home() {
   return (
