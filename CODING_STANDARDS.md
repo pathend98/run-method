@@ -47,7 +47,9 @@ function calculateValue(params: TParams): TResponse {
 * Prefer named exports.
 * Use default exports only where Next.js requires or conventionally expects them.
 * `@/` maps to `src/` and should be preferred over deep relative imports.
+* `@db/` maps to `db/` and should be used for imports from the database schema or migration-adjacent database code.
 * Avoid imports such as `../../../foo` when an `@/` import is clearer.
+* Add a path alias when code repeatedly needs to cross a source boundary with deep relative imports.
 
 ## 5. Project Structure
 
@@ -55,6 +57,7 @@ The primary source layout is:
 
 ```text
 src/
+  core/
   app/
   domain/
   server/
@@ -69,11 +72,18 @@ src/
 * Entry points should primarily dispatch into `server` or `ui`.
 * Do not place substantial business logic in this directory.
 
+### `src/core`
+
+* Contains small framework-independent utilities shared across application layers.
+* Keep utilities focused by concern, for example `src/core/date`.
+* Do not place UI, server, persistence, or domain-schema-specific code here.
+
 ### `src/domain`
 
 * Contains schemas and definitions shared across application boundaries.
 * Put shared Zod schemas here when both server and UI depend on them.
 * Infer boundary types from these schemas where practical.
+* Keep schemas focused on validation and type inference; unrelated parsing, formatting, grouping, or mapping logic belongs in a more specific module.
 
 ### `src/server`
 
@@ -86,6 +96,8 @@ src/
 
 * Contains the application's React frontend.
 * Organise UI code by feature/domain.
+* Frontend API clients belong in `src/ui`, colocated with the UI domain that consumes them.
+* Separate non-rendering UI logic from components. Use focused `*-service.ts` modules for grouping, mapping, date-range calculation, and similar pure functions.
 * Only genuinely reusable components should live in a general `components` directory.
 
 ## 6. Next.js and React
@@ -116,10 +128,18 @@ src/
 
 * All application data fetching should use TanStack Query.
 * Frontend code should access `/api/v1` through a typed API client where practical.
+* Typed frontend API clients should live under `src/ui`, not in a top-level `src/api` directory.
 * Avoid scattering raw `fetch` calls throughout components.
 * Organise TanStack Query keys, queries, and mutations by domain.
 * API routes should translate application errors into appropriate HTTP status codes and response messages.
-* No universal API response envelope is required.
+* Successful API responses do not require a universal response envelope.
+* Failed API responses should use a consistent JSON shape:
+
+```json
+{ "error": "Human-readable error message" }
+```
+
+* Frontend API clients should parse this `error` field for failed responses and provide a stable fallback when the body is missing or malformed.
 
 ## 9. Backend Architecture
 
@@ -171,7 +191,10 @@ class UserNotFoundError extends Error {
 ```
 
 * Use error names that communicate the failure condition.
+* Place project-defined error classes in dedicated `*-errors.ts` files rather than inline with services, clients, routes, validators, or components.
+* Server errors should use a small hierarchy where useful. For example, validation/request errors should extend a generic `BadRequestError` so route handlers can classify responses with `instanceof`.
 * Translate application errors into HTTP responses at the API route boundary.
+* Route handlers should classify generic error categories, such as `BadRequestError`, rather than importing every feature-specific validation error.
 * Do not swallow errors silently.
 
 ## 13. Forms
@@ -200,6 +223,8 @@ class UserNotFoundError extends Error {
 * Use `date-fns` for date parsing, manipulation, comparison, and formatting.
 * Do not implement date manipulation manually when `date-fns` provides the required behaviour.
 * Do not introduce another date utility library without a specific need.
+* Shared date parsing helpers should live in a focused date module, such as `src/core/date`, rather than inside domain schema files.
+* Keep strict date parsing behavior explicit and tested, especially for `YYYY-MM-DD` strings.
 
 ## 17. Accessibility
 
@@ -225,6 +250,10 @@ class UserNotFoundError extends Error {
 * Mock external boundaries where necessary.
 * When mocking a class dependency, define its contract as an interface and create a mock class implementing that same interface.
 * Avoid mocks that bypass or contradict the production type contracts.
+* Avoid weak assertions such as checking only array length or one partial field when the full shape is the behavior under test.
+* Schema and API contract tests should assert complete expected objects, including every required field.
+* Error-response tests should assert exact status codes and exact JSON error shapes.
+* When adding a specific error class, test both the relevant message and the expected class where that classification matters.
 
 ## 19. Comments
 

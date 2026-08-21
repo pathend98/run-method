@@ -15,7 +15,9 @@ export type TrainingActivity = {
   activityType: string;
   day: Weekday;
   timeOfDay: TimeOfDay;
-  description?: string;
+  description?: string | null;
+  date?: string;
+  sortOrder?: number;
 };
 
 export type TrainingDay = {

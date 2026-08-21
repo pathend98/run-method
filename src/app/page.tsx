@@ -1,9 +1,12 @@
-import { sampleWeek, TrainingPlanner } from "@/ui/training-planner";
+import { QueryProvider } from "./query-provider";
+import { TrainingPlannerContainer } from "@/ui/training-planner";
 
 export default function Home() {
   return (
     <main>
-      <TrainingPlanner week={sampleWeek} />
+      <QueryProvider>
+        <TrainingPlannerContainer />
+      </QueryProvider>
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { TrainingPlanner } from "./training-planner";
+import { TrainingActivityCard, TrainingPlanner } from "./training-planner";
 import type { TrainingDay } from "./types";
 
 const testWeek: TrainingDay[] = [
@@ -149,5 +149,37 @@ test("only renders time buckets that contain activities", () => {
     tuesdayColumn.getByRole("heading", { level: 3, name: "PM" }),
   ).toBeDefined();
   expect(tuesdayColumn.getByText("Evening lift")).toBeDefined();
-  expect(screen.queryByText("No activity scheduled")).toBeNull();
+  expect(screen.getAllByText("No activity scheduled")).toHaveLength(5);
+});
+
+test("TrainingActivityCard handles present and absent descriptions", () => {
+  const { rerender } = render(
+    <TrainingActivityCard
+      activity={{
+        id: "run",
+        title: "Easy run",
+        activityType: "Run",
+        day: "Monday",
+        timeOfDay: "AM",
+        description: "45 minutes",
+      }}
+    />,
+  );
+
+  expect(screen.getByText("45 minutes")).toBeDefined();
+
+  rerender(
+    <TrainingActivityCard
+      activity={{
+        id: "rest",
+        title: "Rest day",
+        activityType: "Rest",
+        day: "Friday",
+        timeOfDay: null,
+      }}
+    />,
+  );
+
+  expect(screen.getByText("Rest day")).toBeDefined();
+  expect(screen.queryByText("45 minutes")).toBeNull();
 });
