@@ -108,7 +108,10 @@ src/
 * Do not use Server Actions.
 * Application data must flow through `/api/v1` endpoints.
 * Use functional React components and hooks; do not use React class components.
+* React component modules should define one component per file.
 * Split components when they begin to have multiple responsibilities.
+* Move shared helpers into focused non-component modules.
+* Barrel and re-export files may re-export multiple components.
 * Prefer composition over large, highly configurable components.
 * Avoid unnecessary `useEffect`.
 * Prefer derived state over synchronising duplicated state with effects.

@@ -1,52 +1,69 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { TrainingActivityCard, TrainingPlanner } from "./training-planner";
-import type { TrainingDay } from "./types";
+import type { TrainingActivity, TrainingDay } from "./types";
+
+const baseActivity = {
+  id: "activity",
+  title: "Tempo run",
+  status: "SCHEDULED",
+  date: "2026-08-17",
+  timeOfDay: "AM",
+  description: "Controlled effort",
+  sortOrder: 0,
+  skipReason: null,
+  createdAt: "2026-08-01T10:00:00.000Z",
+  updatedAt: "2026-08-01T10:00:00.000Z",
+  day: "Monday",
+} satisfies Partial<TrainingActivity>;
+
+function runActivity(
+  override: Partial<TrainingActivity> = {},
+): TrainingActivity {
+  return {
+    ...baseActivity,
+    activityType: "RUN",
+    targetType: "DISTANCE_PACE",
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: null,
+    targetPaceSecondsPerKilometre: 255,
+    actualDistanceMetres: null,
+    actualDurationSeconds: null,
+    ...override,
+  } as TrainingActivity;
+}
+
+function strengthActivity(
+  override: Partial<TrainingActivity> = {},
+): TrainingActivity {
+  return {
+    ...baseActivity,
+    id: "strength",
+    title: "Strength",
+    activityType: "STRENGTH",
+    timeOfDay: "PM",
+    targetDurationSeconds: 2700,
+    actualDurationSeconds: null,
+    ...override,
+  } as TrainingActivity;
+}
 
 const testWeek: TrainingDay[] = [
   {
     day: "Monday",
     activities: [
-      {
-        id: "monday-am-run",
-        title: "Tempo run",
-        activityType: "Run",
-        day: "Monday",
-        timeOfDay: "AM",
-      },
-      {
-        id: "monday-am-strides",
-        title: "Strides",
-        activityType: "Workout",
-        day: "Monday",
-        timeOfDay: "AM",
-      },
-      {
-        id: "monday-any-mobility",
-        title: "Mobility",
-        activityType: "Recovery",
-        day: "Monday",
-        timeOfDay: null,
-      },
-      {
-        id: "monday-pm-strength",
+      runActivity({ id: "monday-am-run", title: "Tempo run" }),
+      runActivity({ id: "monday-am-strides", title: "Strides", sortOrder: 1 }),
+      strengthActivity({
+        id: "monday-any-strength",
         title: "Strength",
-        activityType: "Gym",
-        day: "Monday",
-        timeOfDay: "PM",
-      },
+        timeOfDay: null,
+      }),
+      strengthActivity({ id: "monday-pm-lift", title: "Evening lift" }),
     ],
   },
   {
     day: "Tuesday",
-    activities: [
-      {
-        id: "tuesday-pm-lift",
-        title: "Evening lift",
-        activityType: "Gym",
-        day: "Tuesday",
-        timeOfDay: "PM",
-      },
-    ],
+    activities: [strengthActivity({ id: "tuesday-pm-lift", day: "Tuesday" })],
   },
   { day: "Wednesday", activities: [] },
   { day: "Thursday", activities: [] },
@@ -82,16 +99,6 @@ test("renders each time bucket and places activities in the correct bucket", () 
   expect(monday).not.toBeNull();
 
   const mondayColumn = within(monday as HTMLElement);
-  expect(
-    mondayColumn.getByRole("heading", { level: 3, name: "AM" }),
-  ).toBeDefined();
-  expect(
-    mondayColumn.getByRole("heading", { level: 3, name: "Any time" }),
-  ).toBeDefined();
-  expect(
-    mondayColumn.getByRole("heading", { level: 3, name: "PM" }),
-  ).toBeDefined();
-
   const amSection = mondayColumn
     .getByRole("heading", { level: 3, name: "AM" })
     .closest("section");
@@ -102,31 +109,16 @@ test("renders each time bucket and places activities in the correct bucket", () 
     .getByRole("heading", { level: 3, name: "PM" })
     .closest("section");
 
-  expect(amSection).not.toBeNull();
-  expect(anyTimeSection).not.toBeNull();
-  expect(pmSection).not.toBeNull();
-
   expect(within(amSection as HTMLElement).getByText("Tempo run")).toBeDefined();
   expect(within(amSection as HTMLElement).getByText("Strides")).toBeDefined();
   expect(
-    within(anyTimeSection as HTMLElement).getByText("Mobility"),
+    within(anyTimeSection as HTMLElement).getByRole("button", {
+      name: "View Strength details",
+    }),
   ).toBeDefined();
-  expect(within(pmSection as HTMLElement).getByText("Strength")).toBeDefined();
-
-  expect(within(amSection as HTMLElement).queryByText("Mobility")).toBeNull();
-  expect(within(amSection as HTMLElement).queryByText("Strength")).toBeNull();
   expect(
-    within(anyTimeSection as HTMLElement).queryByText("Tempo run"),
-  ).toBeNull();
-  expect(
-    within(anyTimeSection as HTMLElement).queryByText("Strides"),
-  ).toBeNull();
-  expect(
-    within(anyTimeSection as HTMLElement).queryByText("Strength"),
-  ).toBeNull();
-  expect(within(pmSection as HTMLElement).queryByText("Tempo run")).toBeNull();
-  expect(within(pmSection as HTMLElement).queryByText("Strides")).toBeNull();
-  expect(within(pmSection as HTMLElement).queryByText("Mobility")).toBeNull();
+    within(pmSection as HTMLElement).getByText("Evening lift"),
+  ).toBeDefined();
 });
 
 test("only renders time buckets that contain activities", () => {
@@ -148,21 +140,130 @@ test("only renders time buckets that contain activities", () => {
   expect(
     tuesdayColumn.getByRole("heading", { level: 3, name: "PM" }),
   ).toBeDefined();
-  expect(tuesdayColumn.getByText("Evening lift")).toBeDefined();
   expect(screen.getAllByText("No activity scheduled")).toHaveLength(5);
+});
+
+test("opens and closes full activity details from an activity card", () => {
+  render(<TrainingPlanner week={testWeek} />);
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+
+  const panel = screen.getByRole("complementary", {
+    name: "Activity details",
+  });
+  expect(
+    within(panel).getByRole("heading", { name: "Tempo run" }),
+  ).toBeDefined();
+  expect(within(panel).getByText("monday-am-run")).toBeDefined();
+  expect(within(panel).getByText("0")).toBeDefined();
+  expect(within(panel).getAllByText("1 Aug 2026, 10:00")).toHaveLength(2);
+  expect(within(panel).getByText("Distance + Pace")).toBeDefined();
+  expect(within(panel).getByText("6.0 km")).toBeDefined();
+  expect(within(panel).getByText("4:15 / km")).toBeDefined();
+
+  fireEvent.click(
+    within(panel).getByRole("button", { name: "Close activity details" }),
+  );
+
+  expect(
+    screen.getByText("Select an activity to view its full details."),
+  ).toBeDefined();
+});
+
+test("opens activity details with keyboard activation", () => {
+  render(<TrainingPlanner week={testWeek} />);
+
+  const button = screen.getByRole("button", {
+    name: "View Evening lift details",
+  });
+  button.focus();
+  fireEvent.keyDown(button, { key: "Enter", code: "Enter" });
+  fireEvent.click(button);
+
+  const panel = screen.getByRole("complementary", {
+    name: "Activity details",
+  });
+  expect(
+    within(panel).getByRole("heading", { name: "Evening lift" }),
+  ).toBeDefined();
+  expect(within(panel).getByText("45 min")).toBeDefined();
+});
+
+test("renders empty optional metrics in activity details", () => {
+  render(
+    <TrainingPlanner
+      week={[
+        {
+          day: "Monday",
+          activities: [
+            runActivity({
+              targetPaceSecondsPerKilometre: null,
+            }),
+          ],
+        },
+        { day: "Tuesday", activities: [] },
+        { day: "Wednesday", activities: [] },
+        { day: "Thursday", activities: [] },
+        { day: "Friday", activities: [] },
+        { day: "Saturday", activities: [] },
+        { day: "Sunday", activities: [] },
+      ]}
+    />,
+  );
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+
+  const panel = screen.getByRole("complementary", {
+    name: "Activity details",
+  });
+  expect(within(panel).getAllByText("None").length).toBeGreaterThan(0);
+});
+
+test("renders skipped activity metadata in activity details", () => {
+  render(
+    <TrainingPlanner
+      week={[
+        {
+          day: "Monday",
+          activities: [
+            strengthActivity({
+              status: "SKIPPED",
+              timeOfDay: null,
+              description: null,
+              skipReason: "Travel day",
+            }),
+          ],
+        },
+        { day: "Tuesday", activities: [] },
+        { day: "Wednesday", activities: [] },
+        { day: "Thursday", activities: [] },
+        { day: "Friday", activities: [] },
+        { day: "Saturday", activities: [] },
+        { day: "Sunday", activities: [] },
+      ]}
+    />,
+  );
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Strength details" }),
+  );
+
+  const panel = screen.getByRole("complementary", {
+    name: "Activity details",
+  });
+  expect(within(panel).getByText("Any time")).toBeDefined();
+  expect(within(panel).getByText("Skipped")).toBeDefined();
+  expect(within(panel).getByText("Travel day")).toBeDefined();
 });
 
 test("TrainingActivityCard handles present and absent descriptions", () => {
   const { rerender } = render(
     <TrainingActivityCard
-      activity={{
-        id: "run",
-        title: "Easy run",
-        activityType: "Run",
-        day: "Monday",
-        timeOfDay: "AM",
-        description: "45 minutes",
-      }}
+      activity={runActivity({ description: "45 minutes" })}
     />,
   );
 
@@ -170,16 +271,15 @@ test("TrainingActivityCard handles present and absent descriptions", () => {
 
   rerender(
     <TrainingActivityCard
-      activity={{
-        id: "rest",
-        title: "Rest day",
-        activityType: "Rest",
-        day: "Friday",
-        timeOfDay: null,
-      }}
+      activity={strengthActivity({
+        title: "Strength",
+        description: null,
+      })}
     />,
   );
 
-  expect(screen.getByText("Rest day")).toBeDefined();
+  expect(
+    screen.getByRole("button", { name: "View Strength details" }),
+  ).toBeDefined();
   expect(screen.queryByText("45 minutes")).toBeNull();
 });

@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import { databaseEnv } from "./env/database-env";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
 import { DefaultTrainingSessionsService } from "./training-sessions/training-sessions-service";
+import { DefaultTrainingSessionsTransformer } from "./training-sessions/training-sessions-transformer";
 
 const pool = new Pool({
   connectionString: databaseEnv.DATABASE_URL,
@@ -13,7 +14,11 @@ const pool = new Pool({
 });
 
 export const db = drizzle(pool);
-const trainingSessionsRepository = new DrizzleTrainingSessionsRepository(db);
+const trainingSessionsTransformer = new DefaultTrainingSessionsTransformer();
+const trainingSessionsRepository = new DrizzleTrainingSessionsRepository(
+  db,
+  trainingSessionsTransformer,
+);
 
 export const trainingSessionsService = new DefaultTrainingSessionsService(
   trainingSessionsRepository,

@@ -17,7 +17,7 @@
     "db:down": "docker compose down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:check": "tsx src/server/db/check-connection.ts"
+    "db:view": "drizzle-kit studio"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

@@ -1,20 +1,36 @@
-import { asc, between, sql } from "drizzle-orm";
+import { asc, between, eq, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
-import { trainingSessions } from "@db/schema";
+import { runDetails, strengthDetails, trainingSessions } from "@db/schema";
 import type { TrainingSession } from "@/domain/training-sessions";
+import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
 
 export interface TrainingSessionsRepository {
   findBetweenDates(from: string, to: string): Promise<TrainingSession[]>;
 }
 
 export class DrizzleTrainingSessionsRepository implements TrainingSessionsRepository {
-  constructor(private readonly db: NodePgDatabase) {}
+  constructor(
+    private readonly db: NodePgDatabase,
+    private readonly transformer: TrainingSessionsTransformer,
+  ) {}
 
   async findBetweenDates(from: string, to: string): Promise<TrainingSession[]> {
     const rows = await this.db
-      .select()
+      .select({
+        session: trainingSessions,
+        runDetails,
+        strengthDetails,
+      })
       .from(trainingSessions)
+      .leftJoin(
+        runDetails,
+        eq(runDetails.trainingSessionId, trainingSessions.id),
+      )
+      .leftJoin(
+        strengthDetails,
+        eq(strengthDetails.trainingSessionId, trainingSessions.id),
+      )
       .where(between(trainingSessions.date, from, to))
       .orderBy(
         asc(trainingSessions.date),
@@ -23,15 +39,6 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         asc(trainingSessions.id),
       );
 
-    return rows.map((row) => ({
-      id: row.id,
-      title: row.title,
-      activityType: row.activityType,
-      date: row.date,
-      timeOfDay:
-        row.timeOfDay === "AM" || row.timeOfDay === "PM" ? row.timeOfDay : null,
-      description: row.description,
-      sortOrder: row.sortOrder,
-    }));
+    return rows.map((row) => this.transformer.transform(row));
   }
 }
