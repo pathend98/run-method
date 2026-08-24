@@ -68,17 +68,6 @@ function strengthActivity(
   } as TrainingActivity;
 }
 
-test("renders an empty details state when no activity is selected", () => {
-  render(<ActivityDetailsPanel activity={null} onClose={vi.fn()} />);
-
-  expect(
-    screen.getByRole("complementary", { name: "Activity details" }),
-  ).toBeDefined();
-  expect(
-    screen.getByText("Select an activity to view its full details."),
-  ).toBeDefined();
-});
-
 test("calls the close handler from the close button", () => {
   const onClose = vi.fn();
 
@@ -90,11 +79,40 @@ test("calls the close handler from the close button", () => {
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
+test("calls the close handler from the backdrop", () => {
+  const onClose = vi.fn();
+
+  render(<ActivityDetailsPanel activity={runActivity()} onClose={onClose} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Dismiss activity details" }),
+  );
+
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+test("calls the close handler from the Escape key", () => {
+  const onClose = vi.fn();
+
+  render(<ActivityDetailsPanel activity={runActivity()} onClose={onClose} />);
+  fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
+
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+test("ignores non-Escape keys", () => {
+  const onClose = vi.fn();
+
+  render(<ActivityDetailsPanel activity={runActivity()} onClose={onClose} />);
+  fireEvent.keyDown(window, { key: "Enter", code: "Enter" });
+
+  expect(onClose).not.toHaveBeenCalled();
+});
+
 test("renders full run activity details with formatted values", () => {
   render(<ActivityDetailsPanel activity={runActivity()} onClose={vi.fn()} />);
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
   });
   expect(
     within(panel).getByRole("heading", { level: 2, name: "Tempo run" }),
@@ -121,8 +139,8 @@ test("renders strength details with duration values", () => {
     <ActivityDetailsPanel activity={strengthActivity()} onClose={vi.fn()} />,
   );
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Strength",
   });
   expect(
     within(panel).getByRole("heading", { level: 2, name: "Strength" }),
@@ -149,8 +167,8 @@ test("renders null metrics and optional fields as empty values", () => {
     />,
   );
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
   });
   expect(within(panel).getByText("Any time")).toBeDefined();
   expect(within(panel).getAllByText("None")).toHaveLength(6);
@@ -168,8 +186,8 @@ test("renders skipped activity metadata", () => {
     />,
   );
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Strength",
   });
   expect(within(panel).getByText("Skipped")).toBeDefined();
   expect(within(panel).getByText("Travel day")).toBeDefined();

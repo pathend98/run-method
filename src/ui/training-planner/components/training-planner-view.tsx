@@ -38,12 +38,14 @@ export function TrainingPlannerView({ week }: TrainingPlannerViewProps) {
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div>
         <WeekGrid onSelectActivity={setSelectedActivity} week={week} />
-        <ActivityDetailsPanel
-          activity={selectedActivity}
-          onClose={() => setSelectedActivity(null)}
-        />
+        {selectedActivity ? (
+          <ActivityDetailsPanel
+            activity={selectedActivity}
+            onClose={() => setSelectedActivity(null)}
+          />
+        ) : null}
       </div>
     </section>
   );

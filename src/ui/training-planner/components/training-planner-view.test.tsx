@@ -150,12 +150,14 @@ test("only renders time buckets that contain activities", () => {
 test("opens and closes full activity details from an activity card", () => {
   render(<TrainingPlannerView week={testWeek} />);
 
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
+
   fireEvent.click(
     screen.getByRole("button", { name: "View Tempo run details" }),
   );
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
   });
   expect(
     within(panel).getByRole("heading", { name: "Tempo run" }),
@@ -171,9 +173,35 @@ test("opens and closes full activity details from an activity card", () => {
     within(panel).getByRole("button", { name: "Close activity details" }),
   );
 
-  expect(
-    screen.getByText("Select an activity to view its full details."),
-  ).toBeDefined();
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
+});
+
+test("closes activity details from the backdrop", () => {
+  render(<TrainingPlannerView week={testWeek} />);
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  expect(screen.getByRole("dialog", { name: "Tempo run" })).toBeDefined();
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Dismiss activity details" }),
+  );
+
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
+});
+
+test("closes activity details from the Escape key", () => {
+  render(<TrainingPlannerView week={testWeek} />);
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  expect(screen.getByRole("dialog", { name: "Tempo run" })).toBeDefined();
+
+  fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
+
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
 });
 
 test("opens activity details with keyboard activation", () => {
@@ -186,8 +214,8 @@ test("opens activity details with keyboard activation", () => {
   fireEvent.keyDown(button, { key: "Enter", code: "Enter" });
   fireEvent.click(button);
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Evening lift",
   });
   expect(
     within(panel).getByRole("heading", { name: "Evening lift" }),
@@ -221,8 +249,8 @@ test("renders empty optional metrics in activity details", () => {
     screen.getByRole("button", { name: "View Tempo run details" }),
   );
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
   });
   expect(within(panel).getAllByText("None").length).toBeGreaterThan(0);
 });
@@ -256,8 +284,8 @@ test("renders skipped activity metadata in activity details", () => {
     screen.getByRole("button", { name: "View Strength details" }),
   );
 
-  const panel = screen.getByRole("complementary", {
-    name: "Activity details",
+  const panel = screen.getByRole("dialog", {
+    name: "Strength",
   });
   expect(within(panel).getByText("Any time")).toBeDefined();
   expect(within(panel).getByText("Skipped")).toBeDefined();
