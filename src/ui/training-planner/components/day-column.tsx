@@ -1,14 +1,20 @@
 import { TimeOfDaySection } from "./time-of-day-section";
 import type {
+  TimeOfDay,
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
-import { timeSections } from "../utils/time-sections";
 
 type DayColumnProps = {
   day: TrainingDay;
   onSelectActivity: (activity: TrainingActivity) => void;
 };
+
+const timeSections: { label: string; value: TimeOfDay }[] = [
+  { label: "AM", value: "AM" },
+  { label: "Any time", value: null },
+  { label: "PM", value: "PM" },
+];
 
 export function DayColumn({ day, onSelectActivity }: DayColumnProps) {
   const populatedTimeSections = timeSections
