@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { trainingSessionsService } from "@/server/server";
-import { BadRequestError } from "@/server/errors/server-errors";
+import { BadRequestError } from "@/server/errors/bad-request-error";
 
 export async function GET(request: NextRequest) {
   try {

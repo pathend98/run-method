@@ -1,4 +1,4 @@
-import { BadRequestError } from "@/server/errors/server-errors";
+import { BadRequestError } from "@/server/errors/bad-request-error";
 import {
   TrainingSessionsDataIntegrityError,
   TrainingSessionsValidationError,
