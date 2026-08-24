@@ -162,9 +162,6 @@ test("opens and closes full activity details from an activity card", () => {
   expect(
     within(panel).getByRole("heading", { name: "Tempo run" }),
   ).toBeDefined();
-  expect(within(panel).getByText("monday-am-run")).toBeDefined();
-  expect(within(panel).getByText("0")).toBeDefined();
-  expect(within(panel).getAllByText("1 Aug 2026, 10:00")).toHaveLength(2);
   expect(within(panel).getByText("Distance + Pace")).toBeDefined();
   expect(within(panel).getByText("6.0 km")).toBeDefined();
   expect(within(panel).getByText("4:15 / km")).toBeDefined();
@@ -252,7 +249,7 @@ test("renders empty optional metrics in activity details", () => {
   const panel = screen.getByRole("dialog", {
     name: "Tempo run",
   });
-  expect(within(panel).getAllByText("None").length).toBeGreaterThan(0);
+  expect(within(panel).getByText("No target pace")).toBeDefined();
 });
 
 test("renders skipped activity metadata in activity details", () => {

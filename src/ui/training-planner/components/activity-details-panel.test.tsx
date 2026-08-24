@@ -117,20 +117,136 @@ test("renders full run activity details with formatted values", () => {
   expect(
     within(panel).getByRole("heading", { level: 2, name: "Tempo run" }),
   ).toBeDefined();
-  expect(within(panel).getByText("Run")).toBeDefined();
-  expect(within(panel).getByText("activity")).toBeDefined();
-  expect(within(panel).getByText("Monday")).toBeDefined();
-  expect(within(panel).getByText("2026-08-17")).toBeDefined();
+  expect(within(panel).getAllByText("Run").length).toBeGreaterThan(0);
   expect(within(panel).getByText("AM")).toBeDefined();
   expect(within(panel).getByText("Scheduled")).toBeDefined();
   expect(within(panel).getByText("Controlled effort")).toBeDefined();
-  expect(within(panel).getByText("0")).toBeDefined();
-  expect(within(panel).getByText("1 Aug 2026, 10:00")).toBeDefined();
-  expect(within(panel).getByText("1 Aug 2026, 11:30")).toBeDefined();
   expect(within(panel).getByText("Distance + Pace")).toBeDefined();
   expect(within(panel).getByText("6.0 km")).toBeDefined();
   expect(within(panel).getByText("4:15 / km")).toBeDefined();
   expect(within(panel).getByText("5.9 km")).toBeDefined();
+  expect(within(panel).getByText("25 min")).toBeDefined();
+  expect(within(panel).queryByText("activity")).toBeNull();
+  expect(within(panel).queryByText("0")).toBeNull();
+  expect(within(panel).queryByText("1 Aug 2026, 10:00")).toBeNull();
+  expect(within(panel).queryByText("1 Aug 2026, 11:30")).toBeNull();
+});
+
+test("renders primary planned metrics before secondary details", () => {
+  render(<ActivityDetailsPanel activity={runActivity()} onClose={vi.fn()} />);
+
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
+  });
+  const distance = within(panel).getByText("6.0 km");
+  const time = within(panel).getByText("AM");
+  const duration = within(panel).getByText("No target duration");
+  const pace = within(panel).getByText("4:15 / km");
+  const descriptionHeading = within(panel).getByRole("heading", {
+    level: 3,
+    name: "Description",
+  });
+  const detailsHeading = within(panel).getByRole("heading", {
+    level: 3,
+    name: "Details",
+  });
+  const actualDistance = within(panel).getByText("5.9 km");
+
+  expect(distance.compareDocumentPosition(time)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+  expect(time.compareDocumentPosition(duration)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+  expect(duration.compareDocumentPosition(pace)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+  expect(pace.compareDocumentPosition(descriptionHeading)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+  expect(descriptionHeading.compareDocumentPosition(detailsHeading)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+  expect(detailsHeading.compareDocumentPosition(actualDistance)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
+});
+
+test("renders distance and duration run targets", () => {
+  render(
+    <ActivityDetailsPanel
+      activity={runActivity({
+        targetType: "DISTANCE_DURATION",
+        targetDurationSeconds: 2400,
+        targetPaceSecondsPerKilometre: null,
+      })}
+      onClose={vi.fn()}
+    />,
+  );
+
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
+  });
+  expect(within(panel).getByText("No target pace")).toBeDefined();
+  expect(within(panel).getByText("40 min")).toBeDefined();
+  expect(within(panel).getByText("6.0 km")).toBeDefined();
+  expect(within(panel).getByText("Distance + Duration")).toBeDefined();
+});
+
+test("renders duration and pace run targets", () => {
+  render(
+    <ActivityDetailsPanel
+      activity={runActivity({
+        targetType: "DURATION_PACE",
+        targetDistanceMetres: null,
+        targetDurationSeconds: 1800,
+      })}
+      onClose={vi.fn()}
+    />,
+  );
+
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
+  });
+  expect(within(panel).getByText("4:15 / km")).toBeDefined();
+  expect(within(panel).getByText("30 min")).toBeDefined();
+  expect(within(panel).getByText("No target distance")).toBeDefined();
+  expect(within(panel).getByText("Duration + Pace")).toBeDefined();
+});
+
+test("renders run actual distance without actual duration", () => {
+  render(
+    <ActivityDetailsPanel
+      activity={runActivity({
+        actualDurationSeconds: null,
+      })}
+      onClose={vi.fn()}
+    />,
+  );
+
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
+  });
+  expect(within(panel).getByText("Actual distance")).toBeDefined();
+  expect(within(panel).getByText("5.9 km")).toBeDefined();
+  expect(within(panel).queryByText("Actual duration")).toBeNull();
+});
+
+test("renders run actual duration without actual distance", () => {
+  render(
+    <ActivityDetailsPanel
+      activity={runActivity({
+        actualDistanceMetres: null,
+      })}
+      onClose={vi.fn()}
+    />,
+  );
+
+  const panel = screen.getByRole("dialog", {
+    name: "Tempo run",
+  });
+  expect(within(panel).queryByText("Actual distance")).toBeNull();
+  expect(within(panel).getByText("Actual duration")).toBeDefined();
   expect(within(panel).getByText("25 min")).toBeDefined();
 });
 
@@ -145,9 +261,14 @@ test("renders strength details with duration values", () => {
   expect(
     within(panel).getByRole("heading", { level: 2, name: "Strength" }),
   ).toBeDefined();
-  expect(within(panel).getAllByText("Strength")).toHaveLength(2);
+  expect(within(panel).getAllByText("Strength").length).toBeGreaterThan(0);
   expect(within(panel).getByText("45 min")).toBeDefined();
   expect(within(panel).getByText("40 min")).toBeDefined();
+  expect(
+    within(panel)
+      .getByText("PM")
+      .compareDocumentPosition(within(panel).getByText("45 min")),
+  ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 });
 
 test("renders null metrics and optional fields as empty values", () => {
@@ -171,7 +292,12 @@ test("renders null metrics and optional fields as empty values", () => {
     name: "Tempo run",
   });
   expect(within(panel).getByText("Any time")).toBeDefined();
-  expect(within(panel).getAllByText("None")).toHaveLength(6);
+  expect(within(panel).getByText("No target pace")).toBeDefined();
+  expect(within(panel).getByText("No target duration")).toBeDefined();
+  expect(within(panel).getByText("No target distance")).toBeDefined();
+  expect(within(panel).getByText("No description")).toBeDefined();
+  expect(within(panel).queryByText("Actual distance")).toBeNull();
+  expect(within(panel).queryByText("Actual duration")).toBeNull();
 });
 
 test("renders skipped activity metadata", () => {
