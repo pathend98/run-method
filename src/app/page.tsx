@@ -1,5 +1,5 @@
 import { QueryProvider } from "./query-provider";
-import { TrainingPlannerContainer } from "@/ui/training-planner";
+import { TrainingPlannerContainer } from "@/ui/training-planner/training-planner";
 
 export default function Home() {
   return (

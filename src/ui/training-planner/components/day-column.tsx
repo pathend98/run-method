@@ -1,6 +1,9 @@
-import { timeSections } from "./time-sections";
 import { TimeOfDaySection } from "./time-of-day-section";
-import type { TrainingActivity, TrainingDay } from "./types";
+import type {
+  TrainingActivity,
+  TrainingDay,
+} from "../types/training-planner-types";
+import { timeSections } from "../utils/time-sections";
 
 type DayColumnProps = {
   day: TrainingDay;

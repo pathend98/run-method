@@ -1,4 +1,4 @@
-import type { TimeOfDay } from "./types";
+import type { TimeOfDay } from "../types/training-planner-types";
 
 export const timeSections: { label: string; value: TimeOfDay }[] = [
   { label: "AM", value: "AM" },

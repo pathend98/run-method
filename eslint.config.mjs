@@ -44,6 +44,30 @@ const eslintConfig = defineConfig([
       "prefer-const": "error",
     },
   },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/ui/*/components/*",
+                "@/ui/*/services/*",
+                "@/ui/*/types/*",
+                "@/ui/*/utils/*",
+                "@/ui/*/hooks/*",
+              ],
+              message:
+                "Import UI modules through their same-name public interface file.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   prettierConfig,
 ]);
 

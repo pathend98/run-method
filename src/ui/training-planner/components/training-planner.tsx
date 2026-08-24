@@ -4,7 +4,10 @@ import { useState } from "react";
 
 import { ActivityDetailsPanel } from "./activity-details-panel";
 import { WeekGrid } from "./week-grid";
-import type { TrainingActivity, TrainingDay } from "./types";
+import type {
+  TrainingActivity,
+  TrainingDay,
+} from "../types/training-planner-types";
 
 type TrainingPlannerProps = {
   week: TrainingDay[];
@@ -45,10 +48,3 @@ export function TrainingPlanner({ week }: TrainingPlannerProps) {
     </section>
   );
 }
-
-export { ActivityDetailsPanel } from "./activity-details-panel";
-export { DayColumn } from "./day-column";
-export { DetailTerm } from "./detail-term";
-export { TimeOfDaySection } from "./time-of-day-section";
-export { TrainingActivityCard } from "./training-activity-card";
-export { WeekGrid } from "./week-grid";

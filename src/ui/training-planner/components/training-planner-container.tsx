@@ -3,12 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
-import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-client";
+import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions";
 import { TrainingPlanner } from "./training-planner";
 import {
   getCurrentWeekRange,
   groupSessionsByWeekday,
-} from "./training-planner-service";
+} from "../services/training-planner-service";
 
 export function TrainingPlannerContainer() {
   const weekRange = getCurrentWeekRange();

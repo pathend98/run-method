@@ -1,4 +1,4 @@
-import type { TrainingActivity } from "./types";
+import type { TrainingActivity } from "../types/training-planner-types";
 
 export function formatActivityType(
   activityType: TrainingActivity["activityType"],

@@ -7,8 +7,8 @@ import {
   formatPace,
   formatStatus,
   formatTargetType,
-} from "./training-planner-formatters";
-import type { TrainingActivity } from "./types";
+} from "../utils/training-planner-formatters";
+import type { TrainingActivity } from "../types/training-planner-types";
 
 type ActivityDetailsPanelProps = {
   activity: TrainingActivity | null;

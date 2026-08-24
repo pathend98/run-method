@@ -1,5 +1,5 @@
 import { fetchTrainingSessions } from "./training-sessions-client";
-import { TrainingSessionsApiError } from "./training-sessions-errors";
+import { TrainingSessionsApiError } from "../errors/training-sessions-errors";
 
 test("fetchTrainingSessions calls the API and parses sessions", async () => {
   vi.stubGlobal(

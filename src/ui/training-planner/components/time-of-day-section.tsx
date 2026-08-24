@@ -1,5 +1,8 @@
 import { TrainingActivityCard } from "./training-activity-card";
-import type { TrainingActivity, TrainingDay } from "./types";
+import type {
+  TrainingActivity,
+  TrainingDay,
+} from "../types/training-planner-types";
 
 type TimeOfDaySectionProps = {
   activities: TrainingActivity[];

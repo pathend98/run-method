@@ -1,6 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { TrainingActivityCard, TrainingPlanner } from "./training-planner";
-import type { TrainingActivity, TrainingDay } from "./types";
+import { TrainingActivityCard } from "./training-activity-card";
+import { TrainingPlanner } from "./training-planner";
+import type {
+  TrainingActivity,
+  TrainingDay,
+} from "../types/training-planner-types";
 
 const baseActivity = {
   id: "activity",
