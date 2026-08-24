@@ -7,7 +7,7 @@ import type {
   Weekday,
 } from "../types/training-planner-types";
 
-export const weekdays: Weekday[] = [
+const weekdays: Weekday[] = [
   "Monday",
   "Tuesday",
   "Wednesday",

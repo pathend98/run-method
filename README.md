@@ -21,13 +21,15 @@ The top-level layout is:
 
 ### Module Boundaries
 
-When a folder represents a module, its public interface is a same-name file at the module root. For example, `src/ui/training-planner/training-planner.ts` is the only public import surface for the training planner module.
+When a folder represents a module, its public interface is the set of concrete top-level files at the module root. For example, `src/ui/training-planner/training-planner.tsx` is a public entrypoint for the training planner module.
 
-Consumers outside a module must import from that public interface file, not from implementation folders. Internal implementation files should live in kind-based folders such as `components/`, `services/`, `types/`, `utils/`, and `hooks/` when needed.
+Consumers outside a module must import from those top-level files, not from implementation folders. Internal implementation files should live in kind-based folders such as `components/`, `services/`, `types/`, `utils/`, and `hooks/` when needed.
 
-Public module interfaces should stay narrow: export the main component, function, or service capability, plus only the props and types consumers need. Subcomponents, formatting helpers, utility functions, and service details should remain private unless there is a real cross-module use case.
+Top-level module files should contain the concrete components, functions, or types that other modules are meant to use. They should not be re-export-only barrels. Public module interfaces should stay narrow: expose only the main capabilities and types consumers need. Subcomponents, formatting helpers, utility functions, and service details should remain private unless there is a real cross-module use case.
 
 New or reorganised modules should not use `index.ts` as the public interface. Single-file modules can remain as files until they grow enough to need a folder.
+
+Each `.tsx` file should define exactly one React component. Split secondary components into their own files, even when they are private to a module.
 
 ## Requirements
 

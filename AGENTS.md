@@ -31,11 +31,11 @@ The repo is organised around deep modules in the John Ousterhout sense: each mea
 
 ## Module Boundaries
 
-When a folder represents a module, create a same-name public interface file at that module's root. For example, `src/ui/training-planner/training-planner.ts` is the public interface for `src/ui/training-planner/`.
+When a folder represents a module, its public interface is the set of concrete top-level files at that module's root. For example, `src/ui/training-planner/training-planner.tsx` is a public entrypoint for `src/ui/training-planner/`.
 
-Code outside a module must import from that module's public interface file. Do not import from another module's private `components/`, `services/`, `types/`, `utils/`, or `hooks/` folders.
+Code outside a module must import from that module's top-level files. Do not import from another module's private `components/`, `services/`, `types/`, `utils/`, or `hooks/` folders.
 
-Do not use `index.ts` as the public interface for new or reorganised modules. Use a same-name file instead.
+Do not use `index.ts` as the public interface for new or reorganised modules. Use concrete top-level files named after the capability they expose.
 
 Inside a module, organise implementation files by kind:
 
@@ -45,9 +45,11 @@ Inside a module, organise implementation files by kind:
 - `utils/` for private helper functions and constants.
 - `hooks/` for React hooks when needed.
 
-The primary React implementation for a UI feature module should live at `components/<module-name>.tsx`. The module root file should re-export it under the public name.
+Public top-level module files should contain the concrete components, functions, or types that other modules are meant to use. They should not be re-export-only barrels.
 
-Keep public interfaces narrow. Export the main component, function, or service capability, plus public props and types needed by consumers. Keep subcomponents, formatting helpers, utility functions, and service details private unless there is a concrete cross-module use case.
+Keep public interfaces narrow. Expose the main component, function, or service capability, plus public props and types needed by consumers. Keep subcomponents, formatting helpers, utility functions, and service details private unless there is a concrete cross-module use case.
+
+Each `.tsx` file should define exactly one React component. Split secondary components into their own files, even when they are private to a module.
 
 Single-file modules may remain as files until they grow enough to need a folder. Next.js route folders and framework-shaped files under `src/app/` are exempt where the framework requires a different shape.
 
@@ -55,7 +57,7 @@ Single-file modules may remain as files until they grow enough to need a folder.
 
 Tests are implemented with `vitest` and `@testing-library/react`. Test files should be colocated alongside the file under test. Use `.test.ts` for TypeScript files and `.test.tsx` for React component files.
 
-Each file should have a colocated unit test file, with a small number of exceptions: `src/server/server.ts` does not require a colocated test file, and the `db/` folder does not require tests.
+Each file should have a colocated unit test file, with a small number of exceptions: `src/server/server.ts` does not require a colocated test file, and the `db/` folder does not require tests. Any files containing just types do not require tests either.
 
 Vitest globals are enabled, so do not import from `vitest` in test files.
 

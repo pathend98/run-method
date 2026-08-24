@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
-import { TrainingPlannerContainer } from "./training-planner-container";
+import { TrainingPlanner } from "./training-planner";
 
-test("TrainingPlannerContainer renders loading state", () => {
+test("TrainingPlanner renders loading state", () => {
   vi.stubGlobal(
     "fetch",
     vi.fn(() => new Promise(() => undefined)),
@@ -11,14 +11,14 @@ test("TrainingPlannerContainer renders loading state", () => {
 
   render(
     <QueryProvider>
-      <TrainingPlannerContainer />
+      <TrainingPlanner />
     </QueryProvider>,
   );
 
   expect(screen.getByText("Loading training planner...")).toBeDefined();
 });
 
-test("TrainingPlannerContainer renders loaded planner data", async () => {
+test("TrainingPlanner renders loaded planner data", async () => {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
@@ -49,7 +49,7 @@ test("TrainingPlannerContainer renders loaded planner data", async () => {
 
   render(
     <QueryProvider>
-      <TrainingPlannerContainer />
+      <TrainingPlanner />
     </QueryProvider>,
   );
 
@@ -59,7 +59,7 @@ test("TrainingPlannerContainer renders loaded planner data", async () => {
   ).toBeDefined();
 });
 
-test("TrainingPlannerContainer renders error state", async () => {
+test("TrainingPlanner renders error state", async () => {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
@@ -71,7 +71,7 @@ test("TrainingPlannerContainer renders error state", async () => {
 
   render(
     <QueryProvider>
-      <TrainingPlannerContainer />
+      <TrainingPlanner />
     </QueryProvider>,
   );
 

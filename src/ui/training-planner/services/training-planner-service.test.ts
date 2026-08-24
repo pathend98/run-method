@@ -1,20 +1,7 @@
 import {
   getCurrentWeekRange,
   groupSessionsByWeekday,
-  weekdays,
 } from "./training-planner-service";
-
-test("weekdays lists Monday through Sunday", () => {
-  expect(weekdays).toEqual([
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ]);
-});
 
 test("getCurrentWeekRange returns browser-local Monday through Sunday", () => {
   expect(getCurrentWeekRange(new Date("2026-08-21T12:00:00"))).toEqual({

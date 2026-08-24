@@ -9,11 +9,11 @@ import type {
   TrainingDay,
 } from "../types/training-planner-types";
 
-type TrainingPlannerProps = {
+type TrainingPlannerViewProps = {
   week: TrainingDay[];
 };
 
-export function TrainingPlanner({ week }: TrainingPlannerProps) {
+export function TrainingPlannerView({ week }: TrainingPlannerViewProps) {
   const [selectedActivity, setSelectedActivity] =
     useState<TrainingActivity | null>(null);
 

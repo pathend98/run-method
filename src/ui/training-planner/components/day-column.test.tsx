@@ -1,0 +1,113 @@
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { DayColumn } from "./day-column";
+import type {
+  TrainingActivity,
+  TrainingDay,
+} from "../types/training-planner-types";
+
+const baseActivity = {
+  id: "activity",
+  title: "Tempo run",
+  status: "SCHEDULED",
+  date: "2026-08-17",
+  description: null,
+  sortOrder: 0,
+  skipReason: null,
+  createdAt: "2026-08-01T10:00:00.000Z",
+  updatedAt: "2026-08-01T10:00:00.000Z",
+  day: "Monday",
+} satisfies Partial<TrainingActivity>;
+
+function runActivity(
+  override: Partial<TrainingActivity> = {},
+): TrainingActivity {
+  return {
+    ...baseActivity,
+    activityType: "RUN",
+    timeOfDay: "AM",
+    targetType: "DISTANCE_DURATION",
+    targetDistanceMetres: 8000,
+    targetDurationSeconds: 2700,
+    targetPaceSecondsPerKilometre: null,
+    actualDistanceMetres: null,
+    actualDurationSeconds: null,
+    ...override,
+  } as TrainingActivity;
+}
+
+function strengthActivity(
+  override: Partial<TrainingActivity> = {},
+): TrainingActivity {
+  return {
+    ...baseActivity,
+    id: "strength",
+    title: "Strength",
+    activityType: "STRENGTH",
+    timeOfDay: "PM",
+    targetDurationSeconds: 2700,
+    actualDurationSeconds: null,
+    ...override,
+  } as TrainingActivity;
+}
+
+test("renders populated time buckets in day order", () => {
+  render(
+    <DayColumn
+      day={{
+        day: "Monday",
+        activities: [
+          runActivity({ id: "am", title: "Morning run", timeOfDay: "AM" }),
+          strengthActivity({
+            id: "any",
+            title: "Mobility",
+            timeOfDay: null,
+          }),
+          strengthActivity({ id: "pm", title: "Evening lift" }),
+        ],
+      }}
+      onSelectActivity={vi.fn()}
+    />,
+  );
+
+  const column = screen.getByRole("listitem", { name: "Monday" });
+  expect(
+    within(column).getByRole("heading", { level: 2, name: "Monday" }),
+  ).toBeDefined();
+  expect(
+    within(column)
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent),
+  ).toEqual(["AM", "Any time", "PM"]);
+  expect(within(column).getByText("Morning run")).toBeDefined();
+  expect(within(column).getByText("Mobility")).toBeDefined();
+  expect(within(column).getByText("Evening lift")).toBeDefined();
+});
+
+test("renders an empty state for days without activities", () => {
+  render(
+    <DayColumn
+      day={{ day: "Tuesday", activities: [] }}
+      onSelectActivity={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole("listitem", { name: "Tuesday" })).toBeDefined();
+  expect(screen.getByText("No activity scheduled")).toBeDefined();
+  expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+});
+
+test("passes the selected activity to the select handler", () => {
+  const onSelectActivity = vi.fn();
+  const selectedActivity = runActivity({ title: "Morning run" });
+  const day = {
+    day: "Monday",
+    activities: [selectedActivity],
+  } satisfies TrainingDay;
+
+  render(<DayColumn day={day} onSelectActivity={onSelectActivity} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Morning run details" }),
+  );
+
+  expect(onSelectActivity).toHaveBeenCalledWith(selectedActivity);
+});

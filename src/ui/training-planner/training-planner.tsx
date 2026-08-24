@@ -1,16 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { ReactNode } from "react";
 
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions";
-import { TrainingPlanner } from "./training-planner";
+import { PlannerStatus } from "./components/planner-status";
+import { TrainingPlannerView } from "./components/training-planner-view";
 import {
   getCurrentWeekRange,
   groupSessionsByWeekday,
-} from "../services/training-planner-service";
+} from "./services/training-planner-service";
 
-export function TrainingPlannerContainer() {
+export function TrainingPlanner() {
   const weekRange = getCurrentWeekRange();
   const query = useQuery({
     queryKey: ["training-sessions", weekRange.from, weekRange.to],
@@ -32,25 +32,5 @@ export function TrainingPlannerContainer() {
 
   const week = groupSessionsByWeekday(query.data);
 
-  return <TrainingPlanner week={week} />;
-}
-
-type PlannerStatusProps = {
-  action?: ReactNode;
-  message: string;
-};
-
-function PlannerStatus({ action, message }: PlannerStatusProps) {
-  return (
-    <section
-      aria-live="polite"
-      className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-8 sm:px-6 lg:px-8"
-    >
-      <h1 className="text-3xl font-semibold text-zinc-950 sm:text-4xl">
-        Training planner
-      </h1>
-      <p className="text-sm text-zinc-600">{message}</p>
-      {action}
-    </section>
-  );
+  return <TrainingPlannerView week={week} />;
 }

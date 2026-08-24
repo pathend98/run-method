@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { TrainingActivityCard } from "./training-activity-card";
-import { TrainingPlanner } from "./training-planner";
+import { TrainingPlannerView } from "./training-planner-view";
 import type {
   TrainingActivity,
   TrainingDay,
@@ -77,7 +77,7 @@ const testWeek: TrainingDay[] = [
 ];
 
 test("renders one column for each day of the week", () => {
-  render(<TrainingPlanner week={testWeek} />);
+  render(<TrainingPlannerView week={testWeek} />);
 
   const planner = screen.getByRole("list", { name: "Weekly training planner" });
   expect(
@@ -94,7 +94,7 @@ test("renders one column for each day of the week", () => {
 });
 
 test("renders each time bucket and places activities in the correct bucket", () => {
-  render(<TrainingPlanner week={testWeek} />);
+  render(<TrainingPlannerView week={testWeek} />);
 
   const monday = screen
     .getByRole("heading", { level: 2, name: "Monday" })
@@ -126,7 +126,7 @@ test("renders each time bucket and places activities in the correct bucket", () 
 });
 
 test("only renders time buckets that contain activities", () => {
-  render(<TrainingPlanner week={testWeek} />);
+  render(<TrainingPlannerView week={testWeek} />);
 
   const tuesday = screen
     .getByRole("heading", { level: 2, name: "Tuesday" })
@@ -148,7 +148,7 @@ test("only renders time buckets that contain activities", () => {
 });
 
 test("opens and closes full activity details from an activity card", () => {
-  render(<TrainingPlanner week={testWeek} />);
+  render(<TrainingPlannerView week={testWeek} />);
 
   fireEvent.click(
     screen.getByRole("button", { name: "View Tempo run details" }),
@@ -177,7 +177,7 @@ test("opens and closes full activity details from an activity card", () => {
 });
 
 test("opens activity details with keyboard activation", () => {
-  render(<TrainingPlanner week={testWeek} />);
+  render(<TrainingPlannerView week={testWeek} />);
 
   const button = screen.getByRole("button", {
     name: "View Evening lift details",
@@ -197,7 +197,7 @@ test("opens activity details with keyboard activation", () => {
 
 test("renders empty optional metrics in activity details", () => {
   render(
-    <TrainingPlanner
+    <TrainingPlannerView
       week={[
         {
           day: "Monday",
@@ -229,7 +229,7 @@ test("renders empty optional metrics in activity details", () => {
 
 test("renders skipped activity metadata in activity details", () => {
   render(
-    <TrainingPlanner
+    <TrainingPlannerView
       week={[
         {
           day: "Monday",
