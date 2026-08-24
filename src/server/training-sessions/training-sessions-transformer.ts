@@ -1,4 +1,4 @@
-import { runDetails, strengthDetails, trainingSessions } from "@db/schema";
+import type { runDetails, strengthDetails, trainingSessions } from "@db/schema";
 import {
   timeOfDaySchema,
   trainingSessionSchema,

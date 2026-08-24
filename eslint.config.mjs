@@ -14,8 +14,36 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "coverage"
+    "coverage",
   ]),
+  {
+    rules: {
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          prefer: "type-imports",
+          fixStyle: "separate-type-imports",
+        },
+      ],
+      eqeqeq: "error",
+      "func-style": [
+        "error",
+        "declaration",
+        {
+          allowArrowFunctions: false,
+        },
+      ],
+      "max-lines": [
+        "error",
+        {
+          max: 600,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
+      "prefer-const": "error",
+    },
+  },
   prettierConfig,
 ]);
 
