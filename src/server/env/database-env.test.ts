@@ -1,8 +1,8 @@
-const importDatabaseEnv = async () => {
+async function importDatabaseEnv() {
   vi.resetModules();
 
   return import("./database-env");
-};
+}
 
 afterEach(() => {
   vi.unstubAllEnvs();

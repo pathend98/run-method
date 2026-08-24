@@ -3,7 +3,7 @@ import {
   type TrainingSession,
   type TrainingSessionDateRange,
 } from "@/domain/training-sessions";
-import { TrainingSessionsApiError } from "./training-sessions-errors";
+import { TrainingSessionsApiError } from "./errors/training-sessions-errors";
 
 export async function fetchTrainingSessions({
   from,

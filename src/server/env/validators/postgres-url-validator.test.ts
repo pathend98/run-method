@@ -2,12 +2,13 @@ import { cleanEnv } from "envalid";
 import { InvalidPostgresUrlError } from "./postgres-url-errors";
 import { postgresUrlValidator } from "./postgres-url-validator";
 
-const readDatabaseUrl = (DATABASE_URL: string) =>
-  cleanEnv(
+function readDatabaseUrl(DATABASE_URL: string) {
+  return cleanEnv(
     { DATABASE_URL },
     { DATABASE_URL: postgresUrlValidator() },
     { reporter: null },
   ).DATABASE_URL;
+}
 
 test.each([
   "postgres://training_brain:training_brain@localhost:5432/training_brain",

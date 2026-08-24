@@ -1,5 +1,8 @@
 import { DayColumn } from "./day-column";
-import type { TrainingActivity, TrainingDay } from "./types";
+import type {
+  TrainingActivity,
+  TrainingDay,
+} from "../types/training-planner-types";
 
 type WeekGridProps = {
   onSelectActivity: (activity: TrainingActivity) => void;

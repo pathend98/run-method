@@ -6,6 +6,31 @@ The project is currently bootstrapped as a single-package Next.js application us
 
 For the broader roadmap, see [PLAN.md](PLAN.md). For architecture decisions, see [ADRs.md](ADRs.md).
 
+## Project Structure
+
+Training Brain is organised around deep modules: each meaningful folder should expose a small, stable interface and keep implementation details private. This follows John Ousterhout's distinction between a module's interface and its implementation.
+
+The top-level layout is:
+
+- `db/`: database schema and migrations. This stays outside `src/`.
+- `src/app/`: Next.js App Router entrypoints. Keep this lean; route, page, layout, and API files should delegate to UI or server modules.
+- `src/core/`: genuinely cross-cutting utilities that can run in either browser or server code.
+- `src/domain/`: shared data models, schemas, and contracts used across browser and server code.
+- `src/server/`: server-only object-oriented TypeScript. Dependency injection is rooted in `src/server/server.ts`.
+- `src/ui/`: browser-side modules, including React feature modules and browser service modules.
+
+### Module Boundaries
+
+When a folder represents a module, its public interface is the set of concrete top-level files at the module root. For example, `src/ui/training-planner/training-planner.tsx` is a public entrypoint for the training planner module.
+
+Consumers outside a module must import from those top-level files, not from implementation folders. Internal implementation files should live in kind-based folders such as `components/`, `services/`, `types/`, `utils/`, and `hooks/` when needed.
+
+Top-level module files should contain the concrete components, functions, or types that other modules are meant to use. They should not be re-export-only barrels. Public module interfaces should stay narrow: expose only the main capabilities and types consumers need. Subcomponents, formatting helpers, utility functions, and service details should remain private unless there is a real cross-module use case.
+
+New or reorganised modules should not use `index.ts` as the public interface. Single-file modules can remain as files until they grow enough to need a folder.
+
+Each `.tsx` file should define exactly one React component. Split secondary components into their own files, even when they are private to a module.
+
 ## Requirements
 
 - Node.js 24
@@ -50,6 +75,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```bash
 pnpm lint
+pnpm test
 pnpm format:check
 pnpm build
 pnpm db:up

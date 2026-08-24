@@ -1,19 +1,53 @@
 import { DetailTerm } from "./detail-term";
-import {
-  formatActivityType,
-  formatDateTime,
-  formatDistance,
-  formatDuration,
-  formatPace,
-  formatStatus,
-  formatTargetType,
-} from "./training-planner-formatters";
-import type { TrainingActivity } from "./types";
+import { formatActivityType } from "../utils/training-planner-formatters";
+import type { TrainingActivity } from "../types/training-planner-types";
 
 type ActivityDetailsPanelProps = {
   activity: TrainingActivity | null;
   onClose: () => void;
 };
+
+function formatStatus(status: TrainingActivity["status"]) {
+  return status.charAt(0) + status.slice(1).toLowerCase();
+}
+
+function formatTargetType(targetType: string) {
+  return targetType
+    .split("_")
+    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+    .join(" + ");
+}
+
+function formatDistance(metres: number | null) {
+  return metres === null ? "None" : `${(metres / 1000).toFixed(1)} km`;
+}
+
+function formatDuration(seconds: number | null) {
+  if (seconds === null) {
+    return "None";
+  }
+
+  const minutes = Math.round(seconds / 60);
+  return `${minutes} min`;
+}
+
+function formatPace(secondsPerKilometre: number | null) {
+  if (secondsPerKilometre === null) {
+    return "None";
+  }
+
+  const minutes = Math.floor(secondsPerKilometre / 60);
+  const seconds = String(secondsPerKilometre % 60).padStart(2, "0");
+  return `${minutes}:${seconds} / km`;
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}
 
 export function ActivityDetailsPanel({
   activity,

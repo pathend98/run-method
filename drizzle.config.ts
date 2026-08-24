@@ -1,12 +1,13 @@
 import { loadEnvConfig } from "@next/env";
 import { defineConfig } from "drizzle-kit";
 import { createRequire } from "node:module";
+import type * as databaseEnvModule from "./src/server/env/database-env";
 
 loadEnvConfig(process.cwd());
 
 const require = createRequire(import.meta.url);
 const { databaseEnv } =
-  require("./src/server/env/database-env") as typeof import("./src/server/env/database-env");
+  require("./src/server/env/database-env") as typeof databaseEnvModule;
 
 export default defineConfig({
   schema: "db/schema.ts",

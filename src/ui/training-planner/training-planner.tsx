@@ -1,54 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
-import { ActivityDetailsPanel } from "./activity-details-panel";
-import { WeekGrid } from "./week-grid";
-import type { TrainingActivity, TrainingDay } from "./types";
+import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions";
+import { PlannerStatus } from "./components/planner-status";
+import { TrainingPlannerView } from "./components/training-planner-view";
+import {
+  getCurrentWeekRange,
+  groupSessionsByWeekday,
+} from "./services/training-planner-service";
 
-type TrainingPlannerProps = {
-  week: TrainingDay[];
-};
+export function TrainingPlanner() {
+  const weekRange = getCurrentWeekRange();
+  const query = useQuery({
+    queryKey: ["training-sessions", weekRange.from, weekRange.to],
+    queryFn: () => fetchTrainingSessions(weekRange),
+  });
 
-export function TrainingPlanner({ week }: TrainingPlannerProps) {
-  const [selectedActivity, setSelectedActivity] =
-    useState<TrainingActivity | null>(null);
+  if (query.isPending) {
+    return <PlannerStatus message="Loading training planner..." />;
+  }
 
-  return (
-    <section
-      aria-labelledby="training-planner-heading"
-      className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8"
-    >
-      <div className="flex flex-col gap-2">
-        <p className="text-sm font-semibold uppercase tracking-wide text-teal-700">
-          Weekly schedule
-        </p>
-        <h1
-          id="training-planner-heading"
-          className="text-3xl font-semibold text-zinc-950 sm:text-4xl"
-        >
-          Training planner
-        </h1>
-        <p className="max-w-2xl text-sm leading-6 text-zinc-600">
-          A simple week view for arranging runs, workouts, recovery, and rest
-          across morning, flexible, and evening slots.
-        </p>
-      </div>
+  if (query.isError) {
+    return (
+      <PlannerStatus
+        action={<button onClick={() => void query.refetch()}>Retry</button>}
+        message="Unable to load training planner."
+      />
+    );
+  }
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <WeekGrid onSelectActivity={setSelectedActivity} week={week} />
-        <ActivityDetailsPanel
-          activity={selectedActivity}
-          onClose={() => setSelectedActivity(null)}
-        />
-      </div>
-    </section>
-  );
+  const week = groupSessionsByWeekday(query.data);
+
+  return <TrainingPlannerView week={week} />;
 }
-
-export { ActivityDetailsPanel } from "./activity-details-panel";
-export { DayColumn } from "./day-column";
-export { DetailTerm } from "./detail-term";
-export { TimeOfDaySection } from "./time-of-day-section";
-export { TrainingActivityCard } from "./training-activity-card";
-export { WeekGrid } from "./week-grid";

@@ -1,9 +1,13 @@
 import { addDays, format, startOfWeek } from "date-fns";
 
 import type { TrainingSession } from "@/domain/training-sessions";
-import type { TrainingActivity, TrainingDay, Weekday } from "./types";
+import type {
+  TrainingActivity,
+  TrainingDay,
+  Weekday,
+} from "../types/training-planner-types";
 
-export const weekdays: Weekday[] = [
+const weekdays: Weekday[] = [
   "Monday",
   "Tuesday",
   "Wednesday",

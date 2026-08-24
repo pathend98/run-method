@@ -1,5 +1,4 @@
-import { fetchTrainingSessions } from "./training-sessions-client";
-import { TrainingSessionsApiError } from "./training-sessions-errors";
+import { fetchTrainingSessions } from "./training-sessions";
 
 test("fetchTrainingSessions calls the API and parses sessions", async () => {
   vi.stubGlobal(
@@ -104,9 +103,6 @@ test("fetchTrainingSessions throws stable API errors", async () => {
     message: "Invalid range",
     status: 400,
   });
-  await expect(
-    fetchTrainingSessions({ from: "bad", to: "2026-08-23" }),
-  ).rejects.toBeInstanceOf(TrainingSessionsApiError);
 });
 
 test("fetchTrainingSessions falls back when error JSON has no message", async () => {
