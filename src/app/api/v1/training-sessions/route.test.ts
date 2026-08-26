@@ -1,16 +1,27 @@
 import { NextRequest } from "next/server";
 
-import { GET } from "./route";
-import { trainingSessionsService } from "@/server/server";
-import { TrainingSessionsValidationError } from "@/server/training-sessions/training-sessions-errors";
+import { GET, POST } from "./route";
+import {
+  trainingSessionsRequestValidator,
+  trainingSessionsService,
+} from "@/server/server";
+import {
+  TrainingSessionsRequestValidationError,
+  TrainingSessionsValidationError,
+} from "@/server/training-sessions/training-sessions-errors";
 
 vi.mock("@/server/server", () => ({
   trainingSessionsService: {
     findBetweenDates: vi.fn(),
+    create: vi.fn(),
+  },
+  trainingSessionsRequestValidator: {
+    validateCreate: vi.fn(),
   },
 }));
 
 const service = vi.mocked(trainingSessionsService);
+const requestValidator = vi.mocked(trainingSessionsRequestValidator);
 
 class TestDatabaseError extends Error {
   constructor() {
@@ -134,4 +145,42 @@ test("returns stable server errors with 500 status", async () => {
     error: "Unable to fetch training sessions",
   });
   expect(response.status).toBe(500);
+});
+
+test("returns validator field errors with 400 status", async () => {
+  requestValidator.validateCreate.mockImplementation(() => {
+    throw new TrainingSessionsRequestValidationError({
+      title: ["Invalid input: expected string, received undefined"],
+    });
+  });
+
+  const response = await POST(
+    new NextRequest("http://localhost/api/v1/training-sessions", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
+  );
+
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({
+    error: "Invalid request body",
+    fieldErrors: {
+      title: ["Invalid input: expected string, received undefined"],
+    },
+  });
+});
+
+test("returns malformed JSON errors with 400 status", async () => {
+  const response = await POST(
+    new NextRequest("http://localhost/api/v1/training-sessions", {
+      method: "POST",
+      body: "{",
+    }),
+  );
+
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({
+    error: "Invalid request body",
+    fieldErrors: { body: ["Request body must be valid JSON"] },
+  });
 });

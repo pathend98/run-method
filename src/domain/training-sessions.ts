@@ -90,6 +90,47 @@ export const trainingSessionSchema = rawTrainingSessionSchema.refine(
 
 export const trainingSessionsResponseSchema = z.array(trainingSessionSchema);
 
+const createBaseSchema = z
+  .object({
+    title: z.string().trim().min(1),
+    date: z.iso.date(),
+    timeOfDay: timeOfDaySchema.optional().default(null),
+    description: z.string().trim().min(1).nullable().optional().default(null),
+  })
+  .strict();
+
+const createRunSchema = z.discriminatedUnion("targetType", [
+  createBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DISTANCE_DURATION"),
+    targetDistanceMetres: positiveIntegerSchema,
+    targetDurationSeconds: positiveIntegerSchema,
+  }),
+  createBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DISTANCE_PACE"),
+    targetDistanceMetres: positiveIntegerSchema,
+    targetPaceSecondsPerKilometre: positiveIntegerSchema,
+  }),
+  createBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DURATION_PACE"),
+    targetDurationSeconds: positiveIntegerSchema,
+    targetPaceSecondsPerKilometre: positiveIntegerSchema,
+  }),
+]);
+
+export const createTrainingSessionRequestSchema = z.union([
+  createRunSchema,
+  createBaseSchema.extend({
+    activityType: z.literal("STRENGTH"),
+    targetDurationSeconds: positiveIntegerSchema
+      .nullable()
+      .optional()
+      .default(null),
+  }),
+]);
+
 export type TimeOfDay = z.infer<typeof timeOfDaySchema>;
 export type TrainingSessionStatus = z.infer<typeof trainingSessionStatusSchema>;
 export type TrainingSession = z.infer<typeof trainingSessionSchema>;
@@ -102,3 +143,7 @@ export type TrainingSessionDateRange = {
   from: string;
   to: string;
 };
+
+export type CreateTrainingSessionRequest = z.infer<
+  typeof createTrainingSessionRequestSchema
+>;

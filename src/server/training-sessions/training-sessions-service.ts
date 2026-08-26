@@ -1,7 +1,10 @@
 import { differenceInCalendarDays } from "date-fns";
 
 import { parseDateFromString } from "@/core/date/date-parsing";
-import type { TrainingSession } from "@/domain/training-sessions";
+import type {
+  CreateTrainingSessionRequest,
+  TrainingSession,
+} from "@/domain/training-sessions";
 import { TrainingSessionsValidationError } from "./training-sessions-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 
@@ -10,6 +13,7 @@ export interface TrainingSessionsService {
     from: string | null,
     to: string | null,
   ): Promise<TrainingSession[]>;
+  create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
 }
 
 export class DefaultTrainingSessionsService implements TrainingSessionsService {
@@ -47,5 +51,9 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     }
 
     return this.repository.findBetweenDates(from, to);
+  }
+
+  create(request: CreateTrainingSessionRequest): Promise<TrainingSession> {
+    return this.repository.create(request);
   }
 }

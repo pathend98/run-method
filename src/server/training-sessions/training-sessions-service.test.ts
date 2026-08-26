@@ -4,6 +4,7 @@ import type { TrainingSessionsRepository } from "./training-sessions-repository"
 function createService() {
   const repository: TrainingSessionsRepository = {
     findBetweenDates: vi.fn().mockResolvedValue([]),
+    create: vi.fn(),
   };
 
   return {

@@ -1,6 +1,7 @@
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import {
   TrainingSessionsDataIntegrityError,
+  TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
 } from "./training-sessions-errors";
 
@@ -19,4 +20,14 @@ test("TrainingSessionsDataIntegrityError exposes its message and error name", ()
   expect(error).toBeInstanceOf(Error);
   expect(error.message).toBe("Unexpected row shape");
   expect(error.name).toBe("TrainingSessionsDataIntegrityError");
+});
+
+test("TrainingSessionsRequestValidationError exposes field errors", () => {
+  const fieldErrors = { title: ["Required"] };
+  const error = new TrainingSessionsRequestValidationError(fieldErrors);
+
+  expect(error).toBeInstanceOf(BadRequestError);
+  expect(error.name).toBe("TrainingSessionsRequestValidationError");
+  expect(error.message).toBe("Invalid request body");
+  expect(error.fieldErrors).toBe(fieldErrors);
 });
