@@ -1,13 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { AddActivityModal } from "./add-activity-modal";
-import type { TrainingDay } from "../types/training-planner-types";
 
 const day = {
   day: "Monday",
   date: "2026-08-17",
-  activities: [],
-} satisfies TrainingDay;
+};
 
 test("submits a converted activity for its fixed day", async () => {
   const onCreate = vi.fn().mockResolvedValue(undefined);

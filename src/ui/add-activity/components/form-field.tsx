@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 
-type FormFieldProps = {
+interface FormFieldProps {
   children: ReactNode;
   error?: string;
   label: string;
-};
+}
 
 export function FormField({ children, error, label }: FormFieldProps) {
   return (

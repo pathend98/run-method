@@ -5,7 +5,7 @@ import {
   type CreateTrainingSessionRequest,
 } from "@/domain/training-sessions";
 
-const positiveDistance = z
+const positiveDistanceSchema = z
   .string()
   .regex(/^\d+(?:\.\d{1,3})?$/, "Enter a distance in kilometres")
   .refine((value) => Number(value) > 0, "Distance must be greater than zero");
@@ -52,7 +52,7 @@ export const addActivityFormSchema = z
       validateField(
         context,
         "distanceKilometres",
-        positiveDistance,
+        positiveDistanceSchema,
         value.distanceKilometres,
       );
     }

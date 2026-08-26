@@ -1,14 +1,17 @@
 import { useEffect } from "react";
 
-import { formatActivityType } from "../utils/training-planner-formatters";
-import type { TrainingActivity } from "../types/training-planner-types";
+import type { TrainingSession } from "@/domain/training-sessions";
 
 type ActivityDetailsModalProps = {
-  activity: TrainingActivity;
+  activity: TrainingSession;
   onClose: () => void;
 };
 
-function formatStatus(status: TrainingActivity["status"]) {
+function formatActivityType(activityType: TrainingSession["activityType"]) {
+  return activityType === "RUN" ? "Run" : "Strength";
+}
+
+function formatStatus(status: TrainingSession["status"]) {
   return status.charAt(0) + status.slice(1).toLowerCase();
 }
 
@@ -42,7 +45,7 @@ function formatPace(secondsPerKilometre: number | null) {
   return `${minutes}:${seconds} / km`;
 }
 
-function hasActualRunMetrics(activity: TrainingActivity) {
+function hasActualRunMetrics(activity: TrainingSession) {
   return (
     activity.activityType === "RUN" &&
     (activity.actualDistanceMetres !== null ||
@@ -50,7 +53,7 @@ function hasActualRunMetrics(activity: TrainingActivity) {
   );
 }
 
-function hasActualStrengthMetrics(activity: TrainingActivity) {
+function hasActualStrengthMetrics(activity: TrainingSession) {
   return (
     activity.activityType === "STRENGTH" &&
     activity.actualDurationSeconds !== null

@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { ActivityDetailsModal } from "./activity-details-modal";
-import type { TrainingActivity } from "../types/training-planner-types";
 
-type RunTrainingActivity = Extract<TrainingActivity, { activityType: "RUN" }>;
+import type { TrainingSession } from "@/domain/training-sessions";
+import { ActivityDetailsModal } from "./activity-details-modal";
+
+type RunTrainingActivity = Extract<TrainingSession, { activityType: "RUN" }>;
 type StrengthTrainingActivity = Extract<
-  TrainingActivity,
+  TrainingSession,
   { activityType: "STRENGTH" }
 >;
 type RunTrainingActivityOverride = Omit<
@@ -31,12 +32,11 @@ const baseActivity = {
   skipReason: null,
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T11:30:00.000Z",
-  day: "Monday",
-} satisfies Partial<TrainingActivity>;
+} satisfies Partial<TrainingSession>;
 
 function runActivity(
   override: RunTrainingActivityOverride = {},
-): TrainingActivity {
+): TrainingSession {
   return {
     ...baseActivity,
     activityType: "RUN",
@@ -47,12 +47,12 @@ function runActivity(
     actualDistanceMetres: 5900,
     actualDurationSeconds: 1500,
     ...override,
-  } as TrainingActivity;
+  } as TrainingSession;
 }
 
 function strengthActivity(
   override: Partial<StrengthTrainingActivity> = {},
-): TrainingActivity {
+): TrainingSession {
   return {
     ...baseActivity,
     id: "strength",
@@ -62,7 +62,7 @@ function strengthActivity(
     targetDurationSeconds: 2700,
     actualDurationSeconds: 2400,
     ...override,
-  } as TrainingActivity;
+  } as TrainingSession;
 }
 
 test("calls the close handler from the close button", () => {

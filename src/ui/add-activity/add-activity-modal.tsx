@@ -3,17 +3,21 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
-import type { TrainingDay } from "../types/training-planner-types";
 import {
   addActivityFormSchema,
   defaultAddActivityFormValues,
   toCreateTrainingSessionRequest,
   type AddActivityFormValues,
-} from "../utils/add-activity-form";
-import { FormField } from "./form-field";
+} from "./utils/add-activity-form";
+import { FormField } from "./components/form-field";
+
+type AddActivityDay = {
+  date: string;
+  day: string;
+};
 
 type AddActivityModalProps = {
-  day: TrainingDay & { date: string };
+  day: AddActivityDay;
   isSubmitting: boolean;
   onClose: () => void;
   onCreate: (request: CreateTrainingSessionRequest) => Promise<unknown>;

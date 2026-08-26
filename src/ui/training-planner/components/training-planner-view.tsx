@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
-import { ActivityDetailsModal } from "./activity-details-modal";
-import { AddActivityModal } from "./add-activity-modal";
-import { WeekGrid } from "./week-grid";
 import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
+import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
+import { AddActivityModal } from "@/ui/add-activity/add-activity-modal";
+import { WeekGrid } from "./week-grid";
 import type {
   TrainingActivity,
   TrainingDay,
