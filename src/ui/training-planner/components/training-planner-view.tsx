@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { ActivityDetailsPanel } from "./activity-details-panel";
+import { ActivityDetailsModal } from "./activity-details-modal";
 import { WeekGrid } from "./week-grid";
 import type {
   TrainingActivity,
@@ -41,7 +41,7 @@ export function TrainingPlannerView({ week }: TrainingPlannerViewProps) {
       <div>
         <WeekGrid onSelectActivity={setSelectedActivity} week={week} />
         {selectedActivity ? (
-          <ActivityDetailsPanel
+          <ActivityDetailsModal
             activity={selectedActivity}
             onClose={() => setSelectedActivity(null)}
           />

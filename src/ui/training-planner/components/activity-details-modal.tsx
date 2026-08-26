@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { formatActivityType } from "../utils/training-planner-formatters";
 import type { TrainingActivity } from "../types/training-planner-types";
 
-type ActivityDetailsPanelProps = {
+type ActivityDetailsModalProps = {
   activity: TrainingActivity;
   onClose: () => void;
 };
@@ -57,10 +57,10 @@ function hasActualStrengthMetrics(activity: TrainingActivity) {
   );
 }
 
-export function ActivityDetailsPanel({
+export function ActivityDetailsModal({
   activity,
   onClose,
-}: ActivityDetailsPanelProps) {
+}: ActivityDetailsModalProps) {
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -86,17 +86,17 @@ export function ActivityDetailsPanel({
       : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <button
         aria-label="Dismiss activity details"
         className="absolute inset-0 cursor-default bg-zinc-950/30"
         onClick={onClose}
         type="button"
       />
-      <aside
+      <section
         aria-labelledby="activity-details-title"
         aria-modal="true"
-        className="relative z-10 h-full w-full overflow-y-auto bg-white p-4 shadow-xl sm:w-[min(100vw,28rem)] lg:w-[33vw] lg:max-w-[40rem]"
+        className="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto rounded-xl bg-white p-4 shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:p-6"
         role="dialog"
       >
         <div className="flex items-start justify-between gap-3">
@@ -240,7 +240,7 @@ export function ActivityDetailsPanel({
             </dl>
           ) : null}
         </section>
-      </aside>
+      </section>
     </div>
   );
 }
