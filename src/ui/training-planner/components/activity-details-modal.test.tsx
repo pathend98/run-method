@@ -1,11 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { ActivityDetailsPanel } from "./activity-details-panel";
+import { ActivityDetailsModal } from "./activity-details-modal";
 import type { TrainingActivity } from "../types/training-planner-types";
 
-type RunTrainingActivity = Extract<
-  TrainingActivity,
-  { activityType: "RUN" }
->;
+type RunTrainingActivity = Extract<TrainingActivity, { activityType: "RUN" }>;
 type StrengthTrainingActivity = Extract<
   TrainingActivity,
   { activityType: "STRENGTH" }
@@ -71,7 +68,7 @@ function strengthActivity(
 test("calls the close handler from the close button", () => {
   const onClose = vi.fn();
 
-  render(<ActivityDetailsPanel activity={runActivity()} onClose={onClose} />);
+  render(<ActivityDetailsModal activity={runActivity()} onClose={onClose} />);
   fireEvent.click(
     screen.getByRole("button", { name: "Close activity details" }),
   );
@@ -82,7 +79,7 @@ test("calls the close handler from the close button", () => {
 test("calls the close handler from the backdrop", () => {
   const onClose = vi.fn();
 
-  render(<ActivityDetailsPanel activity={runActivity()} onClose={onClose} />);
+  render(<ActivityDetailsModal activity={runActivity()} onClose={onClose} />);
   fireEvent.click(
     screen.getByRole("button", { name: "Dismiss activity details" }),
   );
@@ -93,7 +90,7 @@ test("calls the close handler from the backdrop", () => {
 test("calls the close handler from the Escape key", () => {
   const onClose = vi.fn();
 
-  render(<ActivityDetailsPanel activity={runActivity()} onClose={onClose} />);
+  render(<ActivityDetailsModal activity={runActivity()} onClose={onClose} />);
   fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
 
   expect(onClose).toHaveBeenCalledTimes(1);
@@ -102,14 +99,28 @@ test("calls the close handler from the Escape key", () => {
 test("ignores non-Escape keys", () => {
   const onClose = vi.fn();
 
-  render(<ActivityDetailsPanel activity={runActivity()} onClose={onClose} />);
+  render(<ActivityDetailsModal activity={runActivity()} onClose={onClose} />);
   fireEvent.keyDown(window, { key: "Enter", code: "Enter" });
 
   expect(onClose).not.toHaveBeenCalled();
 });
 
+test("renders as a large centered modal", () => {
+  render(<ActivityDetailsModal activity={runActivity()} onClose={vi.fn()} />);
+
+  const modal = screen.getByRole("dialog", { name: "Tempo run" });
+  const overlay = modal.parentElement;
+
+  expect(overlay?.classList.contains("items-center")).toBe(true);
+  expect(overlay?.classList.contains("justify-center")).toBe(true);
+  expect(modal.classList.contains("max-w-4xl")).toBe(true);
+  expect(modal.classList.contains("max-h-[calc(100dvh-2rem)]")).toBe(true);
+  expect(modal.classList.contains("rounded-xl")).toBe(true);
+  expect(modal.classList.contains("overflow-y-auto")).toBe(true);
+});
+
 test("renders full run activity details with formatted values", () => {
-  render(<ActivityDetailsPanel activity={runActivity()} onClose={vi.fn()} />);
+  render(<ActivityDetailsModal activity={runActivity()} onClose={vi.fn()} />);
 
   const panel = screen.getByRole("dialog", {
     name: "Tempo run",
@@ -133,7 +144,7 @@ test("renders full run activity details with formatted values", () => {
 });
 
 test("renders primary planned metrics before secondary details", () => {
-  render(<ActivityDetailsPanel activity={runActivity()} onClose={vi.fn()} />);
+  render(<ActivityDetailsModal activity={runActivity()} onClose={vi.fn()} />);
 
   const panel = screen.getByRole("dialog", {
     name: "Tempo run",
@@ -174,7 +185,7 @@ test("renders primary planned metrics before secondary details", () => {
 
 test("renders distance and duration run targets", () => {
   render(
-    <ActivityDetailsPanel
+    <ActivityDetailsModal
       activity={runActivity({
         targetType: "DISTANCE_DURATION",
         targetDurationSeconds: 2400,
@@ -195,7 +206,7 @@ test("renders distance and duration run targets", () => {
 
 test("renders duration and pace run targets", () => {
   render(
-    <ActivityDetailsPanel
+    <ActivityDetailsModal
       activity={runActivity({
         targetType: "DURATION_PACE",
         targetDistanceMetres: null,
@@ -216,7 +227,7 @@ test("renders duration and pace run targets", () => {
 
 test("renders run actual distance without actual duration", () => {
   render(
-    <ActivityDetailsPanel
+    <ActivityDetailsModal
       activity={runActivity({
         actualDurationSeconds: null,
       })}
@@ -234,7 +245,7 @@ test("renders run actual distance without actual duration", () => {
 
 test("renders run actual duration without actual distance", () => {
   render(
-    <ActivityDetailsPanel
+    <ActivityDetailsModal
       activity={runActivity({
         actualDistanceMetres: null,
       })}
@@ -252,7 +263,7 @@ test("renders run actual duration without actual distance", () => {
 
 test("renders strength details with duration values", () => {
   render(
-    <ActivityDetailsPanel activity={strengthActivity()} onClose={vi.fn()} />,
+    <ActivityDetailsModal activity={strengthActivity()} onClose={vi.fn()} />,
   );
 
   const panel = screen.getByRole("dialog", {
@@ -273,7 +284,7 @@ test("renders strength details with duration values", () => {
 
 test("renders null metrics and optional fields as empty values", () => {
   render(
-    <ActivityDetailsPanel
+    <ActivityDetailsModal
       activity={runActivity({
         description: null,
         targetDistanceMetres: null,
@@ -302,7 +313,7 @@ test("renders null metrics and optional fields as empty values", () => {
 
 test("renders skipped activity metadata", () => {
   render(
-    <ActivityDetailsPanel
+    <ActivityDetailsModal
       activity={strengthActivity({
         status: "SKIPPED",
         description: null,
