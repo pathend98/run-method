@@ -1,8 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions";
+import {
+  createTrainingSession,
+  fetchTrainingSessions,
+} from "@/ui/training-sessions/training-sessions";
+import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
 import {
@@ -11,10 +15,18 @@ import {
 } from "./services/training-planner-service";
 
 export function TrainingPlanner() {
+  const queryClient = useQueryClient();
   const weekRange = getCurrentWeekRange();
+  const queryKey = ["training-sessions", weekRange.from, weekRange.to];
   const query = useQuery({
-    queryKey: ["training-sessions", weekRange.from, weekRange.to],
+    queryKey,
     queryFn: () => fetchTrainingSessions(weekRange),
+  });
+  const createMutation = useMutation({
+    mutationFn: createTrainingSession,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey });
+    },
   });
 
   if (query.isPending) {
@@ -30,7 +42,15 @@ export function TrainingPlanner() {
     );
   }
 
-  const week = groupSessionsByWeekday(query.data);
+  const week = groupSessionsByWeekday(query.data, weekRange);
 
-  return <TrainingPlannerView week={week} />;
+  return (
+    <TrainingPlannerView
+      isCreatingActivity={createMutation.isPending}
+      onCreateActivity={(request: CreateTrainingSessionRequest) =>
+        createMutation.mutateAsync(request)
+      }
+      week={week}
+    />
+  );
 }

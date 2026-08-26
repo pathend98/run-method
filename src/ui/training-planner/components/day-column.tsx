@@ -7,6 +7,7 @@ import type {
 
 type DayColumnProps = {
   day: TrainingDay;
+  onAddActivity?: (day: TrainingDay) => void;
   onSelectActivity: (activity: TrainingActivity) => void;
 };
 
@@ -16,7 +17,11 @@ const timeSections: { label: string; value: TimeOfDay }[] = [
   { label: "PM", value: "PM" },
 ];
 
-export function DayColumn({ day, onSelectActivity }: DayColumnProps) {
+export function DayColumn({
+  day,
+  onAddActivity,
+  onSelectActivity,
+}: DayColumnProps) {
   const populatedTimeSections = timeSections
     .map((section) => ({
       ...section,
@@ -57,6 +62,15 @@ export function DayColumn({ day, onSelectActivity }: DayColumnProps) {
           <p className="text-sm text-zinc-500">No activity scheduled</p>
         )}
       </div>
+      <footer className="border-t border-zinc-200 p-3">
+        <button
+          className="w-full rounded-md border border-teal-700 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+          onClick={() => onAddActivity?.(day)}
+          type="button"
+        >
+          Add activity
+        </button>
+      </footer>
     </article>
   );
 }

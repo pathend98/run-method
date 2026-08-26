@@ -11,51 +11,55 @@ test("getCurrentWeekRange returns browser-local Monday through Sunday", () => {
 });
 
 test("groupSessionsByWeekday groups API sessions into planner days", () => {
-  const week = groupSessionsByWeekday([
-    {
-      id: "11111111-1111-4111-8111-111111111111",
-      title: "Long run",
-      activityType: "RUN",
-      status: "SCHEDULED",
-      date: "2026-08-22",
-      timeOfDay: "AM",
-      description: "90 minutes",
-      sortOrder: 0,
-      skipReason: null,
-      createdAt: "2026-08-01T10:00:00.000Z",
-      updatedAt: "2026-08-01T10:00:00.000Z",
-      targetType: "DISTANCE_DURATION",
-      targetDistanceMetres: 18000,
-      targetDurationSeconds: 5400,
-      targetPaceSecondsPerKilometre: null,
-      actualDistanceMetres: null,
-      actualDurationSeconds: null,
-    },
-    {
-      id: "22222222-2222-4222-8222-222222222222",
-      title: "Strength",
-      activityType: "STRENGTH",
-      status: "SCHEDULED",
-      date: "2026-08-22",
-      timeOfDay: null,
-      description: null,
-      sortOrder: 1,
-      skipReason: null,
-      createdAt: "2026-08-01T10:00:00.000Z",
-      updatedAt: "2026-08-01T10:00:00.000Z",
-      targetDurationSeconds: 2700,
-      actualDurationSeconds: null,
-    },
-  ]);
+  const week = groupSessionsByWeekday(
+    [
+      {
+        id: "11111111-1111-4111-8111-111111111111",
+        title: "Long run",
+        activityType: "RUN",
+        status: "SCHEDULED",
+        date: "2026-08-22",
+        timeOfDay: "AM",
+        description: "90 minutes",
+        sortOrder: 0,
+        skipReason: null,
+        createdAt: "2026-08-01T10:00:00.000Z",
+        updatedAt: "2026-08-01T10:00:00.000Z",
+        targetType: "DISTANCE_DURATION",
+        targetDistanceMetres: 18000,
+        targetDurationSeconds: 5400,
+        targetPaceSecondsPerKilometre: null,
+        actualDistanceMetres: null,
+        actualDurationSeconds: null,
+      },
+      {
+        id: "22222222-2222-4222-8222-222222222222",
+        title: "Strength",
+        activityType: "STRENGTH",
+        status: "SCHEDULED",
+        date: "2026-08-22",
+        timeOfDay: null,
+        description: null,
+        sortOrder: 1,
+        skipReason: null,
+        createdAt: "2026-08-01T10:00:00.000Z",
+        updatedAt: "2026-08-01T10:00:00.000Z",
+        targetDurationSeconds: 2700,
+        actualDurationSeconds: null,
+      },
+    ],
+    { from: "2026-08-17", to: "2026-08-23" },
+  );
 
   expect(week).toEqual([
-    { day: "Monday", activities: [] },
-    { day: "Tuesday", activities: [] },
-    { day: "Wednesday", activities: [] },
-    { day: "Thursday", activities: [] },
-    { day: "Friday", activities: [] },
+    { day: "Monday", date: "2026-08-17", activities: [] },
+    { day: "Tuesday", date: "2026-08-18", activities: [] },
+    { day: "Wednesday", date: "2026-08-19", activities: [] },
+    { day: "Thursday", date: "2026-08-20", activities: [] },
+    { day: "Friday", date: "2026-08-21", activities: [] },
     {
       day: "Saturday",
+      date: "2026-08-22",
       activities: [
         {
           id: "11111111-1111-4111-8111-111111111111",
@@ -95,6 +99,6 @@ test("groupSessionsByWeekday groups API sessions into planner days", () => {
         },
       ],
     },
-    { day: "Sunday", activities: [] },
+    { day: "Sunday", date: "2026-08-23", activities: [] },
   ]);
 });

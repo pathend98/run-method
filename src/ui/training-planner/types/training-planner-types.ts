@@ -17,5 +17,6 @@ export type TrainingActivity = TrainingSession & {
 
 export type TrainingDay = {
   day: Weekday;
+  date?: string;
   activities: TrainingActivity[];
 };

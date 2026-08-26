@@ -3,19 +3,30 @@
 import { useState } from "react";
 
 import { ActivityDetailsModal } from "./activity-details-modal";
+import { AddActivityModal } from "./add-activity-modal";
 import { WeekGrid } from "./week-grid";
+import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
 import type {
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
 
 type TrainingPlannerViewProps = {
+  isCreatingActivity?: boolean;
+  onCreateActivity?: (
+    request: CreateTrainingSessionRequest,
+  ) => Promise<unknown>;
   week: TrainingDay[];
 };
 
-export function TrainingPlannerView({ week }: TrainingPlannerViewProps) {
+export function TrainingPlannerView({
+  isCreatingActivity = false,
+  onCreateActivity = async () => undefined,
+  week,
+}: TrainingPlannerViewProps) {
   const [selectedActivity, setSelectedActivity] =
     useState<TrainingActivity | null>(null);
+  const [selectedDay, setSelectedDay] = useState<TrainingDay | null>(null);
 
   return (
     <section
@@ -39,11 +50,23 @@ export function TrainingPlannerView({ week }: TrainingPlannerViewProps) {
       </div>
 
       <div>
-        <WeekGrid onSelectActivity={setSelectedActivity} week={week} />
+        <WeekGrid
+          onAddActivity={setSelectedDay}
+          onSelectActivity={setSelectedActivity}
+          week={week}
+        />
         {selectedActivity ? (
           <ActivityDetailsModal
             activity={selectedActivity}
             onClose={() => setSelectedActivity(null)}
+          />
+        ) : null}
+        {selectedDay?.date ? (
+          <AddActivityModal
+            day={{ ...selectedDay, date: selectedDay.date }}
+            isSubmitting={isCreatingActivity}
+            onClose={() => setSelectedDay(null)}
+            onCreate={onCreateActivity}
           />
         ) : null}
       </div>
