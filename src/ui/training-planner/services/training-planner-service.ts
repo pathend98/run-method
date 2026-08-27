@@ -1,6 +1,9 @@
-import { addDays, format, startOfWeek } from "date-fns";
+import { addDays, format, parseISO, startOfWeek } from "date-fns";
 
-import type { TrainingSession } from "@/domain/training-sessions";
+import type {
+  TrainingSession,
+  TrainingSessionDateRange,
+} from "@/domain/training-sessions";
 import type {
   TrainingActivity,
   TrainingDay,
@@ -29,22 +32,29 @@ export function getCurrentWeekRange(now = new Date()) {
 
 export function groupSessionsByWeekday(
   sessions: TrainingSession[],
+  weekRange: TrainingSessionDateRange,
 ): TrainingDay[] {
-  const daysByDate = new Map<string, TrainingActivity[]>();
+  const activitiesByDate = new Map<string, TrainingActivity[]>();
 
   for (const session of sessions) {
     const date = new Date(`${session.date}T00:00:00`);
     const day = format(date, "EEEE") as Weekday;
-    const activities = daysByDate.get(day) ?? [];
+    const activities = activitiesByDate.get(session.date) ?? [];
     activities.push({
       ...session,
       day,
     });
-    daysByDate.set(day, activities);
+    activitiesByDate.set(session.date, activities);
   }
 
-  return weekdays.map((day) => ({
-    day,
-    activities: daysByDate.get(day) ?? [],
-  }));
+  const monday = parseISO(weekRange.from);
+
+  return weekdays.map((day, index) => {
+    const date = format(addDays(monday, index), "yyyy-MM-dd");
+    return {
+      day,
+      date,
+      activities: activitiesByDate.get(date) ?? [],
+    };
+  });
 }

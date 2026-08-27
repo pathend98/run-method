@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import { TrainingPlanner } from "./training-planner";
+import { getCurrentWeekRange } from "./services/training-planner-service";
 
 test("TrainingPlanner renders loading state", () => {
   vi.stubGlobal(
@@ -29,7 +30,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
           title: "Easy run",
           activityType: "RUN",
           status: "SCHEDULED",
-          date: "2026-08-17",
+          date: getCurrentWeekRange().from,
           timeOfDay: "AM",
           description: null,
           sortOrder: 0,

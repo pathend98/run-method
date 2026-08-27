@@ -5,11 +5,16 @@ import type {
 } from "../types/training-planner-types";
 
 type WeekGridProps = {
+  onAddActivity?: (day: TrainingDay) => void;
   onSelectActivity: (activity: TrainingActivity) => void;
   week: TrainingDay[];
 };
 
-export function WeekGrid({ onSelectActivity, week }: WeekGridProps) {
+export function WeekGrid({
+  onAddActivity,
+  onSelectActivity,
+  week,
+}: WeekGridProps) {
   return (
     <div
       aria-label="Weekly training planner"
@@ -20,6 +25,7 @@ export function WeekGrid({ onSelectActivity, week }: WeekGridProps) {
         <DayColumn
           key={day.day}
           day={day}
+          onAddActivity={onAddActivity}
           onSelectActivity={onSelectActivity}
         />
       ))}
