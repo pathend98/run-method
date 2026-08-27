@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import styles from "./form-field.module.css";
+
 interface FormFieldProps {
   children: ReactNode;
   error?: string;
@@ -8,11 +10,11 @@ interface FormFieldProps {
 
 export function FormField({ children, error, label }: FormFieldProps) {
   return (
-    <label className="block text-sm font-medium text-zinc-800">
+    <label className={styles.field}>
       <span>{label}</span>
-      <span className="mt-1 block">{children}</span>
+      <span className={styles.control}>{children}</span>
       {error ? (
-        <span className="mt-1 block text-sm text-red-700" role="alert">
+        <span className={styles.error} role="alert">
           {error}
         </span>
       ) : null}

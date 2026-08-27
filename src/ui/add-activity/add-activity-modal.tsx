@@ -124,17 +124,17 @@ export function AddActivityModal({
             </p>
           ) : null}
           <FormField error={errors.title?.message} label="Title">
-            <input autoFocus className="form-input" {...register("title")} />
+            <input autoFocus {...register("title")} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Activity type">
-              <select className="form-input" {...register("activityType")}>
+              <select {...register("activityType")}>
                 <option value="RUN">Run</option>
                 <option value="STRENGTH">Strength</option>
               </select>
             </FormField>
             <FormField label="Time of day">
-              <select className="form-input" {...register("timeOfDay")}>
+              <select {...register("timeOfDay")}>
                 <option value="ANY">Any time</option>
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
@@ -143,7 +143,7 @@ export function AddActivityModal({
           </div>
           {activityType === "RUN" ? (
             <FormField label="Run target">
-              <select className="form-input" {...register("targetType")}>
+              <select {...register("targetType")}>
                 <option value="DISTANCE_DURATION">Distance + duration</option>
                 <option value="DISTANCE_PACE">Distance + pace</option>
                 <option value="DURATION_PACE">Duration + pace</option>
@@ -157,7 +157,6 @@ export function AddActivityModal({
                 label="Distance (km)"
               >
                 <input
-                  className="form-input"
                   inputMode="decimal"
                   placeholder="8"
                   {...register("distanceKilometres")}
@@ -174,7 +173,6 @@ export function AddActivityModal({
                 }
               >
                 <input
-                  className="form-input"
                   inputMode="numeric"
                   placeholder="45"
                   {...register("durationMinutes")}
@@ -186,19 +184,12 @@ export function AddActivityModal({
                 error={errors.pacePerKilometre?.message}
                 label="Pace (mm:ss / km)"
               >
-                <input
-                  className="form-input"
-                  placeholder="5:30"
-                  {...register("pacePerKilometre")}
-                />
+                <input placeholder="5:30" {...register("pacePerKilometre")} />
               </FormField>
             ) : null}
           </div>
           <FormField label="Description (optional)">
-            <textarea
-              className="form-input min-h-24"
-              {...register("description")}
-            />
+            <textarea className="min-h-24" {...register("description")} />
           </FormField>
           <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
             <button

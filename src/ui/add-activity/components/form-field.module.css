@@ -1,0 +1,33 @@
+.field {
+  display: block;
+  color: #27272a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.control {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.control :where(input, select, textarea) {
+  width: 100%;
+  border: 1px solid #d4d4d8;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  color: #18181b;
+}
+
+.control :where(input, select, textarea):focus {
+  outline: 2px solid #0d9488;
+  outline-offset: 2px;
+}
+
+.error {
+  display: block;
+  margin-top: 0.25rem;
+  color: #b91c1c;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
