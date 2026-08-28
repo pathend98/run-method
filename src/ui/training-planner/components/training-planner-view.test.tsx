@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { TrainingActivityCard } from "./training-activity-card";
 import { TrainingPlannerView } from "./training-planner-view";
 import type {
@@ -311,4 +317,75 @@ test("TrainingActivityCard handles present and absent descriptions", () => {
     screen.getByRole("button", { name: "View Strength details" }),
   ).toBeDefined();
   expect(screen.queryByText("45 minutes")).toBeNull();
+});
+
+test("opens, closes, and submits the add activity modal", async () => {
+  const onCreateActivity = vi.fn().mockResolvedValue(undefined);
+  const week = testWeek.map((day, index) => ({
+    ...day,
+    date: `2026-08-${String(17 + index).padStart(2, "0")}`,
+  }));
+  render(
+    <TrainingPlannerView
+      isCreatingActivity={false}
+      onCreateActivity={onCreateActivity}
+      week={week}
+    />,
+  );
+
+  fireEvent.click(screen.getAllByRole("button", { name: "Add activity" })[0]);
+  expect(screen.getByRole("dialog", { name: "Add activity" })).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog", { name: "Add activity" })).toBeNull();
+
+  fireEvent.click(screen.getAllByRole("button", { name: "Add activity" })[0]);
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Easy run" },
+  });
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "5" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "30" },
+  });
+  fireEvent.click(
+    within(screen.getByRole("dialog", { name: "Add activity" })).getByRole(
+      "button",
+      { name: "Add activity" },
+    ),
+  );
+
+  await waitFor(() => expect(onCreateActivity).toHaveBeenCalledOnce());
+  expect(onCreateActivity).toHaveBeenCalledWith(
+    expect.objectContaining({ date: "2026-08-17", title: "Easy run" }),
+  );
+  expect(screen.queryByRole("dialog", { name: "Add activity" })).toBeNull();
+});
+
+test("supports the default create handler", async () => {
+  render(
+    <TrainingPlannerView
+      week={[{ day: "Monday", date: "2026-08-17", activities: [] }]}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Easy run" },
+  });
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "5" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "30" },
+  });
+  fireEvent.click(
+    within(screen.getByRole("dialog", { name: "Add activity" })).getByRole(
+      "button",
+      { name: "Add activity" },
+    ),
+  );
+
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "Add activity" })).toBeNull(),
+  );
 });

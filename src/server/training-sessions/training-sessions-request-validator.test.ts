@@ -78,3 +78,69 @@ test("reports an invalid activity type without unrelated branch errors", () => {
     });
   }
 });
+
+test("reports primitive bodies once at the body path", () => {
+  expect(() => validator.validateCreate(null)).toThrow(
+    TrainingSessionsRequestValidationError,
+  );
+
+  try {
+    validator.validateCreate(null);
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({ body: ["Invalid input: expected object, received null"] });
+  }
+});
+
+test("reports invalid run target discriminators", () => {
+  try {
+    validator.validateCreate({
+      title: "Run",
+      date: "2026-08-26",
+      activityType: "RUN",
+      targetType: "INVALID",
+    });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({
+      targetType: [
+        "Invalid discriminator value. Expected 'DISTANCE_DURATION' | 'DISTANCE_PACE' | 'DURATION_PACE'",
+      ],
+    });
+  }
+});
+
+test("reports direct errors for recognized activity types", () => {
+  try {
+    validator.validateCreate({
+      title: "Strength",
+      date: "invalid",
+      activityType: "STRENGTH",
+    });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({ date: ["Invalid ISO date"] });
+  }
+});
+
+test("reports errors from the strength branch", () => {
+  try {
+    validator.validateCreate({
+      title: "Strength",
+      date: "2026-08-26",
+      activityType: "STRENGTH",
+      targetDurationSeconds: "long",
+    });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({
+      targetDurationSeconds: [
+        "Invalid input: expected number, received string",
+      ],
+    });
+  }
+});

@@ -153,10 +153,11 @@ function validateField(
 ) {
   const result = schema.safeParse(value);
   if (!result.success) {
+    const [issue] = result.error.issues;
     context.addIssue({
       code: "custom",
       path: [field],
-      message: result.error.issues[0]?.message ?? "Invalid value",
+      message: issue.message,
     });
   }
 }

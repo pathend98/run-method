@@ -66,3 +66,10 @@ Implementation tests may import the internal file they test directly. Cross-modu
 ### Testing Server Code
 
 Server code in `src/server` is written using object-oriented TypeScript. Everything should be defined using classes and interfaces, with dependency injection defined in `src/server/server.ts`.
+
+## Development
+
+When developing, changes are not complete unless the following commands exit with 0 status code:
+- pnpm build
+- pnpm lint
+- pnpm test

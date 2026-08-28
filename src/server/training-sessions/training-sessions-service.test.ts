@@ -51,3 +51,29 @@ test("delegates valid ranges to the repository", async () => {
     "2026-08-23",
   );
 });
+
+test("delegates creation to the repository", async () => {
+  const { repository, service } = createService();
+  const request = {
+    title: "Strength",
+    activityType: "STRENGTH" as const,
+    date: "2026-08-26",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: 1800,
+  };
+  const created = {
+    ...request,
+    id: "11111111-1111-4111-8111-111111111111",
+    status: "SCHEDULED" as const,
+    sortOrder: 0,
+    skipReason: null,
+    createdAt: "2026-08-26T10:00:00.000Z",
+    updatedAt: "2026-08-26T10:00:00.000Z",
+    actualDurationSeconds: null,
+  };
+  vi.mocked(repository.create).mockResolvedValue(created);
+
+  await expect(service.create(request)).resolves.toEqual(created);
+  expect(repository.create).toHaveBeenCalledWith(request);
+});
