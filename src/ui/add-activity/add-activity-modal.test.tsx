@@ -65,3 +65,89 @@ test("keeps the form open and reports failed creation", async () => {
     "Unable to add activity",
   );
 });
+
+test("closes through each enabled dismissal control", () => {
+  const onClose = vi.fn();
+  const { rerender } = render(
+    <AddActivityModal
+      day={day}
+      isSubmitting={false}
+      onClose={onClose}
+      onCreate={vi.fn()}
+    />,
+  );
+
+  fireEvent.keyDown(window, { key: "Tab" });
+  expect(onClose).not.toHaveBeenCalled();
+  fireEvent.keyDown(window, { key: "Escape" });
+  fireEvent.click(screen.getByRole("button", { name: "Dismiss add activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Close add activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(onClose).toHaveBeenCalledTimes(4);
+
+  rerender(
+    <AddActivityModal
+      day={day}
+      isSubmitting
+      onClose={onClose}
+      onCreate={vi.fn()}
+    />,
+  );
+  fireEvent.keyDown(window, { key: "Escape" });
+  expect(onClose).toHaveBeenCalledTimes(4);
+  expect(
+    (screen.getByRole("button", { name: "Adding…" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
+  expect(
+    (screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement)
+      .disabled,
+  ).toBe(true);
+});
+
+test("shows fields for every run target and strength activities", () => {
+  render(
+    <AddActivityModal
+      day={day}
+      isSubmitting={false}
+      onClose={vi.fn()}
+      onCreate={vi.fn()}
+    />,
+  );
+
+  const activityType = screen.getByLabelText("Activity type");
+  const targetType = screen.getByLabelText("Run target");
+
+  fireEvent.change(targetType, { target: { value: "DISTANCE_PACE" } });
+  expect(screen.getByLabelText("Distance (km)")).toBeDefined();
+  expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
+  expect(screen.queryByLabelText("Duration (minutes)")).toBeNull();
+
+  fireEvent.change(targetType, { target: { value: "DURATION_PACE" } });
+  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
+  expect(screen.getByLabelText("Duration (minutes)")).toBeDefined();
+  expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
+
+  fireEvent.change(activityType, { target: { value: "STRENGTH" } });
+  expect(screen.queryByLabelText("Run target")).toBeNull();
+  expect(screen.getByLabelText("Duration (minutes, optional)")).toBeDefined();
+  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
+  expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
+});
+
+test("renders validation messages for invalid visible fields", async () => {
+  render(
+    <AddActivityModal
+      day={day}
+      isSubmitting={false}
+      onClose={vi.fn()}
+      onCreate={vi.fn()}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+
+  expect(await screen.findByText("Enter an activity title")).toBeDefined();
+  expect(screen.getByText("Enter a distance in kilometres")).toBeDefined();
+  expect(screen.getByText("Enter whole minutes")).toBeDefined();
+});

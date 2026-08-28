@@ -58,12 +58,81 @@ test("supports pace runs and optional strength duration", () => {
   ).toMatchObject({ activityType: "STRENGTH", targetDurationSeconds: null });
 });
 
+test("converts distance and pace runs", () => {
+  expect(
+    toCreateTrainingSessionRequest(
+      {
+        ...defaultAddActivityFormValues,
+        title: "Intervals",
+        targetType: "DISTANCE_PACE",
+        timeOfDay: "PM",
+        distanceKilometres: "5",
+        pacePerKilometre: "4:05",
+      },
+      "2026-08-17",
+    ),
+  ).toEqual({
+    title: "Intervals",
+    activityType: "RUN",
+    targetType: "DISTANCE_PACE",
+    date: "2026-08-17",
+    timeOfDay: "PM",
+    description: null,
+    targetDistanceMetres: 5000,
+    targetPaceSecondsPerKilometre: 245,
+  });
+});
+
+test("converts a specified strength duration", () => {
+  expect(
+    toCreateTrainingSessionRequest(
+      {
+        ...defaultAddActivityFormValues,
+        title: "Lift",
+        activityType: "STRENGTH",
+        durationMinutes: "35",
+      },
+      "2026-08-17",
+    ),
+  ).toMatchObject({
+    activityType: "STRENGTH",
+    targetDurationSeconds: 2100,
+  });
+});
+
 test("rejects incomplete required targets", () => {
   expect(
     addActivityFormSchema.safeParse({
       ...defaultAddActivityFormValues,
       title: "Run",
       distanceKilometres: "5",
+    }).success,
+  ).toBe(false);
+});
+
+test.each([
+  { distanceKilometres: "0", durationMinutes: "30" },
+  { distanceKilometres: "5", durationMinutes: "0" },
+  {
+    targetType: "DISTANCE_PACE" as const,
+    distanceKilometres: "5",
+    pacePerKilometre: "0:00",
+  },
+  {
+    targetType: "DURATION_PACE" as const,
+    durationMinutes: "30",
+    pacePerKilometre: "invalid",
+  },
+  {
+    activityType: "STRENGTH" as const,
+    durationMinutes: "1.5",
+  },
+])("rejects invalid target values %#", (override) => {
+  expect(
+    addActivityFormSchema.safeParse({
+      ...defaultAddActivityFormValues,
+      title: "Activity",
+      ...override,
     }).success,
   ).toBe(false);
 });

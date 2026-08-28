@@ -9,6 +9,7 @@ import {
   TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
+import { BadRequestError } from "@/server/errors/bad-request-error";
 
 vi.mock("@/server/server", () => ({
   trainingSessionsService: {
@@ -182,5 +183,86 @@ test("returns malformed JSON errors with 400 status", async () => {
   await expect(response.json()).resolves.toEqual({
     error: "Invalid request body",
     fieldErrors: { body: ["Request body must be valid JSON"] },
+  });
+});
+
+test("creates a training session with 201 status", async () => {
+  const request = {
+    title: "Strength",
+    activityType: "STRENGTH" as const,
+    date: "2026-08-26",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: 1800,
+  };
+  const session = {
+    ...request,
+    id: "11111111-1111-4111-8111-111111111111",
+    status: "SCHEDULED" as const,
+    sortOrder: 0,
+    skipReason: null,
+    createdAt: "2026-08-26T10:00:00.000Z",
+    updatedAt: "2026-08-26T10:00:00.000Z",
+    actualDurationSeconds: null,
+  };
+  requestValidator.validateCreate.mockReturnValue(request);
+  service.create.mockResolvedValue(session);
+
+  const response = await POST(
+    new NextRequest("http://localhost/api/v1/training-sessions", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+  );
+
+  expect(response.status).toBe(201);
+  await expect(response.json()).resolves.toEqual(session);
+  expect(requestValidator.validateCreate).toHaveBeenCalledWith(request);
+  expect(service.create).toHaveBeenCalledWith(request);
+});
+
+test("returns creation business errors with 400 status", async () => {
+  requestValidator.validateCreate.mockReturnValue({
+    title: "Strength",
+    activityType: "STRENGTH",
+    date: "2026-08-26",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: null,
+  });
+  service.create.mockRejectedValue(new BadRequestError("Invalid activity"));
+
+  const response = await POST(
+    new NextRequest("http://localhost/api/v1/training-sessions", {
+      method: "POST",
+      body: JSON.stringify({ activityType: "STRENGTH" }),
+    }),
+  );
+
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({ error: "Invalid activity" });
+});
+
+test("returns stable creation errors with 500 status", async () => {
+  requestValidator.validateCreate.mockReturnValue({
+    title: "Strength",
+    activityType: "STRENGTH",
+    date: "2026-08-26",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: null,
+  });
+  service.create.mockRejectedValue(new TestDatabaseError());
+
+  const response = await POST(
+    new NextRequest("http://localhost/api/v1/training-sessions", {
+      method: "POST",
+      body: JSON.stringify({ activityType: "STRENGTH" }),
+    }),
+  );
+
+  expect(response.status).toBe(500);
+  await expect(response.json()).resolves.toEqual({
+    error: "Unable to create training session",
   });
 });

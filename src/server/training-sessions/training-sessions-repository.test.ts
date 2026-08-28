@@ -1,4 +1,7 @@
-import type { TrainingSession } from "@/domain/training-sessions";
+import type {
+  CreateTrainingSessionRequest,
+  TrainingSession,
+} from "@/domain/training-sessions";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions-repository";
 import type {
   TrainingSessionRow,
@@ -137,3 +140,172 @@ test("findBetweenDates queries ordered rows and delegates transformation in row 
   expect(transformer.transform).toHaveBeenNthCalledWith(1, rows[0]);
   expect(transformer.transform).toHaveBeenNthCalledWith(2, rows[1]);
 });
+
+function createRepositoryForCreation(request: CreateTrainingSessionRequest) {
+  const session = {
+    id: "33333333-3333-4333-8333-333333333333",
+    title: request.title,
+    activityType: request.activityType,
+    status: "SCHEDULED" as const,
+    date: request.date,
+    timeOfDay: request.timeOfDay,
+    description: request.description,
+    sortOrder: 4,
+    skipReason: null,
+    createdAt,
+    updatedAt,
+  };
+  const runRow = {
+    trainingSessionId: session.id,
+    targetType: request.activityType === "RUN" ? request.targetType : "",
+    targetDistanceMetres: null,
+    targetDurationSeconds: null,
+    targetPaceSecondsPerKilometre: null,
+    actualDistanceMetres: null,
+    actualDurationSeconds: null,
+  };
+  const strengthRow = {
+    trainingSessionId: session.id,
+    targetDurationSeconds: null,
+    actualDurationSeconds: null,
+  };
+  const selectWhere = vi.fn().mockResolvedValue([{ nextOrder: "4" }]);
+  const selectFrom = vi.fn().mockReturnValue({ where: selectWhere });
+  const select = vi.fn().mockReturnValue({ from: selectFrom });
+  const insertedValues: unknown[] = [];
+  const insert = vi.fn().mockImplementation(() => ({
+    values: vi.fn().mockImplementation((values) => {
+      insertedValues.push(values);
+      return {
+        returning: vi
+          .fn()
+          .mockResolvedValue([
+            insertedValues.length === 1
+              ? session
+              : request.activityType === "RUN"
+                ? { ...runRow, ...values }
+                : { ...strengthRow, ...values },
+          ]),
+      };
+    }),
+  }));
+  const tx = { insert, select };
+  const transaction = vi.fn().mockImplementation((callback) => callback(tx));
+  const transformed = {
+    id: session.id,
+    title: session.title,
+  } as TrainingSession;
+  const transformer: TrainingSessionsTransformer = {
+    transform: vi.fn().mockReturnValue(transformed),
+  };
+  const repository = new DrizzleTrainingSessionsRepository(
+    { transaction } as never,
+    transformer,
+  );
+
+  return {
+    insertedValues,
+    repository,
+    selectWhere,
+    transformed,
+    transformer,
+  };
+}
+
+const createRequests: CreateTrainingSessionRequest[] = [
+  {
+    title: "Distance duration",
+    activityType: "RUN",
+    targetType: "DISTANCE_DURATION",
+    targetDistanceMetres: 5000,
+    targetDurationSeconds: 1500,
+    date: "2026-08-26",
+    timeOfDay: "AM",
+    description: null,
+  },
+  {
+    title: "Distance pace",
+    activityType: "RUN",
+    targetType: "DISTANCE_PACE",
+    targetDistanceMetres: 5000,
+    targetPaceSecondsPerKilometre: 300,
+    date: "2026-08-26",
+    timeOfDay: null,
+    description: "Steady",
+  },
+  {
+    title: "Duration pace",
+    activityType: "RUN",
+    targetType: "DURATION_PACE",
+    targetDurationSeconds: 1800,
+    targetPaceSecondsPerKilometre: 285,
+    date: "2026-08-26",
+    timeOfDay: "PM",
+    description: null,
+  },
+  {
+    title: "Strength",
+    activityType: "STRENGTH",
+    targetDurationSeconds: 2400,
+    date: "2026-08-26",
+    timeOfDay: null,
+    description: null,
+  },
+];
+
+test.each(createRequests)(
+  "creates $activityType session $title in a transaction",
+  async (request) => {
+    const {
+      insertedValues,
+      repository,
+      selectWhere,
+      transformed,
+      transformer,
+    } = createRepositoryForCreation(request);
+
+    await expect(repository.create(request)).resolves.toBe(transformed);
+
+    expect(selectWhere).toHaveBeenCalledOnce();
+    expect(insertedValues[0]).toEqual({
+      title: request.title,
+      activityType: request.activityType,
+      date: request.date,
+      timeOfDay: request.timeOfDay,
+      description: request.description,
+      sortOrder: 4,
+    });
+    expect(insertedValues).toHaveLength(2);
+    expect(transformer.transform).toHaveBeenCalledWith({
+      session: expect.objectContaining({
+        id: expect.any(String),
+        sortOrder: 4,
+      }),
+      runDetails: request.activityType === "RUN" ? expect.any(Object) : null,
+      strengthDetails:
+        request.activityType === "STRENGTH" ? expect.any(Object) : null,
+    });
+
+    if (request.activityType === "RUN") {
+      expect(insertedValues[1]).toMatchObject({
+        targetType: request.targetType,
+        targetDistanceMetres:
+          "targetDistanceMetres" in request
+            ? request.targetDistanceMetres
+            : null,
+        targetDurationSeconds:
+          "targetDurationSeconds" in request
+            ? request.targetDurationSeconds
+            : null,
+        targetPaceSecondsPerKilometre:
+          "targetPaceSecondsPerKilometre" in request
+            ? request.targetPaceSecondsPerKilometre
+            : null,
+      });
+    } else {
+      expect(insertedValues[1]).toMatchObject({
+        targetDurationSeconds: request.targetDurationSeconds,
+      });
+    }
+  },
+);

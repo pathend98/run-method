@@ -111,3 +111,31 @@ test("passes the selected activity to the select handler", () => {
 
   expect(onSelectActivity).toHaveBeenCalledWith(selectedActivity);
 });
+
+test("passes its day to the add handler", () => {
+  const onAddActivity = vi.fn();
+  const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
+  render(
+    <DayColumn
+      day={day}
+      onAddActivity={onAddActivity}
+      onSelectActivity={vi.fn()}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  expect(onAddActivity).toHaveBeenCalledWith(day);
+});
+
+test("allows an omitted add handler", () => {
+  render(
+    <DayColumn
+      day={{ day: "Monday", activities: [] }}
+      onSelectActivity={vi.fn()}
+    />,
+  );
+
+  expect(() =>
+    fireEvent.click(screen.getByRole("button", { name: "Add activity" })),
+  ).not.toThrow();
+});

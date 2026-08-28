@@ -1,4 +1,27 @@
-import { fetchTrainingSessions } from "./training-sessions";
+import {
+  createTrainingSession,
+  fetchTrainingSessions,
+} from "./training-sessions";
+
+const createRequest = {
+  title: "Strength",
+  activityType: "STRENGTH" as const,
+  date: "2026-08-26",
+  timeOfDay: null,
+  description: null,
+  targetDurationSeconds: 1800,
+};
+
+const createdSession = {
+  ...createRequest,
+  id: "11111111-1111-4111-8111-111111111111",
+  status: "SCHEDULED" as const,
+  sortOrder: 0,
+  skipReason: null,
+  createdAt: "2026-08-26T10:00:00.000Z",
+  updatedAt: "2026-08-26T10:00:00.000Z",
+  actualDurationSeconds: null,
+};
 
 test("fetchTrainingSessions calls the API and parses sessions", async () => {
   vi.stubGlobal(
@@ -135,5 +158,81 @@ test("fetchTrainingSessions falls back when error body is not JSON", async () =>
   ).rejects.toMatchObject({
     message: "Unable to fetch training sessions",
     status: 502,
+  });
+});
+
+test("createTrainingSession posts and parses the created session", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(createdSession),
+    }),
+  );
+
+  await expect(createTrainingSession(createRequest)).resolves.toEqual(
+    createdSession,
+  );
+  expect(fetch).toHaveBeenCalledWith("/api/v1/training-sessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(createRequest),
+  });
+});
+
+test("createTrainingSession returns API messages and field errors", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: vi.fn().mockResolvedValue({
+        error: "Invalid request body",
+        fieldErrors: { title: ["Required"] },
+      }),
+    }),
+  );
+
+  await expect(createTrainingSession(createRequest)).rejects.toMatchObject({
+    message: "Invalid request body",
+    status: 400,
+    fieldErrors: { title: ["Required"] },
+  });
+});
+
+test.each([undefined, null, "invalid", { title: "invalid" }, { title: [1] }])(
+  "createTrainingSession ignores invalid field errors %#",
+  async (fieldErrors) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: vi.fn().mockResolvedValue({ fieldErrors }),
+      }),
+    );
+
+    await expect(createTrainingSession(createRequest)).rejects.toMatchObject({
+      message: "Unable to create training session",
+      status: 500,
+      fieldErrors: undefined,
+    });
+  },
+);
+
+test("createTrainingSession falls back for a non-JSON error body", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: vi.fn().mockRejectedValue(new SyntaxError("not JSON")),
+    }),
+  );
+
+  await expect(createTrainingSession(createRequest)).rejects.toMatchObject({
+    message: "Unable to create training session",
+    status: 502,
+    fieldErrors: undefined,
   });
 });
