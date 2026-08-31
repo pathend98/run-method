@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
 import type { TrainingSession } from "@/domain/training-sessions";
+import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
 import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
-import { formatActivityType } from "./utils/activity-details-formatters";
 
 type ActivityDetailsModalProps = {
   activity: TrainingSession;

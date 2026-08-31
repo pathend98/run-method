@@ -1,7 +1,7 @@
 import { render, renderHook, screen } from "@testing-library/react";
 import { FormProvider, useForm } from "react-hook-form";
 
-import type { EditActivityFormValues } from "../utils/edit-activity-form";
+import type { EditActivityFormValues } from "../utils/edit-activity-form-schema";
 import { EditRunActivityFields } from "./edit-run-activity-fields";
 
 const defaultValues: EditActivityFormValues = {

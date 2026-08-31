@@ -4,6 +4,7 @@ import {
   createTrainingSessionRequestSchema,
   type CreateTrainingSessionRequest,
 } from "@/domain/training-sessions";
+import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 
 const positiveDistanceSchema = z
   .string()
@@ -45,10 +46,9 @@ export const addActivityFormSchema = z
       return;
     }
 
-    if (
-      value.targetType === "DISTANCE_DURATION" ||
-      value.targetType === "DISTANCE_PACE"
-    ) {
+    const targetMetrics = getRunTargetMetrics(value.targetType);
+
+    if (targetMetrics.distance) {
       validateField(
         context,
         "distanceKilometres",
@@ -56,10 +56,7 @@ export const addActivityFormSchema = z
         value.distanceKilometres,
       );
     }
-    if (
-      value.targetType === "DISTANCE_DURATION" ||
-      value.targetType === "DURATION_PACE"
-    ) {
+    if (targetMetrics.duration) {
       validateField(
         context,
         "durationMinutes",
@@ -67,10 +64,7 @@ export const addActivityFormSchema = z
         value.durationMinutes,
       );
     }
-    if (
-      value.targetType === "DISTANCE_PACE" ||
-      value.targetType === "DURATION_PACE"
-    ) {
+    if (targetMetrics.pace) {
       validateField(context, "pacePerKilometre", pace, value.pacePerKilometre);
     }
   });

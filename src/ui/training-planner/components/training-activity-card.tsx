@@ -1,5 +1,5 @@
 import type { TrainingActivity } from "../types/training-planner-types";
-import { formatActivityType } from "../utils/training-planner-formatters";
+import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
 
 type TrainingActivityCardProps = {
   activity: TrainingActivity;

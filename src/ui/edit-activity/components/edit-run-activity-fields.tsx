@@ -2,7 +2,8 @@ import { useFormContext } from "react-hook-form";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import { FormField } from "@/ui/components/form-field";
-import type { EditActivityFormValues } from "../utils/edit-activity-form";
+import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
+import type { EditActivityFormValues } from "../utils/edit-activity-form-schema";
 
 type EditRunActivityFieldsProps = {
   targetType: RunTrainingSession["targetType"];
@@ -15,12 +16,11 @@ export function EditRunActivityFields({
     formState: { errors },
     register,
   } = useFormContext<EditActivityFormValues>();
-  const showDistance =
-    targetType === "DISTANCE_DURATION" || targetType === "DISTANCE_PACE";
-  const showDuration =
-    targetType === "DISTANCE_DURATION" || targetType === "DURATION_PACE";
-  const showPace =
-    targetType === "DISTANCE_PACE" || targetType === "DURATION_PACE";
+  const {
+    distance: showDistance,
+    duration: showDuration,
+    pace: showPace,
+  } = getRunTargetMetrics(targetType);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">

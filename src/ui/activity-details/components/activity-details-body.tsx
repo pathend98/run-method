@@ -4,7 +4,7 @@ import type { TrainingSession } from "@/domain/training-sessions";
 import {
   formatActivityType,
   formatStatus,
-} from "../utils/activity-details-formatters";
+} from "@/ui/training-sessions/training-session-label-formatters";
 
 type ActivityDetailsBodyProps = {
   activity: TrainingSession;

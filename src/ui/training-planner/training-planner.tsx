@@ -7,7 +7,7 @@ import {
   createTrainingSession,
   editTrainingSession,
   fetchTrainingSessions,
-} from "@/ui/training-sessions/training-sessions";
+} from "@/ui/training-sessions/training-sessions-api-client";
 import type {
   CreateTrainingSessionRequest,
   EditTrainingSessionRequest,

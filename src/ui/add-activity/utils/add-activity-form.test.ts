@@ -136,3 +136,21 @@ test.each([
     }).success,
   ).toBe(false);
 });
+
+test.each([
+  ["DISTANCE_DURATION", { pacePerKilometre: "invalid" }],
+  ["DISTANCE_PACE", { durationMinutes: "invalid" }],
+  ["DURATION_PACE", { distanceKilometres: "invalid" }],
+] as const)("ignores metrics excluded by %s", (targetType, excludedMetric) => {
+  expect(
+    addActivityFormSchema.safeParse({
+      ...defaultAddActivityFormValues,
+      title: "Run",
+      targetType,
+      distanceKilometres: "5",
+      durationMinutes: "30",
+      pacePerKilometre: "5:00",
+      ...excludedMetric,
+    }).success,
+  ).toBe(true);
+});
