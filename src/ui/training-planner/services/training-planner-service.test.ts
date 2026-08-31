@@ -1,6 +1,10 @@
 import {
+  formatDayDate,
+  formatWeekRange,
+  getAdjacentWeekStart,
   getCurrentWeekRange,
   groupSessionsByWeekday,
+  resolveWeekRange,
 } from "./training-planner-service";
 
 test("getCurrentWeekRange returns browser-local Monday through Sunday", () => {
@@ -8,6 +12,37 @@ test("getCurrentWeekRange returns browser-local Monday through Sunday", () => {
     from: "2026-08-17",
     to: "2026-08-23",
   });
+});
+
+test.each([
+  [null, "2026-08-17"],
+  ["", "2026-08-17"],
+  ["not-a-date", "2026-08-17"],
+  ["2026-08-19", "2026-08-17"],
+])("resolveWeekRange resolves %s to its browser-local week", (week, from) => {
+  expect(resolveWeekRange(week, new Date("2026-08-21T12:00:00"))).toEqual({
+    from,
+    to: "2026-08-23",
+  });
+});
+
+test("getAdjacentWeekStart moves to the previous or next Monday", () => {
+  const range = { from: "2026-08-31", to: "2026-09-06" };
+
+  expect(getAdjacentWeekStart(range, -1)).toBe("2026-08-24");
+  expect(getAdjacentWeekStart(range, 1)).toBe("2026-09-07");
+});
+
+test.each([
+  [{ from: "2026-08-17", to: "2026-08-23" }, "17–23 August 2026"],
+  [{ from: "2026-08-31", to: "2026-09-06" }, "31 August–6 September 2026"],
+  [{ from: "2025-12-29", to: "2026-01-04" }, "29 December 2025–4 January 2026"],
+])("formatWeekRange formats %#", (range, expected) => {
+  expect(formatWeekRange(range)).toBe(expected);
+});
+
+test("formatDayDate formats a compact day label", () => {
+  expect(formatDayDate("2026-08-17")).toBe("17 Aug");
 });
 
 test("groupSessionsByWeekday groups API sessions into planner days", () => {
