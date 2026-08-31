@@ -8,11 +8,13 @@ import { formatActivityType } from "./utils/activity-details-formatters";
 type ActivityDetailsModalProps = {
   activity: TrainingSession;
   onClose: () => void;
+  onEdit: () => void;
 };
 
 export function ActivityDetailsModal({
   activity,
   onClose,
+  onEdit,
 }: ActivityDetailsModalProps) {
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -54,14 +56,23 @@ export function ActivityDetailsModal({
               {activity.title}
             </h2>
           </div>
-          <button
-            aria-label="Close activity details"
-            className="rounded-md border border-zinc-200 px-2 py-1 text-sm font-medium text-zinc-700 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-            onClick={onClose}
-            type="button"
-          >
-            Close
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="rounded-md bg-teal-700 px-3 py-1 text-sm font-semibold text-white hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              onClick={onEdit}
+              type="button"
+            >
+              Edit activity
+            </button>
+            <button
+              aria-label="Close activity details"
+              className="rounded-md border border-zinc-200 px-2 py-1 text-sm font-medium text-zinc-700 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              onClick={onClose}
+              type="button"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         {activity.activityType === "RUN" ? (

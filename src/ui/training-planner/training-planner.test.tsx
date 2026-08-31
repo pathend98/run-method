@@ -169,6 +169,79 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
   );
 });
 
+test("TrainingPlanner edits an activity and refreshes its week", async () => {
+  const range = getCurrentWeekRange();
+  const activity = {
+    id: "11111111-1111-4111-8111-111111111111",
+    title: "Easy run",
+    activityType: "RUN",
+    status: "SCHEDULED",
+    date: range.from,
+    timeOfDay: "AM",
+    description: null,
+    sortOrder: 0,
+    skipReason: null,
+    createdAt: "2026-08-01T10:00:00.000Z",
+    updatedAt: "2026-08-01T10:00:00.000Z",
+    targetType: "DISTANCE_DURATION",
+    targetDistanceMetres: 5000,
+    targetDurationSeconds: 1800,
+    targetPaceSecondsPerKilometre: null,
+    actualDistanceMetres: null,
+    actualDurationSeconds: null,
+  };
+  const fetchMock = vi.fn().mockImplementation((_url, options) => {
+    if (options?.method === "PATCH") {
+      return Promise.resolve({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          ...activity,
+          title: "Updated easy run",
+          updatedAt: "2026-08-31T10:00:00.000Z",
+        }),
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      json: vi.fn().mockResolvedValue([activity]),
+    });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+
+  render(
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>,
+  );
+  await screen.findByText("Easy run");
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Easy run details" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Updated easy run" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+  await waitFor(() =>
+    expect(
+      fetchMock.mock.calls.filter(([, options]) => options?.method === "PATCH"),
+    ).toHaveLength(1),
+  );
+  expect(fetchMock).toHaveBeenCalledWith(
+    `/api/v1/training-sessions/${activity.id}`,
+    expect.objectContaining({ method: "PATCH" }),
+  );
+  await waitFor(() =>
+    expect(
+      fetchMock.mock.calls.filter(([, options]) => !options?.method),
+    ).toHaveLength(2),
+  );
+  expect(
+    await screen.findByRole("dialog", { name: "Updated easy run" }),
+  ).toBeDefined();
+});
+
 test("TrainingPlanner fetches the week containing the URL date", async () => {
   navigation.search = "week=2026-08-19";
   const fetchMock = vi.fn().mockResolvedValue({

@@ -5,9 +5,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   createTrainingSession,
+  editTrainingSession,
   fetchTrainingSessions,
 } from "@/ui/training-sessions/training-sessions";
-import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
+import type {
+  CreateTrainingSessionRequest,
+  EditTrainingSessionRequest,
+} from "@/domain/training-sessions";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
 import {
@@ -50,6 +54,18 @@ export function TrainingPlanner() {
       await queryClient.invalidateQueries({ queryKey });
     },
   });
+  const editMutation = useMutation({
+    mutationFn: ({
+      id,
+      request,
+    }: {
+      id: string;
+      request: EditTrainingSessionRequest;
+    }) => editTrainingSession(id, request),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey });
+    },
+  });
 
   if (query.isPending) {
     return <PlannerStatus message="Loading training planner..." />;
@@ -70,10 +86,14 @@ export function TrainingPlanner() {
     <TrainingPlannerView
       isCurrentWeek={weekRange.from === currentWeekRange.from}
       isCreatingActivity={createMutation.isPending}
+      isEditingActivity={editMutation.isPending}
       onCreateActivity={(request: CreateTrainingSessionRequest) =>
         createMutation.mutateAsync(request)
       }
       onCurrentWeek={() => navigateToWeek(null)}
+      onEditActivity={(id, request) =>
+        editMutation.mutateAsync({ id, request })
+      }
       onNextWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, 1))}
       onPreviousWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, -1))}
       week={week}
