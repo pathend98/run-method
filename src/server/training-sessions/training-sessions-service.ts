@@ -13,6 +13,7 @@ import {
   TrainingSessionsValidationError,
 } from "./training-sessions-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
+import type { TrainingSessionsValidator } from "./training-sessions-validator";
 
 export interface TrainingSessionsService {
   findBetweenDates(
@@ -27,7 +28,10 @@ export interface TrainingSessionsService {
 }
 
 export class DefaultTrainingSessionsService implements TrainingSessionsService {
-  constructor(private readonly repository: TrainingSessionsRepository) {}
+  constructor(
+    private readonly repository: TrainingSessionsRepository,
+    private readonly validator: TrainingSessionsValidator,
+  ) {}
 
   async findBetweenDates(
     from: string | null,
@@ -80,47 +84,10 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     const current = await this.repository.findById(id);
     if (!current) throw new TrainingSessionNotFoundError();
 
-    this.validateEdit(current, request);
+    this.validator.validateEdit(current, request);
     if (this.isUnchanged(current, request)) return current;
 
     return this.repository.edit(current, request);
-  }
-
-  private validateEdit(
-    current: TrainingSession,
-    request: EditTrainingSessionRequest,
-  ) {
-    if (current.activityType !== request.activityType) {
-      throw new TrainingSessionsValidationError(
-        "activityType cannot be changed",
-      );
-    }
-
-    if (current.activityType === "RUN" && request.activityType === "RUN") {
-      if (current.targetType !== request.targetType) {
-        throw new TrainingSessionsValidationError(
-          "targetType cannot be changed",
-        );
-      }
-    }
-
-    if (current.status === "SCHEDULED") return;
-
-    if (current.timeOfDay !== request.timeOfDay) {
-      throw new TrainingSessionsValidationError(
-        "timeOfDay cannot be changed for completed or skipped sessions",
-      );
-    }
-
-    if (
-      current.activityType === "RUN" &&
-      request.activityType === "RUN" &&
-      !this.runTargetsEqual(current, request)
-    ) {
-      throw new TrainingSessionsValidationError(
-        "run targets cannot be changed for completed or skipped sessions",
-      );
-    }
   }
 
   private isUnchanged(
