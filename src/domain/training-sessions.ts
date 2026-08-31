@@ -18,13 +18,14 @@ export const trainingSessionStatusSchema = z.union([
 ]);
 
 const positiveIntegerSchema = z.number().int().positive();
+export const trainingSessionIdSchema = z.uuid();
 const runActualsSchema = z.object({
   actualDistanceMetres: positiveIntegerSchema.nullable(),
   actualDurationSeconds: positiveIntegerSchema.nullable(),
 });
 
 export const baseTrainingSessionSchema = z.object({
-  id: z.uuid(),
+  id: trainingSessionIdSchema,
   title: z.string().min(1),
   status: trainingSessionStatusSchema,
   date: z.iso.date(),
@@ -131,6 +132,42 @@ export const createTrainingSessionRequestSchema = z.union([
   }),
 ]);
 
+const editBaseSchema = z
+  .object({
+    title: z.string().trim().min(1),
+    timeOfDay: timeOfDaySchema,
+    description: z.string().trim().min(1).nullable(),
+  })
+  .strict();
+
+const editRunSchema = z.discriminatedUnion("targetType", [
+  editBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DISTANCE_DURATION"),
+    targetDistanceMetres: positiveIntegerSchema,
+    targetDurationSeconds: positiveIntegerSchema,
+  }),
+  editBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DISTANCE_PACE"),
+    targetDistanceMetres: positiveIntegerSchema,
+    targetPaceSecondsPerKilometre: positiveIntegerSchema,
+  }),
+  editBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DURATION_PACE"),
+    targetDurationSeconds: positiveIntegerSchema,
+    targetPaceSecondsPerKilometre: positiveIntegerSchema,
+  }),
+]);
+
+export const editTrainingSessionRequestSchema = z.union([
+  editRunSchema,
+  editBaseSchema.extend({
+    activityType: z.literal("STRENGTH"),
+  }),
+]);
+
 export type TimeOfDay = z.infer<typeof timeOfDaySchema>;
 export type TrainingSessionStatus = z.infer<typeof trainingSessionStatusSchema>;
 export type TrainingSession = z.infer<typeof trainingSessionSchema>;
@@ -146,4 +183,8 @@ export type TrainingSessionDateRange = {
 
 export type CreateTrainingSessionRequest = z.infer<
   typeof createTrainingSessionRequestSchema
+>;
+
+export type EditTrainingSessionRequest = z.infer<
+  typeof editTrainingSessionRequestSchema
 >;

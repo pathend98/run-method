@@ -20,3 +20,10 @@ export class TrainingSessionsDataIntegrityError extends Error {
     this.name = "TrainingSessionsDataIntegrityError";
   }
 }
+
+export class TrainingSessionNotFoundError extends Error {
+  constructor() {
+    super("Training session not found");
+    this.name = "TrainingSessionNotFoundError";
+  }
+}

@@ -1,4 +1,7 @@
-import { trainingSessionSchema } from "./training-sessions";
+import {
+  editTrainingSessionRequestSchema,
+  trainingSessionSchema,
+} from "./training-sessions";
 
 const baseSession = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -127,6 +130,77 @@ test.each([
       actualDistanceMetres: null,
       actualDurationSeconds: null,
       ...override,
+    }),
+  ).toThrow();
+});
+
+test.each([
+  {
+    activityType: "RUN",
+    targetType: "DISTANCE_DURATION",
+    targetDistanceMetres: 5000,
+    targetDurationSeconds: 1500,
+  },
+  {
+    activityType: "RUN",
+    targetType: "DISTANCE_PACE",
+    targetDistanceMetres: 5000,
+    targetPaceSecondsPerKilometre: 300,
+  },
+  {
+    activityType: "RUN",
+    targetType: "DURATION_PACE",
+    targetDurationSeconds: 1800,
+    targetPaceSecondsPerKilometre: 300,
+  },
+  { activityType: "STRENGTH" },
+])("editTrainingSessionRequestSchema validates $activityType edits", (edit) => {
+  expect(
+    editTrainingSessionRequestSchema.parse({
+      title: " Updated session ",
+      description: " Updated description ",
+      timeOfDay: null,
+      ...edit,
+    }),
+  ).toMatchObject({
+    title: "Updated session",
+    description: "Updated description",
+    timeOfDay: null,
+    ...edit,
+  });
+});
+
+test.each([
+  ["missing title", { title: undefined }],
+  ["empty description", { description: "" }],
+  ["invalid time of day", { timeOfDay: "NOON" }],
+  ["missing target", { targetDurationSeconds: undefined }],
+  ["invalid target", { targetDistanceMetres: 0 }],
+  ["immutable date", { date: "2026-08-27" }],
+  ["immutable actual", { actualDurationSeconds: 1500 }],
+])("editTrainingSessionRequestSchema rejects %s", (_caseName, override) => {
+  expect(() =>
+    editTrainingSessionRequestSchema.parse({
+      title: "Easy run",
+      description: null,
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetType: "DISTANCE_DURATION",
+      targetDistanceMetres: 5000,
+      targetDurationSeconds: 1500,
+      ...override,
+    }),
+  ).toThrow();
+});
+
+test("editTrainingSessionRequestSchema rejects immutable strength targets", () => {
+  expect(() =>
+    editTrainingSessionRequestSchema.parse({
+      title: "Strength",
+      description: null,
+      timeOfDay: "PM",
+      activityType: "STRENGTH",
+      targetDurationSeconds: 1800,
     }),
   ).toThrow();
 });

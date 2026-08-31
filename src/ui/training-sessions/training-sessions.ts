@@ -2,6 +2,7 @@ import {
   trainingSessionSchema,
   trainingSessionsResponseSchema,
   type CreateTrainingSessionRequest,
+  type EditTrainingSessionRequest,
   type TrainingSession,
   type TrainingSessionDateRange,
 } from "@/domain/training-sessions";
@@ -52,6 +53,39 @@ export async function createTrainingSession(
       typeof body.error === "string"
         ? body.error
         : "Unable to create training session";
+    const fieldErrors =
+      typeof body === "object" &&
+      body !== null &&
+      "fieldErrors" in body &&
+      isFieldErrors(body.fieldErrors)
+        ? body.fieldErrors
+        : undefined;
+
+    throw new TrainingSessionsApiError(message, response.status, fieldErrors);
+  }
+
+  return trainingSessionSchema.parse(await response.json());
+}
+
+export async function editTrainingSession(
+  id: string,
+  request: EditTrainingSessionRequest,
+): Promise<TrainingSession> {
+  const response = await fetch(`/api/v1/training-sessions/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const body = await readJsonBody(response);
+    const message =
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof body.error === "string"
+        ? body.error
+        : "Unable to edit training session";
     const fieldErrors =
       typeof body === "object" &&
       body !== null &&

@@ -94,6 +94,9 @@ PATCH /:id/skip
 ```
 
 Generic `PATCH /:id` cannot change status, actual metrics, or skip reason.
+It is the single edit endpoint for both run and strength sessions; clients
+include the immutable activity discriminator in the request rather than
+selecting a type-specific URL.
 
 ## Consequences
 
@@ -278,6 +281,14 @@ While terminal:
 
 * title and description remain editable;
 * date, time-of-day, and prescription are locked.
+
+Generic session edits use a complete editable projection. While scheduled,
+run sessions may edit title, description, time-of-day, and the two
+authoritative values for their existing target mode. Strength sessions may
+edit title, description, and time-of-day. Activity type, run target mode,
+strength target duration, date, status, actual metrics, skip reason, and
+direct ordering are immutable through the generic edit operation. Moving a
+scheduled session to another time-of-day bucket appends it to that bucket.
 
 Terminal-state actuals or skip reasons may still be corrected through dedicated operations.
 
