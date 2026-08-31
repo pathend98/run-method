@@ -18,6 +18,7 @@ The top-level layout is:
 - `src/domain/`: shared data models, schemas, and contracts used across browser and server code.
 - `src/server/`: server-only object-oriented TypeScript. Dependency injection is rooted in `src/server/server.ts`.
 - `src/ui/`: browser-side modules, including React feature modules and browser service modules.
+- `src/ui/components/`: a deliberately small set of reusable, feature-agnostic React components. Components belong here only after demonstrating genuine reuse across feature modules; feature-specific components stay in the owning module's private `components/` folder.
 
 ### Module Boundaries
 

@@ -1,7 +1,8 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
+import { FormField } from "@/ui/components/form-field";
+import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 import type { AddActivityFormValues } from "../utils/add-activity-form";
-import { FormField } from "./form-field";
 
 export function RunActivityFields() {
   const {
@@ -10,12 +11,11 @@ export function RunActivityFields() {
     register,
   } = useFormContext<AddActivityFormValues>();
   const targetType = useWatch({ control, name: "targetType" });
-  const showDistance =
-    targetType === "DISTANCE_DURATION" || targetType === "DISTANCE_PACE";
-  const showDuration =
-    targetType === "DISTANCE_DURATION" || targetType === "DURATION_PACE";
-  const showPace =
-    targetType === "DISTANCE_PACE" || targetType === "DURATION_PACE";
+  const {
+    distance: showDistance,
+    duration: showDuration,
+    pace: showPace,
+  } = getRunTargetMetrics(targetType);
 
   return (
     <>

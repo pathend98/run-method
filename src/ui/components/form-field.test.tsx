@@ -9,7 +9,7 @@ test("labels its control and renders a validation error", () => {
     </FormField>,
   );
 
-  expect(screen.getByRole("textbox")).toBeDefined();
+  expect(screen.getByRole("textbox", { name: /Title/ })).toBeDefined();
   expect(screen.getByRole("alert").textContent).toBe("Enter a title");
 });
 

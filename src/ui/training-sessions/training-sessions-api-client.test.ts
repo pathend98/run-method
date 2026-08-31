@@ -2,7 +2,7 @@ import {
   createTrainingSession,
   editTrainingSession,
   fetchTrainingSessions,
-} from "./training-sessions";
+} from "./training-sessions-api-client";
 
 const createRequest = {
   title: "Strength",

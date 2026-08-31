@@ -28,6 +28,7 @@ The repo is organised around deep modules in the John Ousterhout sense: each mea
 - `src/domain/` contains shared data models, schemas, and contracts used by both browser and server code.
 - `src/server/` contains server-only object-oriented TypeScript. Dependency injection belongs in `src/server/server.ts`.
 - `src/ui/` contains browser-side modules, including React feature modules and browser service modules.
+- `src/ui/components/` contains a deliberately small set of reusable, feature-agnostic React components. Only move a component here after it has demonstrated genuine reuse across feature modules; keep feature-specific components in the owning module's private `components/` folder.
 
 ## Module Boundaries
 

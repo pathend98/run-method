@@ -38,7 +38,13 @@ const strengthActivity = {
 
 test("calls the close handler from the close button", () => {
   const onClose = vi.fn();
-  render(<ActivityDetailsModal activity={runActivity} onClose={onClose} />);
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      onClose={onClose}
+      onEdit={vi.fn()}
+    />,
+  );
   fireEvent.click(
     screen.getByRole("button", { name: "Close activity details" }),
   );
@@ -47,7 +53,13 @@ test("calls the close handler from the close button", () => {
 
 test("calls the close handler from the backdrop", () => {
   const onClose = vi.fn();
-  render(<ActivityDetailsModal activity={runActivity} onClose={onClose} />);
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      onClose={onClose}
+      onEdit={vi.fn()}
+    />,
+  );
   fireEvent.click(
     screen.getByRole("button", { name: "Dismiss activity details" }),
   );
@@ -56,20 +68,38 @@ test("calls the close handler from the backdrop", () => {
 
 test("calls the close handler from the Escape key", () => {
   const onClose = vi.fn();
-  render(<ActivityDetailsModal activity={runActivity} onClose={onClose} />);
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      onClose={onClose}
+      onEdit={vi.fn()}
+    />,
+  );
   fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
 test("ignores non-Escape keys", () => {
   const onClose = vi.fn();
-  render(<ActivityDetailsModal activity={runActivity} onClose={onClose} />);
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      onClose={onClose}
+      onEdit={vi.fn()}
+    />,
+  );
   fireEvent.keyDown(window, { key: "Enter", code: "Enter" });
   expect(onClose).not.toHaveBeenCalled();
 });
 
 test("renders as an accessible large centered modal", () => {
-  render(<ActivityDetailsModal activity={runActivity} onClose={vi.fn()} />);
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      onClose={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
   const overlay = modal.parentElement;
   expect(overlay?.classList.contains("items-center")).toBe(true);
@@ -84,7 +114,13 @@ test("renders as an accessible large centered modal", () => {
 });
 
 test("dispatches run activities to the run details component", () => {
-  render(<ActivityDetailsModal activity={runActivity} onClose={vi.fn()} />);
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      onClose={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
   expect(within(modal).getByText("Distance + Pace")).toBeDefined();
   expect(within(modal).getByText("4:15 / km")).toBeDefined();
@@ -92,9 +128,26 @@ test("dispatches run activities to the run details component", () => {
 
 test("dispatches strength activities to the strength details component", () => {
   render(
-    <ActivityDetailsModal activity={strengthActivity} onClose={vi.fn()} />,
+    <ActivityDetailsModal
+      activity={strengthActivity}
+      onClose={vi.fn()}
+      onEdit={vi.fn()}
+    />,
   );
   const modal = screen.getByRole("dialog", { name: "Strength" });
   expect(within(modal).getByText("45 min")).toBeDefined();
   expect(within(modal).queryByText("Target pace")).toBeNull();
+});
+
+test("calls the edit handler", () => {
+  const onEdit = vi.fn();
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      onClose={vi.fn()}
+      onEdit={onEdit}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+  expect(onEdit).toHaveBeenCalledOnce();
 });

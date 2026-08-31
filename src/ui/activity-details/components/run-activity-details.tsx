@@ -1,10 +1,10 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
+import { formatTargetType } from "@/ui/training-sessions/training-session-label-formatters";
 import {
   formatDistance,
   formatDuration,
   formatPace,
-  formatTargetType,
-} from "../utils/activity-details-formatters";
+} from "@/ui/training-sessions/training-session-metric-formatters";
 import { resolveRunTargets } from "../utils/run-targets";
 import { ActivityDetailsBody } from "./activity-details-body";
 

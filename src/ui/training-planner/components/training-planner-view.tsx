@@ -4,10 +4,13 @@ import { useState } from "react";
 
 import type {
   CreateTrainingSessionRequest,
+  EditTrainingSessionRequest,
+  TrainingSession,
   TrainingSessionDateRange,
 } from "@/domain/training-sessions";
 import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
 import { AddActivityModal } from "@/ui/add-activity/add-activity-modal";
+import { EditActivityModal } from "@/ui/edit-activity/edit-activity-modal";
 import { WeekGrid } from "./week-grid";
 import { formatWeekRange } from "../services/training-planner-service";
 import type {
@@ -18,10 +21,15 @@ import type {
 type TrainingPlannerViewProps = {
   isCurrentWeek: boolean;
   isCreatingActivity?: boolean;
+  isEditingActivity?: boolean;
   onCreateActivity?: (
     request: CreateTrainingSessionRequest,
   ) => Promise<unknown>;
   onCurrentWeek: () => void;
+  onEditActivity?: (
+    id: string,
+    request: EditTrainingSessionRequest,
+  ) => Promise<TrainingSession>;
   onNextWeek: () => void;
   onPreviousWeek: () => void;
   week: TrainingDay[];
@@ -31,8 +39,10 @@ type TrainingPlannerViewProps = {
 export function TrainingPlannerView({
   isCurrentWeek,
   isCreatingActivity = false,
+  isEditingActivity = false,
   onCreateActivity = async () => undefined,
   onCurrentWeek,
+  onEditActivity,
   onNextWeek,
   onPreviousWeek,
   week,
@@ -41,6 +51,17 @@ export function TrainingPlannerView({
   const [selectedActivity, setSelectedActivity] =
     useState<TrainingActivity | null>(null);
   const [selectedDay, setSelectedDay] = useState<TrainingDay | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  async function editSelectedActivity(
+    activity: TrainingActivity,
+    request: EditTrainingSessionRequest,
+  ) {
+    const editedActivity = onEditActivity
+      ? await onEditActivity(activity.id, request)
+      : ({ ...activity, ...request } as TrainingSession);
+    setSelectedActivity({ ...editedActivity, day: activity.day });
+  }
 
   return (
     <section
@@ -102,10 +123,24 @@ export function TrainingPlannerView({
           onSelectActivity={setSelectedActivity}
           week={week}
         />
-        {selectedActivity ? (
+        {selectedActivity && !isEditModalOpen ? (
           <ActivityDetailsModal
             activity={selectedActivity}
-            onClose={() => setSelectedActivity(null)}
+            onClose={() => {
+              setSelectedActivity(null);
+              setIsEditModalOpen(false);
+            }}
+            onEdit={() => setIsEditModalOpen(true)}
+          />
+        ) : null}
+        {selectedActivity && isEditModalOpen ? (
+          <EditActivityModal
+            activity={selectedActivity}
+            isSubmitting={isEditingActivity}
+            onClose={() => setIsEditModalOpen(false)}
+            onEdit={(request) =>
+              editSelectedActivity(selectedActivity, request)
+            }
           />
         ) : null}
         {selectedDay?.date ? (

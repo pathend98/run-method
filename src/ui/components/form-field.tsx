@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 
 import styles from "./form-field.module.css";
 
-interface FormFieldProps {
+type FormFieldProps = {
   children: ReactNode;
   error?: string;
   label: string;
-}
+};
 
 export function FormField({ children, error, label }: FormFieldProps) {
   return (

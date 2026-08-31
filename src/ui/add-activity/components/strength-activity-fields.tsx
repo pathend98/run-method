@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 
+import { FormField } from "@/ui/components/form-field";
 import type { AddActivityFormValues } from "../utils/add-activity-form";
-import { FormField } from "./form-field";
 
 export function StrengthActivityFields() {
   const {

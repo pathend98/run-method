@@ -187,6 +187,68 @@ test("opens and closes full activity details from an activity card", () => {
   expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
 });
 
+test("opens edit from details and cancels back to details", () => {
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
+  expect(screen.getByRole("dialog", { name: "Edit activity" })).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog", { name: "Edit activity" })).toBeNull();
+  expect(screen.getByRole("dialog", { name: "Tempo run" })).toBeDefined();
+});
+
+test("saves an edit and returns updated details", async () => {
+  const onEditActivity = vi.fn().mockImplementation(async (_id, request) => ({
+    ...runActivity(),
+    ...request,
+    id: "monday-am-run",
+  }));
+  render(
+    <TrainingPlannerView
+      {...navigationProps}
+      isEditingActivity={false}
+      onEditActivity={onEditActivity}
+      week={testWeek}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Updated tempo" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+  await waitFor(() => expect(onEditActivity).toHaveBeenCalledOnce());
+  expect(onEditActivity).toHaveBeenCalledWith(
+    "monday-am-run",
+    expect.objectContaining({ title: "Updated tempo" }),
+  );
+  expect(
+    await screen.findByRole("dialog", { name: "Updated tempo" }),
+  ).toBeDefined();
+});
+
+test("supports the default edit handler", async () => {
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Local update" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  expect(
+    await screen.findByRole("dialog", { name: "Local update" }),
+  ).toBeDefined();
+});
+
 test("closes activity details from the backdrop", () => {
   render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
