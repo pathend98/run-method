@@ -6,8 +6,8 @@ import type {
   EditTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
+import { FormField } from "@/ui/components/form-field";
 import { EditRunActivityFields } from "./components/edit-run-activity-fields";
-import { FormField } from "./components/form-field";
 import {
   createEditActivityFormSchema,
   getEditActivityFormValues,

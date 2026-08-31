@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
+import { FormField } from "@/ui/components/form-field";
 import { RunActivityFields } from "./components/run-activity-fields";
 import { StrengthActivityFields } from "./components/strength-activity-fields";
 import {
@@ -11,7 +12,6 @@ import {
   toCreateTrainingSessionRequest,
   type AddActivityFormValues,
 } from "./utils/add-activity-form";
-import { FormField } from "./components/form-field";
 
 type AddActivityDay = {
   date: string;

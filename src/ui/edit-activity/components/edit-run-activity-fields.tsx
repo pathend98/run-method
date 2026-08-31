@@ -1,8 +1,8 @@
 import { useFormContext } from "react-hook-form";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
+import { FormField } from "@/ui/components/form-field";
 import type { EditActivityFormValues } from "../utils/edit-activity-form";
-import { FormField } from "./form-field";
 
 type EditRunActivityFieldsProps = {
   targetType: RunTrainingSession["targetType"];
