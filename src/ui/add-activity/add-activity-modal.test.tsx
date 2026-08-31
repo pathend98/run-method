@@ -105,7 +105,7 @@ test("closes through each enabled dismissal control", () => {
   ).toBe(true);
 });
 
-test("shows fields for every run target and strength activities", () => {
+test("switches activity fields while preserving hidden run values", () => {
   render(
     <AddActivityModal
       day={day}
@@ -116,8 +116,22 @@ test("shows fields for every run target and strength activities", () => {
   );
 
   const activityType = screen.getByLabelText("Activity type");
-  const targetType = screen.getByLabelText("Run target");
 
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "8" },
+  });
+  fireEvent.change(activityType, { target: { value: "STRENGTH" } });
+  expect(screen.queryByLabelText("Run target")).toBeNull();
+  expect(screen.getByLabelText("Duration (minutes, optional)")).toBeDefined();
+  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
+  expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
+
+  fireEvent.change(activityType, { target: { value: "RUN" } });
+  expect((screen.getByLabelText("Distance (km)") as HTMLInputElement).value).toBe(
+    "8",
+  );
+
+  const targetType = screen.getByLabelText("Run target");
   fireEvent.change(targetType, { target: { value: "DISTANCE_PACE" } });
   expect(screen.getByLabelText("Distance (km)")).toBeDefined();
   expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
@@ -127,12 +141,6 @@ test("shows fields for every run target and strength activities", () => {
   expect(screen.queryByLabelText("Distance (km)")).toBeNull();
   expect(screen.getByLabelText("Duration (minutes)")).toBeDefined();
   expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
-
-  fireEvent.change(activityType, { target: { value: "STRENGTH" } });
-  expect(screen.queryByLabelText("Run target")).toBeNull();
-  expect(screen.getByLabelText("Duration (minutes, optional)")).toBeDefined();
-  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
-  expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
 });
 
 test("renders validation messages for invalid visible fields", async () => {

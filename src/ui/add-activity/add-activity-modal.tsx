@@ -1,8 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
+import { RunActivityFields } from "./components/run-activity-fields";
+import { StrengthActivityFields } from "./components/strength-activity-fields";
 import {
   addActivityFormSchema,
   defaultAddActivityFormValues,
@@ -29,18 +31,18 @@ export function AddActivityModal({
   onClose,
   onCreate,
 }: AddActivityModalProps) {
+  const form = useForm<AddActivityFormValues>({
+    defaultValues: defaultAddActivityFormValues,
+    resolver: zodResolver(addActivityFormSchema),
+  });
   const {
+    control,
     formState: { errors },
     handleSubmit,
     register,
     setError,
-    watch,
-  } = useForm<AddActivityFormValues>({
-    defaultValues: defaultAddActivityFormValues,
-    resolver: zodResolver(addActivityFormSchema),
-  });
-  const activityType = watch("activityType");
-  const targetType = watch("targetType");
+  } = form;
+  const activityType = useWatch({ control, name: "activityType" });
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -60,17 +62,6 @@ export function AddActivityModal({
       });
     }
   }
-
-  const showDistance =
-    activityType === "RUN" &&
-    (targetType === "DISTANCE_DURATION" || targetType === "DISTANCE_PACE");
-  const showDuration =
-    activityType === "STRENGTH" ||
-    targetType === "DISTANCE_DURATION" ||
-    targetType === "DURATION_PACE";
-  const showPace =
-    activityType === "RUN" &&
-    (targetType === "DISTANCE_PACE" || targetType === "DURATION_PACE");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -110,105 +101,65 @@ export function AddActivityModal({
           </button>
         </div>
 
-        <form
-          className="mt-6 space-y-4"
-          noValidate
-          onSubmit={handleSubmit(submit)}
-        >
-          {errors.root ? (
-            <p
-              className="rounded-md bg-red-50 p-3 text-sm text-red-700"
-              role="alert"
-            >
-              {errors.root.message}
-            </p>
-          ) : null}
-          <FormField error={errors.title?.message} label="Title">
-            <input autoFocus {...register("title")} />
-          </FormField>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Activity type">
-              <select {...register("activityType")}>
-                <option value="RUN">Run</option>
-                <option value="STRENGTH">Strength</option>
-              </select>
-            </FormField>
-            <FormField label="Time of day">
-              <select {...register("timeOfDay")}>
-                <option value="ANY">Any time</option>
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </FormField>
-          </div>
-          {activityType === "RUN" ? (
-            <FormField label="Run target">
-              <select {...register("targetType")}>
-                <option value="DISTANCE_DURATION">Distance + duration</option>
-                <option value="DISTANCE_PACE">Distance + pace</option>
-                <option value="DURATION_PACE">Duration + pace</option>
-              </select>
-            </FormField>
-          ) : null}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {showDistance ? (
-              <FormField
-                error={errors.distanceKilometres?.message}
-                label="Distance (km)"
+        <FormProvider {...form}>
+          <form
+            className="mt-6 space-y-4"
+            noValidate
+            onSubmit={handleSubmit(submit)}
+          >
+            {errors.root ? (
+              <p
+                className="rounded-md bg-red-50 p-3 text-sm text-red-700"
+                role="alert"
               >
-                <input
-                  inputMode="decimal"
-                  placeholder="8"
-                  {...register("distanceKilometres")}
-                />
-              </FormField>
+                {errors.root.message}
+              </p>
             ) : null}
-            {showDuration ? (
-              <FormField
-                error={errors.durationMinutes?.message}
-                label={
-                  activityType === "STRENGTH"
-                    ? "Duration (minutes, optional)"
-                    : "Duration (minutes)"
-                }
+            <FormField error={errors.title?.message} label="Title">
+              <input autoFocus {...register("title")} />
+            </FormField>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField label="Activity type">
+                <select {...register("activityType")}>
+                  <option value="RUN">Run</option>
+                  <option value="STRENGTH">Strength</option>
+                </select>
+              </FormField>
+              <FormField label="Time of day">
+                <select {...register("timeOfDay")}>
+                  <option value="ANY">Any time</option>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </FormField>
+            </div>
+            {activityType === "RUN" ? (
+              <RunActivityFields />
+            ) : (
+              <StrengthActivityFields />
+            )}
+            <FormField label="Description (optional)">
+              <textarea className="min-h-24" {...register("description")} />
+            </FormField>
+            <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
+              <button
+                className="rounded-md px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                disabled={isSubmitting}
+                onClick={onClose}
+                type="button"
               >
-                <input
-                  inputMode="numeric"
-                  placeholder="45"
-                  {...register("durationMinutes")}
-                />
-              </FormField>
-            ) : null}
-            {showPace ? (
-              <FormField
-                error={errors.pacePerKilometre?.message}
-                label="Pace (mm:ss / km)"
+                Cancel
+              </button>
+              <button
+                className="rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isSubmitting}
+                type="submit"
               >
-                <input placeholder="5:30" {...register("pacePerKilometre")} />
-              </FormField>
-            ) : null}
-          </div>
-          <FormField label="Description (optional)">
-            <textarea className="min-h-24" {...register("description")} />
-          </FormField>
-          <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
-            <button
-              className="rounded-md px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-              disabled={isSubmitting}
-              onClick={onClose}
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              className="rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting ? "Adding…" : "Add activity"}
-            </button>
-          </div>
-        </form>
+                {isSubmitting ? "Adding…" : "Add activity"}
+              </button>
+            </div>
+          </form>
+        </FormProvider>
       </section>
     </div>
   );
