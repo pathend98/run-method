@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import { RunActivityDetails } from "./run-activity-details";
 
+// Loosen the discriminated union's correlated target fields for partial test overrides.
 type RunOverride = Omit<
   Partial<RunTrainingSession>,
   | "targetDistanceMetres"
