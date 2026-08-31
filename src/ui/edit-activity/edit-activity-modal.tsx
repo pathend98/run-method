@@ -8,6 +8,7 @@ import type {
 } from "@/domain/training-sessions";
 import { FormField } from "@/ui/components/form-field";
 import { EditRunActivityFields } from "./components/edit-run-activity-fields";
+import { ReadOnlyDetail } from "./components/read-only-detail";
 import {
   createEditActivityFormSchema,
   getEditActivityFormValues,
@@ -98,20 +99,32 @@ export function EditActivityModal({
         </div>
 
         <dl className="mt-5 grid grid-cols-2 gap-3 rounded-lg bg-zinc-50 p-3 text-sm">
-          {readOnlyDetail("Activity type", formatActivityType(activity))}
-          {readOnlyDetail("Status", formatStatus(activity.status))}
-          {!isScheduled
-            ? readOnlyDetail("Time of day", activity.timeOfDay ?? "Any time")
-            : null}
-          {activity.activityType === "RUN"
-            ? readOnlyDetail(
-                "Run target",
-                formatTargetType(activity.targetType),
-              )
-            : null}
-          {shouldShowLockedTargets(activity)
-            ? readOnlyDetail("Target details", formatLockedTargets(activity))
-            : null}
+          <ReadOnlyDetail
+            label="Activity type"
+            value={formatActivityType(activity)}
+          />
+          <ReadOnlyDetail
+            label="Status"
+            value={formatStatus(activity.status)}
+          />
+          {!isScheduled ? (
+            <ReadOnlyDetail
+              label="Time of day"
+              value={activity.timeOfDay ?? "Any time"}
+            />
+          ) : null}
+          {activity.activityType === "RUN" ? (
+            <ReadOnlyDetail
+              label="Run target"
+              value={formatTargetType(activity.targetType)}
+            />
+          ) : null}
+          {shouldShowLockedTargets(activity) ? (
+            <ReadOnlyDetail
+              label="Target details"
+              value={formatLockedTargets(activity)}
+            />
+          ) : null}
         </dl>
 
         <FormProvider {...form}>
@@ -166,17 +179,6 @@ export function EditActivityModal({
           </form>
         </FormProvider>
       </section>
-    </div>
-  );
-}
-
-function readOnlyDetail(label: string, value: string) {
-  return (
-    <div>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-        {label}
-      </dt>
-      <dd className="mt-1 text-zinc-950">{value}</dd>
     </div>
   );
 }
