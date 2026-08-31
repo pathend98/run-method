@@ -55,6 +55,7 @@ test("renders populated time buckets in day order", () => {
     <DayColumn
       day={{
         day: "Monday",
+        date: "2026-08-17",
         activities: [
           runActivity({ id: "am", title: "Morning run", timeOfDay: "AM" }),
           strengthActivity({
@@ -81,6 +82,9 @@ test("renders populated time buckets in day order", () => {
   expect(within(column).getByText("Morning run")).toBeDefined();
   expect(within(column).getByText("Mobility")).toBeDefined();
   expect(within(column).getByText("Evening lift")).toBeDefined();
+  expect(within(column).getByText("17 Aug").getAttribute("datetime")).toBe(
+    "2026-08-17",
+  );
 });
 
 test("renders an empty state for days without activities", () => {

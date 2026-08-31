@@ -4,6 +4,24 @@ import { QueryProvider } from "@/app/query-provider";
 import { TrainingPlanner } from "./training-planner";
 import { getCurrentWeekRange } from "./services/training-planner-service";
 
+const navigation = vi.hoisted(() => ({
+  pathname: "/",
+  push: vi.fn(),
+  search: "",
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigation.pathname,
+  useRouter: () => ({ push: navigation.push }),
+  useSearchParams: () => new URLSearchParams(navigation.search),
+}));
+
+beforeEach(() => {
+  navigation.pathname = "/";
+  navigation.push.mockReset();
+  navigation.search = "";
+});
+
 test("TrainingPlanner renders loading state", () => {
   vi.stubGlobal(
     "fetch",
@@ -149,4 +167,88 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
       fetchMock.mock.calls.filter(([, options]) => !options?.method),
     ).toHaveLength(2),
   );
+});
+
+test("TrainingPlanner fetches the week containing the URL date", async () => {
+  navigation.search = "week=2026-08-19";
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    json: vi.fn().mockResolvedValue([]),
+  });
+  vi.stubGlobal("fetch", fetchMock);
+
+  render(
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>,
+  );
+
+  await screen.findByRole("list", { name: "Weekly training planner" });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/api/v1/training-sessions?from=2026-08-17&to=2026-08-23",
+  );
+});
+
+test("TrainingPlanner navigates to adjacent Mondays and preserves query parameters", async () => {
+  navigation.search = "week=2000-01-05&view=compact";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue([]),
+    }),
+  );
+
+  render(
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>,
+  );
+
+  await screen.findByRole("list", { name: "Weekly training planner" });
+  fireEvent.click(screen.getByRole("button", { name: "Previous week" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next week" }));
+
+  expect(navigation.push).toHaveBeenNthCalledWith(
+    1,
+    "/?week=1999-12-27&view=compact",
+    { scroll: false },
+  );
+  expect(navigation.push).toHaveBeenNthCalledWith(
+    2,
+    "/?week=2000-01-10&view=compact",
+    { scroll: false },
+  );
+});
+
+test("TrainingPlanner removes only the week parameter for the current-week navigation", async () => {
+  navigation.search = "week=2000-01-05&view=compact";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue([]),
+    }),
+  );
+  const planner = (
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>
+  );
+  const { rerender } = render(planner);
+
+  await screen.findByRole("list", { name: "Weekly training planner" });
+  fireEvent.click(screen.getByRole("button", { name: "Current week" }));
+  expect(navigation.push).toHaveBeenLastCalledWith("/?view=compact", {
+    scroll: false,
+  });
+
+  navigation.search = "week=2000-01-05";
+  rerender(
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Current week" }));
+  expect(navigation.push).toHaveBeenLastCalledWith("/", { scroll: false });
 });

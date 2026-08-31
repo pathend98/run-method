@@ -1,4 +1,5 @@
 import { TimeOfDaySection } from "./time-of-day-section";
+import { formatDayDate } from "../services/training-planner-service";
 import type {
   TimeOfDay,
   TrainingActivity,
@@ -38,13 +39,21 @@ export function DayColumn({
       className="flex min-h-64 flex-col rounded-lg border border-zinc-200 bg-zinc-50"
       role="listitem"
     >
-      <header className="border-b border-zinc-200 px-3 py-3">
+      <header className="flex items-baseline justify-between gap-2 border-b border-zinc-200 px-3 py-3">
         <h2
           id={`${day.day.toLowerCase()}-heading`}
           className="text-base font-semibold text-zinc-950"
         >
           {day.day}
         </h2>
+        {day.date ? (
+          <time
+            className="text-xs font-medium text-zinc-500"
+            dateTime={day.date}
+          >
+            {formatDayDate(day.date)}
+          </time>
+        ) : null}
       </header>
 
       <div className="flex flex-1 flex-col gap-3 p-3">

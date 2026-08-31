@@ -82,8 +82,16 @@ const testWeek: TrainingDay[] = [
   { day: "Sunday", activities: [] },
 ];
 
+const navigationProps = {
+  isCurrentWeek: true,
+  onCurrentWeek: () => undefined,
+  onNextWeek: () => undefined,
+  onPreviousWeek: () => undefined,
+  weekRange: { from: "2026-08-17", to: "2026-08-23" },
+};
+
 test("renders one column for each day of the week", () => {
-  render(<TrainingPlannerView week={testWeek} />);
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
   const planner = screen.getByRole("list", { name: "Weekly training planner" });
   expect(
@@ -100,7 +108,7 @@ test("renders one column for each day of the week", () => {
 });
 
 test("renders each time bucket and places activities in the correct bucket", () => {
-  render(<TrainingPlannerView week={testWeek} />);
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
   const monday = screen
     .getByRole("heading", { level: 2, name: "Monday" })
@@ -132,7 +140,7 @@ test("renders each time bucket and places activities in the correct bucket", () 
 });
 
 test("only renders time buckets that contain activities", () => {
-  render(<TrainingPlannerView week={testWeek} />);
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
   const tuesday = screen
     .getByRole("heading", { level: 2, name: "Tuesday" })
@@ -154,7 +162,7 @@ test("only renders time buckets that contain activities", () => {
 });
 
 test("opens and closes full activity details from an activity card", () => {
-  render(<TrainingPlannerView week={testWeek} />);
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
   expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
 
@@ -180,7 +188,7 @@ test("opens and closes full activity details from an activity card", () => {
 });
 
 test("closes activity details from the backdrop", () => {
-  render(<TrainingPlannerView week={testWeek} />);
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
   fireEvent.click(
     screen.getByRole("button", { name: "View Tempo run details" }),
@@ -195,7 +203,7 @@ test("closes activity details from the backdrop", () => {
 });
 
 test("closes activity details from the Escape key", () => {
-  render(<TrainingPlannerView week={testWeek} />);
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
   fireEvent.click(
     screen.getByRole("button", { name: "View Tempo run details" }),
@@ -208,7 +216,7 @@ test("closes activity details from the Escape key", () => {
 });
 
 test("opens activity details with keyboard activation", () => {
-  render(<TrainingPlannerView week={testWeek} />);
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
 
   const button = screen.getByRole("button", {
     name: "View Evening lift details",
@@ -229,6 +237,7 @@ test("opens activity details with keyboard activation", () => {
 test("renders empty optional metrics in activity details", () => {
   render(
     <TrainingPlannerView
+      {...navigationProps}
       week={[
         {
           day: "Monday",
@@ -261,6 +270,7 @@ test("renders empty optional metrics in activity details", () => {
 test("renders skipped activity metadata in activity details", () => {
   render(
     <TrainingPlannerView
+      {...navigationProps}
       week={[
         {
           day: "Monday",
@@ -319,6 +329,45 @@ test("TrainingActivityCard handles present and absent descriptions", () => {
   expect(screen.queryByText("45 minutes")).toBeNull();
 });
 
+test("renders the selected range and week navigation controls", () => {
+  const onCurrentWeek = vi.fn();
+  const onNextWeek = vi.fn();
+  const onPreviousWeek = vi.fn();
+  const { rerender } = render(
+    <TrainingPlannerView
+      {...navigationProps}
+      isCurrentWeek={false}
+      onCurrentWeek={onCurrentWeek}
+      onNextWeek={onNextWeek}
+      onPreviousWeek={onPreviousWeek}
+      week={testWeek}
+    />,
+  );
+
+  expect(screen.getByText("17–23 August 2026")).toBeDefined();
+  const navigation = screen.getByRole("navigation", {
+    name: "Week navigation",
+  });
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Previous week" }),
+  );
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Current week" }),
+  );
+  fireEvent.click(
+    within(navigation).getByRole("button", { name: "Next week" }),
+  );
+
+  expect(onPreviousWeek).toHaveBeenCalledOnce();
+  expect(onCurrentWeek).toHaveBeenCalledOnce();
+  expect(onNextWeek).toHaveBeenCalledOnce();
+
+  rerender(
+    <TrainingPlannerView {...navigationProps} isCurrentWeek week={testWeek} />,
+  );
+  expect(screen.queryByRole("button", { name: "Current week" })).toBeNull();
+});
+
 test("opens, closes, and submits the add activity modal", async () => {
   const onCreateActivity = vi.fn().mockResolvedValue(undefined);
   const week = testWeek.map((day, index) => ({
@@ -327,6 +376,7 @@ test("opens, closes, and submits the add activity modal", async () => {
   }));
   render(
     <TrainingPlannerView
+      {...navigationProps}
       isCreatingActivity={false}
       onCreateActivity={onCreateActivity}
       week={week}
@@ -365,6 +415,7 @@ test("opens, closes, and submits the add activity modal", async () => {
 test("supports the default create handler", async () => {
   render(
     <TrainingPlannerView
+      {...navigationProps}
       week={[{ day: "Monday", date: "2026-08-17", activities: [] }]}
     />,
   );

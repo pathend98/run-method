@@ -2,27 +2,41 @@
 
 import { useState } from "react";
 
-import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
+import type {
+  CreateTrainingSessionRequest,
+  TrainingSessionDateRange,
+} from "@/domain/training-sessions";
 import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
 import { AddActivityModal } from "@/ui/add-activity/add-activity-modal";
 import { WeekGrid } from "./week-grid";
+import { formatWeekRange } from "../services/training-planner-service";
 import type {
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
 
 type TrainingPlannerViewProps = {
+  isCurrentWeek: boolean;
   isCreatingActivity?: boolean;
   onCreateActivity?: (
     request: CreateTrainingSessionRequest,
   ) => Promise<unknown>;
+  onCurrentWeek: () => void;
+  onNextWeek: () => void;
+  onPreviousWeek: () => void;
   week: TrainingDay[];
+  weekRange: TrainingSessionDateRange;
 };
 
 export function TrainingPlannerView({
+  isCurrentWeek,
   isCreatingActivity = false,
   onCreateActivity = async () => undefined,
+  onCurrentWeek,
+  onNextWeek,
+  onPreviousWeek,
   week,
+  weekRange,
 }: TrainingPlannerViewProps) {
   const [selectedActivity, setSelectedActivity] =
     useState<TrainingActivity | null>(null);
@@ -49,7 +63,40 @@ export function TrainingPlannerView({
         </p>
       </div>
 
-      <div>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p aria-live="polite" className="text-lg font-semibold text-zinc-900">
+            {formatWeekRange(weekRange)}
+          </p>
+          <nav
+            aria-label="Week navigation"
+            className="flex flex-wrap items-center gap-2"
+          >
+            <button
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              onClick={onPreviousWeek}
+              type="button"
+            >
+              Previous week
+            </button>
+            {!isCurrentWeek ? (
+              <button
+                className="rounded-md border border-teal-700 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                onClick={onCurrentWeek}
+                type="button"
+              >
+                Current week
+              </button>
+            ) : null}
+            <button
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              onClick={onNextWeek}
+              type="button"
+            >
+              Next week
+            </button>
+          </nav>
+        </div>
         <WeekGrid
           onAddActivity={setSelectedDay}
           onSelectActivity={setSelectedActivity}

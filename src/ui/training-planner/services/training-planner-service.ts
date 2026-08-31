@@ -1,5 +1,13 @@
-import { addDays, format, parseISO, startOfWeek } from "date-fns";
+import {
+  addDays,
+  format,
+  isSameMonth,
+  isSameYear,
+  parseISO,
+  startOfWeek,
+} from "date-fns";
 
+import { parseDateFromString } from "@/core/date/date-parsing";
 import type {
   TrainingSession,
   TrainingSessionDateRange,
@@ -21,7 +29,46 @@ const weekdays: Weekday[] = [
 ];
 
 export function getCurrentWeekRange(now = new Date()) {
-  const monday = startOfWeek(now, { weekStartsOn: 1 });
+  return getWeekRange(now);
+}
+
+export function resolveWeekRange(
+  week: string | null,
+  now = new Date(),
+): TrainingSessionDateRange {
+  const selectedDate = week ? parseDateFromString(week) : null;
+
+  return getWeekRange(selectedDate ?? now);
+}
+
+export function getAdjacentWeekStart(
+  weekRange: TrainingSessionDateRange,
+  offset: -1 | 1,
+) {
+  return format(addDays(parseISO(weekRange.from), offset * 7), "yyyy-MM-dd");
+}
+
+export function formatWeekRange(weekRange: TrainingSessionDateRange) {
+  const monday = parseISO(weekRange.from);
+  const sunday = parseISO(weekRange.to);
+
+  if (!isSameYear(monday, sunday)) {
+    return `${format(monday, "d MMMM yyyy")}–${format(sunday, "d MMMM yyyy")}`;
+  }
+
+  if (!isSameMonth(monday, sunday)) {
+    return `${format(monday, "d MMMM")}–${format(sunday, "d MMMM yyyy")}`;
+  }
+
+  return `${format(monday, "d")}–${format(sunday, "d MMMM yyyy")}`;
+}
+
+export function formatDayDate(date: string) {
+  return format(parseISO(date), "d MMM");
+}
+
+function getWeekRange(date: Date): TrainingSessionDateRange {
+  const monday = startOfWeek(date, { weekStartsOn: 1 });
   const sunday = addDays(monday, 6);
 
   return {
