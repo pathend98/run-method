@@ -2,17 +2,29 @@ import type { ZodError } from "zod";
 
 import {
   createTrainingSessionRequestSchema,
+  editTrainingSessionRequestSchema,
   type CreateTrainingSessionRequest,
+  type EditTrainingSessionRequest,
 } from "@/domain/training-sessions";
 import { TrainingSessionsRequestValidationError } from "./training-sessions-errors";
 
 export interface TrainingSessionsRequestValidator {
   validateCreate(body: unknown): CreateTrainingSessionRequest;
+  validateEdit(body: unknown): EditTrainingSessionRequest;
 }
 
 export class DefaultTrainingSessionsRequestValidator implements TrainingSessionsRequestValidator {
   validateCreate(body: unknown): CreateTrainingSessionRequest {
     const result = createTrainingSessionRequestSchema.safeParse(body);
+    if (result.success) return result.data;
+
+    throw new TrainingSessionsRequestValidationError(
+      this.fieldErrors(result.error, body),
+    );
+  }
+
+  validateEdit(body: unknown): EditTrainingSessionRequest {
+    const result = editTrainingSessionRequestSchema.safeParse(body);
     if (result.success) return result.data;
 
     throw new TrainingSessionsRequestValidationError(

@@ -4,13 +4,19 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { runDetails, strengthDetails, trainingSessions } from "@db/schema";
 import type {
   CreateTrainingSessionRequest,
+  EditTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
 import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
 
 export interface TrainingSessionsRepository {
   findBetweenDates(from: string, to: string): Promise<TrainingSession[]>;
+  findById(id: string): Promise<TrainingSession | null>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
+  edit(
+    current: TrainingSession,
+    request: EditTrainingSessionRequest,
+  ): Promise<TrainingSession>;
 }
 
 export class DrizzleTrainingSessionsRepository implements TrainingSessionsRepository {
@@ -44,6 +50,28 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
       );
 
     return rows.map((row) => this.transformer.transform(row));
+  }
+
+  async findById(id: string): Promise<TrainingSession | null> {
+    const [row] = await this.db
+      .select({
+        session: trainingSessions,
+        runDetails,
+        strengthDetails,
+      })
+      .from(trainingSessions)
+      .leftJoin(
+        runDetails,
+        eq(runDetails.trainingSessionId, trainingSessions.id),
+      )
+      .leftJoin(
+        strengthDetails,
+        eq(strengthDetails.trainingSessionId, trainingSessions.id),
+      )
+      .where(eq(trainingSessions.id, id))
+      .limit(1);
+
+    return row ? this.transformer.transform(row) : null;
   }
 
   async create(
@@ -116,6 +144,101 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         runDetails: runDetailsRow,
         strengthDetails: strengthDetailsRow,
       });
+    });
+  }
+
+  async edit(
+    current: TrainingSession,
+    request: EditTrainingSessionRequest,
+  ): Promise<TrainingSession> {
+    return this.db.transaction(async (tx) => {
+      let sortOrder = current.sortOrder;
+      if (request.timeOfDay !== current.timeOfDay) {
+        const bucket = [
+          eq(trainingSessions.date, current.date),
+          request.timeOfDay === null
+            ? isNull(trainingSessions.timeOfDay)
+            : eq(trainingSessions.timeOfDay, request.timeOfDay),
+        ];
+        const [{ nextOrder }] = await tx
+          .select({
+            nextOrder: sql<number>`coalesce(max(${trainingSessions.sortOrder}), -1) + 1`,
+          })
+          .from(trainingSessions)
+          .where(and(...bucket));
+        sortOrder = Number(nextOrder);
+      }
+
+      const [session] = await tx
+        .update(trainingSessions)
+        .set({
+          title: request.title,
+          timeOfDay: request.timeOfDay,
+          description: request.description,
+          sortOrder,
+          updatedAt: new Date(),
+        })
+        .where(eq(trainingSessions.id, current.id))
+        .returning();
+
+      if (current.activityType === "RUN" && request.activityType === "RUN") {
+        let runDetailsRow: typeof runDetails.$inferSelect;
+        if (current.status === "SCHEDULED") {
+          const [updatedRunDetails] = await tx
+            .update(runDetails)
+            .set({
+              targetDistanceMetres:
+                "targetDistanceMetres" in request
+                  ? request.targetDistanceMetres
+                  : null,
+              targetDurationSeconds:
+                "targetDurationSeconds" in request
+                  ? request.targetDurationSeconds
+                  : null,
+              targetPaceSecondsPerKilometre:
+                "targetPaceSecondsPerKilometre" in request
+                  ? request.targetPaceSecondsPerKilometre
+                  : null,
+            })
+            .where(eq(runDetails.trainingSessionId, current.id))
+            .returning();
+          runDetailsRow = updatedRunDetails;
+        } else {
+          runDetailsRow = {
+            trainingSessionId: current.id,
+            targetType: current.targetType,
+            targetDistanceMetres: current.targetDistanceMetres,
+            targetDurationSeconds: current.targetDurationSeconds,
+            targetPaceSecondsPerKilometre:
+              current.targetPaceSecondsPerKilometre,
+            actualDistanceMetres: current.actualDistanceMetres,
+            actualDurationSeconds: current.actualDurationSeconds,
+          };
+        }
+
+        return this.transformer.transform({
+          session,
+          runDetails: runDetailsRow,
+          strengthDetails: null,
+        });
+      }
+
+      if (
+        current.activityType === "STRENGTH" &&
+        request.activityType === "STRENGTH"
+      ) {
+        return this.transformer.transform({
+          session,
+          runDetails: null,
+          strengthDetails: {
+            trainingSessionId: current.id,
+            targetDurationSeconds: current.targetDurationSeconds,
+            actualDurationSeconds: current.actualDurationSeconds,
+          },
+        });
+      }
+
+      throw new Error("Training session activity type changed during edit");
     });
   }
 }

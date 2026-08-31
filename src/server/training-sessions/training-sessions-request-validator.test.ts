@@ -144,3 +144,61 @@ test("reports errors from the strength branch", () => {
     });
   }
 });
+
+test("validates an edit request and trims editable text", () => {
+  expect(
+    validator.validateEdit({
+      title: " Easy run ",
+      description: " Aerobic work ",
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetType: "DISTANCE_PACE",
+      targetDistanceMetres: 5000,
+      targetPaceSecondsPerKilometre: 300,
+    }),
+  ).toEqual({
+    title: "Easy run",
+    description: "Aerobic work",
+    timeOfDay: "AM",
+    activityType: "RUN",
+    targetType: "DISTANCE_PACE",
+    targetDistanceMetres: 5000,
+    targetPaceSecondsPerKilometre: 300,
+  });
+});
+
+test("reports edit errors from the matching activity branch", () => {
+  try {
+    validator.validateEdit({
+      title: "Strength",
+      description: null,
+      timeOfDay: null,
+      activityType: "STRENGTH",
+      targetDurationSeconds: 1800,
+    });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({
+      targetDurationSeconds: ['Unrecognized key: "targetDurationSeconds"'],
+    });
+  }
+});
+
+test("edit validation rejects omitted and immutable fields", () => {
+  try {
+    validator.validateEdit({
+      description: null,
+      timeOfDay: null,
+      activityType: "STRENGTH",
+      date: "2026-08-27",
+    });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({
+      title: ["Invalid input: expected string, received undefined"],
+      date: ['Unrecognized key: "date"'],
+    });
+  }
+});

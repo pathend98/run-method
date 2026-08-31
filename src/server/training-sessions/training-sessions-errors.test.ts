@@ -3,6 +3,7 @@ import {
   TrainingSessionsDataIntegrityError,
   TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
+  TrainingSessionNotFoundError,
 } from "./training-sessions-errors";
 
 test("TrainingSessionsValidationError extends BadRequestError with its own name", () => {
@@ -30,4 +31,12 @@ test("TrainingSessionsRequestValidationError exposes field errors", () => {
   expect(error.name).toBe("TrainingSessionsRequestValidationError");
   expect(error.message).toBe("Invalid request body");
   expect(error.fieldErrors).toBe(fieldErrors);
+});
+
+test("TrainingSessionNotFoundError exposes a stable message", () => {
+  const error = new TrainingSessionNotFoundError();
+
+  expect(error).toBeInstanceOf(Error);
+  expect(error.name).toBe("TrainingSessionNotFoundError");
+  expect(error.message).toBe("Training session not found");
 });

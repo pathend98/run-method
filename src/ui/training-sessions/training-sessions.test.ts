@@ -1,5 +1,6 @@
 import {
   createTrainingSession,
+  editTrainingSession,
   fetchTrainingSessions,
 } from "./training-sessions";
 
@@ -232,6 +233,82 @@ test("createTrainingSession falls back for a non-JSON error body", async () => {
 
   await expect(createTrainingSession(createRequest)).rejects.toMatchObject({
     message: "Unable to create training session",
+    status: 502,
+    fieldErrors: undefined,
+  });
+});
+
+const editRequest = {
+  title: "Updated strength",
+  activityType: "STRENGTH" as const,
+  timeOfDay: "PM" as const,
+  description: "Lower body",
+};
+
+const editedSession = {
+  ...createdSession,
+  ...editRequest,
+  updatedAt: "2026-08-31T10:00:00.000Z",
+};
+
+test("editTrainingSession patches and parses the edited session", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(editedSession),
+    }),
+  );
+
+  await expect(
+    editTrainingSession(createdSession.id, editRequest),
+  ).resolves.toEqual(editedSession);
+  expect(fetch).toHaveBeenCalledWith(
+    `/api/v1/training-sessions/${createdSession.id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editRequest),
+    },
+  );
+});
+
+test("editTrainingSession returns API messages and field errors", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: vi.fn().mockResolvedValue({
+        error: "Invalid request body",
+        fieldErrors: { title: ["Required"] },
+      }),
+    }),
+  );
+
+  await expect(
+    editTrainingSession(createdSession.id, editRequest),
+  ).rejects.toMatchObject({
+    message: "Invalid request body",
+    status: 400,
+    fieldErrors: { title: ["Required"] },
+  });
+});
+
+test("editTrainingSession falls back for non-JSON errors", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: vi.fn().mockRejectedValue(new SyntaxError("not JSON")),
+    }),
+  );
+
+  await expect(
+    editTrainingSession(createdSession.id, editRequest),
+  ).rejects.toMatchObject({
+    message: "Unable to edit training session",
     status: 502,
     fieldErrors: undefined,
   });
