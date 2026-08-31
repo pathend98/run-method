@@ -22,22 +22,22 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
   const plannedMetrics = (
     <dl
       aria-label="Planned activity metrics"
-      className="mt-6 grid grid-cols-2 gap-3"
+      className="mt-6 grid gap-3 sm:grid-cols-3"
     >
-      <div className="col-span-2 rounded-lg border border-teal-200 bg-teal-50 p-4">
-        <dt className="text-xs font-semibold uppercase tracking-wide text-teal-700">
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Distance
         </dt>
-        <dd className="mt-2 text-3xl font-semibold text-zinc-950">
+        <dd className="mt-1 text-lg font-semibold text-zinc-950">
           {targetDistance ?? "No target distance"}
         </dd>
       </div>
       <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
         <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Time
+          Target pace
         </dt>
         <dd className="mt-1 text-lg font-semibold text-zinc-950">
-          {activity.timeOfDay ?? "Any time"}
+          {targetPace ?? "No target pace"}
         </dd>
       </div>
       <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
@@ -48,20 +48,12 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
           {targetDuration ?? "No target duration"}
         </dd>
       </div>
-      <div className="col-span-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Target pace
-        </dt>
-        <dd className="mt-1 text-lg font-semibold text-zinc-950">
-          {targetPace ?? "No target pace"}
-        </dd>
-      </div>
     </dl>
   );
 
-  const detailMetrics = (
-    <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-      <div className="col-span-2">
+  const detailMetricItems = (
+    <>
+      <div>
         <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Target type
         </dt>
@@ -89,13 +81,13 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
           </dd>
         </div>
       ) : null}
-    </dl>
+    </>
   );
 
   return (
     <ActivityDetailsBody
       activity={activity}
-      detailMetrics={detailMetrics}
+      detailMetricItems={detailMetricItems}
       plannedMetrics={plannedMetrics}
     />
   );

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 import type { StrengthTrainingSession } from "@/domain/training-sessions";
 import { StrengthActivityDetails } from "./strength-activity-details";
@@ -26,6 +26,9 @@ function strengthActivity(
 
 test("renders strength planned and actual durations", () => {
   render(<StrengthActivityDetails activity={strengthActivity()} />);
+  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  expect(within(plannedMetrics).queryByText("PM")).toBeNull();
+  expect(screen.getByText("Time of day")).toBeDefined();
   expect(screen.getByText("PM")).toBeDefined();
   expect(screen.getByText("45 min")).toBeDefined();
   expect(screen.getByText("Actual duration")).toBeDefined();
@@ -42,6 +45,8 @@ test("renders missing planned values and omits a missing actual duration", () =>
       })}
     />,
   );
+  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
   expect(screen.getByText("Any time")).toBeDefined();
   expect(screen.getByText("No target duration")).toBeDefined();
   expect(screen.queryByText("Actual duration")).toBeNull();

@@ -23,7 +23,12 @@ test("renders shared metadata between planned and detail metrics", () => {
   render(
     <ActivityDetailsBody
       activity={activity}
-      detailMetrics={<p>Actual metrics</p>}
+      detailMetricItems={
+        <div>
+          <dt>Metric</dt>
+          <dd>Actual metrics</dd>
+        </div>
+      }
       plannedMetrics={<p>Planned metrics</p>}
     />,
   );
@@ -46,6 +51,8 @@ test("renders shared metadata between planned and detail metrics", () => {
   expect(screen.getByText("Single-leg stability")).toBeDefined();
   expect(screen.getByText("Skipped")).toBeDefined();
   expect(screen.getByText("Strength")).toBeDefined();
+  expect(screen.getByText("Time of day")).toBeDefined();
+  expect(screen.getByText("PM")).toBeDefined();
   expect(screen.getByText("Skip reason")).toBeDefined();
   expect(screen.getByText("Travel day")).toBeDefined();
 });
@@ -58,12 +65,14 @@ test("renders the description fallback and omits absent skip metadata", () => {
         description: null,
         skipReason: null,
         status: "SCHEDULED",
+        timeOfDay: null,
       }}
-      detailMetrics={null}
+      detailMetricItems={null}
       plannedMetrics={null}
     />,
   );
   expect(screen.getByText("No description")).toBeDefined();
   expect(screen.getByText("Scheduled")).toBeDefined();
+  expect(screen.getByText("Any time")).toBeDefined();
   expect(screen.queryByText("Skip reason")).toBeNull();
 });

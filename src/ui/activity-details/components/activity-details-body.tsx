@@ -8,13 +8,13 @@ import {
 
 type ActivityDetailsBodyProps = {
   activity: TrainingSession;
-  detailMetrics: ReactNode;
+  detailMetricItems: ReactNode;
   plannedMetrics: ReactNode;
 };
 
 export function ActivityDetailsBody({
   activity,
-  detailMetrics,
+  detailMetricItems,
   plannedMetrics,
 }: ActivityDetailsBodyProps) {
   return (
@@ -50,7 +50,17 @@ export function ActivityDetailsBody({
           </div>
         ) : null}
 
-        {detailMetrics}
+        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Time of day
+            </dt>
+            <dd className="mt-1 text-sm text-zinc-950">
+              {activity.timeOfDay ?? "Any time"}
+            </dd>
+          </div>
+          {detailMetricItems}
+        </dl>
       </section>
     </>
   );

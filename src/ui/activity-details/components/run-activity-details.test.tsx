@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import { RunActivityDetails } from "./run-activity-details";
@@ -42,13 +42,50 @@ function runActivity(override: RunOverride = {}): RunTrainingSession {
 
 test("renders full run targets and actual values", () => {
   render(<RunActivityDetails activity={runActivity()} />);
-  expect(screen.getByText("AM")).toBeDefined();
+  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  const details = screen
+    .getByRole("heading", { level: 3, name: "Details" })
+    .closest("section");
+
+  expect(within(plannedMetrics).queryByText("AM")).toBeNull();
+  expect(within(details!).getByText("Time of day")).toBeDefined();
+  expect(within(details!).getByText("AM")).toBeDefined();
   expect(screen.getByText("6.0 km")).toBeDefined();
   expect(screen.getByText("26 min")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
   expect(screen.getByText("Distance + Pace")).toBeDefined();
   expect(screen.getByText("5.9 km")).toBeDefined();
   expect(screen.getByText("25 min")).toBeDefined();
+});
+
+test("renders run targets as three equally styled responsive cards", () => {
+  render(<RunActivityDetails activity={runActivity()} />);
+  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  expect(plannedMetrics.classList.contains("sm:grid-cols-3")).toBe(true);
+  expect(
+    [...plannedMetrics.querySelectorAll("dt")].map((term) => term.textContent),
+  ).toEqual(["Distance", "Target pace", "Duration"]);
+
+  const expectedCardClasses = [
+    "rounded-lg",
+    "border",
+    "border-zinc-200",
+    "bg-zinc-50",
+    "p-3",
+  ];
+
+  for (const label of ["Distance", "Target pace", "Duration"]) {
+    const term = within(plannedMetrics).getByText(label);
+    const card = term.closest("div");
+    const value = card?.querySelector("dd");
+
+    for (const className of expectedCardClasses) {
+      expect(card?.classList.contains(className)).toBe(true);
+    }
+    expect(card?.classList.contains("col-span-2")).toBe(false);
+    expect(value?.classList.contains("text-lg")).toBe(true);
+    expect(value?.classList.contains("text-3xl")).toBe(false);
+  }
 });
 
 test.each([
@@ -101,6 +138,8 @@ test("renders missing planned values and no actual metrics", () => {
       })}
     />,
   );
+  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
   expect(screen.getByText("Any time")).toBeDefined();
   expect(screen.getByText("No target distance")).toBeDefined();
   expect(screen.getByText("No target duration")).toBeDefined();
