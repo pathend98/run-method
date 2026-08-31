@@ -5,6 +5,7 @@ import {
   formatPace,
   formatTargetType,
 } from "../utils/activity-details-formatters";
+import { resolveRunTargets } from "../utils/run-targets";
 import { ActivityDetailsBody } from "./activity-details-body";
 
 type RunActivityDetailsProps = {
@@ -12,9 +13,11 @@ type RunActivityDetailsProps = {
 };
 
 export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
-  const targetDistance = formatDistance(activity.targetDistanceMetres);
-  const targetDuration = formatDuration(activity.targetDurationSeconds);
-  const targetPace = formatPace(activity.targetPaceSecondsPerKilometre);
+  const { distanceMetres, durationSeconds, paceSecondsPerKilometre } =
+    resolveRunTargets(activity);
+  const targetDistance = formatDistance(distanceMetres);
+  const targetDuration = formatDuration(durationSeconds);
+  const targetPace = formatPace(paceSecondsPerKilometre);
 
   const plannedMetrics = (
     <dl

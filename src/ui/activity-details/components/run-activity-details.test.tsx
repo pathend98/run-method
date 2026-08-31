@@ -44,7 +44,7 @@ test("renders full run targets and actual values", () => {
   render(<RunActivityDetails activity={runActivity()} />);
   expect(screen.getByText("AM")).toBeDefined();
   expect(screen.getByText("6.0 km")).toBeDefined();
-  expect(screen.getByText("No target duration")).toBeDefined();
+  expect(screen.getByText("26 min")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
   expect(screen.getByText("Distance + Pace")).toBeDefined();
   expect(screen.getByText("5.9 km")).toBeDefined();
@@ -54,6 +54,7 @@ test("renders full run targets and actual values", () => {
 test.each([
   {
     expectedTarget: "Distance + Duration",
+    expectedDerivedTarget: "6:40 / km",
     expectedDuration: "40 min",
     override: {
       targetType: "DISTANCE_DURATION",
@@ -63,6 +64,7 @@ test.each([
   },
   {
     expectedTarget: "Duration + Pace",
+    expectedDerivedTarget: "7.1 km",
     expectedDuration: "30 min",
     override: {
       targetType: "DURATION_PACE",
@@ -72,13 +74,18 @@ test.each([
   },
 ] satisfies Array<{
   expectedTarget: string;
+  expectedDerivedTarget: string;
   expectedDuration: string;
   override: RunOverride;
-}>)("$expectedTarget", ({ expectedDuration, expectedTarget, override }) => {
-  render(<RunActivityDetails activity={runActivity(override)} />);
-  expect(screen.getByText(expectedTarget)).toBeDefined();
-  expect(screen.getByText(expectedDuration)).toBeDefined();
-});
+}>)(
+  "$expectedTarget",
+  ({ expectedDerivedTarget, expectedDuration, expectedTarget, override }) => {
+    render(<RunActivityDetails activity={runActivity(override)} />);
+    expect(screen.getByText(expectedTarget)).toBeDefined();
+    expect(screen.getByText(expectedDuration)).toBeDefined();
+    expect(screen.getByText(expectedDerivedTarget)).toBeDefined();
+  },
+);
 
 test("renders missing planned values and no actual metrics", () => {
   render(
