@@ -201,6 +201,59 @@ test("opens edit from details and cancels back to details", () => {
   expect(screen.getByRole("dialog", { name: "Tempo run" })).toBeDefined();
 });
 
+test("deletes the selected activity and closes its details", async () => {
+  const onDeleteActivity = vi.fn().mockResolvedValue(undefined);
+  render(
+    <TrainingPlannerView
+      {...navigationProps}
+      onDeleteActivity={onDeleteActivity}
+      week={testWeek}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+
+  await waitFor(() => expect(onDeleteActivity).toHaveBeenCalledOnce());
+  expect(onDeleteActivity).toHaveBeenCalledWith("monday-am-run");
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
+});
+
+test("supports the default delete handler", async () => {
+  render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull(),
+  );
+});
+
+test("keeps activity details open after a failed deletion", async () => {
+  render(
+    <TrainingPlannerView
+      {...navigationProps}
+      onDeleteActivity={vi.fn().mockRejectedValue(new Error("nope"))}
+      week={testWeek}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Unable to delete activity",
+  );
+  expect(screen.getByRole("dialog", { name: "Tempo run" })).toBeDefined();
+});
+
 test("saves an edit and returns updated details", async () => {
   const onEditActivity = vi.fn().mockImplementation(async (_id, request) => ({
     ...runActivity(),

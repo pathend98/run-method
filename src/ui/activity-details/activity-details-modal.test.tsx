@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import type {
   RunTrainingSession,
@@ -41,7 +47,9 @@ test("calls the close handler from the close button", () => {
   render(
     <ActivityDetailsModal
       activity={runActivity}
+      isDeleting={false}
       onClose={onClose}
+      onDelete={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
@@ -56,7 +64,9 @@ test("calls the close handler from the backdrop", () => {
   render(
     <ActivityDetailsModal
       activity={runActivity}
+      isDeleting={false}
       onClose={onClose}
+      onDelete={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
@@ -71,7 +81,9 @@ test("calls the close handler from the Escape key", () => {
   render(
     <ActivityDetailsModal
       activity={runActivity}
+      isDeleting={false}
       onClose={onClose}
+      onDelete={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
@@ -84,7 +96,9 @@ test("ignores non-Escape keys", () => {
   render(
     <ActivityDetailsModal
       activity={runActivity}
+      isDeleting={false}
       onClose={onClose}
+      onDelete={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
@@ -96,7 +110,9 @@ test("renders as an accessible large centered modal", () => {
   render(
     <ActivityDetailsModal
       activity={runActivity}
+      isDeleting={false}
       onClose={vi.fn()}
+      onDelete={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
@@ -117,7 +133,9 @@ test("dispatches run activities to the run details component", () => {
   render(
     <ActivityDetailsModal
       activity={runActivity}
+      isDeleting={false}
       onClose={vi.fn()}
+      onDelete={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
@@ -130,7 +148,9 @@ test("dispatches strength activities to the strength details component", () => {
   render(
     <ActivityDetailsModal
       activity={strengthActivity}
+      isDeleting={false}
       onClose={vi.fn()}
+      onDelete={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
@@ -144,10 +164,113 @@ test("calls the edit handler", () => {
   render(
     <ActivityDetailsModal
       activity={runActivity}
+      isDeleting={false}
       onClose={vi.fn()}
+      onDelete={vi.fn()}
       onEdit={onEdit}
     />,
   );
   fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
   expect(onEdit).toHaveBeenCalledOnce();
+});
+
+test("asks for confirmation and allows cancellation", () => {
+  const onDelete = vi.fn();
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting={false}
+      onClose={vi.fn()}
+      onDelete={onDelete}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  expect(screen.getByText("Delete “Tempo run”?")).toBeDefined();
+  expect(screen.getByText("This action cannot be undone.")).toBeDefined();
+
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByText("Delete “Tempo run”?")).toBeNull();
+  expect(onDelete).not.toHaveBeenCalled();
+});
+
+test("deletes the activity and closes after success", async () => {
+  const onClose = vi.fn();
+  const onDelete = vi.fn().mockResolvedValue(undefined);
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting={false}
+      onClose={onClose}
+      onDelete={onDelete}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+
+  await waitFor(() => expect(onDelete).toHaveBeenCalledOnce());
+  expect(onClose).toHaveBeenCalledOnce();
+});
+
+test("keeps confirmation open and reports deletion failures", async () => {
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting={false}
+      onClose={vi.fn()}
+      onDelete={vi.fn().mockRejectedValue(new Error("nope"))}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Unable to delete activity",
+  );
+  expect(
+    screen.getByRole("button", { name: "Delete permanently" }),
+  ).toBeDefined();
+});
+
+test("disables confirmation and dismissal while deleting", () => {
+  const onClose = vi.fn();
+  const { rerender } = render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting={false}
+      onClose={onClose}
+      onDelete={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+
+  rerender(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting
+      onClose={onClose}
+      onDelete={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole("button", { name: "Deleting…" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  expect(screen.getByRole("button", { name: "Cancel" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  expect(
+    screen.getByRole("button", { name: "Dismiss activity details" }),
+  ).toHaveProperty("disabled", true);
+  fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
+  expect(onClose).not.toHaveBeenCalled();
 });

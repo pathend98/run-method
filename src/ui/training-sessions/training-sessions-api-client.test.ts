@@ -1,5 +1,6 @@
 import {
   createTrainingSession,
+  deleteTrainingSession,
   editTrainingSession,
   fetchTrainingSessions,
 } from "./training-sessions-api-client";
@@ -312,5 +313,52 @@ test("editTrainingSession falls back for non-JSON errors", async () => {
     message: "Unable to edit training session",
     status: 502,
     fieldErrors: undefined,
+  });
+});
+
+test("deleteTrainingSession sends a DELETE request and accepts an empty response", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({ ok: true, status: 204 }),
+  );
+
+  await expect(
+    deleteTrainingSession(createdSession.id),
+  ).resolves.toBeUndefined();
+  expect(fetch).toHaveBeenCalledWith(
+    `/api/v1/training-sessions/${createdSession.id}`,
+    { method: "DELETE" },
+  );
+});
+
+test("deleteTrainingSession returns API messages", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: vi.fn().mockResolvedValue({ error: "Training session not found" }),
+    }),
+  );
+
+  await expect(deleteTrainingSession(createdSession.id)).rejects.toMatchObject({
+    message: "Training session not found",
+    status: 404,
+  });
+});
+
+test("deleteTrainingSession falls back for non-JSON errors", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: vi.fn().mockRejectedValue(new SyntaxError("not JSON")),
+    }),
+  );
+
+  await expect(deleteTrainingSession(createdSession.id)).rejects.toMatchObject({
+    message: "Unable to delete training session",
+    status: 502,
   });
 });
