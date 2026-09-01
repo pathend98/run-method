@@ -3,8 +3,10 @@
 import { useState } from "react";
 
 import type {
+  CompleteTrainingSessionRequest,
   CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
+  SkipTrainingSessionRequest,
   TrainingSession,
   TrainingSessionDateRange,
 } from "@/domain/training-sessions";
@@ -23,10 +25,15 @@ type TrainingPlannerViewProps = {
   isCreatingActivity?: boolean;
   isDeletingActivity?: boolean;
   isEditingActivity?: boolean;
+  isTransitioningActivity?: boolean;
   onCreateActivity?: (
     request: CreateTrainingSessionRequest,
   ) => Promise<unknown>;
   onCurrentWeek: () => void;
+  onCompleteActivity?: (
+    id: string,
+    request: CompleteTrainingSessionRequest,
+  ) => Promise<unknown>;
   onDeleteActivity?: (id: string) => Promise<unknown>;
   onEditActivity?: (
     id: string,
@@ -34,6 +41,10 @@ type TrainingPlannerViewProps = {
   ) => Promise<TrainingSession>;
   onNextWeek: () => void;
   onPreviousWeek: () => void;
+  onSkipActivity?: (
+    id: string,
+    request: SkipTrainingSessionRequest,
+  ) => Promise<unknown>;
   week: TrainingDay[];
   weekRange: TrainingSessionDateRange;
 };
@@ -43,12 +54,15 @@ export function TrainingPlannerView({
   isCreatingActivity = false,
   isDeletingActivity = false,
   isEditingActivity = false,
+  isTransitioningActivity = false,
   onCreateActivity = async () => undefined,
   onCurrentWeek,
+  onCompleteActivity = async () => undefined,
   onDeleteActivity = async () => undefined,
   onEditActivity,
   onNextWeek,
   onPreviousWeek,
+  onSkipActivity = async () => undefined,
   week,
   weekRange,
 }: TrainingPlannerViewProps) {
@@ -131,12 +145,17 @@ export function TrainingPlannerView({
           <ActivityDetailsModal
             activity={selectedActivity}
             isDeleting={isDeletingActivity}
+            isTransitioning={isTransitioningActivity}
             onClose={() => {
               setSelectedActivity(null);
               setIsEditModalOpen(false);
             }}
+            onComplete={(request) =>
+              onCompleteActivity(selectedActivity.id, request)
+            }
             onDelete={() => onDeleteActivity(selectedActivity.id)}
             onEdit={() => setIsEditModalOpen(true)}
+            onSkip={(request) => onSkipActivity(selectedActivity.id, request)}
           />
         ) : null}
         {selectedActivity && isEditModalOpen ? (

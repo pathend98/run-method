@@ -1,8 +1,10 @@
 import {
   trainingSessionSchema,
   trainingSessionsResponseSchema,
+  type CompleteTrainingSessionRequest,
   type CreateTrainingSessionRequest,
   type EditTrainingSessionRequest,
+  type SkipTrainingSessionRequest,
   type TrainingSession,
   type TrainingSessionDateRange,
 } from "@/domain/training-sessions";
@@ -117,6 +119,62 @@ export async function deleteTrainingSession(id: string): Promise<void> {
 
     throw new TrainingSessionsApiError(message, response.status);
   }
+}
+
+export async function skipTrainingSession(
+  id: string,
+  request: SkipTrainingSessionRequest,
+): Promise<TrainingSession> {
+  return postTrainingSessionTransition(
+    `/api/v1/training-sessions/${id}/skip`,
+    request,
+    "Unable to skip training session",
+  );
+}
+
+export async function completeTrainingSession(
+  id: string,
+  request: CompleteTrainingSessionRequest,
+): Promise<TrainingSession> {
+  return postTrainingSessionTransition(
+    `/api/v1/training-sessions/${id}/complete`,
+    request,
+    "Unable to complete training session",
+  );
+}
+
+async function postTrainingSessionTransition(
+  url: string,
+  request: SkipTrainingSessionRequest | CompleteTrainingSessionRequest,
+  fallbackMessage: string,
+): Promise<TrainingSession> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const body = await readJsonBody(response);
+    const message =
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof body.error === "string"
+        ? body.error
+        : fallbackMessage;
+    const fieldErrors =
+      typeof body === "object" &&
+      body !== null &&
+      "fieldErrors" in body &&
+      isFieldErrors(body.fieldErrors)
+        ? body.fieldErrors
+        : undefined;
+
+    throw new TrainingSessionsApiError(message, response.status, fieldErrors);
+  }
+
+  return trainingSessionSchema.parse(await response.json());
 }
 
 async function readJsonBody(response: Response): Promise<unknown> {
