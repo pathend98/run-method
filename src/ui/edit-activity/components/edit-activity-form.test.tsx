@@ -39,7 +39,6 @@ test("renders pre-populated editable fields for a scheduled run", () => {
   render(
     <EditActivityForm
       activity={runActivity}
-      isSubmitting={false}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
@@ -60,7 +59,6 @@ test("submits an edit and closes the form", async () => {
   render(
     <EditActivityForm
       activity={runActivity}
-      isSubmitting={false}
       onClose={onClose}
       onEdit={onEdit}
     />,
@@ -71,7 +69,7 @@ test("submits an edit and closes the form", async () => {
   fireEvent.change(screen.getByLabelText("Time of day"), {
     target: { value: "PM" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  fireEvent.submit(screen.getByLabelText("Title").closest("form")!);
 
   await waitFor(() => expect(onEdit).toHaveBeenCalledOnce());
   expect(onEdit).toHaveBeenCalledWith(
@@ -90,12 +88,11 @@ test("keeps the form open and reports a failed edit", async () => {
   render(
     <EditActivityForm
       activity={runActivity}
-      isSubmitting={false}
       onClose={onClose}
       onEdit={vi.fn().mockRejectedValue(new Error("nope"))}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  fireEvent.submit(screen.getByLabelText("Title").closest("form")!);
 
   expect((await screen.findByRole("alert")).textContent).toContain(
     "Unable to edit activity",
@@ -108,54 +105,21 @@ test("shows validation errors without submitting", async () => {
   render(
     <EditActivityForm
       activity={runActivity}
-      isSubmitting={false}
       onClose={vi.fn()}
       onEdit={onEdit}
     />,
   );
   fireEvent.change(screen.getByLabelText("Title"), { target: { value: "" } });
-  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  fireEvent.submit(screen.getByLabelText("Title").closest("form")!);
 
   expect(await screen.findByText("Enter an activity title")).toBeDefined();
   expect(onEdit).not.toHaveBeenCalled();
-});
-
-test("supports cancellation and reports pending submission", () => {
-  const onClose = vi.fn();
-  const { rerender } = render(
-    <EditActivityForm
-      activity={runActivity}
-      isSubmitting={false}
-      onClose={onClose}
-      onEdit={vi.fn()}
-    />,
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(onClose).toHaveBeenCalledOnce();
-
-  rerender(
-    <EditActivityForm
-      activity={runActivity}
-      isSubmitting
-      onClose={onClose}
-      onEdit={vi.fn()}
-    />,
-  );
-  expect(screen.getByRole("button", { name: "Saving…" })).toHaveProperty(
-    "disabled",
-    true,
-  );
-  expect(screen.getByRole("button", { name: "Cancel" })).toHaveProperty(
-    "disabled",
-    true,
-  );
 });
 
 test("hides locked terminal run fields", () => {
   render(
     <EditActivityForm
       activity={{ ...runActivity, status: "COMPLETED" }}
-      isSubmitting={false}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
@@ -170,7 +134,6 @@ test("renders an editable duration for scheduled strength activities", () => {
   render(
     <EditActivityForm
       activity={strengthActivity}
-      isSubmitting={false}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
@@ -188,7 +151,6 @@ test("hides the duration for terminal strength activities", () => {
   render(
     <EditActivityForm
       activity={{ ...strengthActivity, status: "COMPLETED" }}
-      isSubmitting={false}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
