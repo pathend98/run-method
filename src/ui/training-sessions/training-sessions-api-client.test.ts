@@ -1,8 +1,10 @@
 import {
   createTrainingSession,
+  completeTrainingSession,
   deleteTrainingSession,
   editTrainingSession,
   fetchTrainingSessions,
+  skipTrainingSession,
 } from "./training-sessions-api-client";
 
 const createRequest = {
@@ -360,5 +362,45 @@ test("deleteTrainingSession falls back for non-JSON errors", async () => {
   await expect(deleteTrainingSession(createdSession.id)).rejects.toMatchObject({
     message: "Unable to delete training session",
     status: 502,
+  });
+});
+
+test("skipTrainingSession posts the reason and parses the skipped session", async () => {
+  const skippedSession = { ...createdSession, status: "SKIPPED" as const, skipReason: "Recovery" };
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(skippedSession) }));
+
+  await expect(skipTrainingSession(createdSession.id, { skipReason: "Recovery" })).resolves.toEqual(skippedSession);
+  expect(fetch).toHaveBeenCalledWith(`/api/v1/training-sessions/${createdSession.id}/skip`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ skipReason: "Recovery" }),
+  });
+});
+
+test("completeTrainingSession posts actuals and parses the completed session", async () => {
+  const completedSession = { ...createdSession, status: "COMPLETED" as const, actualDurationSeconds: 1800 };
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(completedSession) }));
+
+  await expect(completeTrainingSession(createdSession.id, { actualDurationSeconds: 1800 })).resolves.toEqual(completedSession);
+  expect(fetch).toHaveBeenCalledWith(`/api/v1/training-sessions/${createdSession.id}/complete`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actualDurationSeconds: 1800 }),
+  });
+});
+
+test("skipTrainingSession preserves API field errors", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: false, status: 400, json: vi.fn().mockResolvedValue({ error: "Invalid request", fieldErrors: { skipReason: ["Required"] } }),
+  }));
+
+  await expect(skipTrainingSession(createdSession.id, { skipReason: "Recovery" })).rejects.toMatchObject({
+    message: "Invalid request", status: 400, fieldErrors: { skipReason: ["Required"] },
+  });
+});
+
+test("completeTrainingSession falls back for a non-JSON error", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: false, status: 502, json: vi.fn().mockRejectedValue(new SyntaxError("not JSON")),
+  }));
+
+  await expect(completeTrainingSession(createdSession.id, { actualDurationSeconds: 1800 })).rejects.toMatchObject({
+    message: "Unable to complete training session", status: 502, fieldErrors: undefined,
   });
 });

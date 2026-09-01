@@ -420,6 +420,46 @@ test("renders skipped activity metadata in activity details", () => {
   expect(within(panel).getByText("Travel day")).toBeDefined();
 });
 
+test("skips the selected activity and closes its details", async () => {
+  const onSkipActivity = vi.fn().mockResolvedValue(undefined);
+  render(<TrainingPlannerView {...navigationProps} onSkipActivity={onSkipActivity} week={testWeek} />);
+  fireEvent.click(screen.getByRole("button", { name: "View Tempo run details" }));
+  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  fireEvent.change(screen.getByLabelText("Skip reason"), { target: { value: "Recovery" } });
+  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  await waitFor(() => expect(onSkipActivity).toHaveBeenCalledWith("monday-am-run", { skipReason: "Recovery" }));
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
+});
+
+test("completes the selected activity and closes its details", async () => {
+  const onCompleteActivity = vi.fn().mockResolvedValue(undefined);
+  render(<TrainingPlannerView {...navigationProps} onCompleteActivity={onCompleteActivity} week={testWeek} />);
+  fireEvent.click(screen.getByRole("button", { name: "View Tempo run details" }));
+  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.change(screen.getByLabelText("Actual duration (minutes)"), { target: { value: "40" } });
+  fireEvent.change(screen.getByLabelText("Actual distance (km)"), { target: { value: "6" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  await waitFor(() => expect(onCompleteActivity).toHaveBeenCalledWith("monday-am-run", { actualDurationSeconds: 2400, actualDistanceMetres: 6000 }));
+  expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull();
+});
+
+test("supports default skip and complete handlers", async () => {
+  const { rerender } = render(<TrainingPlannerView {...navigationProps} week={testWeek} />);
+  fireEvent.click(screen.getByRole("button", { name: "View Tempo run details" }));
+  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  fireEvent.change(screen.getByLabelText("Skip reason"), { target: { value: "Rest" } });
+  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  await waitFor(() => expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull());
+
+  rerender(<TrainingPlannerView {...navigationProps} week={testWeek} />);
+  fireEvent.click(screen.getByRole("button", { name: "View Tempo run details" }));
+  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.change(screen.getByLabelText("Actual duration (minutes)"), { target: { value: "30" } });
+  fireEvent.change(screen.getByLabelText("Actual distance (km)"), { target: { value: "5" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  await waitFor(() => expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull());
+});
+
 test("TrainingActivityCard handles present and absent descriptions", () => {
   const { rerender } = render(
     <TrainingActivityCard

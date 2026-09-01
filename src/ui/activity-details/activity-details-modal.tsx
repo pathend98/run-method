@@ -1,28 +1,44 @@
 import { useState } from "react";
 
-import type { TrainingSession } from "@/domain/training-sessions";
+import type {
+  CompleteTrainingSessionRequest,
+  SkipTrainingSessionRequest,
+  TrainingSession,
+} from "@/domain/training-sessions";
 import { Modal, type ModalAction } from "@/ui/components/modal";
 import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
 import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
+import { ActivityTransitionForm } from "./components/activity-transition-form";
 
 type ActivityDetailsModalProps = {
   activity: TrainingSession;
   isDeleting: boolean;
+  isTransitioning?: boolean;
   onClose: () => void;
+  onComplete?: (
+    request: CompleteTrainingSessionRequest,
+  ) => Promise<unknown>;
   onDelete: () => Promise<unknown>;
   onEdit: () => void;
+  onSkip?: (request: SkipTrainingSessionRequest) => Promise<unknown>;
 };
 
 export function ActivityDetailsModal({
   activity,
   isDeleting,
+  isTransitioning = false,
   onClose,
+  onComplete = async () => undefined,
   onDelete,
   onEdit,
+  onSkip = async () => undefined,
 }: ActivityDetailsModalProps) {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [transitionMode, setTransitionMode] = useState<
+    "complete" | "skip" | null
+  >(null);
 
   async function confirmDelete() {
     setDeleteError(null);
@@ -40,6 +56,19 @@ export function ActivityDetailsModal({
     setIsConfirmingDelete(false);
   }
 
+  async function completeActivity(request: CompleteTrainingSessionRequest) {
+    await onComplete(request);
+    onClose();
+  }
+
+  async function skipActivity(request: SkipTrainingSessionRequest) {
+    await onSkip(request);
+    onClose();
+  }
+
+  const isTransitioningActivity = transitionMode !== null;
+  const isBusy = isDeleting || isTransitioning;
+
   const headerActions: ModalAction[] = isConfirmingDelete
     ? [
         {
@@ -53,7 +82,35 @@ export function ActivityDetailsModal({
           variant: "danger",
         },
       ]
-    : [
+    : isTransitioningActivity
+      ? [
+          {
+            label: "Cancel",
+            onClick: () => setTransitionMode(null),
+            variant: "secondary",
+          },
+          {
+            ariaLabel: "Close activity details",
+            label: "Close",
+            onClick: onClose,
+            variant: "secondary",
+          },
+        ]
+      : [
+        ...(activity.status === "SCHEDULED"
+          ? [
+              {
+                label: "Complete activity",
+                onClick: () => setTransitionMode("complete"),
+                variant: "primary" as const,
+              },
+              {
+                label: "Skip activity",
+                onClick: () => setTransitionMode("skip"),
+                variant: "danger-outline" as const,
+              },
+            ]
+          : []),
         {
           label: "Edit activity",
           onClick: onEdit,
@@ -76,8 +133,32 @@ export function ActivityDetailsModal({
     <Modal
       dismissLabel="Dismiss activity details"
       eyebrow={formatActivityType(activity.activityType)}
+      footerActions={
+        transitionMode
+          ? [
+              {
+                label: "Cancel",
+                onClick: () => setTransitionMode(null),
+                variant: "secondary",
+              },
+              {
+                form: "activity-transition-form",
+                label:
+                  transitionMode === "skip"
+                    ? isTransitioning
+                      ? "Skipping…"
+                      : "Skip activity"
+                    : isTransitioning
+                      ? "Completing…"
+                      : "Complete activity",
+                type: "submit",
+                variant: transitionMode === "skip" ? "danger" : "primary",
+              },
+            ]
+          : []
+      }
       headerActions={headerActions}
-      isBusy={isDeleting}
+      isBusy={isBusy}
       onClose={onClose}
       size="large"
       title={activity.title}
@@ -92,6 +173,16 @@ export function ActivityDetailsModal({
             </p>
           ) : null}
         </div>
+      ) : null}
+
+      {transitionMode ? (
+        <ActivityTransitionForm
+          activity={activity}
+          isSubmitting={isTransitioning}
+          mode={transitionMode}
+          onComplete={completeActivity}
+          onSkip={skipActivity}
+        />
       ) : null}
 
       {activity.activityType === "RUN" ? (
