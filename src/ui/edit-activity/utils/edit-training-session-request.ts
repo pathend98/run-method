@@ -28,7 +28,12 @@ export function toEditTrainingSessionRequest(
     return editTrainingSessionRequestSchema.parse({
       ...base,
       activityType: activity.activityType,
-      targetDurationSeconds: activity.targetDurationSeconds,
+      targetDurationSeconds:
+        activity.status !== "SCHEDULED"
+          ? activity.targetDurationSeconds
+          : parsed.durationMinutes === ""
+            ? null
+            : Number(parsed.durationMinutes) * 60,
     });
   }
 

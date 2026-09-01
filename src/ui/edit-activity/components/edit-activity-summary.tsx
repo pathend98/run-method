@@ -13,8 +13,7 @@ type EditActivitySummaryProps = {
 
 export function EditActivitySummary({ activity }: EditActivitySummaryProps) {
   const isScheduled = activity.status === "SCHEDULED";
-  const showLockedTargets =
-    activity.activityType === "STRENGTH" || !isScheduled;
+  const showLockedTargets = !isScheduled;
 
   return (
     <dl className="mt-5 grid grid-cols-2 gap-3 rounded-lg bg-zinc-50 p-3 text-sm">

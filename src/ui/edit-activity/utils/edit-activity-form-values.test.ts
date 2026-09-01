@@ -77,10 +77,17 @@ test("maps null values and formats pace", () => {
   ).toBe("");
 });
 
-test("leaves target fields empty for strength activities", () => {
+test("initializes the optional duration for strength activities", () => {
   expect(getEditActivityFormValues(strength())).toMatchObject({
     distanceKilometres: "",
-    durationMinutes: "",
+    durationMinutes: "40",
     pacePerKilometre: "",
   });
+
+  expect(
+    getEditActivityFormValues({
+      ...strength(),
+      targetDurationSeconds: null,
+    }).durationMinutes,
+  ).toBe("");
 });

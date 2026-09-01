@@ -80,6 +80,14 @@ export function EditActivityForm({
         {isScheduled && activity.activityType === "RUN" ? (
           <EditRunActivityFields targetType={activity.targetType} />
         ) : null}
+        {isScheduled && activity.activityType === "STRENGTH" ? (
+          <FormField
+            error={errors.durationMinutes?.message}
+            label="Duration (minutes, optional)"
+          >
+            <input inputMode="numeric" {...register("durationMinutes")} />
+          </FormField>
+        ) : null}
         <FormField label="Description (optional)">
           <textarea className="min-h-24" {...register("description")} />
         </FormField>

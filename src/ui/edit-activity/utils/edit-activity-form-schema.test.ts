@@ -45,7 +45,6 @@ test("does not validate hidden target fields", () => {
   const invalidValues = {
     ...getEditActivityFormValues(strength()),
     distanceKilometres: "bad",
-    durationMinutes: "bad",
     pacePerKilometre: "bad",
   };
   expect(
@@ -55,6 +54,34 @@ test("does not validate hidden target fields", () => {
     createEditActivityFormSchema(run({ status: "COMPLETED" })).safeParse(
       invalidValues,
     ).success,
+  ).toBe(true);
+});
+
+test.each([
+  ["", true, ""],
+  ["45", true, ""],
+  ["1.5", false, "Enter whole minutes"],
+  ["0", false, "greater than zero"],
+] as const)(
+  "validates scheduled strength duration %#",
+  (durationMinutes, success, message) => {
+    const result = createEditActivityFormSchema(strength()).safeParse({
+      ...getEditActivityFormValues(strength()),
+      durationMinutes,
+    });
+
+    expect(result.success).toBe(success);
+    if (!result.success) expect(result.error.message).toContain(message);
+  },
+);
+
+test("does not validate a locked terminal strength duration", () => {
+  const activity = { ...strength(), status: "COMPLETED" as const };
+  expect(
+    createEditActivityFormSchema(activity).safeParse({
+      ...getEditActivityFormValues(activity),
+      durationMinutes: "bad",
+    }).success,
   ).toBe(true);
 });
 

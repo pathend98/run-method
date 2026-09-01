@@ -32,12 +32,15 @@ function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
   } as RunTrainingSession;
 }
 
-function strength(): StrengthTrainingSession {
+function strength(
+  override: Partial<StrengthTrainingSession> = {},
+): StrengthTrainingSession {
   return {
     ...base,
     activityType: "STRENGTH",
     targetDurationSeconds: 2400,
     actualDurationSeconds: null,
+    ...override,
   };
 }
 
@@ -93,25 +96,51 @@ test.each([
   },
 );
 
-test("converts strength edits while preserving its hidden target", () => {
-  const activity = strength();
-  const request = toEditTrainingSessionRequest(
-    {
-      ...getEditActivityFormValues(activity),
-      title: "Gym",
-      timeOfDay: "PM",
-    },
-    activity,
-  );
+test.each([
+  ["60", 3600],
+  ["", null],
+] as const)(
+  "converts a scheduled strength duration of %#",
+  (durationMinutes, targetDurationSeconds) => {
+    const activity = strength();
+    const request = toEditTrainingSessionRequest(
+      {
+        ...getEditActivityFormValues(activity),
+        title: "Gym",
+        timeOfDay: "PM",
+        durationMinutes,
+      },
+      activity,
+    );
 
-  expect(request).toEqual({
-    title: "Gym",
-    description: "Controlled effort",
-    timeOfDay: "PM",
-    activityType: "STRENGTH",
-    targetDurationSeconds: 2400,
-  });
-});
+    expect(request).toEqual({
+      title: "Gym",
+      description: "Controlled effort",
+      timeOfDay: "PM",
+      activityType: "STRENGTH",
+      targetDurationSeconds,
+    });
+  },
+);
+
+test.each(["COMPLETED", "SKIPPED"] as const)(
+  "preserves the locked duration for a %s strength activity",
+  (status) => {
+    const activity = strength({
+      status,
+      skipReason: status === "SKIPPED" ? "Rest" : null,
+    });
+    const request = toEditTrainingSessionRequest(
+      {
+        ...getEditActivityFormValues(activity),
+        durationMinutes: "999",
+      },
+      activity,
+    );
+
+    expect(request).toMatchObject({ targetDurationSeconds: 2400 });
+  },
+);
 
 test.each([
   run({ status: "COMPLETED" }),
