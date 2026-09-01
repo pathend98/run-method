@@ -10,10 +10,11 @@ import {
   TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
-import { PATCH } from "./route";
+import { DELETE, PATCH } from "./route";
 
 vi.mock("@/server/server", () => ({
   trainingSessionsService: {
+    delete: vi.fn(),
     edit: vi.fn(),
   },
   trainingSessionsRequestValidator: {
@@ -58,6 +59,61 @@ function patchRequest(body: string = JSON.stringify(editRequest)) {
 function context(sessionId = id) {
   return { params: Promise.resolve({ id: sessionId }) };
 }
+
+function deleteRequest(sessionId = id) {
+  return new NextRequest(
+    `http://localhost/api/v1/training-sessions/${sessionId}`,
+    { method: "DELETE" },
+  );
+}
+
+test("deletes a training session with 204 status", async () => {
+  service.delete.mockResolvedValue();
+
+  const response = await DELETE(deleteRequest(), context());
+
+  expect(response.status).toBe(204);
+  await expect(response.text()).resolves.toBe("");
+  expect(service.delete).toHaveBeenCalledWith(id);
+});
+
+test("returns invalid delete ids with 400 status", async () => {
+  service.delete.mockRejectedValue(
+    new TrainingSessionsValidationError(
+      "training session id must be a valid UUID",
+    ),
+  );
+
+  const response = await DELETE(deleteRequest("invalid"), context("invalid"));
+
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({
+    error: "training session id must be a valid UUID",
+  });
+  expect(service.delete).toHaveBeenCalledWith("invalid");
+});
+
+test("returns missing delete targets with 404 status", async () => {
+  service.delete.mockRejectedValue(new TrainingSessionNotFoundError());
+
+  const response = await DELETE(deleteRequest(), context());
+
+  expect(response.status).toBe(404);
+  await expect(response.json()).resolves.toEqual({
+    error: "Training session not found",
+  });
+});
+
+test("returns stable deletion errors with 500 status", async () => {
+  service.delete.mockRejectedValue(new Error("database down"));
+
+  const response = await DELETE(deleteRequest(), context());
+
+  expect(response.status).toBe(500);
+  await expect(response.json()).resolves.toEqual({
+    error: "Unable to delete training session",
+  });
+});
 
 test("edits and returns a complete training session", async () => {
   validator.validateEdit.mockReturnValue(editRequest);

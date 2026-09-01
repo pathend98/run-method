@@ -15,6 +15,7 @@ function createService() {
     findBetweenDates: vi.fn().mockResolvedValue([]),
     findById: vi.fn(),
     create: vi.fn(),
+    deleteById: vi.fn(),
     edit: vi.fn(),
   };
   const validator: TrainingSessionsValidator = {
@@ -91,6 +92,34 @@ test("delegates creation to the repository", async () => {
 
   await expect(service.create(request)).resolves.toEqual(created);
   expect(repository.create).toHaveBeenCalledWith(request);
+});
+
+test("rejects invalid delete ids before deleting from the repository", async () => {
+  const { repository, service } = createService();
+
+  await expect(service.delete("invalid")).rejects.toThrow(
+    "training session id must be a valid UUID",
+  );
+  expect(repository.deleteById).not.toHaveBeenCalled();
+});
+
+test("deletes a training session by id", async () => {
+  const { repository, service } = createService();
+  const id = "11111111-1111-4111-8111-111111111111";
+  vi.mocked(repository.deleteById).mockResolvedValue(true);
+
+  await expect(service.delete(id)).resolves.toBeUndefined();
+  expect(repository.deleteById).toHaveBeenCalledWith(id);
+});
+
+test("reports a missing training session during deletion", async () => {
+  const { repository, service } = createService();
+  const id = "11111111-1111-4111-8111-111111111111";
+  vi.mocked(repository.deleteById).mockResolvedValue(false);
+
+  await expect(service.delete(id)).rejects.toBeInstanceOf(
+    TrainingSessionNotFoundError,
+  );
 });
 
 const runSession: TrainingSession = {

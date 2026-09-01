@@ -13,6 +13,7 @@ export interface TrainingSessionsRepository {
   findBetweenDates(from: string, to: string): Promise<TrainingSession[]>;
   findById(id: string): Promise<TrainingSession | null>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
+  deleteById(id: string): Promise<boolean>;
   edit(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
@@ -145,6 +146,15 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         strengthDetails: strengthDetailsRow,
       });
     });
+  }
+
+  async deleteById(id: string): Promise<boolean> {
+    const deleted = await this.db
+      .delete(trainingSessions)
+      .where(eq(trainingSessions.id, id))
+      .returning({ id: trainingSessions.id });
+
+    return deleted.length > 0;
   }
 
   async edit(

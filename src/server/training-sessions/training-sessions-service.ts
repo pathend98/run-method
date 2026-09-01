@@ -21,6 +21,7 @@ export interface TrainingSessionsService {
     to: string | null,
   ): Promise<TrainingSession[]>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
+  delete(id: string): Promise<void>;
   edit(
     id: string,
     request: EditTrainingSessionRequest,
@@ -69,6 +70,17 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
 
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession> {
     return this.repository.create(request);
+  }
+
+  async delete(id: string): Promise<void> {
+    if (!trainingSessionIdSchema.safeParse(id).success) {
+      throw new TrainingSessionsValidationError(
+        "training session id must be a valid UUID",
+      );
+    }
+
+    const deleted = await this.repository.deleteById(id);
+    if (!deleted) throw new TrainingSessionNotFoundError();
   }
 
   async edit(
