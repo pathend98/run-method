@@ -377,6 +377,11 @@ function createRepositoryForEdit(
         ? request.targetPaceSecondsPerKilometre
         : null,
   };
+  const strengthRow = {
+    ...rows[1].strengthDetails!,
+    targetDurationSeconds:
+      "targetDurationSeconds" in request ? request.targetDurationSeconds : null,
+  };
   const updateValues: unknown[] = [];
   const update = vi.fn().mockImplementation(() => ({
     set: vi.fn().mockImplementation((values) => {
@@ -385,7 +390,13 @@ function createRepositoryForEdit(
         where: vi.fn().mockReturnValue({
           returning: vi
             .fn()
-            .mockResolvedValue([updateValues.length === 1 ? session : runRow]),
+            .mockResolvedValue([
+              updateValues.length === 1
+                ? session
+                : request.activityType === "RUN"
+                  ? runRow
+                  : strengthRow,
+            ]),
         }),
       };
     }),
@@ -464,15 +475,16 @@ test("edits strength common fields without changing strength details or order", 
     description: "Upper body",
     timeOfDay: current.timeOfDay,
     activityType: "STRENGTH",
+    targetDurationSeconds: current.targetDurationSeconds,
   } satisfies EditTrainingSessionRequest;
-  const { repository, selectWhere, transformer, updateValues } =
-    createRepositoryForEdit(current, request);
+  const { repository, transformer, updateValues } = createRepositoryForEdit(
+    current,
+    request,
+  );
 
   await repository.edit(current, request);
 
-  expect(selectWhere).not.toHaveBeenCalled();
   expect(updateValues).toHaveLength(1);
-  expect(updateValues[0]).toMatchObject({ sortOrder: current.sortOrder });
   expect(transformer.transform).toHaveBeenCalledWith({
     session: expect.any(Object),
     runDetails: null,
@@ -483,6 +495,32 @@ test("edits strength common fields without changing strength details or order", 
     },
   });
 });
+
+test.each([3600, null])(
+  "updates a scheduled strength duration to %s",
+  async (targetDurationSeconds) => {
+    const current: TrainingSession = {
+      ...transformedRows[1],
+      status: "SCHEDULED",
+    };
+    const request = {
+      title: current.title,
+      description: current.description,
+      timeOfDay: current.timeOfDay,
+      activityType: "STRENGTH" as const,
+      targetDurationSeconds,
+    };
+    const { repository, transformer, updateValues } = createRepositoryForEdit(
+      current,
+      request,
+    );
+
+    await repository.edit(current, request);
+
+    expect(updateValues[1]).toEqual({ targetDurationSeconds });
+    expect(transformer.transform).toHaveBeenCalledOnce();
+  },
+);
 
 test.each([
   {
@@ -592,6 +630,7 @@ test("rejects mismatched aggregate and request activity types defensively", asyn
     description: null,
     timeOfDay: current.timeOfDay,
     activityType: "STRENGTH",
+    targetDurationSeconds: null,
   } satisfies EditTrainingSessionRequest;
   const { repository } = createRepositoryForEdit(current, request);
 

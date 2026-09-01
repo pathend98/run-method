@@ -43,6 +43,7 @@ test("rejects activity type changes", () => {
       description: null,
       timeOfDay: "AM",
       activityType: "STRENGTH",
+      targetDurationSeconds: 1500,
     }),
   ).toThrow("activityType cannot be changed");
 });
@@ -192,6 +193,43 @@ test("allows title and description edits on terminal strength sessions", () => {
       description: "Upper body",
       timeOfDay: null,
       activityType: "STRENGTH",
+      targetDurationSeconds: current.targetDurationSeconds,
     }),
   ).not.toThrow();
 });
+
+test.each([
+  ["completed", "COMPLETED" as const, 1801],
+  ["skipped", "SKIPPED" as const, null],
+])(
+  "rejects changed strength duration for %s sessions",
+  (_name, status, targetDurationSeconds) => {
+    const current: TrainingSession = {
+      id: "22222222-2222-4222-8222-222222222222",
+      title: "Strength",
+      activityType: "STRENGTH",
+      status,
+      date: "2026-08-26",
+      timeOfDay: null,
+      description: null,
+      sortOrder: 0,
+      skipReason: status === "SKIPPED" ? "Sick" : null,
+      createdAt: "2026-08-01T10:00:00.000Z",
+      updatedAt: "2026-08-01T10:00:00.000Z",
+      targetDurationSeconds: 1800,
+      actualDurationSeconds: null,
+    };
+
+    expect(() =>
+      validator.validateEdit(current, {
+        title: current.title,
+        description: current.description,
+        timeOfDay: current.timeOfDay,
+        activityType: "STRENGTH",
+        targetDurationSeconds,
+      }),
+    ).toThrow(
+      "strength target duration cannot be changed for completed or skipped sessions",
+    );
+  },
+);

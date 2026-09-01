@@ -243,6 +243,7 @@ const editRequest = {
   activityType: "STRENGTH" as const,
   timeOfDay: "PM" as const,
   description: "Lower body",
+  targetDurationSeconds: 2400,
 };
 
 const editedSession = {

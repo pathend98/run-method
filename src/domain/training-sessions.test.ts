@@ -153,7 +153,8 @@ test.each([
     targetDurationSeconds: 1800,
     targetPaceSecondsPerKilometre: 300,
   },
-  { activityType: "STRENGTH" },
+  { activityType: "STRENGTH", targetDurationSeconds: 1800 },
+  { activityType: "STRENGTH", targetDurationSeconds: null },
 ])("editTrainingSessionRequestSchema validates $activityType edits", (edit) => {
   expect(
     editTrainingSessionRequestSchema.parse({
@@ -193,14 +194,17 @@ test.each([
   ).toThrow();
 });
 
-test("editTrainingSessionRequestSchema rejects immutable strength targets", () => {
-  expect(() =>
-    editTrainingSessionRequestSchema.parse({
-      title: "Strength",
-      description: null,
-      timeOfDay: "PM",
-      activityType: "STRENGTH",
-      targetDurationSeconds: 1800,
-    }),
-  ).toThrow();
-});
+test.each([undefined, 0, -1, 1.5, "1800"])(
+  "editTrainingSessionRequestSchema rejects invalid strength duration %#",
+  (targetDurationSeconds) => {
+    expect(() =>
+      editTrainingSessionRequestSchema.parse({
+        title: "Strength",
+        description: null,
+        timeOfDay: "PM",
+        activityType: "STRENGTH",
+        targetDurationSeconds,
+      }),
+    ).toThrow();
+  },
+);
