@@ -167,20 +167,40 @@ test("validates an edit request and trims editable text", () => {
   });
 });
 
-test("reports edit errors from the matching activity branch", () => {
+test("validates a nullable strength duration edit", () => {
+  expect(
+    validator.validateEdit({
+      title: "Strength",
+      description: null,
+      timeOfDay: null,
+      activityType: "STRENGTH",
+      targetDurationSeconds: null,
+    }),
+  ).toEqual({
+    title: "Strength",
+    description: null,
+    timeOfDay: null,
+    activityType: "STRENGTH",
+    targetDurationSeconds: null,
+  });
+});
+
+test("reports strength duration edit errors from the matching branch", () => {
   try {
     validator.validateEdit({
       title: "Strength",
       description: null,
       timeOfDay: null,
       activityType: "STRENGTH",
-      targetDurationSeconds: 1800,
+      targetDurationSeconds: "long",
     });
   } catch (error) {
     expect(
       (error as TrainingSessionsRequestValidationError).fieldErrors,
     ).toEqual({
-      targetDurationSeconds: ['Unrecognized key: "targetDurationSeconds"'],
+      targetDurationSeconds: [
+        "Invalid input: expected number, received string",
+      ],
     });
   }
 });
@@ -198,6 +218,9 @@ test("edit validation rejects omitted and immutable fields", () => {
       (error as TrainingSessionsRequestValidationError).fieldErrors,
     ).toEqual({
       title: ["Invalid input: expected string, received undefined"],
+      targetDurationSeconds: [
+        "Invalid input: expected number, received undefined",
+      ],
       date: ['Unrecognized key: "date"'],
     });
   }

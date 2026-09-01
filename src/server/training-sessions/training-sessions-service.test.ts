@@ -241,6 +241,7 @@ test("edits scheduled strength sessions", async () => {
     description: "Pull focus",
     timeOfDay: "PM",
     activityType: "STRENGTH",
+    targetDurationSeconds: 2400,
   } satisfies EditTrainingSessionRequest;
   vi.mocked(repository.findById).mockResolvedValue(strength);
   vi.mocked(repository.edit).mockResolvedValue({ ...strength, ...edit });
@@ -272,12 +273,47 @@ test("returns unchanged strength sessions without writing", async () => {
     description: strength.description,
     timeOfDay: strength.timeOfDay,
     activityType: "STRENGTH",
+    targetDurationSeconds: strength.targetDurationSeconds,
   } satisfies EditTrainingSessionRequest;
   vi.mocked(repository.findById).mockResolvedValue(strength);
 
   await expect(service.edit(strength.id, edit)).resolves.toBe(strength);
   expect(repository.edit).not.toHaveBeenCalled();
 });
+
+test.each([2400, null])(
+  "writes a scheduled strength duration change to %s",
+  async (targetDurationSeconds) => {
+    const { repository, service } = createService();
+    const strength: TrainingSession = {
+      id: "22222222-2222-4222-8222-222222222222",
+      title: "Strength",
+      activityType: "STRENGTH",
+      status: "SCHEDULED",
+      date: "2026-08-26",
+      timeOfDay: null,
+      description: null,
+      sortOrder: 0,
+      skipReason: null,
+      createdAt: "2026-08-01T10:00:00.000Z",
+      updatedAt: "2026-08-01T10:00:00.000Z",
+      targetDurationSeconds: 1800,
+      actualDurationSeconds: null,
+    };
+    const edit = {
+      title: strength.title,
+      description: strength.description,
+      timeOfDay: strength.timeOfDay,
+      activityType: "STRENGTH" as const,
+      targetDurationSeconds,
+    };
+    vi.mocked(repository.findById).mockResolvedValue(strength);
+
+    await service.edit(strength.id, edit);
+
+    expect(repository.edit).toHaveBeenCalledWith(strength, edit);
+  },
+);
 
 test.each([
   {

@@ -165,6 +165,7 @@ export const editTrainingSessionRequestSchema = z.union([
   editRunSchema,
   editBaseSchema.extend({
     activityType: z.literal("STRENGTH"),
+    targetDurationSeconds: positiveIntegerSchema.nullable(),
   }),
 ]);
 

@@ -102,7 +102,9 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
       return false;
     }
 
-    if (request.activityType === "STRENGTH") return true;
+    if (request.activityType === "STRENGTH") {
+      return current.targetDurationSeconds === request.targetDurationSeconds;
+    }
     return this.runTargetsEqual(current as RunTrainingSession, request);
   }
 

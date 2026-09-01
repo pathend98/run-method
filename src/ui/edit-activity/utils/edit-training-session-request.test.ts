@@ -93,7 +93,7 @@ test.each([
   },
 );
 
-test("converts strength edits without its immutable target", () => {
+test("converts strength edits while preserving its hidden target", () => {
   const activity = strength();
   const request = toEditTrainingSessionRequest(
     {
@@ -109,8 +109,8 @@ test("converts strength edits without its immutable target", () => {
     description: "Controlled effort",
     timeOfDay: "PM",
     activityType: "STRENGTH",
+    targetDurationSeconds: 2400,
   });
-  expect(request).not.toHaveProperty("targetDurationSeconds");
 });
 
 test.each([

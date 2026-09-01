@@ -54,6 +54,16 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
         "run targets cannot be changed for completed or skipped sessions",
       );
     }
+
+    if (
+      current.activityType === "STRENGTH" &&
+      request.activityType === "STRENGTH" &&
+      current.targetDurationSeconds !== request.targetDurationSeconds
+    ) {
+      throw new TrainingSessionsValidationError(
+        "strength target duration cannot be changed for completed or skipped sessions",
+      );
+    }
   }
 
   private runTargetsEqual(

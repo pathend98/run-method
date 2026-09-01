@@ -227,14 +227,28 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         current.activityType === "STRENGTH" &&
         request.activityType === "STRENGTH"
       ) {
-        return this.transformer.transform({
-          session,
-          runDetails: null,
-          strengthDetails: {
+        let strengthDetailsRow: typeof strengthDetails.$inferSelect;
+        if (current.status === "SCHEDULED") {
+          const [updatedStrengthDetails] = await tx
+            .update(strengthDetails)
+            .set({
+              targetDurationSeconds: request.targetDurationSeconds,
+            })
+            .where(eq(strengthDetails.trainingSessionId, current.id))
+            .returning();
+          strengthDetailsRow = updatedStrengthDetails;
+        } else {
+          strengthDetailsRow = {
             trainingSessionId: current.id,
             targetDurationSeconds: current.targetDurationSeconds,
             actualDurationSeconds: current.actualDurationSeconds,
-          },
+          };
+        }
+
+        return this.transformer.transform({
+          session,
+          runDetails: null,
+          strengthDetails: strengthDetailsRow,
         });
       }
 

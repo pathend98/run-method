@@ -28,6 +28,7 @@ export function toEditTrainingSessionRequest(
     return editTrainingSessionRequestSchema.parse({
       ...base,
       activityType: activity.activityType,
+      targetDurationSeconds: activity.targetDurationSeconds,
     });
   }
 
