@@ -15,6 +15,25 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
+export async function DELETE(_request: NextRequest, context: RouteContext) {
+  try {
+    const { id } = await context.params;
+    await trainingSessionsService.delete(id);
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    if (error instanceof TrainingSessionNotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    if (error instanceof BadRequestError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json(
+      { error: "Unable to delete training session" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function PATCH(request: NextRequest, context: RouteContext) {
   let body: unknown;
   try {
