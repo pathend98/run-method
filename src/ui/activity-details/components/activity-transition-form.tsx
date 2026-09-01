@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 import type {
   CompleteTrainingSessionRequest,
@@ -7,10 +8,10 @@ import type {
 } from "@/domain/training-sessions";
 import { FormField } from "@/ui/components/form-field";
 import {
-  createCompleteActivityFormSchema,
-  skipActivityFormSchema,
+  createActivityTransitionFormSchema,
   toCompleteTrainingSessionRequest,
   toSkipTrainingSessionRequest,
+  type ActivityTransitionFormValues,
 } from "../utils/activity-transition-form";
 
 type ActivityTransitionFormProps = {
@@ -28,58 +29,35 @@ export function ActivityTransitionForm({
   onComplete,
   onSkip,
 }: ActivityTransitionFormProps) {
-  const [skipReason, setSkipReason] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("");
-  const [distanceKilometres, setDistanceKilometres] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const isSkipping = mode === "skip";
+  const form = useForm<ActivityTransitionFormValues>({
+    defaultValues: {
+      distanceKilometres: "",
+      durationMinutes: "",
+      skipReason: "",
+    },
+    resolver: zodResolver(createActivityTransitionFormSchema(activity, mode)),
+  });
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    setError,
+  } = form;
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmissionError(null);
-    const result = isSkipping
-      ? skipActivityFormSchema.safeParse({ skipReason })
-      : createCompleteActivityFormSchema(activity).safeParse({
-          durationMinutes,
-          distanceKilometres,
-        });
-
-    if (!result.success) {
-      setFieldErrors(
-        Object.fromEntries(
-          result.error.issues.map((issue) => [
-            String(issue.path[0]),
-            issue.message,
-          ]),
-        ),
-      );
-      return;
-    }
-
-    setFieldErrors({});
+  async function submit(values: ActivityTransitionFormValues) {
     try {
       if (isSkipping) {
-        await onSkip(
-          toSkipTrainingSessionRequest(result.data as { skipReason: string }),
-        );
+        await onSkip(toSkipTrainingSessionRequest(values));
       } else {
-        await onComplete(
-          toCompleteTrainingSessionRequest(
-            activity,
-            result.data as {
-              distanceKilometres: string;
-              durationMinutes: string;
-            },
-          ),
-        );
+        await onComplete(toCompleteTrainingSessionRequest(activity, values));
       }
     } catch {
-      setSubmissionError(
-        isSkipping
+      setError("root", {
+        message: isSkipping
           ? "Unable to skip activity. Please try again."
           : "Unable to complete activity. Please try again.",
-      );
+      });
     }
   }
 
@@ -88,31 +66,30 @@ export function ActivityTransitionForm({
       className="mt-6 space-y-4 rounded-lg border border-teal-200 bg-teal-50 p-4"
       id="activity-transition-form"
       noValidate
-      onSubmit={submit}
+      onSubmit={handleSubmit(submit)}
     >
       <h3 className="text-sm font-semibold text-zinc-950">
         {isSkipping ? "Skip activity" : "Complete activity"}
       </h3>
-      {submissionError ? (
+      {errors.root ? (
         <p className="text-sm text-red-700" role="alert">
-          {submissionError}
+          {errors.root.message}
         </p>
       ) : null}
       {isSkipping ? (
-        <FormField error={fieldErrors.skipReason} label="Skip reason">
+        <FormField error={errors.skipReason?.message} label="Skip reason">
           <textarea
             aria-label="Skip reason"
             autoFocus
             className="min-h-24"
             disabled={isSubmitting}
-            onChange={(event) => setSkipReason(event.target.value)}
-            value={skipReason}
+            {...register("skipReason")}
           />
         </FormField>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
-            error={fieldErrors.durationMinutes}
+            error={errors.durationMinutes?.message}
             label="Actual duration (minutes)"
           >
             <input
@@ -120,21 +97,19 @@ export function ActivityTransitionForm({
               autoFocus
               disabled={isSubmitting}
               inputMode="numeric"
-              onChange={(event) => setDurationMinutes(event.target.value)}
-              value={durationMinutes}
+              {...register("durationMinutes")}
             />
           </FormField>
           {activity.activityType === "RUN" ? (
             <FormField
-              error={fieldErrors.distanceKilometres}
+              error={errors.distanceKilometres?.message}
               label="Actual distance (km)"
             >
               <input
                 aria-label="Actual distance (km)"
                 disabled={isSubmitting}
                 inputMode="decimal"
-                onChange={(event) => setDistanceKilometres(event.target.value)}
-                value={distanceKilometres}
+                {...register("distanceKilometres")}
               />
             </FormField>
           ) : null}

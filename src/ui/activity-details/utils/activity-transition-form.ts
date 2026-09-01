@@ -28,6 +28,8 @@ export type SkipActivityFormValues = z.infer<typeof skipActivityFormSchema>;
 export type CompleteActivityFormValues = z.infer<
   typeof completeActivityFormSchema
 >;
+export type ActivityTransitionFormValues = SkipActivityFormValues &
+  CompleteActivityFormValues;
 
 export function createCompleteActivityFormSchema(activity: TrainingSession) {
   return completeActivityFormSchema.superRefine((values, context) => {
@@ -41,6 +43,38 @@ export function createCompleteActivityFormSchema(activity: TrainingSession) {
       });
     }
   });
+}
+
+export function createActivityTransitionFormSchema(
+  activity: TrainingSession,
+  mode: "complete" | "skip",
+) {
+  const transitionSchema =
+    mode === "skip"
+      ? skipActivityFormSchema
+      : createCompleteActivityFormSchema(activity);
+
+  return z
+    .object({
+      skipReason: z.string(),
+      durationMinutes: z.string(),
+      distanceKilometres: z.string(),
+    })
+    .superRefine((values, context) => {
+      const result = transitionSchema.safeParse(values);
+      if (result.success) return;
+
+      const issuesByPath = new Map(
+        result.error.issues.map((issue) => [issue.path.join("."), issue]),
+      );
+      for (const issue of issuesByPath.values()) {
+        context.addIssue({
+          code: "custom",
+          message: issue.message,
+          path: issue.path,
+        });
+      }
+    });
 }
 
 export function toSkipTrainingSessionRequest(
