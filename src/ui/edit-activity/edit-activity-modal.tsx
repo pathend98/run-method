@@ -1,12 +1,11 @@
-import { useEffect } from "react";
-
 import type {
   EditTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
+import { Modal } from "@/ui/components/modal";
 import { EditActivityForm } from "./components/edit-activity-form";
-import { EditActivityHeader } from "./components/edit-activity-header";
 import { EditActivitySummary } from "./components/edit-activity-summary";
+import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
 
 type EditActivityModalProps = {
   activity: TrainingSession;
@@ -21,42 +20,37 @@ export function EditActivityModal({
   onClose,
   onEdit,
 }: EditActivityModalProps) {
-  useEffect(() => {
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape" && !isSubmitting) onClose();
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [isSubmitting, onClose]);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      <button
-        aria-label="Dismiss edit activity"
-        className="absolute inset-0 cursor-default bg-zinc-950/30"
-        disabled={isSubmitting}
-        onClick={onClose}
-        type="button"
-      />
-      <section
-        aria-labelledby="edit-activity-title"
-        aria-modal="true"
-        className="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-xl bg-white p-4 shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:p-6"
-        role="dialog"
-      >
-        <EditActivityHeader
-          activity={activity}
-          isSubmitting={isSubmitting}
-          onClose={onClose}
-        />
-        <EditActivitySummary activity={activity} />
-        <EditActivityForm
-          activity={activity}
-          isSubmitting={isSubmitting}
-          onClose={onClose}
-          onEdit={onEdit}
-        />
-      </section>
-    </div>
+    <Modal
+      dismissLabel="Dismiss edit activity"
+      eyebrow={`${formatActivityType(activity.activityType)} · ${activity.date}`}
+      footerActions={[
+        {
+          label: "Cancel",
+          onClick: onClose,
+          variant: "secondary",
+        },
+        {
+          form: "edit-activity-form",
+          label: isSubmitting ? "Saving…" : "Save changes",
+          type: "submit",
+          variant: "primary",
+        },
+      ]}
+      headerActions={[
+        {
+          ariaLabel: "Close edit activity",
+          label: "Close",
+          onClick: onClose,
+          variant: "secondary",
+        },
+      ]}
+      isBusy={isSubmitting}
+      onClose={onClose}
+      title="Edit activity"
+    >
+      <EditActivitySummary activity={activity} />
+      <EditActivityForm activity={activity} onClose={onClose} onEdit={onEdit} />
+    </Modal>
   );
 }

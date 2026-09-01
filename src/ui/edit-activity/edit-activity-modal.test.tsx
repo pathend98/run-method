@@ -34,6 +34,7 @@ test("renders the edit activity dialog and its sections", () => {
   );
 
   expect(screen.getByRole("dialog", { name: "Edit activity" })).toBeDefined();
+  expect(screen.getByText("Run · 2026-08-17")).toBeDefined();
   expect(screen.getByText("Activity type")).toBeDefined();
   expect(screen.getByLabelText("Title")).toBeDefined();
 });
@@ -54,7 +55,9 @@ test("closes through the backdrop and Escape key", () => {
   fireEvent.click(
     screen.getByRole("button", { name: "Dismiss edit activity" }),
   );
-  expect(onClose).toHaveBeenCalledTimes(2);
+  fireEvent.click(screen.getByRole("button", { name: "Close edit activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(onClose).toHaveBeenCalledTimes(4);
 });
 
 test("locks backdrop and Escape dismissal while submitting", () => {
@@ -73,4 +76,15 @@ test("locks backdrop and Escape dismissal while submitting", () => {
     screen.getByRole("button", { name: "Dismiss edit activity" }),
   );
   expect(onClose).not.toHaveBeenCalled();
+  expect(
+    screen.getByRole("button", { name: "Close edit activity" }),
+  ).toHaveProperty("disabled", true);
+  expect(screen.getByRole("button", { name: "Cancel" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  expect(screen.getByRole("button", { name: "Saving…" })).toHaveProperty(
+    "disabled",
+    true,
+  );
 });

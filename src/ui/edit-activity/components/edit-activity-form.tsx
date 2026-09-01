@@ -16,14 +16,12 @@ import { EditRunActivityFields } from "./edit-run-activity-fields";
 
 type EditActivityFormProps = {
   activity: TrainingSession;
-  isSubmitting: boolean;
   onClose: () => void;
   onEdit: (request: EditTrainingSessionRequest) => Promise<unknown>;
 };
 
 export function EditActivityForm({
   activity,
-  isSubmitting,
   onClose,
   onEdit,
 }: EditActivityFormProps) {
@@ -54,6 +52,7 @@ export function EditActivityForm({
     <FormProvider {...form}>
       <form
         className="mt-6 space-y-4"
+        id="edit-activity-form"
         noValidate
         onSubmit={handleSubmit(submit)}
       >
@@ -91,23 +90,6 @@ export function EditActivityForm({
         <FormField label="Description (optional)">
           <textarea className="min-h-24" {...register("description")} />
         </FormField>
-        <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
-          <button
-            className="rounded-md px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-            disabled={isSubmitting}
-            onClick={onClose}
-            type="button"
-          >
-            Cancel
-          </button>
-          <button
-            className="rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isSubmitting}
-            type="submit"
-          >
-            {isSubmitting ? "Saving…" : "Save changes"}
-          </button>
-        </div>
       </form>
     </FormProvider>
   );
