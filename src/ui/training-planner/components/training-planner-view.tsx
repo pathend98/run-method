@@ -21,11 +21,13 @@ import type {
 type TrainingPlannerViewProps = {
   isCurrentWeek: boolean;
   isCreatingActivity?: boolean;
+  isDeletingActivity?: boolean;
   isEditingActivity?: boolean;
   onCreateActivity?: (
     request: CreateTrainingSessionRequest,
   ) => Promise<unknown>;
   onCurrentWeek: () => void;
+  onDeleteActivity?: (id: string) => Promise<unknown>;
   onEditActivity?: (
     id: string,
     request: EditTrainingSessionRequest,
@@ -39,9 +41,11 @@ type TrainingPlannerViewProps = {
 export function TrainingPlannerView({
   isCurrentWeek,
   isCreatingActivity = false,
+  isDeletingActivity = false,
   isEditingActivity = false,
   onCreateActivity = async () => undefined,
   onCurrentWeek,
+  onDeleteActivity = async () => undefined,
   onEditActivity,
   onNextWeek,
   onPreviousWeek,
@@ -126,10 +130,12 @@ export function TrainingPlannerView({
         {selectedActivity && !isEditModalOpen ? (
           <ActivityDetailsModal
             activity={selectedActivity}
+            isDeleting={isDeletingActivity}
             onClose={() => {
               setSelectedActivity(null);
               setIsEditModalOpen(false);
             }}
+            onDelete={() => onDeleteActivity(selectedActivity.id)}
             onEdit={() => setIsEditModalOpen(true)}
           />
         ) : null}

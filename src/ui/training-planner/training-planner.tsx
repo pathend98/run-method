@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   createTrainingSession,
+  deleteTrainingSession,
   editTrainingSession,
   fetchTrainingSessions,
 } from "@/ui/training-sessions/training-sessions-api-client";
@@ -66,6 +67,12 @@ export function TrainingPlanner() {
       await queryClient.invalidateQueries({ queryKey });
     },
   });
+  const deleteMutation = useMutation({
+    mutationFn: deleteTrainingSession,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey });
+    },
+  });
 
   if (query.isPending) {
     return <PlannerStatus message="Loading training planner..." />;
@@ -86,11 +93,13 @@ export function TrainingPlanner() {
     <TrainingPlannerView
       isCurrentWeek={weekRange.from === currentWeekRange.from}
       isCreatingActivity={createMutation.isPending}
+      isDeletingActivity={deleteMutation.isPending}
       isEditingActivity={editMutation.isPending}
       onCreateActivity={(request: CreateTrainingSessionRequest) =>
         createMutation.mutateAsync(request)
       }
       onCurrentWeek={() => navigateToWeek(null)}
+      onDeleteActivity={(id) => deleteMutation.mutateAsync(id)}
       onEditActivity={(id, request) =>
         editMutation.mutateAsync({ id, request })
       }

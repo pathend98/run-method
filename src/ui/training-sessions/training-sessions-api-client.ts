@@ -100,6 +100,25 @@ export async function editTrainingSession(
   return trainingSessionSchema.parse(await response.json());
 }
 
+export async function deleteTrainingSession(id: string): Promise<void> {
+  const response = await fetch(`/api/v1/training-sessions/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const body = await readJsonBody(response);
+    const message =
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof body.error === "string"
+        ? body.error
+        : "Unable to delete training session";
+
+    throw new TrainingSessionsApiError(message, response.status);
+  }
+}
+
 async function readJsonBody(response: Response): Promise<unknown> {
   try {
     return await response.json();
