@@ -10,7 +10,10 @@ export function getEditActivityFormValues(
     timeOfDay: activity.timeOfDay ?? "ANY",
     description: activity.description ?? "",
     distanceKilometres: "",
-    durationMinutes: "",
+    durationMinutes:
+      activity.targetDurationSeconds === null
+        ? ""
+        : String(activity.targetDurationSeconds / 60),
     pacePerKilometre: "",
   };
 
@@ -22,10 +25,6 @@ export function getEditActivityFormValues(
       activity.targetDistanceMetres === null
         ? ""
         : String(activity.targetDistanceMetres / 1000),
-    durationMinutes:
-      activity.targetDurationSeconds === null
-        ? ""
-        : String(activity.targetDurationSeconds / 60),
     pacePerKilometre:
       activity.targetPaceSecondsPerKilometre === null
         ? ""

@@ -71,15 +71,28 @@ test.each([
   ).toBeDefined();
 });
 
-test("renders strength duration and a clear missing-duration fallback", () => {
+test("hides the editable target duration for scheduled strength activities", () => {
+  render(<EditActivitySummary activity={strengthActivity} />);
+
+  expect(screen.queryByText("Target details")).toBeNull();
+  expect(screen.queryByText("45 min")).toBeNull();
+});
+
+test("renders locked strength duration and a clear missing-duration fallback", () => {
   const { rerender } = render(
-    <EditActivitySummary activity={strengthActivity} />,
+    <EditActivitySummary
+      activity={{ ...strengthActivity, status: "COMPLETED" }}
+    />,
   );
   expect(screen.getByText("45 min")).toBeDefined();
 
   rerender(
     <EditActivitySummary
-      activity={{ ...strengthActivity, targetDurationSeconds: null }}
+      activity={{
+        ...strengthActivity,
+        status: "COMPLETED",
+        targetDurationSeconds: null,
+      }}
     />,
   );
   expect(screen.getByText("No target duration")).toBeDefined();

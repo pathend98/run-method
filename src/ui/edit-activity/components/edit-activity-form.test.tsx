@@ -166,7 +166,7 @@ test("hides locked terminal run fields", () => {
   expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
 });
 
-test("does not render run targets for strength activities", () => {
+test("renders an editable duration for scheduled strength activities", () => {
   render(
     <EditActivityForm
       activity={strengthActivity}
@@ -177,5 +177,22 @@ test("does not render run targets for strength activities", () => {
   );
 
   expect(screen.getByLabelText("Time of day")).toBeDefined();
+  expect(screen.getByLabelText("Duration (minutes, optional)")).toHaveProperty(
+    "value",
+    "45",
+  );
   expect(screen.queryByLabelText("Distance (km)")).toBeNull();
+});
+
+test("hides the duration for terminal strength activities", () => {
+  render(
+    <EditActivityForm
+      activity={{ ...strengthActivity, status: "COMPLETED" }}
+      isSubmitting={false}
+      onClose={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  expect(screen.queryByLabelText("Duration (minutes, optional)")).toBeNull();
 });
