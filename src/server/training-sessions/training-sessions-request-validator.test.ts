@@ -3,6 +3,45 @@ import { DefaultTrainingSessionsRequestValidator } from "./training-sessions-req
 
 const validator = new DefaultTrainingSessionsRequestValidator();
 
+test("validates skip requests", () => {
+  expect(validator.validateSkip({ skipReason: "  Recovery  " })).toEqual({
+    skipReason: "Recovery",
+  });
+});
+
+test("reports skip request field errors", () => {
+  expect(() => validator.validateSkip({ skipReason: "" })).toThrow(
+    TrainingSessionsRequestValidationError,
+  );
+
+  try {
+    validator.validateSkip({ skipReason: "Rest", unexpected: true });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toHaveProperty("unexpected");
+  }
+});
+
+test("validates completion requests", () => {
+  expect(
+    validator.validateComplete({
+      actualDurationSeconds: 1500,
+      actualDistanceMetres: 5000,
+    }),
+  ).toEqual({ actualDurationSeconds: 1500, actualDistanceMetres: 5000 });
+});
+
+test("reports completion request field errors", () => {
+  try {
+    validator.validateComplete({ actualDurationSeconds: 0 });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toHaveProperty("actualDurationSeconds");
+  }
+});
+
 test("validates a run creation request and applies optional defaults", () => {
   expect(
     validator.validateCreate({

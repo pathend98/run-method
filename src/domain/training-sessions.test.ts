@@ -1,5 +1,7 @@
 import {
+  completeTrainingSessionRequestSchema,
   editTrainingSessionRequestSchema,
+  skipTrainingSessionRequestSchema,
   trainingSessionSchema,
 } from "./training-sessions";
 
@@ -46,6 +48,7 @@ test("trainingSessionSchema validates strength read models", () => {
       ...baseSession,
       id: "22222222-2222-4222-8222-222222222222",
       title: "Strength",
+      status: "COMPLETED",
       activityType: "STRENGTH",
       targetDurationSeconds: 2700,
       actualDurationSeconds: 2400,
@@ -54,10 +57,98 @@ test("trainingSessionSchema validates strength read models", () => {
     ...baseSession,
     id: "22222222-2222-4222-8222-222222222222",
     title: "Strength",
+    status: "COMPLETED",
     activityType: "STRENGTH",
     targetDurationSeconds: 2700,
     actualDurationSeconds: 2400,
   });
+});
+
+test("trainingSessionSchema validates completed runs with required actuals", () => {
+  expect(() =>
+    trainingSessionSchema.parse({
+      ...baseSession,
+      status: "COMPLETED",
+      activityType: "RUN",
+      targetType: "DISTANCE_DURATION",
+      targetDistanceMetres: 8000,
+      targetDurationSeconds: 2700,
+      targetPaceSecondsPerKilometre: null,
+      actualDistanceMetres: 8050,
+      actualDurationSeconds: 2680,
+    }),
+  ).not.toThrow();
+});
+
+test.each([
+  ["scheduled duration", { actualDurationSeconds: 1200 }],
+  ["scheduled distance", { actualDistanceMetres: 5000 }],
+  ["completed duration", { status: "COMPLETED", actualDurationSeconds: null }],
+  [
+    "completed run distance",
+    {
+      status: "COMPLETED",
+      actualDurationSeconds: 1200,
+      actualDistanceMetres: null,
+    },
+  ],
+  [
+    "skipped actuals",
+    {
+      status: "SKIPPED",
+      skipReason: "Recovery",
+      actualDurationSeconds: 1200,
+    },
+  ],
+])("trainingSessionSchema rejects invalid %s state", (_name, override) => {
+  const session = {
+    ...baseSession,
+    activityType: "RUN",
+    targetType: "DISTANCE_DURATION",
+    targetDistanceMetres: 8000,
+    targetDurationSeconds: 2700,
+    targetPaceSecondsPerKilometre: null,
+    actualDistanceMetres: null,
+    actualDurationSeconds: null,
+  };
+  Object.assign(session, override);
+
+  expect(() => trainingSessionSchema.parse(session)).toThrow();
+});
+
+test("skip request requires and trims a non-empty reason", () => {
+  expect(
+    skipTrainingSessionRequestSchema.parse({ skipReason: "  Rest  " }),
+  ).toEqual({ skipReason: "Rest" });
+  expect(() => skipTrainingSessionRequestSchema.parse({})).toThrow();
+  expect(() =>
+    skipTrainingSessionRequestSchema.parse({ skipReason: "  " }),
+  ).toThrow();
+  expect(() =>
+    skipTrainingSessionRequestSchema.parse({
+      skipReason: "Rest",
+      unexpected: true,
+    }),
+  ).toThrow();
+});
+
+test("completion request requires positive integer actuals", () => {
+  expect(
+    completeTrainingSessionRequestSchema.parse({
+      actualDurationSeconds: 1500,
+      actualDistanceMetres: 5000,
+    }),
+  ).toEqual({ actualDurationSeconds: 1500, actualDistanceMetres: 5000 });
+  expect(() => completeTrainingSessionRequestSchema.parse({})).toThrow();
+  expect(() =>
+    completeTrainingSessionRequestSchema.parse({ actualDurationSeconds: 0 }),
+  ).toThrow();
+  expect(() =>
+    completeTrainingSessionRequestSchema.parse({
+      actualDurationSeconds: 1500,
+      actualDistanceMetres: 1.5,
+    }),
+  ).toThrow();
 });
 
 test.each([

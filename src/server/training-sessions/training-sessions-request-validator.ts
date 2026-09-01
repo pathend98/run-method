@@ -1,16 +1,22 @@
 import type { ZodError } from "zod";
 
 import {
+  completeTrainingSessionRequestSchema,
   createTrainingSessionRequestSchema,
   editTrainingSessionRequestSchema,
+  skipTrainingSessionRequestSchema,
+  type CompleteTrainingSessionRequest,
   type CreateTrainingSessionRequest,
   type EditTrainingSessionRequest,
+  type SkipTrainingSessionRequest,
 } from "@/domain/training-sessions";
 import { TrainingSessionsRequestValidationError } from "./training-sessions-errors";
 
 export interface TrainingSessionsRequestValidator {
   validateCreate(body: unknown): CreateTrainingSessionRequest;
   validateEdit(body: unknown): EditTrainingSessionRequest;
+  validateSkip(body: unknown): SkipTrainingSessionRequest;
+  validateComplete(body: unknown): CompleteTrainingSessionRequest;
 }
 
 export class DefaultTrainingSessionsRequestValidator implements TrainingSessionsRequestValidator {
@@ -25,6 +31,30 @@ export class DefaultTrainingSessionsRequestValidator implements TrainingSessions
 
   validateEdit(body: unknown): EditTrainingSessionRequest {
     const result = editTrainingSessionRequestSchema.safeParse(body);
+    if (result.success) return result.data;
+
+    throw new TrainingSessionsRequestValidationError(
+      this.fieldErrors(result.error, body),
+    );
+  }
+
+  validateSkip(body: unknown): SkipTrainingSessionRequest {
+    return this.validate(skipTrainingSessionRequestSchema, body);
+  }
+
+  validateComplete(body: unknown): CompleteTrainingSessionRequest {
+    return this.validate(completeTrainingSessionRequestSchema, body);
+  }
+
+  private validate<T>(
+    schema: {
+      safeParse(
+        body: unknown,
+      ): { success: true; data: T } | { success: false; error: ZodError };
+    },
+    body: unknown,
+  ): T {
+    const result = schema.safeParse(body);
     if (result.success) return result.data;
 
     throw new TrainingSessionsRequestValidationError(

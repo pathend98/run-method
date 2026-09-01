@@ -78,14 +78,60 @@ const rawTrainingSessionSchema = z.union([
   strengthTrainingSessionSchema,
 ]);
 
-export const trainingSessionSchema = rawTrainingSessionSchema.refine(
-  (session) =>
-    session.status === "SKIPPED"
-      ? session.skipReason !== null
-      : session.skipReason === null,
-  {
-    message: "skipReason is required only for skipped sessions",
-    path: ["skipReason"],
+export const trainingSessionSchema = rawTrainingSessionSchema.superRefine(
+  (session, context) => {
+    if (session.status === "SKIPPED") {
+      if (session.skipReason === null) {
+        context.addIssue({
+          code: "custom",
+          message: "skipReason is required for skipped sessions",
+          path: ["skipReason"],
+        });
+      }
+    } else if (session.skipReason !== null) {
+      context.addIssue({
+        code: "custom",
+        message: "skipReason is only allowed for skipped sessions",
+        path: ["skipReason"],
+      });
+    }
+
+    const actualDurationSeconds = session.actualDurationSeconds;
+    const actualDistanceMetres =
+      session.activityType === "RUN" ? session.actualDistanceMetres : null;
+
+    if (session.status === "COMPLETED") {
+      if (actualDurationSeconds === null) {
+        context.addIssue({
+          code: "custom",
+          message: "actualDurationSeconds is required for completed sessions",
+          path: ["actualDurationSeconds"],
+        });
+      }
+      if (session.activityType === "RUN" && actualDistanceMetres === null) {
+        context.addIssue({
+          code: "custom",
+          message: "actualDistanceMetres is required for completed runs",
+          path: ["actualDistanceMetres"],
+        });
+      }
+    } else {
+      if (actualDurationSeconds !== null) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "actualDurationSeconds is only allowed for completed sessions",
+          path: ["actualDurationSeconds"],
+        });
+      }
+      if (actualDistanceMetres !== null) {
+        context.addIssue({
+          code: "custom",
+          message: "actualDistanceMetres is only allowed for completed runs",
+          path: ["actualDistanceMetres"],
+        });
+      }
+    }
   },
 );
 
@@ -169,6 +215,19 @@ export const editTrainingSessionRequestSchema = z.union([
   }),
 ]);
 
+export const skipTrainingSessionRequestSchema = z
+  .object({
+    skipReason: z.string().trim().min(1),
+  })
+  .strict();
+
+export const completeTrainingSessionRequestSchema = z
+  .object({
+    actualDurationSeconds: positiveIntegerSchema,
+    actualDistanceMetres: positiveIntegerSchema.optional(),
+  })
+  .strict();
+
 export type TimeOfDay = z.infer<typeof timeOfDaySchema>;
 export type TrainingSessionStatus = z.infer<typeof trainingSessionStatusSchema>;
 export type TrainingSession = z.infer<typeof trainingSessionSchema>;
@@ -188,4 +247,12 @@ export type CreateTrainingSessionRequest = z.infer<
 
 export type EditTrainingSessionRequest = z.infer<
   typeof editTrainingSessionRequestSchema
+>;
+
+export type SkipTrainingSessionRequest = z.infer<
+  typeof skipTrainingSessionRequestSchema
+>;
+
+export type CompleteTrainingSessionRequest = z.infer<
+  typeof completeTrainingSessionRequestSchema
 >;

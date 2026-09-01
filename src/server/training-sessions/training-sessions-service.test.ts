@@ -16,10 +16,14 @@ function createService() {
     findById: vi.fn(),
     create: vi.fn(),
     deleteById: vi.fn(),
+    skip: vi.fn(),
+    complete: vi.fn(),
     edit: vi.fn(),
   };
   const validator: TrainingSessionsValidator = {
     validateEdit: vi.fn(),
+    validateSkip: vi.fn(),
+    validateComplete: vi.fn(),
   };
 
   return {
@@ -121,6 +125,100 @@ test("reports a missing training session during deletion", async () => {
     TrainingSessionNotFoundError,
   );
 });
+
+test("skips a scheduled training session", async () => {
+  const { repository, service, validator } = createService();
+  const skipped = {
+    ...runSession,
+    status: "SKIPPED" as const,
+    skipReason: "Recovery",
+  };
+  vi.mocked(repository.findById).mockResolvedValue(runSession);
+  vi.mocked(repository.skip).mockResolvedValue(skipped);
+
+  await expect(
+    service.skip(runSession.id, { skipReason: "Recovery" }),
+  ).resolves.toBe(skipped);
+  expect(validator.validateSkip).toHaveBeenCalledWith(runSession);
+  expect(repository.skip).toHaveBeenCalledWith(runSession, {
+    skipReason: "Recovery",
+  });
+});
+
+test("completes a scheduled training session", async () => {
+  const { repository, service, validator } = createService();
+  const request = {
+    actualDurationSeconds: 1500,
+    actualDistanceMetres: 5000,
+  };
+  const completed = {
+    ...runSession,
+    status: "COMPLETED" as const,
+    actualDurationSeconds: 1500,
+    actualDistanceMetres: 5000,
+  };
+  vi.mocked(repository.findById).mockResolvedValue(runSession);
+  vi.mocked(repository.complete).mockResolvedValue(completed);
+
+  await expect(service.complete(runSession.id, request)).resolves.toBe(
+    completed,
+  );
+  expect(validator.validateComplete).toHaveBeenCalledWith(runSession, request);
+  expect(repository.complete).toHaveBeenCalledWith(runSession, request);
+});
+
+test.each(["skip", "complete"] as const)(
+  "validates %s ids before loading a session",
+  async (operation) => {
+    const { repository, service } = createService();
+
+    const result =
+      operation === "skip"
+        ? service.skip("invalid", { skipReason: "Recovery" })
+        : service.complete("invalid", { actualDurationSeconds: 1500 });
+
+    await expect(result).rejects.toThrow(
+      "training session id must be a valid UUID",
+    );
+    expect(repository.findById).not.toHaveBeenCalled();
+  },
+);
+
+test.each(["skip", "complete"] as const)(
+  "reports missing sessions during %s",
+  async (operation) => {
+    const { repository, service } = createService();
+    vi.mocked(repository.findById).mockResolvedValue(null);
+
+    const result =
+      operation === "skip"
+        ? service.skip(runSession.id, { skipReason: "Recovery" })
+        : service.complete(runSession.id, { actualDurationSeconds: 1500 });
+
+    await expect(result).rejects.toBeInstanceOf(TrainingSessionNotFoundError);
+  },
+);
+
+test.each(["skip", "complete"] as const)(
+  "reports a concurrent %s transition",
+  async (operation) => {
+    const { repository, service } = createService();
+    vi.mocked(repository.findById).mockResolvedValue(runSession);
+    vi.mocked(repository[operation]).mockResolvedValue(null);
+
+    const result =
+      operation === "skip"
+        ? service.skip(runSession.id, { skipReason: "Recovery" })
+        : service.complete(runSession.id, {
+            actualDurationSeconds: 1500,
+            actualDistanceMetres: 5000,
+          });
+
+    await expect(result).rejects.toThrow(
+      "training session is no longer scheduled",
+    );
+  },
+);
 
 const runSession: TrainingSession = {
   id: "11111111-1111-4111-8111-111111111111",

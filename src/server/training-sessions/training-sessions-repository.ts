@@ -3,8 +3,10 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { runDetails, strengthDetails, trainingSessions } from "@db/schema";
 import type {
+  CompleteTrainingSessionRequest,
   CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
+  SkipTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
 import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
@@ -14,6 +16,14 @@ export interface TrainingSessionsRepository {
   findById(id: string): Promise<TrainingSession | null>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
   deleteById(id: string): Promise<boolean>;
+  skip(
+    current: TrainingSession,
+    request: SkipTrainingSessionRequest,
+  ): Promise<TrainingSession | null>;
+  complete(
+    current: TrainingSession,
+    request: CompleteTrainingSessionRequest,
+  ): Promise<TrainingSession | null>;
   edit(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
@@ -155,6 +165,106 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
       .returning({ id: trainingSessions.id });
 
     return deleted.length > 0;
+  }
+
+  async skip(
+    current: TrainingSession,
+    request: SkipTrainingSessionRequest,
+  ): Promise<TrainingSession | null> {
+    const [session] = await this.db
+      .update(trainingSessions)
+      .set({
+        status: "SKIPPED",
+        skipReason: request.skipReason,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(trainingSessions.id, current.id),
+          eq(trainingSessions.status, "SCHEDULED"),
+        ),
+      )
+      .returning();
+
+    if (!session) return null;
+
+    return this.transformer.transform({
+      session,
+      runDetails:
+        current.activityType === "RUN"
+          ? {
+              trainingSessionId: current.id,
+              targetType: current.targetType,
+              targetDistanceMetres: current.targetDistanceMetres,
+              targetDurationSeconds: current.targetDurationSeconds,
+              targetPaceSecondsPerKilometre:
+                current.targetPaceSecondsPerKilometre,
+              actualDistanceMetres: null,
+              actualDurationSeconds: null,
+            }
+          : null,
+      strengthDetails:
+        current.activityType === "STRENGTH"
+          ? {
+              trainingSessionId: current.id,
+              targetDurationSeconds: current.targetDurationSeconds,
+              actualDurationSeconds: null,
+            }
+          : null,
+    });
+  }
+
+  async complete(
+    current: TrainingSession,
+    request: CompleteTrainingSessionRequest,
+  ): Promise<TrainingSession | null> {
+    return this.db.transaction(async (tx) => {
+      const [session] = await tx
+        .update(trainingSessions)
+        .set({
+          status: "COMPLETED",
+          skipReason: null,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(trainingSessions.id, current.id),
+            eq(trainingSessions.status, "SCHEDULED"),
+          ),
+        )
+        .returning();
+
+      if (!session) return null;
+
+      if (current.activityType === "RUN") {
+        const [runDetailsRow] = await tx
+          .update(runDetails)
+          .set({
+            actualDistanceMetres: request.actualDistanceMetres,
+            actualDurationSeconds: request.actualDurationSeconds,
+          })
+          .where(eq(runDetails.trainingSessionId, current.id))
+          .returning();
+
+        return this.transformer.transform({
+          session,
+          runDetails: runDetailsRow,
+          strengthDetails: null,
+        });
+      }
+
+      const [strengthDetailsRow] = await tx
+        .update(strengthDetails)
+        .set({ actualDurationSeconds: request.actualDurationSeconds })
+        .where(eq(strengthDetails.trainingSessionId, current.id))
+        .returning();
+
+      return this.transformer.transform({
+        session,
+        runDetails: null,
+        strengthDetails: strengthDetailsRow,
+      });
+    });
   }
 
   async edit(

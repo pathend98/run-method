@@ -237,14 +237,12 @@ Derived values are not persisted independently.
 
 ### Run actuals
 
-Completed runs may optionally contain:
+Completed runs require:
 
 ```text
 actualDistanceMetres
 actualDurationSeconds
 ```
-
-Either, both, or neither may be supplied.
 
 Actual pace is derived when both exist.
 
@@ -252,7 +250,8 @@ Actual pace is derived when both exist.
 
 Strength sessions require only the shared required fields.
 
-V1 optionally supports:
+V1 optionally supports a target duration and requires an actual duration when
+completed:
 
 ```text
 targetDurationSeconds

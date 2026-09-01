@@ -1,4 +1,5 @@
 import type {
+  CompleteTrainingSessionRequest,
   EditTrainingSessionRequest,
   RunTrainingSession,
   TrainingSession,
@@ -10,9 +11,39 @@ export interface TrainingSessionsValidator {
     current: TrainingSession,
     request: EditTrainingSessionRequest,
   ): void;
+  validateSkip(current: TrainingSession): void;
+  validateComplete(
+    current: TrainingSession,
+    request: CompleteTrainingSessionRequest,
+  ): void;
 }
 
 export class DefaultTrainingSessionsValidator implements TrainingSessionsValidator {
+  validateSkip(current: TrainingSession): void {
+    this.validateScheduledTransition(current, "skipped");
+  }
+
+  validateComplete(
+    current: TrainingSession,
+    request: CompleteTrainingSessionRequest,
+  ): void {
+    this.validateScheduledTransition(current, "completed");
+
+    if (current.activityType === "RUN" && !request.actualDistanceMetres) {
+      throw new TrainingSessionsValidationError(
+        "actualDistanceMetres is required to complete a run",
+      );
+    }
+    if (
+      current.activityType === "STRENGTH" &&
+      request.actualDistanceMetres !== undefined
+    ) {
+      throw new TrainingSessionsValidationError(
+        "actualDistanceMetres is not allowed for strength sessions",
+      );
+    }
+  }
+
   validateEdit(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
@@ -62,6 +93,17 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
     ) {
       throw new TrainingSessionsValidationError(
         "strength target duration cannot be changed for completed or skipped sessions",
+      );
+    }
+  }
+
+  private validateScheduledTransition(
+    current: TrainingSession,
+    transition: "completed" | "skipped",
+  ): void {
+    if (current.status !== "SCHEDULED") {
+      throw new TrainingSessionsValidationError(
+        `only scheduled training sessions can be ${transition}`,
       );
     }
   }
