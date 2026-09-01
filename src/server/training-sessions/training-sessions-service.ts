@@ -2,9 +2,11 @@ import { differenceInCalendarDays } from "date-fns";
 
 import { parseDateFromString } from "@/core/date/date-parsing";
 import type {
+  CompleteTrainingSessionRequest,
   CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
   RunTrainingSession,
+  SkipTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
 import { trainingSessionIdSchema } from "@/domain/training-sessions";
@@ -22,6 +24,14 @@ export interface TrainingSessionsService {
   ): Promise<TrainingSession[]>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
   delete(id: string): Promise<void>;
+  skip(
+    id: string,
+    request: SkipTrainingSessionRequest,
+  ): Promise<TrainingSession>;
+  complete(
+    id: string,
+    request: CompleteTrainingSessionRequest,
+  ): Promise<TrainingSession>;
   edit(
     id: string,
     request: EditTrainingSessionRequest,
@@ -83,6 +93,38 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     if (!deleted) throw new TrainingSessionNotFoundError();
   }
 
+  async skip(
+    id: string,
+    request: SkipTrainingSessionRequest,
+  ): Promise<TrainingSession> {
+    const current = await this.findForTransition(id);
+    this.validator.validateSkip(current);
+
+    const skipped = await this.repository.skip(current, request);
+    if (!skipped) {
+      throw new TrainingSessionsValidationError(
+        "training session is no longer scheduled",
+      );
+    }
+    return skipped;
+  }
+
+  async complete(
+    id: string,
+    request: CompleteTrainingSessionRequest,
+  ): Promise<TrainingSession> {
+    const current = await this.findForTransition(id);
+    this.validator.validateComplete(current, request);
+
+    const completed = await this.repository.complete(current, request);
+    if (!completed) {
+      throw new TrainingSessionsValidationError(
+        "training session is no longer scheduled",
+      );
+    }
+    return completed;
+  }
+
   async edit(
     id: string,
     request: EditTrainingSessionRequest,
@@ -118,6 +160,18 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
       return current.targetDurationSeconds === request.targetDurationSeconds;
     }
     return this.runTargetsEqual(current as RunTrainingSession, request);
+  }
+
+  private async findForTransition(id: string): Promise<TrainingSession> {
+    if (!trainingSessionIdSchema.safeParse(id).success) {
+      throw new TrainingSessionsValidationError(
+        "training session id must be a valid UUID",
+      );
+    }
+
+    const current = await this.repository.findById(id);
+    if (!current) throw new TrainingSessionNotFoundError();
+    return current;
   }
 
   private runTargetsEqual(
