@@ -6,7 +6,7 @@ import type {
   SkipTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
-import { defaultDurationFields } from "@/ui/components/duration";
+import { defaultDurationFields } from "@/ui/training-sessions/duration-fields";
 import { DurationInput } from "@/ui/components/duration-input";
 import { FormField } from "@/ui/components/form-field";
 import {

@@ -5,7 +5,7 @@ import {
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
-} from "@/ui/components/duration";
+} from "@/ui/training-sessions/duration-fields";
 import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 
 const positiveDistanceSchema = z

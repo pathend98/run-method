@@ -8,7 +8,7 @@ import type {
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
-} from "@/ui/components/duration";
+} from "@/ui/training-sessions/duration-fields";
 
 const positiveDistanceSchema = z
   .string()
