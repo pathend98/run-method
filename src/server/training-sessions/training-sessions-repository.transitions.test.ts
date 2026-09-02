@@ -146,6 +146,98 @@ test("returns null when a guarded skip loses a concurrent transition", async () 
   expect(transformer.transform).not.toHaveBeenCalled();
 });
 
+test("patches a completed run's supplied actual values", async () => {
+  const { repository, transformed, transformer, updateValues } =
+    createRepository();
+  const completed = {
+    ...run,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 8000,
+    actualDurationSeconds: 2700,
+  };
+
+  await expect(
+    repository.patchFinal(completed, {
+      actualDistanceMetres: 8000,
+      actualDurationSeconds: 2800,
+    }),
+  ).resolves.toBe(transformed);
+  expect(updateValues).toEqual([
+    { updatedAt: expect.any(Date) },
+    { actualDistanceMetres: 8000, actualDurationSeconds: 2800 },
+  ]);
+  expect(transformer.transform).toHaveBeenCalledWith({
+    session: expect.any(Object),
+    runDetails: expect.objectContaining({
+      actualDistanceMetres: 8000,
+      actualDurationSeconds: 2800,
+    }),
+    strengthDetails: null,
+  });
+});
+
+test("patches a skipped reason without touching activity details", async () => {
+  const { repository, updateValues } = createRepository();
+  const skipped = { ...run, status: "SKIPPED" as const, skipReason: "Recovery" };
+
+  await repository.patchFinal(skipped, { skipReason: "Sick" });
+  expect(updateValues).toEqual([
+    { skipReason: "Sick", updatedAt: expect.any(Date) },
+  ]);
+});
+
+test("patches a skipped strength reason without touching activity details", async () => {
+  const { repository, updateValues } = createRepository();
+  const skipped = {
+    ...strength,
+    status: "SKIPPED" as const,
+    skipReason: "Recovery",
+  };
+
+  await repository.patchFinal(skipped, { skipReason: "Sick" });
+  expect(updateValues).toEqual([
+    { skipReason: "Sick", updatedAt: expect.any(Date) },
+  ]);
+});
+
+test("patches completed strength duration", async () => {
+  const { repository, transformed, transformer, updateValues } =
+    createRepository();
+  const completed = {
+    ...strength,
+    status: "COMPLETED" as const,
+    actualDurationSeconds: 2700,
+  };
+
+  await expect(
+    repository.patchFinal(completed, { actualDurationSeconds: 2800 }),
+  ).resolves.toBe(transformed);
+  expect(updateValues).toEqual([
+    { updatedAt: expect.any(Date) },
+    { actualDurationSeconds: 2800 },
+  ]);
+  expect(transformer.transform).toHaveBeenCalledWith({
+    session: expect.any(Object),
+    runDetails: null,
+    strengthDetails: expect.objectContaining({ actualDurationSeconds: 2800 }),
+  });
+});
+
+test.each([
+  { actualDurationSeconds: 2800 },
+  { actualDistanceMetres: 8100 },
+])("patches one completed run actual at a time", async (request) => {
+  const { repository } = createRepository();
+  const completed = {
+    ...run,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 8000,
+    actualDurationSeconds: 2700,
+  };
+
+  await expect(repository.patchFinal(completed, request)).resolves.toBeDefined();
+});
+
 test("completes a run in a transaction", async () => {
   const { repository, transformed, transformer, updateValues } =
     createRepository();

@@ -6,6 +6,7 @@ import type {
   CompleteTrainingSessionRequest,
   CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
+  PatchTrainingSessionRequest,
   SkipTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
@@ -27,6 +28,10 @@ export interface TrainingSessionsRepository {
   edit(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
+  ): Promise<TrainingSession>;
+  patchFinal(
+    current: TrainingSession,
+    request: PatchTrainingSessionRequest,
   ): Promise<TrainingSession>;
 }
 
@@ -373,6 +378,86 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
       }
 
       throw new Error("Training session activity type changed during edit");
+    });
+  }
+
+  async patchFinal(
+    current: TrainingSession,
+    request: PatchTrainingSessionRequest,
+  ): Promise<TrainingSession> {
+    const skipReason = "skipReason" in request ? request.skipReason : undefined;
+    const actualDurationSeconds =
+      "actualDurationSeconds" in request
+        ? request.actualDurationSeconds
+        : undefined;
+    const actualDistanceMetres =
+      "actualDistanceMetres" in request
+        ? request.actualDistanceMetres
+        : undefined;
+    return this.db.transaction(async (tx) => {
+      const [session] = await tx
+        .update(trainingSessions)
+        .set({
+          ...(skipReason !== undefined
+            ? { skipReason }
+            : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(trainingSessions.id, current.id))
+        .returning();
+
+      if (current.activityType === "RUN") {
+        let runDetailsRow: typeof runDetails.$inferSelect = {
+          trainingSessionId: current.id,
+          targetType: current.targetType,
+          targetDistanceMetres: current.targetDistanceMetres,
+          targetDurationSeconds: current.targetDurationSeconds,
+          targetPaceSecondsPerKilometre: current.targetPaceSecondsPerKilometre,
+          actualDistanceMetres: current.actualDistanceMetres,
+          actualDurationSeconds: current.actualDurationSeconds,
+        };
+        if (
+          actualDurationSeconds !== undefined || actualDistanceMetres !== undefined
+        ) {
+          const [updatedRunDetails] = await tx
+            .update(runDetails)
+            .set({
+              ...(actualDurationSeconds !== undefined
+                ? { actualDurationSeconds }
+                : {}),
+              ...(actualDistanceMetres !== undefined
+                ? { actualDistanceMetres }
+                : {}),
+            })
+            .where(eq(runDetails.trainingSessionId, current.id))
+            .returning();
+          runDetailsRow = updatedRunDetails;
+        }
+        return this.transformer.transform({
+          session,
+          runDetails: runDetailsRow,
+          strengthDetails: null,
+        });
+      }
+
+      let strengthDetailsRow: typeof strengthDetails.$inferSelect = {
+        trainingSessionId: current.id,
+        targetDurationSeconds: current.targetDurationSeconds,
+        actualDurationSeconds: current.actualDurationSeconds,
+      };
+      if (actualDurationSeconds !== undefined) {
+        const [updatedStrengthDetails] = await tx
+          .update(strengthDetails)
+          .set({ actualDurationSeconds })
+          .where(eq(strengthDetails.trainingSessionId, current.id))
+          .returning();
+        strengthDetailsRow = updatedStrengthDetails;
+      }
+      return this.transformer.transform({
+        session,
+        runDetails: null,
+        strengthDetails: strengthDetailsRow,
+      });
     });
   }
 }

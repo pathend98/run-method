@@ -32,6 +32,15 @@ test("validates completion requests", () => {
   ).toEqual({ actualDurationSeconds: 1500, actualDistanceMetres: 5000 });
 });
 
+test("validates sparse final session patches", () => {
+  expect(validator.validatePatch({ actualDistanceMetres: 5000 })).toEqual({
+    actualDistanceMetres: 5000,
+  });
+  expect(validator.validatePatch({ skipReason: "  Recovery " })).toEqual({
+    skipReason: "Recovery",
+  });
+});
+
 test("reports completion request field errors", () => {
   try {
     validator.validateComplete({ actualDurationSeconds: 0 });

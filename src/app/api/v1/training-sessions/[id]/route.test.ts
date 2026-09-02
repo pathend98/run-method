@@ -15,10 +15,10 @@ import { DELETE, PATCH } from "./route";
 vi.mock("@/server/server", () => ({
   trainingSessionsService: {
     delete: vi.fn(),
-    edit: vi.fn(),
+    patch: vi.fn(),
   },
   trainingSessionsRequestValidator: {
-    validateEdit: vi.fn(),
+    validatePatch: vi.fn(),
   },
 }));
 
@@ -116,15 +116,33 @@ test("returns stable deletion errors with 500 status", async () => {
 });
 
 test("edits and returns a complete training session", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockResolvedValue(editedSession);
+  validator.validatePatch.mockReturnValue(editRequest);
+  service.patch.mockResolvedValue(editedSession);
 
   const response = await PATCH(patchRequest(), context());
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(editedSession);
-  expect(validator.validateEdit).toHaveBeenCalledWith(editRequest);
-  expect(service.edit).toHaveBeenCalledWith(id, editRequest);
+  expect(validator.validatePatch).toHaveBeenCalledWith(editRequest);
+  expect(service.patch).toHaveBeenCalledWith(id, editRequest);
+});
+
+test("patches and returns final activity data", async () => {
+  const finalPatch = { actualDurationSeconds: 1800 };
+  const completed = {
+    ...editedSession,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 8000,
+    actualDurationSeconds: 1800,
+  };
+  validator.validatePatch.mockReturnValue(finalPatch);
+  service.patch.mockResolvedValue(completed);
+
+  const response = await PATCH(patchRequest(JSON.stringify(finalPatch)), context());
+
+  expect(response.status).toBe(200);
+  await expect(response.json()).resolves.toEqual(completed);
+  expect(service.patch).toHaveBeenCalledWith(id, finalPatch);
 });
 
 test("returns malformed JSON errors with 400 status", async () => {
@@ -138,7 +156,7 @@ test("returns malformed JSON errors with 400 status", async () => {
 });
 
 test("returns edit field errors with 400 status", async () => {
-  validator.validateEdit.mockImplementation(() => {
+  validator.validatePatch.mockImplementation(() => {
     throw new TrainingSessionsRequestValidationError({
       title: ["Required"],
     });
@@ -154,8 +172,8 @@ test("returns edit field errors with 400 status", async () => {
 });
 
 test("returns business validation errors with 400 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(
+  validator.validatePatch.mockReturnValue(editRequest);
+  service.patch.mockRejectedValue(
     new BadRequestError("activityType cannot be changed"),
   );
 
@@ -168,8 +186,8 @@ test("returns business validation errors with 400 status", async () => {
 });
 
 test("returns invalid session ids with 400 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(
+  validator.validatePatch.mockReturnValue(editRequest);
+  service.patch.mockRejectedValue(
     new TrainingSessionsValidationError(
       "training session id must be a valid UUID",
     ),
@@ -181,12 +199,12 @@ test("returns invalid session ids with 400 status", async () => {
   await expect(response.json()).resolves.toEqual({
     error: "training session id must be a valid UUID",
   });
-  expect(service.edit).toHaveBeenCalledWith("invalid", editRequest);
+  expect(service.patch).toHaveBeenCalledWith("invalid", editRequest);
 });
 
 test("returns missing sessions with 404 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(new TrainingSessionNotFoundError());
+  validator.validatePatch.mockReturnValue(editRequest);
+  service.patch.mockRejectedValue(new TrainingSessionNotFoundError());
 
   const response = await PATCH(patchRequest(), context());
 
@@ -197,8 +215,8 @@ test("returns missing sessions with 404 status", async () => {
 });
 
 test("returns stable edit errors with 500 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(new Error("database down"));
+  validator.validatePatch.mockReturnValue(editRequest);
+  service.patch.mockRejectedValue(new Error("database down"));
 
   const response = await PATCH(patchRequest(), context());
 

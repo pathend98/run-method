@@ -1,6 +1,7 @@
 import {
   completeTrainingSessionRequestSchema,
   editTrainingSessionRequestSchema,
+  patchTrainingSessionRequestSchema,
   skipTrainingSessionRequestSchema,
   trainingSessionSchema,
 } from "./training-sessions";
@@ -284,6 +285,37 @@ test.each([
     }),
   ).toThrow();
 });
+
+test("patchTrainingSessionRequestSchema accepts sparse final updates", () => {
+  expect(
+    patchTrainingSessionRequestSchema.parse({ actualDurationSeconds: 1800 }),
+  ).toEqual({ actualDurationSeconds: 1800 });
+  expect(patchTrainingSessionRequestSchema.parse({ skipReason: " Rest " })).toEqual({
+    skipReason: "Rest",
+  });
+});
+
+test("patchTrainingSessionRequestSchema accepts final fields with a full edit", () => {
+  expect(
+    patchTrainingSessionRequestSchema.parse({
+      title: "Easy run",
+      description: null,
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetType: "DISTANCE_DURATION",
+      targetDistanceMetres: 5000,
+      targetDurationSeconds: 1500,
+      actualDistanceMetres: 4900,
+    }),
+  ).toMatchObject({ actualDistanceMetres: 4900 });
+});
+
+test.each([{}, { actualDurationSeconds: 0 }, { skipReason: "" }])(
+  "patchTrainingSessionRequestSchema rejects invalid final patches %#",
+  (request) => {
+    expect(() => patchTrainingSessionRequestSchema.parse(request)).toThrow();
+  },
+);
 
 test.each([undefined, 0, -1, 1.5, "1800"])(
   "editTrainingSessionRequestSchema rejects invalid strength duration %#",

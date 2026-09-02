@@ -50,8 +50,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const { id } = await context.params;
-    const editRequest = trainingSessionsRequestValidator.validateEdit(body);
-    const session = await trainingSessionsService.edit(id, editRequest);
+    const patchRequest = trainingSessionsRequestValidator.validatePatch(body);
+    const session = await trainingSessionsService.patch(id, patchRequest);
     return NextResponse.json(session);
   } catch (error) {
     if (error instanceof TrainingSessionsRequestValidationError) {

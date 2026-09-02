@@ -5,6 +5,7 @@ import type {
   CompleteTrainingSessionRequest,
   CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
+  PatchTrainingSessionRequest,
   RunTrainingSession,
   SkipTrainingSessionRequest,
   TrainingSession,
@@ -38,6 +39,7 @@ export interface TrainingSessionsService {
     id: string,
     request: EditTrainingSessionRequest,
   ): Promise<TrainingSession>;
+  patch(id: string, request: PatchTrainingSessionRequest): Promise<TrainingSession>;
 }
 
 export class DefaultTrainingSessionsService implements TrainingSessionsService {
@@ -148,6 +150,33 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     return this.repository.edit(current, request);
   }
 
+  async patch(
+    id: string,
+    request: PatchTrainingSessionRequest,
+  ): Promise<TrainingSession> {
+    if (!trainingSessionIdSchema.safeParse(id).success) {
+      throw new TrainingSessionsValidationError(
+        "training session id must be a valid UUID",
+      );
+    }
+
+    const current = await this.repository.findById(id);
+    if (!current) throw new TrainingSessionNotFoundError();
+    this.validator.validatePatch(current, request);
+
+    const hasFullEdit = "activityType" in request;
+    const editChanged = hasFullEdit && !this.isUnchanged(current, request);
+    const finalChanged = this.finalValuesChanged(current, request);
+    if (!editChanged && !finalChanged) return current;
+
+    const edited = editChanged
+      ? await this.repository.edit(current, request)
+      : current;
+    return finalChanged
+      ? this.repository.patchFinal(edited, request)
+      : edited;
+  }
+
   private isUnchanged(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
@@ -195,6 +224,29 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
       current.targetDistanceMetres === requestDistance &&
       current.targetDurationSeconds === requestDuration &&
       current.targetPaceSecondsPerKilometre === requestPace
+    );
+  }
+
+  private finalValuesChanged(
+    current: TrainingSession,
+    request: PatchTrainingSessionRequest,
+  ): boolean {
+    const skipReason = "skipReason" in request ? request.skipReason : undefined;
+    const actualDurationSeconds =
+      "actualDurationSeconds" in request
+        ? request.actualDurationSeconds
+        : undefined;
+    const actualDistanceMetres =
+      "actualDistanceMetres" in request
+        ? request.actualDistanceMetres
+        : undefined;
+    return (
+      (skipReason !== undefined && skipReason !== current.skipReason) ||
+      (actualDurationSeconds !== undefined &&
+        actualDurationSeconds !== current.actualDurationSeconds) ||
+      (current.activityType === "RUN" &&
+        actualDistanceMetres !== undefined &&
+        actualDistanceMetres !== current.actualDistanceMetres)
     );
   }
 }

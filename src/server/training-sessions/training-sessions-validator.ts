@@ -1,6 +1,7 @@
 import type {
   CompleteTrainingSessionRequest,
   EditTrainingSessionRequest,
+  PatchTrainingSessionRequest,
   RunTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
@@ -10,6 +11,10 @@ export interface TrainingSessionsValidator {
   validateEdit(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
+  ): void;
+  validatePatch(
+    current: TrainingSession,
+    request: PatchTrainingSessionRequest,
   ): void;
   validateSkip(current: TrainingSession, timeZone: string | null): void;
   validateComplete(
@@ -97,6 +102,47 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
     ) {
       throw new TrainingSessionsValidationError(
         "strength target duration cannot be changed for completed or skipped sessions",
+      );
+    }
+  }
+
+  validatePatch(
+    current: TrainingSession,
+    request: PatchTrainingSessionRequest,
+  ): void {
+    if ("activityType" in request) this.validateEdit(current, request);
+
+    const actualDurationSeconds =
+      "actualDurationSeconds" in request
+        ? request.actualDurationSeconds
+        : undefined;
+    const actualDistanceMetres =
+      "actualDistanceMetres" in request
+        ? request.actualDistanceMetres
+        : undefined;
+    const skipReason = "skipReason" in request ? request.skipReason : undefined;
+
+    const updatesActuals =
+      actualDurationSeconds !== undefined || actualDistanceMetres !== undefined;
+    if (updatesActuals) {
+      if (current.status !== "COMPLETED") {
+        throw new TrainingSessionsValidationError(
+          "actual values can only be updated for completed sessions",
+        );
+      }
+      if (
+        current.activityType === "STRENGTH" &&
+        actualDistanceMetres !== undefined
+      ) {
+        throw new TrainingSessionsValidationError(
+          "actualDistanceMetres is not allowed for strength sessions",
+        );
+      }
+    }
+
+    if (skipReason !== undefined && current.status !== "SKIPPED") {
+      throw new TrainingSessionsValidationError(
+        "skipReason can only be updated for skipped sessions",
       );
     }
   }

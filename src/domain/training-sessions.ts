@@ -215,6 +215,68 @@ export const editTrainingSessionRequestSchema = z.union([
   }),
 ]);
 
+const finalFieldsShape = {
+  actualDurationSeconds: positiveIntegerSchema.optional(),
+  actualDistanceMetres: positiveIntegerSchema.optional(),
+  skipReason: z.string().trim().min(1).optional(),
+};
+
+const editRunWithFinalFieldsSchema = z.discriminatedUnion("targetType", [
+  editBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DISTANCE_DURATION"),
+    targetDistanceMetres: positiveIntegerSchema,
+    targetDurationSeconds: positiveIntegerSchema,
+    ...finalFieldsShape,
+  }),
+  editBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DISTANCE_PACE"),
+    targetDistanceMetres: positiveIntegerSchema,
+    targetPaceSecondsPerKilometre: positiveIntegerSchema,
+    ...finalFieldsShape,
+  }),
+  editBaseSchema.extend({
+    activityType: z.literal("RUN"),
+    targetType: z.literal("DURATION_PACE"),
+    targetDurationSeconds: positiveIntegerSchema,
+    targetPaceSecondsPerKilometre: positiveIntegerSchema,
+    ...finalFieldsShape,
+  }),
+]);
+
+const editTrainingSessionWithFinalFieldsRequestSchema = z.union([
+  editRunWithFinalFieldsSchema,
+  editBaseSchema.extend({
+    activityType: z.literal("STRENGTH"),
+    targetDurationSeconds: positiveIntegerSchema.nullable(),
+    ...finalFieldsShape,
+  }),
+]);
+
+const completedActualsPatchSchema = z
+  .object({
+    actualDurationSeconds: positiveIntegerSchema.optional(),
+    actualDistanceMetres: positiveIntegerSchema.optional(),
+  })
+  .strict()
+  .refine(
+    (request) =>
+      request.actualDurationSeconds !== undefined ||
+      request.actualDistanceMetres !== undefined,
+    "At least one actual value is required",
+  );
+
+const skippedReasonPatchSchema = z
+  .object({ skipReason: z.string().trim().min(1) })
+  .strict();
+
+export const patchTrainingSessionRequestSchema = z.union([
+  editTrainingSessionWithFinalFieldsRequestSchema,
+  completedActualsPatchSchema,
+  skippedReasonPatchSchema,
+]);
+
 export const skipTrainingSessionRequestSchema = z
   .object({
     skipReason: z.string().trim().min(1),
@@ -247,6 +309,10 @@ export type CreateTrainingSessionRequest = z.infer<
 
 export type EditTrainingSessionRequest = z.infer<
   typeof editTrainingSessionRequestSchema
+>;
+
+export type PatchTrainingSessionRequest = z.infer<
+  typeof patchTrainingSessionRequestSchema
 >;
 
 export type SkipTrainingSessionRequest = z.infer<

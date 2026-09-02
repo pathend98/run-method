@@ -80,6 +80,66 @@ test("rejects time of day changes for terminal sessions", () => {
   ).toThrow("timeOfDay cannot be changed for completed or skipped sessions");
 });
 
+test("allows completed actual patches and skipped reason patches", () => {
+  expect(() =>
+    validator.validatePatch(
+      {
+        ...runSession,
+        status: "COMPLETED",
+        actualDistanceMetres: 5000,
+        actualDurationSeconds: 1500,
+      },
+      { actualDurationSeconds: 1600 },
+    ),
+  ).not.toThrow();
+  expect(() =>
+    validator.validatePatch(
+      { ...runSession, status: "SKIPPED", skipReason: "Recovery" },
+      { skipReason: "Sick" },
+    ),
+  ).not.toThrow();
+  expect(() =>
+    validator.validatePatch(
+      {
+        ...runSession,
+        status: "COMPLETED",
+        actualDistanceMetres: 5000,
+        actualDurationSeconds: 1500,
+      },
+      runEdit,
+    ),
+  ).not.toThrow();
+});
+
+test("rejects final patches for incompatible statuses and activities", () => {
+  expect(() =>
+    validator.validatePatch(runSession, { actualDurationSeconds: 1600 }),
+  ).toThrow("actual values can only be updated for completed sessions");
+  expect(() =>
+    validator.validatePatch(runSession, { skipReason: "Recovery" }),
+  ).toThrow("skipReason can only be updated for skipped sessions");
+  expect(() =>
+    validator.validatePatch(
+      {
+        id: "22222222-2222-4222-8222-222222222222",
+        title: "Strength",
+        activityType: "STRENGTH",
+        status: "COMPLETED",
+        date: "2026-08-26",
+        timeOfDay: null,
+        description: null,
+        sortOrder: 0,
+        skipReason: null,
+        createdAt: "2026-08-01T10:00:00.000Z",
+        updatedAt: "2026-08-01T10:00:00.000Z",
+        targetDurationSeconds: null,
+        actualDurationSeconds: 1200,
+      },
+      { actualDistanceMetres: 5000 },
+    ),
+  ).toThrow("actualDistanceMetres is not allowed for strength sessions");
+});
+
 test.each([
   {
     name: "distance",

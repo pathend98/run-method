@@ -21,9 +21,11 @@ function createService() {
     skip: vi.fn(),
     complete: vi.fn(),
     edit: vi.fn(),
+    patchFinal: vi.fn(),
   };
   const validator: TrainingSessionsValidator = {
     validateEdit: vi.fn(),
+    validatePatch: vi.fn(),
     validateSkip: vi.fn(),
     validateComplete: vi.fn(),
   };
@@ -126,6 +128,119 @@ test("reports a missing training session during deletion", async () => {
   await expect(service.delete(id)).rejects.toBeInstanceOf(
     TrainingSessionNotFoundError,
   );
+});
+
+test("patches completed actuals without editing the activity", async () => {
+  const { repository, service, validator } = createService();
+  const completed = {
+    ...runSession,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 5000,
+    actualDurationSeconds: 1500,
+  };
+  const updated = { ...completed, actualDurationSeconds: 1600 };
+  vi.mocked(repository.findById).mockResolvedValue(completed);
+  vi.mocked(repository.patchFinal).mockResolvedValue(updated);
+
+  await expect(
+    service.patch(completed.id, { actualDurationSeconds: 1600 }),
+  ).resolves.toBe(updated);
+
+  expect(validator.validatePatch).toHaveBeenCalledWith(completed, {
+    actualDurationSeconds: 1600,
+  });
+  expect(repository.edit).not.toHaveBeenCalled();
+  expect(repository.patchFinal).toHaveBeenCalledWith(completed, {
+    actualDurationSeconds: 1600,
+  });
+});
+
+test("combines normal and final data edits", async () => {
+  const { repository, service } = createService();
+  const completed = {
+    ...runSession,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 5000,
+    actualDurationSeconds: 1500,
+  };
+  const request = { ...runEdit, title: "Updated run", actualDurationSeconds: 1600 };
+  const edited = { ...completed, title: request.title };
+  const updated = { ...edited, actualDurationSeconds: 1600 };
+  vi.mocked(repository.findById).mockResolvedValue(completed);
+  vi.mocked(repository.edit).mockResolvedValue(edited);
+  vi.mocked(repository.patchFinal).mockResolvedValue(updated);
+
+  await expect(service.patch(completed.id, request)).resolves.toBe(updated);
+  expect(repository.edit).toHaveBeenCalledWith(completed, request);
+  expect(repository.patchFinal).toHaveBeenCalledWith(edited, request);
+});
+
+test("does not write an unchanged final patch", async () => {
+  const { repository, service } = createService();
+  const skipped = { ...runSession, status: "SKIPPED" as const, skipReason: "Recovery" };
+  vi.mocked(repository.findById).mockResolvedValue(skipped);
+
+  await expect(service.patch(skipped.id, { skipReason: "Recovery" })).resolves.toBe(skipped);
+  expect(repository.edit).not.toHaveBeenCalled();
+  expect(repository.patchFinal).not.toHaveBeenCalled();
+});
+
+test("patches a changed skipped reason", async () => {
+  const { repository, service } = createService();
+  const skipped = { ...runSession, status: "SKIPPED" as const, skipReason: "Recovery" };
+  const updated = { ...skipped, skipReason: "Sick" };
+  vi.mocked(repository.findById).mockResolvedValue(skipped);
+  vi.mocked(repository.patchFinal).mockResolvedValue(updated);
+
+  await expect(service.patch(skipped.id, { skipReason: "Sick" })).resolves.toBe(updated);
+});
+
+test("patches a changed completed run distance", async () => {
+  const { repository, service } = createService();
+  const completed = {
+    ...runSession,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 5000,
+    actualDurationSeconds: 1500,
+  };
+  const updated = { ...completed, actualDistanceMetres: 5100 };
+  vi.mocked(repository.findById).mockResolvedValue(completed);
+  vi.mocked(repository.patchFinal).mockResolvedValue(updated);
+
+  await expect(
+    service.patch(completed.id, { actualDistanceMetres: 5100 }),
+  ).resolves.toBe(updated);
+});
+
+test("rejects invalid ids before patching", async () => {
+  const { repository, service } = createService();
+
+  await expect(
+    service.patch("invalid", { actualDurationSeconds: 1600 }),
+  ).rejects.toThrow("training session id must be a valid UUID");
+  expect(repository.findById).not.toHaveBeenCalled();
+});
+
+test("reports missing patch targets", async () => {
+  const { repository, service } = createService();
+  vi.mocked(repository.findById).mockResolvedValue(null);
+
+  await expect(
+    service.patch("11111111-1111-4111-8111-111111111111", {
+      actualDurationSeconds: 1600,
+    }),
+  ).rejects.toBeInstanceOf(TrainingSessionNotFoundError);
+});
+
+test("applies a normal patch without final data", async () => {
+  const { repository, service } = createService();
+  const request = { ...runEdit, title: "Updated run" };
+  const updated = { ...runSession, title: request.title };
+  vi.mocked(repository.findById).mockResolvedValue(runSession);
+  vi.mocked(repository.edit).mockResolvedValue(updated);
+
+  await expect(service.patch(runSession.id, request)).resolves.toBe(updated);
+  expect(repository.patchFinal).not.toHaveBeenCalled();
 });
 
 test("skips a scheduled training session", async () => {

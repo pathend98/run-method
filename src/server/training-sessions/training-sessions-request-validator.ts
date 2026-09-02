@@ -4,10 +4,12 @@ import {
   completeTrainingSessionRequestSchema,
   createTrainingSessionRequestSchema,
   editTrainingSessionRequestSchema,
+  patchTrainingSessionRequestSchema,
   skipTrainingSessionRequestSchema,
   type CompleteTrainingSessionRequest,
   type CreateTrainingSessionRequest,
   type EditTrainingSessionRequest,
+  type PatchTrainingSessionRequest,
   type SkipTrainingSessionRequest,
 } from "@/domain/training-sessions";
 import { TrainingSessionsRequestValidationError } from "./training-sessions-errors";
@@ -15,6 +17,7 @@ import { TrainingSessionsRequestValidationError } from "./training-sessions-erro
 export interface TrainingSessionsRequestValidator {
   validateCreate(body: unknown): CreateTrainingSessionRequest;
   validateEdit(body: unknown): EditTrainingSessionRequest;
+  validatePatch(body: unknown): PatchTrainingSessionRequest;
   validateSkip(body: unknown): SkipTrainingSessionRequest;
   validateComplete(body: unknown): CompleteTrainingSessionRequest;
 }
@@ -36,6 +39,10 @@ export class DefaultTrainingSessionsRequestValidator implements TrainingSessions
     throw new TrainingSessionsRequestValidationError(
       this.fieldErrors(result.error, body),
     );
+  }
+
+  validatePatch(body: unknown): PatchTrainingSessionRequest {
+    return this.validate(patchTrainingSessionRequestSchema, body);
   }
 
   validateSkip(body: unknown): SkipTrainingSessionRequest {
