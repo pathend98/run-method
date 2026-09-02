@@ -460,14 +460,14 @@ test("supports default skip and complete handlers", async () => {
   await waitFor(() => expect(screen.queryByRole("dialog", { name: "Tempo run" })).toBeNull());
 });
 
-test("TrainingActivityCard handles present and absent descriptions", () => {
+test("TrainingActivityCard omits descriptions from the planner overview", () => {
   const { rerender } = render(
     <TrainingActivityCard
       activity={runActivity({ description: "45 minutes" })}
     />,
   );
 
-  expect(screen.getByText("45 minutes")).toBeDefined();
+  expect(screen.queryByText("45 minutes")).toBeNull();
 
   rerender(
     <TrainingActivityCard
