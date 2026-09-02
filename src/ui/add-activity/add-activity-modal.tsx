@@ -6,6 +6,7 @@ import { Modal } from "@/ui/components/modal";
 import { RunActivityFields } from "./components/run-activity-fields";
 import { StrengthActivityFields } from "./components/strength-activity-fields";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useCreateTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 import {
   addActivityFormSchema,
   defaultAddActivityFormValues,
@@ -16,9 +17,7 @@ import {
 export function AddActivityModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const modalOperations = useTrainingPlannerStore(
-    (state) => state.modalOperations,
-  );
+  const createMutation = useCreateTrainingSessionMutation();
   const form = useForm<AddActivityFormValues>({
     defaultValues: defaultAddActivityFormValues,
     resolver: zodResolver(addActivityFormSchema),
@@ -34,21 +33,16 @@ export function AddActivityModal() {
 
   const dayDate = activeModal?.kind === "add" ? activeModal.day.date : null;
 
-  if (
-    activeModal?.kind !== "add" ||
-    typeof dayDate !== "string" ||
-    !modalOperations
-  ) {
+  if (activeModal?.kind !== "add" || typeof dayDate !== "string") {
     return null;
   }
 
-  const operations = modalOperations;
   const date = dayDate;
   const { day } = activeModal;
 
   async function submit(values: AddActivityFormValues) {
     try {
-      await operations.createActivity(
+      await createMutation.mutateAsync(
         toCreateTrainingSessionRequest(values, date),
       );
       closeModal();
@@ -71,7 +65,7 @@ export function AddActivityModal() {
         },
         {
           form: "add-activity-form",
-          label: operations.isCreatingActivity ? "Adding…" : "Add activity",
+          label: createMutation.isPending ? "Adding…" : "Add activity",
           type: "submit",
           variant: "primary",
         },
@@ -84,7 +78,7 @@ export function AddActivityModal() {
           variant: "secondary",
         },
       ]}
-      isBusy={operations.isCreatingActivity}
+      isBusy={createMutation.isPending}
       onClose={closeModal}
       title="Add activity"
     >

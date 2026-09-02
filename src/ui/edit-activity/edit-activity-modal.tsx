@@ -4,6 +4,7 @@ import { EditActivityForm } from "./components/edit-activity-form";
 import { EditActivitySummary } from "./components/edit-activity-summary";
 import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 
 export function EditActivityModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
@@ -13,19 +14,19 @@ export function EditActivityModal() {
   const returnToActivityDetails = useTrainingPlannerStore(
     (state) => state.returnToActivityDetails,
   );
-  const modalOperations = useTrainingPlannerStore(
-    (state) => state.modalOperations,
-  );
+  const editMutation = useEditTrainingSessionMutation();
 
-  if (activeModal?.kind !== "edit" || !modalOperations) {
+  if (activeModal?.kind !== "edit") {
     return null;
   }
 
-  const operations = modalOperations;
   const { activity } = activeModal;
 
   async function editActivity(request: EditTrainingSessionRequest) {
-    const editedActivity = await operations.editActivity(activity.id, request);
+    const editedActivity = await editMutation.mutateAsync({
+      id: activity.id,
+      request,
+    });
     replaceActivityAndShowDetails({ ...editedActivity, day: activity.day });
   }
 
@@ -41,7 +42,7 @@ export function EditActivityModal() {
         },
         {
           form: "edit-activity-form",
-          label: operations.isEditingActivity ? "Saving…" : "Save changes",
+          label: editMutation.isPending ? "Saving…" : "Save changes",
           type: "submit",
           variant: "primary",
         },
@@ -54,7 +55,7 @@ export function EditActivityModal() {
           variant: "secondary",
         },
       ]}
-      isBusy={operations.isEditingActivity}
+      isBusy={editMutation.isPending}
       onClose={returnToActivityDetails}
       title="Edit activity"
     >

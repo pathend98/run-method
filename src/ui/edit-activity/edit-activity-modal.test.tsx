@@ -1,12 +1,22 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
+import { QueryProvider } from "@/app/query-provider";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import {
   createTrainingPlannerStore,
-  type TrainingPlannerModalOperations,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { EditActivityModal } from "./edit-activity-modal";
+
+const api = vi.hoisted(() => ({ editTrainingSession: vi.fn() }));
+
+vi.mock(
+  "@/ui/training-sessions/training-sessions-api-client",
+  async (importOriginal) => ({
+    ...(await importOriginal()),
+    editTrainingSession: api.editTrainingSession,
+  }),
+);
 
 const activity = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -29,31 +39,24 @@ const activity = {
 } satisfies RunTrainingSession;
 
 type EditActivityModalTestProps = {
-  isSubmitting?: boolean;
-  onEdit?: TrainingPlannerModalOperations["editActivity"];
+  onEdit?: (id: string, request: unknown) => Promise<RunTrainingSession>;
 };
 
 function renderEditActivityModal(props: EditActivityModalTestProps = {}) {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails({ ...activity, day: "Monday" });
   store.getState().openEditActivity();
-  store.getState().setModalOperations({
-    createActivity: vi.fn(),
-    editActivity: props.onEdit ?? vi.fn().mockResolvedValue(activity),
-    deleteActivity: vi.fn(),
-    skipActivity: vi.fn(),
-    completeActivity: vi.fn(),
-    isCreatingActivity: false,
-    isEditingActivity: props.isSubmitting ?? false,
-    isDeletingActivity: false,
-    isTransitioningActivity: false,
-  } as TrainingPlannerModalOperations);
+  api.editTrainingSession.mockImplementation(
+    props.onEdit ?? vi.fn().mockResolvedValue(activity),
+  );
 
   return {
     store,
     ...render(
       <TrainingPlannerStoreProvider store={store}>
-        <EditActivityModal />
+        <QueryProvider>
+          <EditActivityModal />
+        </QueryProvider>
       </TrainingPlannerStoreProvider>,
     ),
   };
@@ -83,7 +86,9 @@ test("updates the selected activity and returns to its details", async () => {
 });
 
 test("keeps the modal open after a failed edit", async () => {
-  renderEditActivityModal({ onEdit: vi.fn().mockRejectedValue(new Error("nope")) });
+  renderEditActivityModal({
+    onEdit: vi.fn().mockRejectedValue(new Error("nope")),
+  });
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Changed" },
   });
@@ -96,16 +101,19 @@ test("keeps the modal open after a failed edit", async () => {
 test("renders nothing when edit activity is not active", () => {
   render(
     <TrainingPlannerStoreProvider>
-      <EditActivityModal />
+      <QueryProvider>
+        <EditActivityModal />
+      </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
 
   expect(screen.queryByRole("dialog", { name: "Edit activity" })).toBeNull();
 });
 
-test("shows its submitting state", () => {
-  renderEditActivityModal({ isSubmitting: true });
-  expect(screen.getByRole("button", { name: "Saving…" })).toHaveProperty(
+test("shows its submitting state", async () => {
+  renderEditActivityModal({ onEdit: () => new Promise(() => undefined) });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  expect(await screen.findByRole("button", { name: "Saving…" })).toHaveProperty(
     "disabled",
     true,
   );
