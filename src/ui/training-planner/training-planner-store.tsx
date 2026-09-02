@@ -73,6 +73,9 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
   }));
 }
 
+// Context scopes a fresh Zustand store to each mounted planner, avoiding a
+// module-global store and resetting its UI state on unmount. Zustand's
+// useStore handles subscriptions; Context only supplies the store instance.
 const TrainingPlannerStoreContext =
   createContext<TrainingPlannerStoreApi | null>(null);
 
