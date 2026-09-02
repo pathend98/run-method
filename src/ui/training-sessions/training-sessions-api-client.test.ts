@@ -371,7 +371,7 @@ test("skipTrainingSession posts the reason and parses the skipped session", asyn
 
   await expect(skipTrainingSession(createdSession.id, { skipReason: "Recovery" })).resolves.toEqual(skippedSession);
   expect(fetch).toHaveBeenCalledWith(`/api/v1/training-sessions/${createdSession.id}/skip`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ skipReason: "Recovery" }),
+    method: "POST", headers: { "Content-Type": "application/json", "Time-Zone": Intl.DateTimeFormat().resolvedOptions().timeZone }, body: JSON.stringify({ skipReason: "Recovery" }),
   });
 });
 
@@ -381,7 +381,7 @@ test("completeTrainingSession posts actuals and parses the completed session", a
 
   await expect(completeTrainingSession(createdSession.id, { actualDurationSeconds: 1800 })).resolves.toEqual(completedSession);
   expect(fetch).toHaveBeenCalledWith(`/api/v1/training-sessions/${createdSession.id}/complete`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ actualDurationSeconds: 1800 }),
+    method: "POST", headers: { "Content-Type": "application/json", "Time-Zone": Intl.DateTimeFormat().resolvedOptions().timeZone }, body: JSON.stringify({ actualDurationSeconds: 1800 }),
   });
 });
 
@@ -403,4 +403,21 @@ test("completeTrainingSession falls back for a non-JSON error", async () => {
   await expect(completeTrainingSession(createdSession.id, { actualDurationSeconds: 1800 })).rejects.toMatchObject({
     message: "Unable to complete training session", status: 502, fieldErrors: undefined,
   });
+});
+
+test("rejects transitions when the browser timezone is unavailable", async () => {
+  const dateTimeFormat = vi
+    .spyOn(Intl, "DateTimeFormat")
+    .mockImplementation(
+      () => ({ resolvedOptions: () => ({}) }) as Intl.DateTimeFormat,
+    );
+
+  await expect(
+    skipTrainingSession(createdSession.id, { skipReason: "Recovery" }),
+  ).rejects.toMatchObject({
+    message: "Unable to determine browser timezone",
+    status: 0,
+  });
+
+  dateTimeFormat.mockRestore();
 });

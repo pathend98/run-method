@@ -10,6 +10,8 @@ import {
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 
+const timeZone = "UTC";
+
 function createService() {
   const repository: TrainingSessionsRepository = {
     findBetweenDates: vi.fn().mockResolvedValue([]),
@@ -137,9 +139,9 @@ test("skips a scheduled training session", async () => {
   vi.mocked(repository.skip).mockResolvedValue(skipped);
 
   await expect(
-    service.skip(runSession.id, { skipReason: "Recovery" }),
+    service.skip(runSession.id, { skipReason: "Recovery" }, timeZone),
   ).resolves.toBe(skipped);
-  expect(validator.validateSkip).toHaveBeenCalledWith(runSession);
+  expect(validator.validateSkip).toHaveBeenCalledWith(runSession, timeZone);
   expect(repository.skip).toHaveBeenCalledWith(runSession, {
     skipReason: "Recovery",
   });
@@ -160,10 +162,14 @@ test("completes a scheduled training session", async () => {
   vi.mocked(repository.findById).mockResolvedValue(runSession);
   vi.mocked(repository.complete).mockResolvedValue(completed);
 
-  await expect(service.complete(runSession.id, request)).resolves.toBe(
+  await expect(service.complete(runSession.id, request, timeZone)).resolves.toBe(
     completed,
   );
-  expect(validator.validateComplete).toHaveBeenCalledWith(runSession, request);
+  expect(validator.validateComplete).toHaveBeenCalledWith(
+    runSession,
+    request,
+    timeZone,
+  );
   expect(repository.complete).toHaveBeenCalledWith(runSession, request);
 });
 
@@ -174,8 +180,8 @@ test.each(["skip", "complete"] as const)(
 
     const result =
       operation === "skip"
-        ? service.skip("invalid", { skipReason: "Recovery" })
-        : service.complete("invalid", { actualDurationSeconds: 1500 });
+        ? service.skip("invalid", { skipReason: "Recovery" }, timeZone)
+        : service.complete("invalid", { actualDurationSeconds: 1500 }, timeZone);
 
     await expect(result).rejects.toThrow(
       "training session id must be a valid UUID",
@@ -192,8 +198,8 @@ test.each(["skip", "complete"] as const)(
 
     const result =
       operation === "skip"
-        ? service.skip(runSession.id, { skipReason: "Recovery" })
-        : service.complete(runSession.id, { actualDurationSeconds: 1500 });
+        ? service.skip(runSession.id, { skipReason: "Recovery" }, timeZone)
+        : service.complete(runSession.id, { actualDurationSeconds: 1500 }, timeZone);
 
     await expect(result).rejects.toBeInstanceOf(TrainingSessionNotFoundError);
   },
@@ -208,11 +214,11 @@ test.each(["skip", "complete"] as const)(
 
     const result =
       operation === "skip"
-        ? service.skip(runSession.id, { skipReason: "Recovery" })
+        ? service.skip(runSession.id, { skipReason: "Recovery" }, timeZone)
         : service.complete(runSession.id, {
             actualDurationSeconds: 1500,
             actualDistanceMetres: 5000,
-          });
+          }, timeZone);
 
     await expect(result).rejects.toThrow(
       "training session is no longer scheduled",

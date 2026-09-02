@@ -306,7 +306,7 @@ The model prioritizes explicit invariants and type safety while leaving richer w
 
 The planner displays Monday–Sunday weeks.
 
-The browser's local timezone determines today and the current week. Session dates remain timezone-free `YYYY-MM-DD` calendar dates.
+The browser's local timezone determines today and the current week. Session dates remain timezone-free `YYYY-MM-DD` calendar dates. Skip and complete requests include the browser's IANA timezone in a `Time-Zone` header so the API can evaluate transition eligibility against the same local calendar day.
 
 The selected week is represented as:
 

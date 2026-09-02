@@ -11,23 +11,27 @@ export interface TrainingSessionsValidator {
     current: TrainingSession,
     request: EditTrainingSessionRequest,
   ): void;
-  validateSkip(current: TrainingSession): void;
+  validateSkip(current: TrainingSession, timeZone: string | null): void;
   validateComplete(
     current: TrainingSession,
     request: CompleteTrainingSessionRequest,
+    timeZone: string | null,
   ): void;
 }
 
 export class DefaultTrainingSessionsValidator implements TrainingSessionsValidator {
-  validateSkip(current: TrainingSession): void {
-    this.validateScheduledTransition(current, "skipped");
+  constructor(private readonly now: () => Date = () => new Date()) {}
+
+  validateSkip(current: TrainingSession, timeZone: string | null): void {
+    this.validateScheduledTransition(current, "skipped", timeZone);
   }
 
   validateComplete(
     current: TrainingSession,
     request: CompleteTrainingSessionRequest,
+    timeZone: string | null,
   ): void {
-    this.validateScheduledTransition(current, "completed");
+    this.validateScheduledTransition(current, "completed", timeZone);
 
     if (current.activityType === "RUN" && !request.actualDistanceMetres) {
       throw new TrainingSessionsValidationError(
@@ -100,10 +104,41 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
   private validateScheduledTransition(
     current: TrainingSession,
     transition: "completed" | "skipped",
+    timeZone: string | null,
   ): void {
     if (current.status !== "SCHEDULED") {
       throw new TrainingSessionsValidationError(
         `only scheduled training sessions can be ${transition}`,
+      );
+    }
+
+    if (current.date > this.currentDate(timeZone)) {
+      throw new TrainingSessionsValidationError(
+        `future training sessions cannot be ${transition}`,
+      );
+    }
+  }
+
+  private currentDate(timeZone: string | null): string {
+    if (!timeZone) {
+      throw new TrainingSessionsValidationError("Time-Zone header is required");
+    }
+
+    try {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(this.now());
+      const values = new Map(
+        parts.map((part) => [part.type, part.value] as const),
+      );
+
+      return `${values.get("year")}-${values.get("month")}-${values.get("day")}`;
+    } catch {
+      throw new TrainingSessionsValidationError(
+        "Time-Zone header must be a valid IANA timezone",
       );
     }
   }

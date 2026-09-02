@@ -150,7 +150,10 @@ async function postTrainingSessionTransition(
 ): Promise<TrainingSession> {
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Time-Zone": browserTimeZone(),
+    },
     body: JSON.stringify(request),
   });
 
@@ -175,6 +178,16 @@ async function postTrainingSessionTransition(
   }
 
   return trainingSessionSchema.parse(await response.json());
+}
+
+function browserTimeZone(): string {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (timeZone) return timeZone;
+
+  throw new TrainingSessionsApiError(
+    "Unable to determine browser timezone",
+    0,
+  );
 }
 
 async function readJsonBody(response: Response): Promise<unknown> {

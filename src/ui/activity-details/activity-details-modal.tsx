@@ -10,6 +10,7 @@ import { formatActivityType } from "@/ui/training-sessions/training-session-labe
 import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
 import { ActivityTransitionForm } from "./components/activity-transition-form";
+import { canTransitionActivity } from "./utils/activity-transition-availability";
 
 type ActivityDetailsModalProps = {
   activity: TrainingSession;
@@ -97,7 +98,7 @@ export function ActivityDetailsModal({
           },
         ]
       : [
-        ...(activity.status === "SCHEDULED"
+        ...(canTransitionActivity(activity)
           ? [
               {
                 label: "Complete activity",
