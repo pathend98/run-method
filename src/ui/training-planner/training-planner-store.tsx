@@ -1,21 +1,9 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 
-import type {
-  CompleteTrainingSessionRequest,
-  CreateTrainingSessionRequest,
-  EditTrainingSessionRequest,
-  SkipTrainingSessionRequest,
-  TrainingSession,
-} from "@/domain/training-sessions";
 import type {
   TrainingActivity,
   TrainingDay,
@@ -27,30 +15,8 @@ export type TrainingPlannerActiveModal =
   | { kind: "edit"; activity: TrainingActivity }
   | null;
 
-export type TrainingPlannerModalOperations = {
-  createActivity: (request: CreateTrainingSessionRequest) => Promise<TrainingSession>;
-  editActivity: (
-    id: string,
-    request: EditTrainingSessionRequest,
-  ) => Promise<TrainingSession>;
-  deleteActivity: (id: string) => Promise<void>;
-  skipActivity: (
-    id: string,
-    request: SkipTrainingSessionRequest,
-  ) => Promise<TrainingSession>;
-  completeActivity: (
-    id: string,
-    request: CompleteTrainingSessionRequest,
-  ) => Promise<TrainingSession>;
-  isCreatingActivity: boolean;
-  isEditingActivity: boolean;
-  isDeletingActivity: boolean;
-  isTransitioningActivity: boolean;
-};
-
 type TrainingPlannerStoreState = {
   activeModal: TrainingPlannerActiveModal;
-  modalOperations: TrainingPlannerModalOperations | null;
 };
 
 type TrainingPlannerStoreActions = {
@@ -60,19 +26,16 @@ type TrainingPlannerStoreActions = {
   openEditActivity: () => void;
   replaceActivityAndShowDetails: (activity: TrainingActivity) => void;
   returnToActivityDetails: () => void;
-  setModalOperations: (operations: TrainingPlannerModalOperations) => void;
 };
 
-export type TrainingPlannerStore =
-  & TrainingPlannerStoreState
-  & TrainingPlannerStoreActions;
+export type TrainingPlannerStore = TrainingPlannerStoreState &
+  TrainingPlannerStoreActions;
 
 export type TrainingPlannerStoreApi = StoreApi<TrainingPlannerStore>;
 
 export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
   return createStore<TrainingPlannerStore>()((set) => ({
     activeModal: null,
-    modalOperations: null,
     closeModal: () => set({ activeModal: null }),
     openAddActivity: (day) => set({ activeModal: { kind: "add", day } }),
     openActivityDetails: (activity) =>
@@ -101,7 +64,6 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
-    setModalOperations: (modalOperations) => set({ modalOperations }),
   }));
 }
 

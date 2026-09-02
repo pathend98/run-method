@@ -11,6 +11,11 @@ import { StrengthActivityDetails } from "./components/strength-activity-details"
 import { ActivityTransitionForm } from "./components/activity-transition-form";
 import { canTransitionActivity } from "./utils/activity-transition-availability";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import {
+  useCompleteTrainingSessionMutation,
+  useDeleteTrainingSessionMutation,
+  useSkipTrainingSessionMutation,
+} from "@/ui/training-sessions/training-session-mutations";
 
 export function ActivityDetailsModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
@@ -18,27 +23,26 @@ export function ActivityDetailsModal() {
   const openEditActivity = useTrainingPlannerStore(
     (state) => state.openEditActivity,
   );
-  const modalOperations = useTrainingPlannerStore(
-    (state) => state.modalOperations,
-  );
+  const deleteMutation = useDeleteTrainingSessionMutation();
+  const skipMutation = useSkipTrainingSessionMutation();
+  const completeMutation = useCompleteTrainingSessionMutation();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [transitionMode, setTransitionMode] = useState<
     "complete" | "skip" | null
   >(null);
 
-  if (activeModal?.kind !== "details" || !modalOperations) {
+  if (activeModal?.kind !== "details") {
     return null;
   }
 
-  const operations = modalOperations;
   const { activity } = activeModal;
 
   async function confirmDelete() {
     setDeleteError(null);
 
     try {
-      await operations.deleteActivity(activity.id);
+      await deleteMutation.mutateAsync(activity.id);
       closeModal();
     } catch {
       setDeleteError("Unable to delete activity. Please try again.");
@@ -51,18 +55,20 @@ export function ActivityDetailsModal() {
   }
 
   async function completeActivity(request: CompleteTrainingSessionRequest) {
-    await operations.completeActivity(activity.id, request);
+    await completeMutation.mutateAsync({ id: activity.id, request });
     closeModal();
   }
 
   async function skipActivity(request: SkipTrainingSessionRequest) {
-    await operations.skipActivity(activity.id, request);
+    await skipMutation.mutateAsync({ id: activity.id, request });
     closeModal();
   }
 
   const isTransitioningActivity = transitionMode !== null;
   const isBusy =
-    operations.isDeletingActivity || operations.isTransitioningActivity;
+    deleteMutation.isPending ||
+    skipMutation.isPending ||
+    completeMutation.isPending;
 
   const headerActions: ModalAction[] = isConfirmingDelete
     ? [
@@ -72,9 +78,7 @@ export function ActivityDetailsModal() {
           variant: "secondary",
         },
         {
-          label: operations.isDeletingActivity
-            ? "Deleting…"
-            : "Delete permanently",
+          label: deleteMutation.isPending ? "Deleting…" : "Delete permanently",
           onClick: () => void confirmDelete(),
           variant: "danger",
         },
@@ -94,37 +98,37 @@ export function ActivityDetailsModal() {
           },
         ]
       : [
-        ...(canTransitionActivity(activity)
-          ? [
-              {
-                label: "Complete activity",
-                onClick: () => setTransitionMode("complete"),
-                variant: "primary" as const,
-              },
-              {
-                label: "Skip activity",
-                onClick: () => setTransitionMode("skip"),
-                variant: "danger-outline" as const,
-              },
-            ]
-          : []),
-        {
-          label: "Edit activity",
-          onClick: openEditActivity,
-          variant: "primary",
-        },
-        {
-          label: "Delete activity",
-          onClick: () => setIsConfirmingDelete(true),
-          variant: "danger-outline",
-        },
-        {
-          ariaLabel: "Close activity details",
-          label: "Close",
-          onClick: closeModal,
-          variant: "secondary",
-        },
-      ];
+          ...(canTransitionActivity(activity)
+            ? [
+                {
+                  label: "Complete activity",
+                  onClick: () => setTransitionMode("complete"),
+                  variant: "primary" as const,
+                },
+                {
+                  label: "Skip activity",
+                  onClick: () => setTransitionMode("skip"),
+                  variant: "danger-outline" as const,
+                },
+              ]
+            : []),
+          {
+            label: "Edit activity",
+            onClick: openEditActivity,
+            variant: "primary",
+          },
+          {
+            label: "Delete activity",
+            onClick: () => setIsConfirmingDelete(true),
+            variant: "danger-outline",
+          },
+          {
+            ariaLabel: "Close activity details",
+            label: "Close",
+            onClick: closeModal,
+            variant: "secondary",
+          },
+        ];
 
   return (
     <Modal
@@ -142,10 +146,10 @@ export function ActivityDetailsModal() {
                 form: "activity-transition-form",
                 label:
                   transitionMode === "skip"
-                    ? operations.isTransitioningActivity
+                    ? skipMutation.isPending
                       ? "Skipping…"
                       : "Skip activity"
-                    : operations.isTransitioningActivity
+                    : completeMutation.isPending
                       ? "Completing…"
                       : "Complete activity",
                 type: "submit",
@@ -175,7 +179,7 @@ export function ActivityDetailsModal() {
       {transitionMode ? (
         <ActivityTransitionForm
           activity={activity}
-          isSubmitting={operations.isTransitioningActivity}
+          isSubmitting={skipMutation.isPending || completeMutation.isPending}
           mode={transitionMode}
           onComplete={completeActivity}
           onSkip={skipActivity}
