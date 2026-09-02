@@ -1,6 +1,6 @@
 import {
   fireEvent,
-  render,
+  render as testingRender,
   screen,
   waitFor,
   within,
@@ -11,7 +11,11 @@ import type {
   RunTrainingSession,
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
-import { ActivityDetailsModal } from "./activity-details-modal";
+import { ActivityDetailsModal as ActualActivityDetailsModal } from "./activity-details-modal";
+import {
+  createTrainingPlannerStore,
+  TrainingPlannerStoreProvider,
+} from "@/ui/training-planner/training-planner-store";
 
 const runActivity = {
   id: "run",
@@ -42,6 +46,48 @@ const strengthActivity = {
   targetDurationSeconds: 2700,
   actualDurationSeconds: 2400,
 } satisfies StrengthTrainingSession;
+
+type ActivityDetailsModalTestProps = React.ComponentProps<
+  typeof ActualActivityDetailsModal
+> & {
+  activity: RunTrainingSession | StrengthTrainingSession;
+  onClose: () => void;
+  onEdit: () => void;
+};
+
+const ActivityDetailsModal = ActualActivityDetailsModal as unknown as (
+  props: ActivityDetailsModalTestProps,
+) => React.ReactElement;
+
+function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
+  const store = createTrainingPlannerStore();
+  let currentProps = ui.props;
+  store.getState().openActivityDetails({ ...currentProps.activity, day: "Monday" });
+  store.subscribe((state, previousState) => {
+    if (state.activeModal?.kind === "edit" && previousState.activeModal?.kind === "details") {
+      currentProps.onEdit();
+    }
+    if (state.activeModal === null && previousState.activeModal !== null) {
+      currentProps.onClose();
+    }
+  });
+  const rendered = testingRender(
+    <TrainingPlannerStoreProvider store={store}>{ui}</TrainingPlannerStoreProvider>,
+  );
+
+  return {
+    ...rendered,
+    rerender: (nextUi: React.ReactElement<ActivityDetailsModalTestProps>) => {
+      currentProps = nextUi.props;
+      store.getState().openActivityDetails({ ...currentProps.activity, day: "Monday" });
+      rendered.rerender(
+        <TrainingPlannerStoreProvider store={store}>
+          {nextUi}
+        </TrainingPlannerStoreProvider>,
+      );
+    },
+  };
+}
 
 test("calls the close handler from the close button", () => {
   const onClose = vi.fn();
@@ -319,7 +365,9 @@ test("validates a skip reason and closes after a successful skip", async () => {
   expect(await screen.findByText("Enter a skip reason")).toBeDefined();
   fireEvent.change(screen.getByLabelText("Skip reason"), { target: { value: "Recovery" } });
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
-  await waitFor(() => expect(onSkip).toHaveBeenCalledWith({ skipReason: "Recovery" }));
+  await waitFor(() =>
+    expect(onSkip).toHaveBeenCalledWith("run", { skipReason: "Recovery" }),
+  );
   expect(onClose).toHaveBeenCalledOnce();
 });
 
@@ -333,7 +381,12 @@ test("collects run actuals, handles errors, and can cancel completion", async ()
   fireEvent.change(screen.getByLabelText("Actual duration (minutes)"), { target: { value: "42" } });
   fireEvent.change(screen.getByLabelText("Actual distance (km)"), { target: { value: "6.2" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
-  await waitFor(() => expect(onComplete).toHaveBeenCalledWith({ actualDurationSeconds: 2520, actualDistanceMetres: 6200 }));
+  await waitFor(() =>
+    expect(onComplete).toHaveBeenCalledWith("run", {
+      actualDurationSeconds: 2520,
+      actualDistanceMetres: 6200,
+    }),
+  );
   expect((await screen.findByRole("alert")).textContent).toContain("Unable to complete activity");
   fireEvent.click(screen.getAllByRole("button", { name: "Cancel" })[1]);
   expect(screen.queryByLabelText("Actual duration (minutes)")).toBeNull();

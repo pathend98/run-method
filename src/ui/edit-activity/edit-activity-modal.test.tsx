@@ -1,6 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
+import {
+  createTrainingPlannerStore,
+  TrainingPlannerStoreProvider,
+} from "@/ui/training-planner/training-planner-store";
 import { EditActivityModal } from "./edit-activity-modal";
 
 const activity = {
@@ -23,66 +27,73 @@ const activity = {
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
 
-test("renders the edit activity dialog and its sections", () => {
-  render(
-    <EditActivityModal
-      activity={activity}
-      isSubmitting={false}
-      onClose={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+function renderEditActivityModal(
+  props: Partial<React.ComponentProps<typeof EditActivityModal>> = {},
+) {
+  const store = createTrainingPlannerStore();
+  store.getState().openActivityDetails({ ...activity, day: "Monday" });
+  store.getState().openEditActivity();
 
+  return {
+    store,
+    ...render(
+      <TrainingPlannerStoreProvider store={store}>
+        <EditActivityModal
+          isSubmitting={false}
+          onEdit={vi.fn().mockResolvedValue(activity)}
+          {...props}
+        />
+      </TrainingPlannerStoreProvider>,
+    ),
+  };
+}
+
+test("renders the selected activity and returns to details when dismissed", () => {
+  const { store } = renderEditActivityModal();
   expect(screen.getByRole("dialog", { name: "Edit activity" })).toBeDefined();
-  expect(screen.getByText("Run · 2026-08-17")).toBeDefined();
-  expect(screen.getByText("Activity type")).toBeDefined();
-  expect(screen.getByLabelText("Title")).toBeDefined();
-});
-
-test("closes through the backdrop and Escape key", () => {
-  const onClose = vi.fn();
-  render(
-    <EditActivityModal
-      activity={activity}
-      isSubmitting={false}
-      onClose={onClose}
-      onEdit={vi.fn()}
-    />,
-  );
-
-  fireEvent.keyDown(window, { key: "Tab" });
-  fireEvent.keyDown(window, { key: "Escape" });
-  fireEvent.click(
-    screen.getByRole("button", { name: "Dismiss edit activity" }),
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Close edit activity" }));
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(onClose).toHaveBeenCalledTimes(4);
+  expect(store.getState().activeModal?.kind).toBe("details");
 });
 
-test("locks backdrop and Escape dismissal while submitting", () => {
-  const onClose = vi.fn();
+test("updates the selected activity and returns to its details", async () => {
+  const onEdit = vi
+    .fn()
+    .mockResolvedValue({ ...activity, title: "Updated tempo" });
+  const { store } = renderEditActivityModal({ onEdit });
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Updated tempo" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  await waitFor(() => expect(onEdit).toHaveBeenCalledOnce());
+  expect(store.getState().activeModal).toMatchObject({
+    kind: "details",
+    activity: { title: "Updated tempo", day: "Monday" },
+  });
+});
+
+test("keeps the modal open after a failed edit", async () => {
+  renderEditActivityModal({ onEdit: vi.fn().mockRejectedValue(new Error("nope")) });
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Changed" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Unable to edit activity",
+  );
+});
+
+test("renders nothing when edit activity is not active", () => {
   render(
-    <EditActivityModal
-      activity={activity}
-      isSubmitting
-      onClose={onClose}
-      onEdit={vi.fn()}
-    />,
+    <TrainingPlannerStoreProvider>
+      <EditActivityModal isSubmitting={false} onEdit={vi.fn()} />
+    </TrainingPlannerStoreProvider>,
   );
 
-  fireEvent.keyDown(window, { key: "Escape" });
-  fireEvent.click(
-    screen.getByRole("button", { name: "Dismiss edit activity" }),
-  );
-  expect(onClose).not.toHaveBeenCalled();
-  expect(
-    screen.getByRole("button", { name: "Close edit activity" }),
-  ).toHaveProperty("disabled", true);
-  expect(screen.getByRole("button", { name: "Cancel" })).toHaveProperty(
-    "disabled",
-    true,
-  );
+  expect(screen.queryByRole("dialog", { name: "Edit activity" })).toBeNull();
+});
+
+test("shows its submitting state", () => {
+  renderEditActivityModal({ isSubmitting: true });
   expect(screen.getByRole("button", { name: "Saving…" })).toHaveProperty(
     "disabled",
     true,

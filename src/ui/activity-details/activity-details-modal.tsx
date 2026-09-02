@@ -3,7 +3,6 @@ import { useState } from "react";
 import type {
   CompleteTrainingSessionRequest,
   SkipTrainingSessionRequest,
-  TrainingSession,
 } from "@/domain/training-sessions";
 import { Modal, type ModalAction } from "@/ui/components/modal";
 import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
@@ -11,42 +10,52 @@ import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
 import { ActivityTransitionForm } from "./components/activity-transition-form";
 import { canTransitionActivity } from "./utils/activity-transition-availability";
+import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 
 type ActivityDetailsModalProps = {
-  activity: TrainingSession;
   isDeleting: boolean;
   isTransitioning?: boolean;
-  onClose: () => void;
   onComplete?: (
+    id: string,
     request: CompleteTrainingSessionRequest,
   ) => Promise<unknown>;
-  onDelete: () => Promise<unknown>;
-  onEdit: () => void;
-  onSkip?: (request: SkipTrainingSessionRequest) => Promise<unknown>;
+  onDelete: (id: string) => Promise<unknown>;
+  onSkip?: (
+    id: string,
+    request: SkipTrainingSessionRequest,
+  ) => Promise<unknown>;
 };
 
 export function ActivityDetailsModal({
-  activity,
   isDeleting,
   isTransitioning = false,
-  onClose,
   onComplete = async () => undefined,
   onDelete,
-  onEdit,
   onSkip = async () => undefined,
 }: ActivityDetailsModalProps) {
+  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
+  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
+  const openEditActivity = useTrainingPlannerStore(
+    (state) => state.openEditActivity,
+  );
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [transitionMode, setTransitionMode] = useState<
     "complete" | "skip" | null
   >(null);
 
+  if (activeModal?.kind !== "details") {
+    return null;
+  }
+
+  const { activity } = activeModal;
+
   async function confirmDelete() {
     setDeleteError(null);
 
     try {
-      await onDelete();
-      onClose();
+      await onDelete(activity.id);
+      closeModal();
     } catch {
       setDeleteError("Unable to delete activity. Please try again.");
     }
@@ -58,13 +67,13 @@ export function ActivityDetailsModal({
   }
 
   async function completeActivity(request: CompleteTrainingSessionRequest) {
-    await onComplete(request);
-    onClose();
+    await onComplete(activity.id, request);
+    closeModal();
   }
 
   async function skipActivity(request: SkipTrainingSessionRequest) {
-    await onSkip(request);
-    onClose();
+    await onSkip(activity.id, request);
+    closeModal();
   }
 
   const isTransitioningActivity = transitionMode !== null;
@@ -93,7 +102,7 @@ export function ActivityDetailsModal({
           {
             ariaLabel: "Close activity details",
             label: "Close",
-            onClick: onClose,
+            onClick: closeModal,
             variant: "secondary",
           },
         ]
@@ -114,7 +123,7 @@ export function ActivityDetailsModal({
           : []),
         {
           label: "Edit activity",
-          onClick: onEdit,
+          onClick: openEditActivity,
           variant: "primary",
         },
         {
@@ -125,7 +134,7 @@ export function ActivityDetailsModal({
         {
           ariaLabel: "Close activity details",
           label: "Close",
-          onClick: onClose,
+          onClick: closeModal,
           variant: "secondary",
         },
       ];
@@ -160,7 +169,7 @@ export function ActivityDetailsModal({
       }
       headerActions={headerActions}
       isBusy={isBusy}
-      onClose={onClose}
+      onClose={closeModal}
       size="large"
       title={activity.title}
     >

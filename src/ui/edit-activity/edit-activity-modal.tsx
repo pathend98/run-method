@@ -6,20 +6,39 @@ import { Modal } from "@/ui/components/modal";
 import { EditActivityForm } from "./components/edit-activity-form";
 import { EditActivitySummary } from "./components/edit-activity-summary";
 import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
+import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 
 type EditActivityModalProps = {
-  activity: TrainingSession;
   isSubmitting: boolean;
-  onClose: () => void;
-  onEdit: (request: EditTrainingSessionRequest) => Promise<unknown>;
+  onEdit: (
+    id: string,
+    request: EditTrainingSessionRequest,
+  ) => Promise<TrainingSession>;
 };
 
 export function EditActivityModal({
-  activity,
   isSubmitting,
-  onClose,
   onEdit,
 }: EditActivityModalProps) {
+  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
+  const replaceActivityAndShowDetails = useTrainingPlannerStore(
+    (state) => state.replaceActivityAndShowDetails,
+  );
+  const returnToActivityDetails = useTrainingPlannerStore(
+    (state) => state.returnToActivityDetails,
+  );
+
+  if (activeModal?.kind !== "edit") {
+    return null;
+  }
+
+  const { activity } = activeModal;
+
+  async function editActivity(request: EditTrainingSessionRequest) {
+    const editedActivity = await onEdit(activity.id, request);
+    replaceActivityAndShowDetails({ ...editedActivity, day: activity.day });
+  }
+
   return (
     <Modal
       dismissLabel="Dismiss edit activity"
@@ -27,7 +46,7 @@ export function EditActivityModal({
       footerActions={[
         {
           label: "Cancel",
-          onClick: onClose,
+          onClick: returnToActivityDetails,
           variant: "secondary",
         },
         {
@@ -41,16 +60,20 @@ export function EditActivityModal({
         {
           ariaLabel: "Close edit activity",
           label: "Close",
-          onClick: onClose,
+          onClick: returnToActivityDetails,
           variant: "secondary",
         },
       ]}
       isBusy={isSubmitting}
-      onClose={onClose}
+      onClose={returnToActivityDetails}
       title="Edit activity"
     >
       <EditActivitySummary activity={activity} />
-      <EditActivityForm activity={activity} onClose={onClose} onEdit={onEdit} />
+      <EditActivityForm
+        activity={activity}
+        onClose={returnToActivityDetails}
+        onEdit={editActivity}
+      />
     </Modal>
   );
 }
