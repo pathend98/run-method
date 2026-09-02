@@ -2,7 +2,7 @@ import {
   defaultDurationFields,
   durationFieldsToSeconds,
   durationSecondsToFields,
-} from "./duration";
+} from "./duration-fields";
 
 test("converts duration fields to seconds", () => {
   expect(

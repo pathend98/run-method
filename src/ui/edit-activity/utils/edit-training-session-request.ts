@@ -3,7 +3,7 @@ import {
   type EditTrainingSessionRequest,
   type TrainingSession,
 } from "@/domain/training-sessions";
-import { durationFieldsToSeconds } from "@/ui/components/duration";
+import { durationFieldsToSeconds } from "@/ui/training-sessions/duration-fields";
 import {
   createEditActivityFormSchema,
   type EditActivityFormValues,
