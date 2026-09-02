@@ -51,11 +51,11 @@ test("renders full run targets and actual values", () => {
   expect(within(details!).getByText("Time of day")).toBeDefined();
   expect(within(details!).getByText("AM")).toBeDefined();
   expect(screen.getByText("6.0 km")).toBeDefined();
-  expect(screen.getByText("26 min")).toBeDefined();
+  expect(screen.getByText("00:25:30")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
   expect(screen.getByText("Distance + Pace")).toBeDefined();
   expect(screen.getByText("5.9 km")).toBeDefined();
-  expect(screen.getByText("25 min")).toBeDefined();
+  expect(screen.getByText("00:25:00")).toBeDefined();
 });
 
 test("renders run targets as three equally styled responsive cards", () => {
@@ -92,7 +92,7 @@ test.each([
   {
     expectedTarget: "Distance + Duration",
     expectedDerivedTarget: "6:40 / km",
-    expectedDuration: "40 min",
+    expectedDuration: "00:40:00",
     override: {
       targetType: "DISTANCE_DURATION",
       targetDurationSeconds: 2400,
@@ -102,7 +102,7 @@ test.each([
   {
     expectedTarget: "Duration + Pace",
     expectedDerivedTarget: "7.1 km",
-    expectedDuration: "30 min",
+    expectedDuration: "00:30:00",
     override: {
       targetType: "DURATION_PACE",
       targetDistanceMetres: null,

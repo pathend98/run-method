@@ -6,6 +6,8 @@ import type {
   SkipTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
+import { defaultDurationFields } from "@/ui/components/duration";
+import { DurationInput } from "@/ui/components/duration-input";
 import { FormField } from "@/ui/components/form-field";
 import {
   createActivityTransitionFormSchema,
@@ -33,7 +35,7 @@ export function ActivityTransitionForm({
   const form = useForm<ActivityTransitionFormValues>({
     defaultValues: {
       distanceKilometres: "",
-      durationMinutes: "",
+      ...defaultDurationFields,
       skipReason: "",
     },
     resolver: zodResolver(createActivityTransitionFormSchema(activity, mode)),
@@ -88,18 +90,7 @@ export function ActivityTransitionForm({
         </FormField>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
-            error={errors.durationMinutes?.message}
-            label="Actual duration (minutes)"
-          >
-            <input
-              aria-label="Actual duration (minutes)"
-              autoFocus
-              disabled={isSubmitting}
-              inputMode="numeric"
-              {...register("durationMinutes")}
-            />
-          </FormField>
+          <DurationInput autoFocus error={errors.durationHours?.message ?? errors.durationMinutes?.message ?? errors.durationSeconds?.message} disabled={isSubmitting} hoursName="durationHours" label="Actual duration (hh:mm:ss)" minutesName="durationMinutes" register={register} secondsName="durationSeconds" />
           {activity.activityType === "RUN" ? (
             <FormField
               error={errors.distanceKilometres?.message}

@@ -112,7 +112,7 @@ test("rejects incomplete required targets", () => {
 
 test.each([
   { distanceKilometres: "0", durationMinutes: "30" },
-  { distanceKilometres: "5", durationMinutes: "0" },
+  { distanceKilometres: "5" },
   {
     targetType: "DISTANCE_PACE" as const,
     distanceKilometres: "5",
@@ -125,7 +125,7 @@ test.each([
   },
   {
     activityType: "STRENGTH" as const,
-    durationMinutes: "1.5",
+    durationSeconds: "1.5",
   },
 ])("rejects invalid target values %#", (override) => {
   expect(

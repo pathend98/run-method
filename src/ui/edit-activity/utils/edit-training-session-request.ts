@@ -3,6 +3,7 @@ import {
   type EditTrainingSessionRequest,
   type TrainingSession,
 } from "@/domain/training-sessions";
+import { durationFieldsToSeconds } from "@/ui/components/duration";
 import {
   createEditActivityFormSchema,
   type EditActivityFormValues,
@@ -31,9 +32,9 @@ export function toEditTrainingSessionRequest(
       targetDurationSeconds:
         activity.status !== "SCHEDULED"
           ? activity.targetDurationSeconds
-          : parsed.durationMinutes === ""
+          : durationFieldsToSeconds(parsed) === 0
             ? null
-            : Number(parsed.durationMinutes) * 60,
+            : durationFieldsToSeconds(parsed),
     });
   }
 
@@ -47,7 +48,7 @@ export function toEditTrainingSessionRequest(
   }
 
   const distance = Number(parsed.distanceKilometres) * 1000;
-  const duration = Number(parsed.durationMinutes) * 60;
+  const duration = durationFieldsToSeconds(parsed);
   const [paceMinutes, paceSeconds] = parsed.pacePerKilometre
     .split(":")
     .map(Number);

@@ -5,23 +5,31 @@ import type {
   SkipTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
+import {
+  durationFieldsSchema,
+  durationFieldsToSeconds,
+} from "@/ui/components/duration";
 
 const positiveDistanceSchema = z
   .string()
   .regex(/^\d+(?:\.\d{1,3})?$/, "Enter a distance in kilometres")
   .refine((value) => Number(value) > 0, "Distance must be greater than zero");
-const positiveWholeMinutesSchema = z
-  .string()
-  .regex(/^\d+$/, "Enter whole minutes")
-  .refine((value) => Number(value) > 0, "Duration must be greater than zero");
 
 export const skipActivityFormSchema = z.object({
   skipReason: z.string().trim().min(1, "Enter a skip reason"),
 });
 
 export const completeActivityFormSchema = z.object({
-  durationMinutes: positiveWholeMinutesSchema,
+  ...durationFieldsSchema.shape,
   distanceKilometres: z.string(),
+}).superRefine((values, context) => {
+  if (durationFieldsToSeconds(values) === 0) {
+    context.addIssue({
+      code: "custom",
+      path: ["durationHours"],
+      message: "Duration must be greater than zero",
+    });
+  }
 });
 
 export type SkipActivityFormValues = z.infer<typeof skipActivityFormSchema>;
@@ -57,7 +65,7 @@ export function createActivityTransitionFormSchema(
   return z
     .object({
       skipReason: z.string(),
-      durationMinutes: z.string(),
+      ...durationFieldsSchema.shape,
       distanceKilometres: z.string(),
     })
     .superRefine((values, context) => {
@@ -89,7 +97,7 @@ export function toCompleteTrainingSessionRequest(
 ): CompleteTrainingSessionRequest {
   const parsed = createCompleteActivityFormSchema(activity).parse(values);
   return {
-    actualDurationSeconds: Number(parsed.durationMinutes) * 60,
+    actualDurationSeconds: durationFieldsToSeconds(parsed),
     ...(activity.activityType === "RUN"
       ? { actualDistanceMetres: Number(parsed.distanceKilometres) * 1000 }
       : {}),

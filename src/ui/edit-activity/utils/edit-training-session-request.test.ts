@@ -68,7 +68,7 @@ test.each([
       targetDistanceMetres: null,
       targetPaceSecondsPerKilometre: 300,
     }),
-    { durationMinutes: "60", pacePerKilometre: "5:10" },
+    { durationHours: "01", durationMinutes: "00", pacePerKilometre: "5:10" },
     { targetDurationSeconds: 3600, targetPaceSecondsPerKilometre: 310 },
   ],
 ] as const)(
@@ -97,18 +97,18 @@ test.each([
 );
 
 test.each([
-  ["60", 3600],
-  ["", null],
+  [{ durationHours: "01", durationMinutes: "00", durationSeconds: "00" }, 3600],
+  [{ durationHours: "00", durationMinutes: "00", durationSeconds: "00" }, null],
 ] as const)(
   "converts a scheduled strength duration of %#",
-  (durationMinutes, targetDurationSeconds) => {
+  (duration, targetDurationSeconds) => {
     const activity = strength();
     const request = toEditTrainingSessionRequest(
       {
         ...getEditActivityFormValues(activity),
         title: "Gym",
         timeOfDay: "PM",
-        durationMinutes,
+        ...duration,
       },
       activity,
     );
@@ -133,7 +133,7 @@ test.each(["COMPLETED", "SKIPPED"] as const)(
     const request = toEditTrainingSessionRequest(
       {
         ...getEditActivityFormValues(activity),
-        durationMinutes: "999",
+        durationHours: "999",
       },
       activity,
     );
@@ -164,7 +164,7 @@ test.each([
       title: "Renamed",
       timeOfDay: "PM",
       distanceKilometres: "999",
-      durationMinutes: "999",
+      durationHours: "999",
       pacePerKilometre: "9:59",
     },
     activity,

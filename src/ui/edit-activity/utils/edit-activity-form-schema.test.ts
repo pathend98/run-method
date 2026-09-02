@@ -58,10 +58,10 @@ test("does not validate hidden target fields", () => {
 });
 
 test.each([
-  ["", true, ""],
+  ["00", true, ""],
   ["45", true, ""],
-  ["1.5", false, "Enter whole minutes"],
-  ["0", false, "greater than zero"],
+  ["1.5", false, "Enter a whole number"],
+  ["60", false, "00 to 59"],
 ] as const)(
   "validates scheduled strength duration %#",
   (durationMinutes, success, message) => {
@@ -88,7 +88,7 @@ test("does not validate a locked terminal strength duration", () => {
 test.each([
   [run(), "distanceKilometres", "", "Enter a distance"],
   [run(), "distanceKilometres", "0", "greater than zero"],
-  [run(), "durationMinutes", "1.5", "Enter whole minutes"],
+  [run(), "durationMinutes", "1.5", "Enter a whole number"],
   [run(), "durationMinutes", "0", "greater than zero"],
   [
     run({
