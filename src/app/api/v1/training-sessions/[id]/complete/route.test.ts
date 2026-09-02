@@ -45,10 +45,17 @@ const completedSession = {
 const service = vi.mocked(trainingSessionsService);
 const validator = vi.mocked(trainingSessionsRequestValidator);
 
-function request(body = JSON.stringify(completeRequest)) {
+function request(
+  body = JSON.stringify(completeRequest),
+  timeZone: string | null = "Pacific/Auckland",
+) {
   return new NextRequest(
     `http://localhost/api/v1/training-sessions/${id}/complete`,
-    { method: "POST", body },
+    {
+      method: "POST",
+      body,
+      headers: timeZone ? { "Time-Zone": timeZone } : undefined,
+    },
   );
 }
 
@@ -64,7 +71,32 @@ test("completes and returns a complete training session", async () => {
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(completedSession);
-  expect(service.complete).toHaveBeenCalledWith(id, completeRequest);
+  expect(service.complete).toHaveBeenCalledWith(
+    id,
+    completeRequest,
+    "Pacific/Auckland",
+  );
+});
+
+test("passes an invalid timezone header to the service", async () => {
+  validator.validateComplete.mockReturnValue(completeRequest);
+  service.complete.mockRejectedValue(
+    new TrainingSessionsValidationError(
+      "Time-Zone header must be a valid IANA timezone",
+    ),
+  );
+
+  const response = await POST(request(undefined, "Not/AZone"), context());
+
+  expect(service.complete).toHaveBeenCalledWith(
+    id,
+    completeRequest,
+    "Not/AZone",
+  );
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({
+    error: "Time-Zone header must be a valid IANA timezone",
+  });
 });
 
 test("returns malformed completion JSON with 400 status", async () => {

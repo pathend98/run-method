@@ -33,7 +33,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const completeRequest =
       trainingSessionsRequestValidator.validateComplete(body);
-    const session = await trainingSessionsService.complete(id, completeRequest);
+    const session = await trainingSessionsService.complete(
+      id,
+      completeRequest,
+      request.headers.get("Time-Zone"),
+    );
     return NextResponse.json(session);
   } catch (error) {
     if (error instanceof TrainingSessionsRequestValidationError) {

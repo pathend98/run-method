@@ -32,7 +32,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const skipRequest = trainingSessionsRequestValidator.validateSkip(body);
-    const session = await trainingSessionsService.skip(id, skipRequest);
+    const session = await trainingSessionsService.skip(
+      id,
+      skipRequest,
+      request.headers.get("Time-Zone"),
+    );
     return NextResponse.json(session);
   } catch (error) {
     if (error instanceof TrainingSessionsRequestValidationError) {

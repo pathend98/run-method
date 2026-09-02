@@ -42,10 +42,17 @@ const skippedSession = {
 const service = vi.mocked(trainingSessionsService);
 const validator = vi.mocked(trainingSessionsRequestValidator);
 
-function request(body = JSON.stringify(skipRequest)) {
+function request(
+  body = JSON.stringify(skipRequest),
+  timeZone: string | null = "Pacific/Auckland",
+) {
   return new NextRequest(
     `http://localhost/api/v1/training-sessions/${id}/skip`,
-    { method: "POST", body },
+    {
+      method: "POST",
+      body,
+      headers: timeZone ? { "Time-Zone": timeZone } : undefined,
+    },
   );
 }
 
@@ -61,7 +68,26 @@ test("skips and returns a complete training session", async () => {
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(skippedSession);
-  expect(service.skip).toHaveBeenCalledWith(id, skipRequest);
+  expect(service.skip).toHaveBeenCalledWith(
+    id,
+    skipRequest,
+    "Pacific/Auckland",
+  );
+});
+
+test("passes a missing timezone header to the service", async () => {
+  validator.validateSkip.mockReturnValue(skipRequest);
+  service.skip.mockRejectedValue(
+    new TrainingSessionsValidationError("Time-Zone header is required"),
+  );
+
+  const response = await POST(request(undefined, null), context());
+
+  expect(service.skip).toHaveBeenCalledWith(id, skipRequest, null);
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({
+    error: "Time-Zone header is required",
+  });
 });
 
 test("returns malformed skip JSON with 400 status", async () => {

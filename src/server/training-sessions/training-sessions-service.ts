@@ -27,10 +27,12 @@ export interface TrainingSessionsService {
   skip(
     id: string,
     request: SkipTrainingSessionRequest,
+    timeZone: string | null,
   ): Promise<TrainingSession>;
   complete(
     id: string,
     request: CompleteTrainingSessionRequest,
+    timeZone: string | null,
   ): Promise<TrainingSession>;
   edit(
     id: string,
@@ -96,9 +98,10 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   async skip(
     id: string,
     request: SkipTrainingSessionRequest,
+    timeZone: string | null,
   ): Promise<TrainingSession> {
     const current = await this.findForTransition(id);
-    this.validator.validateSkip(current);
+    this.validator.validateSkip(current, timeZone);
 
     const skipped = await this.repository.skip(current, request);
     if (!skipped) {
@@ -112,9 +115,10 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   async complete(
     id: string,
     request: CompleteTrainingSessionRequest,
+    timeZone: string | null,
   ): Promise<TrainingSession> {
     const current = await this.findForTransition(id);
-    this.validator.validateComplete(current, request);
+    this.validator.validateComplete(current, request, timeZone);
 
     const completed = await this.repository.complete(current, request);
     if (!completed) {

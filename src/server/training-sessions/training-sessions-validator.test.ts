@@ -6,6 +6,7 @@ import { DefaultTrainingSessionsValidator } from "./training-sessions-validator"
 
 const validator = new DefaultTrainingSessionsValidator();
 const today = new Date("2026-08-26T12:00:00");
+const timeZone = "UTC";
 
 const runSession: TrainingSession = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -179,14 +180,14 @@ test.each(["COMPLETED", "SKIPPED"] as const)(
         ...runSession,
         status,
         skipReason: status === "SKIPPED" ? "Recovery" : null,
-      }),
+      }, timeZone),
     ).toThrow("only scheduled training sessions can be skipped");
   },
 );
 
 test.each([
   ["skip", "skipped", (validator: DefaultTrainingSessionsValidator) =>
-    validator.validateSkip({ ...runSession, date: "2026-08-27" })],
+    validator.validateSkip({ ...runSession, date: "2026-08-27" }, timeZone)],
   [
     "complete",
     "completed",
@@ -194,6 +195,7 @@ test.each([
       validator.validateComplete(
         { ...runSession, date: "2026-08-27" },
         { actualDurationSeconds: 1500, actualDistanceMetres: 5000 },
+        timeZone,
       ),
   ],
 ] as const)(
@@ -213,7 +215,9 @@ test.each([
 ])("allows skipping a %s session", (_description, date) => {
   const validator = new DefaultTrainingSessionsValidator(() => today);
 
-  expect(() => validator.validateSkip({ ...runSession, date })).not.toThrow();
+  expect(() =>
+    validator.validateSkip({ ...runSession, date }, timeZone),
+  ).not.toThrow();
 });
 
 test.each([
@@ -226,8 +230,32 @@ test.each([
     validator.validateComplete(
       { ...runSession, date },
       { actualDurationSeconds: 1500, actualDistanceMetres: 5000 },
+      timeZone,
     ),
   ).not.toThrow();
+});
+
+test("uses the supplied IANA timezone to determine the current date", () => {
+  const validator = new DefaultTrainingSessionsValidator(
+    () => new Date("2026-08-26T12:00:00.000Z"),
+  );
+  const tomorrowInAuckland = { ...runSession, date: "2026-08-27" };
+
+  expect(() =>
+    validator.validateSkip(tomorrowInAuckland, "Pacific/Auckland"),
+  ).not.toThrow();
+  expect(() =>
+    validator.validateSkip(tomorrowInAuckland, "America/Los_Angeles"),
+  ).toThrow("future training sessions cannot be skipped");
+});
+
+test.each([
+  [null, "Time-Zone header is required"],
+  ["Not/AZone", "Time-Zone header must be a valid IANA timezone"],
+])("rejects %s timezone headers", (header, message) => {
+  const validator = new DefaultTrainingSessionsValidator(() => today);
+
+  expect(() => validator.validateSkip(runSession, header)).toThrow(message);
 });
 
 test("rejects future strength session transitions", () => {
@@ -248,17 +276,25 @@ test("rejects future strength session transitions", () => {
     actualDurationSeconds: null,
   };
 
-  expect(() => validator.validateSkip(strength)).toThrow(
+  expect(() => validator.validateSkip(strength, timeZone)).toThrow(
     "future training sessions cannot be skipped",
   );
   expect(() =>
-    validator.validateComplete(strength, { actualDurationSeconds: 1500 }),
+    validator.validateComplete(
+      strength,
+      { actualDurationSeconds: 1500 },
+      timeZone,
+    ),
   ).toThrow("future training sessions cannot be completed");
 });
 
 test("requires distance to complete runs", () => {
   expect(() =>
-    validator.validateComplete(runSession, { actualDurationSeconds: 1500 }),
+    validator.validateComplete(
+      runSession,
+      { actualDurationSeconds: 1500 },
+      timeZone,
+    ),
   ).toThrow("actualDistanceMetres is required to complete a run");
 });
 
@@ -267,7 +303,7 @@ test("allows run completion actuals", () => {
     validator.validateComplete(runSession, {
       actualDurationSeconds: 1500,
       actualDistanceMetres: 5000,
-    }),
+    }, timeZone),
   ).not.toThrow();
 });
 
@@ -292,7 +328,7 @@ test("rejects distance when completing strength sessions", () => {
     validator.validateComplete(strength, {
       actualDurationSeconds: 1500,
       actualDistanceMetres: 5000,
-    }),
+    }, timeZone),
   ).toThrow("actualDistanceMetres is not allowed for strength sessions");
 });
 

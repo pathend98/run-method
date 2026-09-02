@@ -5,6 +5,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import { addDays, format } from "date-fns";
 
 import type {
   RunTrainingSession,
@@ -16,7 +17,7 @@ const runActivity = {
   id: "run",
   title: "Tempo run",
   status: "SCHEDULED",
-  date: "2026-08-17",
+  date: format(new Date(), "yyyy-MM-dd"),
   timeOfDay: "AM",
   description: "Controlled effort",
   sortOrder: 0,
@@ -275,7 +276,7 @@ test("disables confirmation and dismissal while deleting", () => {
   expect(onClose).not.toHaveBeenCalled();
 });
 
-test("shows skip and complete actions only for scheduled activities", () => {
+test("shows skip and complete actions only for scheduled activities on or before today", () => {
   const { rerender } = render(
     <ActivityDetailsModal activity={runActivity} isDeleting={false} onClose={vi.fn()} onDelete={vi.fn()} onEdit={vi.fn()} />,
   );
@@ -287,6 +288,26 @@ test("shows skip and complete actions only for scheduled activities", () => {
   );
   expect(screen.queryByRole("button", { name: "Skip activity" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Complete activity" })).toBeNull();
+});
+
+test("hides skip and complete actions for future scheduled activities", () => {
+  render(
+    <ActivityDetailsModal
+      activity={{
+        ...runActivity,
+        date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+      }}
+      isDeleting={false}
+      onClose={vi.fn()}
+      onDelete={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  expect(screen.queryByRole("button", { name: "Skip activity" })).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Complete activity" }),
+  ).toBeNull();
 });
 
 test("validates a skip reason and closes after a successful skip", async () => {
