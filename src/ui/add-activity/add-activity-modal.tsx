@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
-import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
 import { FormField } from "@/ui/components/form-field";
 import { Modal } from "@/ui/components/modal";
 import { RunActivityFields } from "./components/run-activity-fields";
@@ -14,17 +13,12 @@ import {
   type AddActivityFormValues,
 } from "./utils/add-activity-form";
 
-type AddActivityModalProps = {
-  isSubmitting: boolean;
-  onCreate: (request: CreateTrainingSessionRequest) => Promise<unknown>;
-};
-
-export function AddActivityModal({
-  isSubmitting,
-  onCreate,
-}: AddActivityModalProps) {
+export function AddActivityModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
+  const modalOperations = useTrainingPlannerStore(
+    (state) => state.modalOperations,
+  );
   const form = useForm<AddActivityFormValues>({
     defaultValues: defaultAddActivityFormValues,
     resolver: zodResolver(addActivityFormSchema),
@@ -40,15 +34,23 @@ export function AddActivityModal({
 
   const dayDate = activeModal?.kind === "add" ? activeModal.day.date : null;
 
-  if (activeModal?.kind !== "add" || typeof dayDate !== "string") {
+  if (
+    activeModal?.kind !== "add" ||
+    typeof dayDate !== "string" ||
+    !modalOperations
+  ) {
     return null;
   }
 
+  const operations = modalOperations;
+  const date = dayDate;
   const { day } = activeModal;
 
   async function submit(values: AddActivityFormValues) {
     try {
-      await onCreate(toCreateTrainingSessionRequest(values, dayDate!));
+      await operations.createActivity(
+        toCreateTrainingSessionRequest(values, date),
+      );
       closeModal();
     } catch {
       setError("root", {
@@ -69,7 +71,7 @@ export function AddActivityModal({
         },
         {
           form: "add-activity-form",
-          label: isSubmitting ? "Adding…" : "Add activity",
+          label: operations.isCreatingActivity ? "Adding…" : "Add activity",
           type: "submit",
           variant: "primary",
         },
@@ -82,7 +84,7 @@ export function AddActivityModal({
           variant: "secondary",
         },
       ]}
-      isBusy={isSubmitting}
+      isBusy={operations.isCreatingActivity}
       onClose={closeModal}
       title="Add activity"
     >

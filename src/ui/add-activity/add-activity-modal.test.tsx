@@ -2,27 +2,38 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import {
   createTrainingPlannerStore,
+  type TrainingPlannerModalOperations,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { AddActivityModal } from "./add-activity-modal";
 
 const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
 
-function renderAddActivityModal(
-  props: Partial<React.ComponentProps<typeof AddActivityModal>> = {},
-) {
+type AddActivityModalTestProps = {
+  isSubmitting?: boolean;
+  onCreate?: TrainingPlannerModalOperations["createActivity"];
+};
+
+function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
   const store = createTrainingPlannerStore();
   store.getState().openAddActivity(day);
+  store.getState().setModalOperations({
+    createActivity: props.onCreate ?? vi.fn().mockResolvedValue({}),
+    editActivity: vi.fn(),
+    deleteActivity: vi.fn(),
+    skipActivity: vi.fn(),
+    completeActivity: vi.fn(),
+    isCreatingActivity: props.isSubmitting ?? false,
+    isEditingActivity: false,
+    isDeletingActivity: false,
+    isTransitioningActivity: false,
+  } as TrainingPlannerModalOperations);
 
   return {
     store,
     ...render(
       <TrainingPlannerStoreProvider store={store}>
-        <AddActivityModal
-          isSubmitting={false}
-          onCreate={vi.fn().mockResolvedValue(undefined)}
-          {...props}
-        />
+        <AddActivityModal />
       </TrainingPlannerStoreProvider>,
     ),
   };
@@ -97,7 +108,7 @@ test("switches activity fields and reports validation errors", async () => {
 test("renders nothing when add activity is not active", () => {
   render(
     <TrainingPlannerStoreProvider>
-      <AddActivityModal isSubmitting={false} onCreate={vi.fn()} />
+      <AddActivityModal />
     </TrainingPlannerStoreProvider>,
   );
 

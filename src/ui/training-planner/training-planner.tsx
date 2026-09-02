@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -13,7 +14,6 @@ import {
 } from "@/ui/training-sessions/training-sessions-api-client";
 import type {
   CompleteTrainingSessionRequest,
-  CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
   SkipTrainingSessionRequest,
 } from "@/domain/training-sessions";
@@ -39,6 +39,9 @@ export function TrainingPlanner() {
   );
   const activeModalKind = useTrainingPlannerStore(
     (state) => state.activeModal?.kind,
+  );
+  const setModalOperations = useTrainingPlannerStore(
+    (state) => state.setModalOperations,
   );
   const queryClient = useQueryClient();
   const pathname = usePathname();
@@ -104,6 +107,42 @@ export function TrainingPlanner() {
       await queryClient.invalidateQueries({ queryKey });
     },
   });
+  const { isPending: isCreatingActivity, mutateAsync: createActivity } =
+    createMutation;
+  const { isPending: isEditingActivity, mutateAsync: editActivity } =
+    editMutation;
+  const { isPending: isDeletingActivity, mutateAsync: deleteActivity } =
+    deleteMutation;
+  const { isPending: isSkippingActivity, mutateAsync: skipActivity } =
+    skipMutation;
+  const { isPending: isCompletingActivity, mutateAsync: completeActivity } =
+    completeMutation;
+
+  useEffect(() => {
+    setModalOperations({
+      createActivity,
+      editActivity: (id, request) => editActivity({ id, request }),
+      deleteActivity,
+      skipActivity: (id, request) => skipActivity({ id, request }),
+      completeActivity: (id, request) => completeActivity({ id, request }),
+      isCreatingActivity,
+      isEditingActivity,
+      isDeletingActivity,
+      isTransitioningActivity: isSkippingActivity || isCompletingActivity,
+    });
+  }, [
+    completeActivity,
+    createActivity,
+    deleteActivity,
+    editActivity,
+    isCompletingActivity,
+    isCreatingActivity,
+    isDeletingActivity,
+    isEditingActivity,
+    isSkippingActivity,
+    setModalOperations,
+    skipActivity,
+  ]);
 
   if (query.isPending) {
     return <PlannerStatus message="Loading training planner..." />;
@@ -133,29 +172,13 @@ export function TrainingPlanner() {
         weekRange={weekRange}
       />
       {activeModalKind === "details" ? (
-        <ActivityDetailsModal
-          isDeleting={deleteMutation.isPending}
-          isTransitioning={skipMutation.isPending || completeMutation.isPending}
-          onComplete={(id, request) =>
-            completeMutation.mutateAsync({ id, request })
-          }
-          onDelete={(id) => deleteMutation.mutateAsync(id)}
-          onSkip={(id, request) => skipMutation.mutateAsync({ id, request })}
-        />
+        <ActivityDetailsModal />
       ) : null}
       {activeModalKind === "edit" ? (
-        <EditActivityModal
-          isSubmitting={editMutation.isPending}
-          onEdit={(id, request) => editMutation.mutateAsync({ id, request })}
-        />
+        <EditActivityModal />
       ) : null}
       {activeModalKind === "add" ? (
-        <AddActivityModal
-          isSubmitting={createMutation.isPending}
-          onCreate={(request: CreateTrainingSessionRequest) =>
-            createMutation.mutateAsync(request)
-          }
-        />
+        <AddActivityModal />
       ) : null}
     </>
   );

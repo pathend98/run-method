@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import {
   createTrainingPlannerStore,
+  type TrainingPlannerModalOperations,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { EditActivityModal } from "./edit-activity-modal";
@@ -27,22 +28,32 @@ const activity = {
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
 
-function renderEditActivityModal(
-  props: Partial<React.ComponentProps<typeof EditActivityModal>> = {},
-) {
+type EditActivityModalTestProps = {
+  isSubmitting?: boolean;
+  onEdit?: TrainingPlannerModalOperations["editActivity"];
+};
+
+function renderEditActivityModal(props: EditActivityModalTestProps = {}) {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails({ ...activity, day: "Monday" });
   store.getState().openEditActivity();
+  store.getState().setModalOperations({
+    createActivity: vi.fn(),
+    editActivity: props.onEdit ?? vi.fn().mockResolvedValue(activity),
+    deleteActivity: vi.fn(),
+    skipActivity: vi.fn(),
+    completeActivity: vi.fn(),
+    isCreatingActivity: false,
+    isEditingActivity: props.isSubmitting ?? false,
+    isDeletingActivity: false,
+    isTransitioningActivity: false,
+  } as TrainingPlannerModalOperations);
 
   return {
     store,
     ...render(
       <TrainingPlannerStoreProvider store={store}>
-        <EditActivityModal
-          isSubmitting={false}
-          onEdit={vi.fn().mockResolvedValue(activity)}
-          {...props}
-        />
+        <EditActivityModal />
       </TrainingPlannerStoreProvider>,
     ),
   };
@@ -85,7 +96,7 @@ test("keeps the modal open after a failed edit", async () => {
 test("renders nothing when edit activity is not active", () => {
   render(
     <TrainingPlannerStoreProvider>
-      <EditActivityModal isSubmitting={false} onEdit={vi.fn()} />
+      <EditActivityModal />
     </TrainingPlannerStoreProvider>,
   );
 
