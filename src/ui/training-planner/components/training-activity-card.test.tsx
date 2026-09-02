@@ -32,20 +32,46 @@ function runActivity(
   } as TrainingActivity;
 }
 
-test("renders the activity title, type, and description", () => {
+test("renders a compact activity summary", () => {
   render(<TrainingActivityCard activity={runActivity()} />);
 
-  expect(
-    screen.getByRole("button", { name: "View Tempo run details" }),
-  ).toBeDefined();
+  const card = screen.getByRole("button", { name: "View Tempo run details" });
+
+  expect(card).toBeDefined();
+  expect(screen.getByText("Tempo run").className).toContain("line-clamp-2");
+  expect(screen.getByText("Scheduled")).toBeDefined();
   expect(screen.getByText("Run")).toBeDefined();
-  expect(screen.getByText("Controlled effort")).toBeDefined();
+  expect(screen.queryByText("Controlled effort")).toBeNull();
 });
 
-test("omits absent descriptions", () => {
+test.each([
+  ["SCHEDULED", "border-zinc-200", "text-zinc-700"],
+  ["COMPLETED", "border-green-200", "text-green-800"],
+  ["SKIPPED", "border-amber-200", "text-amber-800"],
+] as const)(
+  "renders %s activities with their status label and styling",
+  (status, cardClass, labelClass) => {
+    render(<TrainingActivityCard activity={runActivity({ status })} />);
+
+    const card = screen.getByRole("button", {
+      name: "View Tempo run details",
+    });
+    const statusLabel = screen.getByText(
+      status.charAt(0) + status.slice(1).toLowerCase(),
+    );
+
+    expect(card.className).toContain(cardClass);
+    expect(statusLabel.className).toContain(labelClass);
+    expect(statusLabel.className).not.toContain("bg-");
+    expect(statusLabel.className).not.toContain("rounded-full");
+    expect(statusLabel.className).not.toContain("whitespace-nowrap");
+  },
+);
+
+test("does not render descriptions in the planner overview", () => {
   render(
     <TrainingActivityCard
-      activity={runActivity({ description: null, title: "Easy run" })}
+      activity={runActivity({ title: "Easy run" })}
     />,
   );
 
