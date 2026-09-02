@@ -1,18 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
-import type {
-  CompleteTrainingSessionRequest,
-  CreateTrainingSessionRequest,
-  EditTrainingSessionRequest,
-  SkipTrainingSessionRequest,
-  TrainingSession,
-  TrainingSessionDateRange,
-} from "@/domain/training-sessions";
-import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
-import { AddActivityModal } from "@/ui/add-activity/add-activity-modal";
-import { EditActivityModal } from "@/ui/edit-activity/edit-activity-modal";
+import type { TrainingSessionDateRange } from "@/domain/training-sessions";
 import { WeekGrid } from "./week-grid";
 import { formatWeekRange } from "../services/training-planner-service";
 import type {
@@ -22,65 +10,25 @@ import type {
 
 type TrainingPlannerViewProps = {
   isCurrentWeek: boolean;
-  isCreatingActivity?: boolean;
-  isDeletingActivity?: boolean;
-  isEditingActivity?: boolean;
-  isTransitioningActivity?: boolean;
-  onCreateActivity?: (
-    request: CreateTrainingSessionRequest,
-  ) => Promise<unknown>;
+  onAddActivity?: (day: TrainingDay) => void;
   onCurrentWeek: () => void;
-  onCompleteActivity?: (
-    id: string,
-    request: CompleteTrainingSessionRequest,
-  ) => Promise<unknown>;
-  onDeleteActivity?: (id: string) => Promise<unknown>;
-  onEditActivity?: (
-    id: string,
-    request: EditTrainingSessionRequest,
-  ) => Promise<TrainingSession>;
   onNextWeek: () => void;
   onPreviousWeek: () => void;
-  onSkipActivity?: (
-    id: string,
-    request: SkipTrainingSessionRequest,
-  ) => Promise<unknown>;
+  onSelectActivity: (activity: TrainingActivity) => void;
   week: TrainingDay[];
   weekRange: TrainingSessionDateRange;
 };
 
 export function TrainingPlannerView({
   isCurrentWeek,
-  isCreatingActivity = false,
-  isDeletingActivity = false,
-  isEditingActivity = false,
-  isTransitioningActivity = false,
-  onCreateActivity = async () => undefined,
+  onAddActivity,
   onCurrentWeek,
-  onCompleteActivity = async () => undefined,
-  onDeleteActivity = async () => undefined,
-  onEditActivity,
   onNextWeek,
   onPreviousWeek,
-  onSkipActivity = async () => undefined,
+  onSelectActivity,
   week,
   weekRange,
 }: TrainingPlannerViewProps) {
-  const [selectedActivity, setSelectedActivity] =
-    useState<TrainingActivity | null>(null);
-  const [selectedDay, setSelectedDay] = useState<TrainingDay | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  async function editSelectedActivity(
-    activity: TrainingActivity,
-    request: EditTrainingSessionRequest,
-  ) {
-    const editedActivity = onEditActivity
-      ? await onEditActivity(activity.id, request)
-      : ({ ...activity, ...request } as TrainingSession);
-    setSelectedActivity({ ...editedActivity, day: activity.day });
-  }
-
   return (
     <section
       aria-labelledby="training-planner-heading"
@@ -137,45 +85,10 @@ export function TrainingPlannerView({
           </nav>
         </div>
         <WeekGrid
-          onAddActivity={setSelectedDay}
-          onSelectActivity={setSelectedActivity}
+          onAddActivity={onAddActivity}
+          onSelectActivity={onSelectActivity}
           week={week}
         />
-        {selectedActivity && !isEditModalOpen ? (
-          <ActivityDetailsModal
-            activity={selectedActivity}
-            isDeleting={isDeletingActivity}
-            isTransitioning={isTransitioningActivity}
-            onClose={() => {
-              setSelectedActivity(null);
-              setIsEditModalOpen(false);
-            }}
-            onComplete={(request) =>
-              onCompleteActivity(selectedActivity.id, request)
-            }
-            onDelete={() => onDeleteActivity(selectedActivity.id)}
-            onEdit={() => setIsEditModalOpen(true)}
-            onSkip={(request) => onSkipActivity(selectedActivity.id, request)}
-          />
-        ) : null}
-        {selectedActivity && isEditModalOpen ? (
-          <EditActivityModal
-            activity={selectedActivity}
-            isSubmitting={isEditingActivity}
-            onClose={() => setIsEditModalOpen(false)}
-            onEdit={(request) =>
-              editSelectedActivity(selectedActivity, request)
-            }
-          />
-        ) : null}
-        {selectedDay?.date ? (
-          <AddActivityModal
-            day={{ ...selectedDay, date: selectedDay.date }}
-            isSubmitting={isCreatingActivity}
-            onClose={() => setSelectedDay(null)}
-            onCreate={onCreateActivity}
-          />
-        ) : null}
       </div>
     </section>
   );

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { QueryProvider } from "./query-provider";
 import { TrainingPlanner } from "@/ui/training-planner/training-planner";
+import { TrainingPlannerStoreProvider } from "@/ui/training-planner/training-planner-store";
 
 export default function Home() {
   return (
@@ -22,7 +23,9 @@ export default function Home() {
             </section>
           }
         >
-          <TrainingPlanner />
+          <TrainingPlannerStoreProvider>
+            <TrainingPlanner />
+          </TrainingPlannerStoreProvider>
         </Suspense>
       </QueryProvider>
     </main>

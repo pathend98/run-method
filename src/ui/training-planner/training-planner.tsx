@@ -19,14 +19,27 @@ import type {
 } from "@/domain/training-sessions";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
+import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
+import { AddActivityModal } from "@/ui/add-activity/add-activity-modal";
+import { EditActivityModal } from "@/ui/edit-activity/edit-activity-modal";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
   groupSessionsByWeekday,
   resolveWeekRange,
 } from "./services/training-planner-service";
+import { useTrainingPlannerStore } from "./training-planner-store";
 
 export function TrainingPlanner() {
+  const openAddActivity = useTrainingPlannerStore(
+    (state) => state.openAddActivity,
+  );
+  const openActivityDetails = useTrainingPlannerStore(
+    (state) => state.openActivityDetails,
+  );
+  const activeModalKind = useTrainingPlannerStore(
+    (state) => state.activeModal?.kind,
+  );
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const router = useRouter();
@@ -108,30 +121,42 @@ export function TrainingPlanner() {
   const week = groupSessionsByWeekday(query.data, weekRange);
 
   return (
-    <TrainingPlannerView
-      isCurrentWeek={weekRange.from === currentWeekRange.from}
-      isCreatingActivity={createMutation.isPending}
-      isDeletingActivity={deleteMutation.isPending}
-      isEditingActivity={editMutation.isPending}
-      isTransitioningActivity={
-        skipMutation.isPending || completeMutation.isPending
-      }
-      onCreateActivity={(request: CreateTrainingSessionRequest) =>
-        createMutation.mutateAsync(request)
-      }
-      onCurrentWeek={() => navigateToWeek(null)}
-      onCompleteActivity={(id, request) =>
-        completeMutation.mutateAsync({ id, request })
-      }
-      onDeleteActivity={(id) => deleteMutation.mutateAsync(id)}
-      onEditActivity={(id, request) =>
-        editMutation.mutateAsync({ id, request })
-      }
-      onNextWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, 1))}
-      onPreviousWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, -1))}
-      onSkipActivity={(id, request) => skipMutation.mutateAsync({ id, request })}
-      week={week}
-      weekRange={weekRange}
-    />
+    <>
+      <TrainingPlannerView
+        isCurrentWeek={weekRange.from === currentWeekRange.from}
+        onCurrentWeek={() => navigateToWeek(null)}
+        onNextWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, 1))}
+        onPreviousWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, -1))}
+        onAddActivity={openAddActivity}
+        onSelectActivity={openActivityDetails}
+        week={week}
+        weekRange={weekRange}
+      />
+      {activeModalKind === "details" ? (
+        <ActivityDetailsModal
+          isDeleting={deleteMutation.isPending}
+          isTransitioning={skipMutation.isPending || completeMutation.isPending}
+          onComplete={(id, request) =>
+            completeMutation.mutateAsync({ id, request })
+          }
+          onDelete={(id) => deleteMutation.mutateAsync(id)}
+          onSkip={(id, request) => skipMutation.mutateAsync({ id, request })}
+        />
+      ) : null}
+      {activeModalKind === "edit" ? (
+        <EditActivityModal
+          isSubmitting={editMutation.isPending}
+          onEdit={(id, request) => editMutation.mutateAsync({ id, request })}
+        />
+      ) : null}
+      {activeModalKind === "add" ? (
+        <AddActivityModal
+          isSubmitting={createMutation.isPending}
+          onCreate={(request: CreateTrainingSessionRequest) =>
+            createMutation.mutateAsync(request)
+          }
+        />
+      ) : null}
+    </>
   );
 }

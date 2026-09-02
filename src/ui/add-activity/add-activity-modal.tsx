@@ -6,6 +6,7 @@ import { FormField } from "@/ui/components/form-field";
 import { Modal } from "@/ui/components/modal";
 import { RunActivityFields } from "./components/run-activity-fields";
 import { StrengthActivityFields } from "./components/strength-activity-fields";
+import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import {
   addActivityFormSchema,
   defaultAddActivityFormValues,
@@ -13,24 +14,17 @@ import {
   type AddActivityFormValues,
 } from "./utils/add-activity-form";
 
-type AddActivityDay = {
-  date: string;
-  day: string;
-};
-
 type AddActivityModalProps = {
-  day: AddActivityDay;
   isSubmitting: boolean;
-  onClose: () => void;
   onCreate: (request: CreateTrainingSessionRequest) => Promise<unknown>;
 };
 
 export function AddActivityModal({
-  day,
   isSubmitting,
-  onClose,
   onCreate,
 }: AddActivityModalProps) {
+  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
+  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const form = useForm<AddActivityFormValues>({
     defaultValues: defaultAddActivityFormValues,
     resolver: zodResolver(addActivityFormSchema),
@@ -44,10 +38,18 @@ export function AddActivityModal({
   } = form;
   const activityType = useWatch({ control, name: "activityType" });
 
+  const dayDate = activeModal?.kind === "add" ? activeModal.day.date : null;
+
+  if (activeModal?.kind !== "add" || typeof dayDate !== "string") {
+    return null;
+  }
+
+  const { day } = activeModal;
+
   async function submit(values: AddActivityFormValues) {
     try {
-      await onCreate(toCreateTrainingSessionRequest(values, day.date));
-      onClose();
+      await onCreate(toCreateTrainingSessionRequest(values, dayDate!));
+      closeModal();
     } catch {
       setError("root", {
         message: "Unable to add activity. Please try again.",
@@ -62,7 +64,7 @@ export function AddActivityModal({
       footerActions={[
         {
           label: "Cancel",
-          onClick: onClose,
+          onClick: closeModal,
           variant: "secondary",
         },
         {
@@ -76,12 +78,12 @@ export function AddActivityModal({
         {
           ariaLabel: "Close add activity",
           label: "Close",
-          onClick: onClose,
+          onClick: closeModal,
           variant: "secondary",
         },
       ]}
       isBusy={isSubmitting}
-      onClose={onClose}
+      onClose={closeModal}
       title="Add activity"
     >
       <FormProvider {...form}>

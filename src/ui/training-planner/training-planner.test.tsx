@@ -1,6 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render as testingRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
+import { TrainingPlannerStoreProvider } from "./training-planner-store";
 import { TrainingPlanner } from "./training-planner";
 import { getCurrentWeekRange } from "./services/training-planner-service";
 
@@ -9,6 +15,20 @@ const navigation = vi.hoisted(() => ({
   push: vi.fn(),
   search: "",
 }));
+
+function render(ui: React.ReactElement) {
+  const rendered = testingRender(
+    <TrainingPlannerStoreProvider>{ui}</TrainingPlannerStoreProvider>,
+  );
+
+  return {
+    ...rendered,
+    rerender: (nextUi: React.ReactElement) =>
+      rendered.rerender(
+        <TrainingPlannerStoreProvider>{nextUi}</TrainingPlannerStoreProvider>,
+      ),
+  };
+}
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navigation.pathname,
