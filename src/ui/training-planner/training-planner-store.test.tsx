@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import type { TrainingActivity, TrainingDay } from "./types/training-planner-types";
 import {
   createTrainingPlannerStore,
+  type TrainingPlannerModalOperations,
   useTrainingPlannerStore,
 } from "./training-planner-store";
 
@@ -29,6 +30,30 @@ test("replaces an edited activity and ignores invalid detail transitions", () =>
   store.getState().returnToActivityDetails();
   store.getState().replaceActivityAndShowDetails({ ...activity, title: "Updated tempo" });
   expect(store.getState().activeModal).toMatchObject({ kind: "details", activity: { title: "Updated tempo" } });
+});
+
+test("replaces the configured modal operations", () => {
+  const store = createTrainingPlannerStore();
+  const firstOperations = {
+    createActivity: vi.fn(),
+    editActivity: vi.fn(),
+    deleteActivity: vi.fn(),
+    skipActivity: vi.fn(),
+    completeActivity: vi.fn(),
+    isCreatingActivity: false,
+    isEditingActivity: false,
+    isDeletingActivity: false,
+    isTransitioningActivity: false,
+  } as TrainingPlannerModalOperations;
+  const secondOperations = {
+    ...firstOperations,
+    isDeletingActivity: true,
+  };
+
+  store.getState().setModalOperations(firstOperations);
+  expect(store.getState().modalOperations).toBe(firstOperations);
+  store.getState().setModalOperations(secondOperations);
+  expect(store.getState().modalOperations).toBe(secondOperations);
 });
 
 test("requires a provider when using the selector hook", () => {

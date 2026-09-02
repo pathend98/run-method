@@ -14,6 +14,7 @@ import type {
 import { ActivityDetailsModal as ActualActivityDetailsModal } from "./activity-details-modal";
 import {
   createTrainingPlannerStore,
+  type TrainingPlannerModalOperations,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 
@@ -47,12 +48,15 @@ const strengthActivity = {
   actualDurationSeconds: 2400,
 } satisfies StrengthTrainingSession;
 
-type ActivityDetailsModalTestProps = React.ComponentProps<
-  typeof ActualActivityDetailsModal
-> & {
+type ActivityDetailsModalTestProps = {
   activity: RunTrainingSession | StrengthTrainingSession;
   onClose: () => void;
   onEdit: () => void;
+  isDeleting?: boolean;
+  isTransitioning?: boolean;
+  onComplete?: TrainingPlannerModalOperations["completeActivity"];
+  onDelete?: TrainingPlannerModalOperations["deleteActivity"];
+  onSkip?: TrainingPlannerModalOperations["skipActivity"];
 };
 
 const ActivityDetailsModal = ActualActivityDetailsModal as unknown as (
@@ -62,6 +66,22 @@ const ActivityDetailsModal = ActualActivityDetailsModal as unknown as (
 function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
   const store = createTrainingPlannerStore();
   let currentProps = ui.props;
+  function configureModalOperations() {
+    store.getState().setModalOperations({
+      createActivity: vi.fn(),
+      editActivity: vi.fn(),
+      deleteActivity: currentProps.onDelete ?? vi.fn().mockResolvedValue(undefined),
+      skipActivity: currentProps.onSkip ?? vi.fn().mockResolvedValue(undefined),
+      completeActivity:
+        currentProps.onComplete ?? vi.fn().mockResolvedValue(undefined),
+      isCreatingActivity: false,
+      isEditingActivity: false,
+      isDeletingActivity: currentProps.isDeleting ?? false,
+      isTransitioningActivity: currentProps.isTransitioning ?? false,
+    } as TrainingPlannerModalOperations);
+  }
+
+  configureModalOperations();
   store.getState().openActivityDetails({ ...currentProps.activity, day: "Monday" });
   store.subscribe((state, previousState) => {
     if (state.activeModal?.kind === "edit" && previousState.activeModal?.kind === "details") {
@@ -79,6 +99,7 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
     ...rendered,
     rerender: (nextUi: React.ReactElement<ActivityDetailsModalTestProps>) => {
       currentProps = nextUi.props;
+      configureModalOperations();
       store.getState().openActivityDetails({ ...currentProps.activity, day: "Monday" });
       rendered.rerender(
         <TrainingPlannerStoreProvider store={store}>

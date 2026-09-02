@@ -12,31 +12,14 @@ import { ActivityTransitionForm } from "./components/activity-transition-form";
 import { canTransitionActivity } from "./utils/activity-transition-availability";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 
-type ActivityDetailsModalProps = {
-  isDeleting: boolean;
-  isTransitioning?: boolean;
-  onComplete?: (
-    id: string,
-    request: CompleteTrainingSessionRequest,
-  ) => Promise<unknown>;
-  onDelete: (id: string) => Promise<unknown>;
-  onSkip?: (
-    id: string,
-    request: SkipTrainingSessionRequest,
-  ) => Promise<unknown>;
-};
-
-export function ActivityDetailsModal({
-  isDeleting,
-  isTransitioning = false,
-  onComplete = async () => undefined,
-  onDelete,
-  onSkip = async () => undefined,
-}: ActivityDetailsModalProps) {
+export function ActivityDetailsModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const openEditActivity = useTrainingPlannerStore(
     (state) => state.openEditActivity,
+  );
+  const modalOperations = useTrainingPlannerStore(
+    (state) => state.modalOperations,
   );
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -44,17 +27,18 @@ export function ActivityDetailsModal({
     "complete" | "skip" | null
   >(null);
 
-  if (activeModal?.kind !== "details") {
+  if (activeModal?.kind !== "details" || !modalOperations) {
     return null;
   }
 
+  const operations = modalOperations;
   const { activity } = activeModal;
 
   async function confirmDelete() {
     setDeleteError(null);
 
     try {
-      await onDelete(activity.id);
+      await operations.deleteActivity(activity.id);
       closeModal();
     } catch {
       setDeleteError("Unable to delete activity. Please try again.");
@@ -67,17 +51,18 @@ export function ActivityDetailsModal({
   }
 
   async function completeActivity(request: CompleteTrainingSessionRequest) {
-    await onComplete(activity.id, request);
+    await operations.completeActivity(activity.id, request);
     closeModal();
   }
 
   async function skipActivity(request: SkipTrainingSessionRequest) {
-    await onSkip(activity.id, request);
+    await operations.skipActivity(activity.id, request);
     closeModal();
   }
 
   const isTransitioningActivity = transitionMode !== null;
-  const isBusy = isDeleting || isTransitioning;
+  const isBusy =
+    operations.isDeletingActivity || operations.isTransitioningActivity;
 
   const headerActions: ModalAction[] = isConfirmingDelete
     ? [
@@ -87,7 +72,9 @@ export function ActivityDetailsModal({
           variant: "secondary",
         },
         {
-          label: isDeleting ? "Deleting…" : "Delete permanently",
+          label: operations.isDeletingActivity
+            ? "Deleting…"
+            : "Delete permanently",
           onClick: () => void confirmDelete(),
           variant: "danger",
         },
@@ -155,10 +142,10 @@ export function ActivityDetailsModal({
                 form: "activity-transition-form",
                 label:
                   transitionMode === "skip"
-                    ? isTransitioning
+                    ? operations.isTransitioningActivity
                       ? "Skipping…"
                       : "Skip activity"
-                    : isTransitioning
+                    : operations.isTransitioningActivity
                       ? "Completing…"
                       : "Complete activity",
                 type: "submit",
@@ -188,7 +175,7 @@ export function ActivityDetailsModal({
       {transitionMode ? (
         <ActivityTransitionForm
           activity={activity}
-          isSubmitting={isTransitioning}
+          isSubmitting={operations.isTransitioningActivity}
           mode={transitionMode}
           onComplete={completeActivity}
           onSkip={skipActivity}
