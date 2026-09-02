@@ -16,17 +16,17 @@ const strength = { ...run, activityType: "STRENGTH", targetDurationSeconds: null
 
 test("converts skip and run completion form values to API requests", () => {
   expect(toSkipTrainingSessionRequest({ skipReason: "  Travel  " })).toEqual({ skipReason: "Travel" });
-  expect(toCompleteTrainingSessionRequest(run, { durationMinutes: "45", distanceKilometres: "5.25" })).toEqual({ actualDurationSeconds: 2700, actualDistanceMetres: 5250 });
+  expect(toCompleteTrainingSessionRequest(run, { durationHours: "00", durationMinutes: "45", durationSeconds: "30", distanceKilometres: "5.25" })).toEqual({ actualDurationSeconds: 2730, actualDistanceMetres: 5250 });
 });
 
 test("does not require or send distance when completing strength", () => {
-  expect(toCompleteTrainingSessionRequest(strength, { durationMinutes: "30", distanceKilometres: "" })).toEqual({ actualDurationSeconds: 1800 });
+  expect(toCompleteTrainingSessionRequest(strength, { durationHours: "00", durationMinutes: "30", durationSeconds: "00", distanceKilometres: "" })).toEqual({ actualDurationSeconds: 1800 });
 });
 
-test.each(["", "0", "10.5"])("rejects invalid actual duration %s", (durationMinutes) => {
-  expect(createCompleteActivityFormSchema(run).safeParse({ durationMinutes, distanceKilometres: "5" }).success).toBe(false);
+test.each(["", "0", "10.5"])("rejects invalid actual duration seconds %s", (durationSeconds) => {
+  expect(createCompleteActivityFormSchema(run).safeParse({ durationHours: "00", durationMinutes: "00", durationSeconds, distanceKilometres: "5" }).success).toBe(false);
 });
 
 test.each(["", "0", "5.1234", "five"])("rejects invalid run distance %s", (distanceKilometres) => {
-  expect(createCompleteActivityFormSchema(run).safeParse({ durationMinutes: "30", distanceKilometres }).success).toBe(false);
+  expect(createCompleteActivityFormSchema(run).safeParse({ durationHours: "00", durationMinutes: "30", durationSeconds: "00", distanceKilometres }).success).toBe(false);
 });

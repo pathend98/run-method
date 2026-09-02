@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 
-import { FormField } from "@/ui/components/form-field";
+import { DurationInput } from "@/ui/components/duration-input";
 import type { AddActivityFormValues } from "../utils/add-activity-form";
 
 export function StrengthActivityFields() {
@@ -11,16 +11,7 @@ export function StrengthActivityFields() {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <FormField
-        error={errors.durationMinutes?.message}
-        label="Duration (minutes, optional)"
-      >
-        <input
-          inputMode="numeric"
-          placeholder="45"
-          {...register("durationMinutes")}
-        />
-      </FormField>
+      <DurationInput error={errors.durationHours?.message ?? errors.durationMinutes?.message ?? errors.durationSeconds?.message} hoursName="durationHours" label="Duration (hh:mm:ss, optional)" minutesName="durationMinutes" register={register} secondsName="durationSeconds" />
     </div>
   );
 }

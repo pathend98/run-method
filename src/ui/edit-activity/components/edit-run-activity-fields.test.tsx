@@ -9,14 +9,16 @@ const defaultValues: EditActivityFormValues = {
   timeOfDay: "AM",
   description: "",
   distanceKilometres: "5",
+  durationHours: "00",
   durationMinutes: "30",
+  durationSeconds: "00",
   pacePerKilometre: "5:00",
 };
 
 test.each([
-  ["DISTANCE_DURATION", ["Distance (km)", "Duration (minutes)"]],
+  ["DISTANCE_DURATION", ["Distance (km)", "Duration (hh:mm:ss) hours"]],
   ["DISTANCE_PACE", ["Distance (km)", "Pace (mm:ss / km)"]],
-  ["DURATION_PACE", ["Duration (minutes)", "Pace (mm:ss / km)"]],
+  ["DURATION_PACE", ["Duration (hh:mm:ss) hours", "Pace (mm:ss / km)"]],
 ] as const)("renders the fixed %s target fields", (targetType, labels) => {
   const { result } = renderHook(() =>
     useForm<EditActivityFormValues>({ defaultValues }),
@@ -29,7 +31,7 @@ test.each([
 
   for (const label of labels)
     expect(screen.getByLabelText(label)).toBeDefined();
-  expect(screen.getAllByRole("textbox")).toHaveLength(2);
+  expect(screen.getAllByRole("textbox")).toHaveLength(targetType === "DISTANCE_PACE" ? 2 : 4);
 });
 
 test("renders field errors from the form", () => {

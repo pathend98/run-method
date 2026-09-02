@@ -1,16 +1,17 @@
 import { z } from "zod";
 
 import type { TrainingSession } from "@/domain/training-sessions";
+import {
+  durationFieldsSchema,
+  durationFieldsToSeconds,
+  type DurationFields,
+} from "@/ui/training-sessions/duration-fields";
 import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 
 const positiveDistanceSchema = z
   .string()
   .regex(/^\d+(?:\.\d{1,3})?$/, "Enter a distance in kilometres")
   .refine((value) => Number(value) > 0, "Distance must be greater than zero");
-const positiveWholeMinutes = z
-  .string()
-  .regex(/^\d+$/, "Enter whole minutes")
-  .refine((value) => Number(value) > 0, "Duration must be greater than zero");
 const paceSchema = z
   .string()
   .regex(/^\d+:[0-5]\d$/, "Enter pace as mm:ss")
@@ -24,7 +25,9 @@ const editActivityFormBaseSchema = z.object({
   timeOfDay: z.enum(["AM", "ANY", "PM"]),
   description: z.string(),
   distanceKilometres: z.string(),
+  durationHours: z.string(),
   durationMinutes: z.string(),
+  durationSeconds: z.string(),
   pacePerKilometre: z.string(),
 });
 
@@ -37,13 +40,8 @@ export function createEditActivityFormSchema(activity: TrainingSession) {
     }
 
     if (activity.activityType === "STRENGTH") {
-      if (values.durationMinutes !== "") {
-        validateField(
-          context,
-          "durationMinutes",
-          positiveWholeMinutes,
-          values.durationMinutes,
-        );
+      if (!isZeroDuration(values)) {
+        validateDuration(context, values, false);
       }
       return;
     }
@@ -59,12 +57,7 @@ export function createEditActivityFormSchema(activity: TrainingSession) {
       );
     }
     if (targetMetrics.duration) {
-      validateField(
-        context,
-        "durationMinutes",
-        positiveWholeMinutes,
-        values.durationMinutes,
-      );
+      validateDuration(context, values, true);
     }
     if (targetMetrics.pace) {
       validateField(
@@ -79,7 +72,7 @@ export function createEditActivityFormSchema(activity: TrainingSession) {
 
 function validateField(
   context: z.RefinementCtx,
-  field: "distanceKilometres" | "durationMinutes" | "pacePerKilometre",
+  field: "distanceKilometres" | "pacePerKilometre",
   schema: z.ZodType<string>,
   value: string,
 ) {
@@ -91,4 +84,32 @@ function validateField(
       message: result.error.issues[0].message,
     });
   }
+}
+
+function validateDuration(
+  context: z.RefinementCtx,
+  values: DurationFields,
+  required: boolean,
+) {
+  const result = durationFieldsSchema.safeParse(values);
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      context.addIssue({ code: "custom", path: issue.path, message: issue.message });
+    }
+  }
+  if (required && durationFieldsToSeconds(values) === 0) {
+    context.addIssue({
+      code: "custom",
+      path: ["durationHours"],
+      message: "Duration must be greater than zero",
+    });
+  }
+}
+
+function isZeroDuration(values: DurationFields) {
+  return (
+    values.durationHours === "00" &&
+    values.durationMinutes === "00" &&
+    values.durationSeconds === "00"
+  );
 }

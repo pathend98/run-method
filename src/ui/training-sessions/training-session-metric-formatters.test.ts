@@ -9,9 +9,9 @@ test("formats distances in kilometres with one decimal place", () => {
   expect(formatDistance(6000)).toBe("6.0 km");
 });
 
-test("formats durations as rounded whole minutes", () => {
-  expect(formatDuration(1500)).toBe("25 min");
-  expect(formatDuration(1530)).toBe("26 min");
+test("formats durations as exact hh:mm:ss values", () => {
+  expect(formatDuration(1500)).toBe("00:25:00");
+  expect(formatDuration(1530)).toBe("00:25:30");
 });
 
 test("formats pace with padded seconds and an optional unit", () => {

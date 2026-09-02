@@ -46,7 +46,9 @@ test("initializes common and run target values", () => {
     timeOfDay: "AM",
     description: "Controlled effort",
     distanceKilometres: "8",
+    durationHours: "00",
     durationMinutes: "45",
+    durationSeconds: "00",
     pacePerKilometre: "",
   });
 });
@@ -67,14 +69,16 @@ test("maps null values and formats pace", () => {
     timeOfDay: "ANY",
     description: "",
     distanceKilometres: "",
+    durationHours: "00",
     durationMinutes: "45",
+    durationSeconds: "00",
     pacePerKilometre: "4:15",
   });
   expect(
     getEditActivityFormValues(
       run({ targetDurationSeconds: null, targetType: "DISTANCE_PACE" }),
-    ).durationMinutes,
-  ).toBe("");
+  ).durationMinutes,
+  ).toBe("00");
 });
 
 test("initializes the optional duration for strength activities", () => {
@@ -89,5 +93,5 @@ test("initializes the optional duration for strength activities", () => {
       ...strength(),
       targetDurationSeconds: null,
     }).durationMinutes,
-  ).toBe("");
+  ).toBe("00");
 });

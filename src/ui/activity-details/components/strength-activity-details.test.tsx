@@ -30,9 +30,9 @@ test("renders strength planned and actual durations", () => {
   expect(within(plannedMetrics).queryByText("PM")).toBeNull();
   expect(screen.getByText("Time of day")).toBeDefined();
   expect(screen.getByText("PM")).toBeDefined();
-  expect(screen.getByText("45 min")).toBeDefined();
+  expect(screen.getByText("00:45:00")).toBeDefined();
   expect(screen.getByText("Actual duration")).toBeDefined();
-  expect(screen.getByText("40 min")).toBeDefined();
+  expect(screen.getByText("00:40:00")).toBeDefined();
 });
 
 test("renders missing planned values and omits a missing actual duration", () => {

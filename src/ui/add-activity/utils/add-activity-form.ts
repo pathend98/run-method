@@ -4,16 +4,18 @@ import {
   createTrainingSessionRequestSchema,
   type CreateTrainingSessionRequest,
 } from "@/domain/training-sessions";
+import {
+  defaultDurationFields,
+  durationFieldsSchema,
+  durationFieldsToSeconds,
+  type DurationFields,
+} from "@/ui/training-sessions/duration-fields";
 import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 
 const positiveDistanceSchema = z
   .string()
   .regex(/^\d+(?:\.\d{1,3})?$/, "Enter a distance in kilometres")
   .refine((value) => Number(value) > 0, "Distance must be greater than zero");
-const positiveWholeMinutes = z
-  .string()
-  .regex(/^\d+$/, "Enter whole minutes")
-  .refine((value) => Number(value) > 0, "Duration must be greater than zero");
 const pace = z
   .string()
   .regex(/^\d+:[0-5]\d$/, "Enter pace as mm:ss")
@@ -30,18 +32,15 @@ export const addActivityFormSchema = z
     timeOfDay: z.enum(["AM", "ANY", "PM"]),
     description: z.string(),
     distanceKilometres: z.string(),
+    durationHours: z.string(),
     durationMinutes: z.string(),
+    durationSeconds: z.string(),
     pacePerKilometre: z.string(),
   })
   .superRefine((value, context) => {
     if (value.activityType === "STRENGTH") {
-      if (value.durationMinutes !== "") {
-        validateField(
-          context,
-          "durationMinutes",
-          positiveWholeMinutes,
-          value.durationMinutes,
-        );
+      if (!isZeroDuration(value)) {
+        validateDuration(context, value, false);
       }
       return;
     }
@@ -57,12 +56,7 @@ export const addActivityFormSchema = z
       );
     }
     if (targetMetrics.duration) {
-      validateField(
-        context,
-        "durationMinutes",
-        positiveWholeMinutes,
-        value.durationMinutes,
-      );
+      validateDuration(context, value, true);
     }
     if (targetMetrics.pace) {
       validateField(context, "pacePerKilometre", pace, value.pacePerKilometre);
@@ -78,7 +72,7 @@ export const defaultAddActivityFormValues: AddActivityFormValues = {
   timeOfDay: "ANY",
   description: "",
   distanceKilometres: "",
-  durationMinutes: "",
+  ...defaultDurationFields,
   pacePerKilometre: "",
 };
 
@@ -99,14 +93,14 @@ export function toCreateTrainingSessionRequest(
       ...base,
       activityType: "STRENGTH",
       targetDurationSeconds:
-        parsed.durationMinutes === ""
+        durationFieldsToSeconds(parsed) === 0
           ? null
-          : Number(parsed.durationMinutes) * 60,
+          : durationFieldsToSeconds(parsed),
     });
   }
 
   const distance = Number(parsed.distanceKilometres) * 1000;
-  const duration = Number(parsed.durationMinutes) * 60;
+  const duration = durationFieldsToSeconds(parsed);
   const [paceMinutes, paceSeconds] = parsed.pacePerKilometre
     .split(":")
     .map(Number);
@@ -141,7 +135,7 @@ export function toCreateTrainingSessionRequest(
 
 function validateField(
   context: z.RefinementCtx,
-  field: "distanceKilometres" | "durationMinutes" | "pacePerKilometre",
+  field: "distanceKilometres" | "pacePerKilometre",
   schema: z.ZodType<string>,
   value: string,
 ) {
@@ -154,4 +148,32 @@ function validateField(
       message: issue.message,
     });
   }
+}
+
+function validateDuration(
+  context: z.RefinementCtx,
+  values: DurationFields,
+  required: boolean,
+) {
+  const result = durationFieldsSchema.safeParse(values);
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      context.addIssue({ code: "custom", path: issue.path, message: issue.message });
+    }
+  }
+  if (required && durationFieldsToSeconds(values) === 0) {
+    context.addIssue({
+      code: "custom",
+      path: ["durationHours"],
+      message: "Duration must be greater than zero",
+    });
+  }
+}
+
+function isZeroDuration(values: DurationFields) {
+  return (
+    values.durationHours === "00" &&
+    values.durationMinutes === "00" &&
+    values.durationSeconds === "00"
+  );
 }

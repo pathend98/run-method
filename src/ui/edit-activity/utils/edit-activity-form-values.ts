@@ -1,4 +1,5 @@
 import type { TrainingSession } from "@/domain/training-sessions";
+import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
 import { formatPace } from "@/ui/training-sessions/training-session-metric-formatters";
 import type { EditActivityFormValues } from "./edit-activity-form-schema";
 
@@ -10,10 +11,7 @@ export function getEditActivityFormValues(
     timeOfDay: activity.timeOfDay ?? "ANY",
     description: activity.description ?? "",
     distanceKilometres: "",
-    durationMinutes:
-      activity.targetDurationSeconds === null
-        ? ""
-        : String(activity.targetDurationSeconds / 60),
+    ...durationSecondsToFields(activity.targetDurationSeconds),
     pacePerKilometre: "",
   };
 

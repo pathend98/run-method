@@ -1,5 +1,6 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
+import { DurationInput } from "@/ui/components/duration-input";
 import { FormField } from "@/ui/components/form-field";
 import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 import type { AddActivityFormValues } from "../utils/add-activity-form";
@@ -40,16 +41,7 @@ export function RunActivityFields() {
           </FormField>
         ) : null}
         {showDuration ? (
-          <FormField
-            error={errors.durationMinutes?.message}
-            label="Duration (minutes)"
-          >
-            <input
-              inputMode="numeric"
-              placeholder="45"
-              {...register("durationMinutes")}
-            />
-          </FormField>
+          <DurationInput error={errors.durationHours?.message ?? errors.durationMinutes?.message ?? errors.durationSeconds?.message} hoursName="durationHours" label="Duration (hh:mm:ss)" minutesName="durationMinutes" register={register} secondsName="durationSeconds" />
         ) : null}
         {showPace ? (
           <FormField

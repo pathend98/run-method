@@ -35,17 +35,17 @@ test("shows fields for every run target", () => {
 
   const targetType = screen.getByLabelText("Run target");
   expect(screen.getByLabelText("Distance (km)")).toBeDefined();
-  expect(screen.getByLabelText("Duration (minutes)")).toBeDefined();
+  expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toBeDefined();
   expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
 
   fireEvent.change(targetType, { target: { value: "DISTANCE_PACE" } });
   expect(screen.getByLabelText("Distance (km)")).toBeDefined();
-  expect(screen.queryByLabelText("Duration (minutes)")).toBeNull();
+  expect(screen.queryByLabelText("Duration (hh:mm:ss) hours")).toBeNull();
   expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
 
   fireEvent.change(targetType, { target: { value: "DURATION_PACE" } });
   expect(screen.queryByLabelText("Distance (km)")).toBeNull();
-  expect(screen.getByLabelText("Duration (minutes)")).toBeDefined();
+  expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toBeDefined();
   expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
 });
 
