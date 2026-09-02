@@ -8,6 +8,7 @@ import {
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsRequestValidationError,
+  TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
 import { POST } from "./route";
 
@@ -95,6 +96,13 @@ test.each([
     new BadRequestError("only scheduled sessions can be skipped"),
     400,
     "only scheduled sessions can be skipped",
+  ],
+  [
+    new TrainingSessionsValidationError(
+      "future training sessions cannot be skipped",
+    ),
+    400,
+    "future training sessions cannot be skipped",
   ],
 ] as const)("maps expected skip errors", async (error, status, message) => {
   validator.validateSkip.mockReturnValue(skipRequest);

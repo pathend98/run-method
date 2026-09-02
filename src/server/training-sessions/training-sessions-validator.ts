@@ -4,6 +4,7 @@ import type {
   RunTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
+import { format } from "date-fns";
 import { TrainingSessionsValidationError } from "./training-sessions-errors";
 
 export interface TrainingSessionsValidator {
@@ -19,6 +20,8 @@ export interface TrainingSessionsValidator {
 }
 
 export class DefaultTrainingSessionsValidator implements TrainingSessionsValidator {
+  constructor(private readonly now: () => Date = () => new Date()) {}
+
   validateSkip(current: TrainingSession): void {
     this.validateScheduledTransition(current, "skipped");
   }
@@ -104,6 +107,12 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
     if (current.status !== "SCHEDULED") {
       throw new TrainingSessionsValidationError(
         `only scheduled training sessions can be ${transition}`,
+      );
+    }
+
+    if (current.date > format(this.now(), "yyyy-MM-dd")) {
+      throw new TrainingSessionsValidationError(
+        `future training sessions cannot be ${transition}`,
       );
     }
   }

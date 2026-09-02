@@ -8,6 +8,7 @@ import {
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsRequestValidationError,
+  TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
 import { POST } from "./route";
 
@@ -98,6 +99,13 @@ test.each([
     new BadRequestError("only scheduled sessions can be completed"),
     400,
     "only scheduled sessions can be completed",
+  ],
+  [
+    new TrainingSessionsValidationError(
+      "future training sessions cannot be completed",
+    ),
+    400,
+    "future training sessions cannot be completed",
   ],
 ] as const)(
   "maps expected completion errors",
