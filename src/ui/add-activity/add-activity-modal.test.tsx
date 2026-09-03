@@ -61,6 +61,7 @@ test("submits a converted activity for its selected day and closes", async () =>
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         date: day.date,
+        targetType: "DISTANCE_DURATION",
         targetDistanceMetres: 8000,
         targetDurationSeconds: 2700,
       }),
@@ -135,5 +136,29 @@ test("shows its submitting state", async () => {
   expect(await screen.findByRole("button", { name: "Adding…" })).toHaveProperty(
     "disabled",
     true,
+  );
+});
+
+test("blocks submission while an Auto override is unresolved", () => {
+  renderAddActivityModal();
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "8" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "44" },
+  });
+  const pace = screen.getByLabelText("Pace (mm:ss / km) · Auto");
+  fireEvent.focus(pace);
+  fireEvent.change(pace, { target: { value: "5:20" } });
+  fireEvent.blur(pace);
+
+  expect(screen.getByRole("button", { name: "Add activity" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Keep distance" }));
+  expect(screen.getByRole("button", { name: "Add activity" })).toHaveProperty(
+    "disabled",
+    false,
   );
 });

@@ -1,57 +1,85 @@
+import { useCallback } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
-import { DurationInput } from "@/ui/components/duration-input";
-import { FormField } from "@/ui/components/form-field";
-import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
+import {
+  RunFieldInput,
+  type RunFieldInputValue,
+} from "@/ui/run-field-input/run-field-input";
 import type { AddActivityFormValues } from "../utils/add-activity-form";
 
-export function RunActivityFields() {
+type RunActivityFieldsProps = {
+  onPendingChange: (pending: boolean) => void;
+};
+
+export function RunActivityFields({ onPendingChange }: RunActivityFieldsProps) {
   const {
     control,
     formState: { errors },
-    register,
+    setValue,
   } = useFormContext<AddActivityFormValues>();
-  const targetType = useWatch({ control, name: "targetType" });
-  const {
-    distance: showDistance,
-    duration: showDuration,
-    pace: showPace,
-  } = getRunTargetMetrics(targetType);
+  const fields = useWatch({
+    control,
+    name: [
+      "distanceKilometres",
+      "durationHours",
+      "durationMinutes",
+      "durationSeconds",
+      "pacePerKilometre",
+      "derivedMetric",
+    ],
+  });
+  const value: RunFieldInputValue = {
+    distanceKilometres: fields[0],
+    durationHours: fields[1],
+    durationMinutes: fields[2],
+    durationSeconds: fields[3],
+    pacePerKilometre: fields[4],
+    derivedMetric: fields[5],
+  };
+
+  const changeValue = useCallback(
+    (next: RunFieldInputValue) => {
+      setValue("distanceKilometres", next.distanceKilometres, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("durationHours", next.durationHours, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("durationMinutes", next.durationMinutes, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("durationSeconds", next.durationSeconds, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("pacePerKilometre", next.pacePerKilometre, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("derivedMetric", next.derivedMetric, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    },
+    [setValue],
+  );
 
   return (
-    <>
-      <FormField label="Run target">
-        <select {...register("targetType")}>
-          <option value="DISTANCE_DURATION">Distance + duration</option>
-          <option value="DISTANCE_PACE">Distance + pace</option>
-          <option value="DURATION_PACE">Duration + pace</option>
-        </select>
-      </FormField>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {showDistance ? (
-          <FormField
-            error={errors.distanceKilometres?.message}
-            label="Distance (km)"
-          >
-            <input
-              inputMode="decimal"
-              placeholder="8"
-              {...register("distanceKilometres")}
-            />
-          </FormField>
-        ) : null}
-        {showDuration ? (
-          <DurationInput error={errors.durationHours?.message ?? errors.durationMinutes?.message ?? errors.durationSeconds?.message} hoursName="durationHours" label="Duration (hh:mm:ss)" minutesName="durationMinutes" register={register} secondsName="durationSeconds" />
-        ) : null}
-        {showPace ? (
-          <FormField
-            error={errors.pacePerKilometre?.message}
-            label="Pace (mm:ss / km)"
-          >
-            <input placeholder="5:30" {...register("pacePerKilometre")} />
-          </FormField>
-        ) : null}
-      </div>
-    </>
+    <RunFieldInput
+      errors={{
+        distance: errors.distanceKilometres?.message,
+        duration:
+          errors.durationHours?.message ??
+          errors.durationMinutes?.message ??
+          errors.durationSeconds?.message,
+        pace: errors.pacePerKilometre?.message,
+      }}
+      onChange={changeValue}
+      onPendingChange={onPendingChange}
+      value={value}
+    />
   );
 }

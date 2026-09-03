@@ -10,7 +10,6 @@ import {
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/training-sessions/duration-fields";
-import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 
 const positiveDistanceSchema = z
   .string()
@@ -28,7 +27,7 @@ export const addActivityFormSchema = z
   .object({
     title: z.string().trim().min(1, "Enter an activity title"),
     activityType: z.enum(["RUN", "STRENGTH"]),
-    targetType: z.enum(["DISTANCE_DURATION", "DISTANCE_PACE", "DURATION_PACE"]),
+    derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
     timeOfDay: z.enum(["AM", "ANY", "PM"]),
     description: z.string(),
     distanceKilometres: z.string(),
@@ -45,22 +44,14 @@ export const addActivityFormSchema = z
       return;
     }
 
-    const targetMetrics = getRunTargetMetrics(value.targetType);
-
-    if (targetMetrics.distance) {
-      validateField(
-        context,
-        "distanceKilometres",
-        positiveDistanceSchema,
-        value.distanceKilometres,
-      );
-    }
-    if (targetMetrics.duration) {
-      validateDuration(context, value, true);
-    }
-    if (targetMetrics.pace) {
-      validateField(context, "pacePerKilometre", pace, value.pacePerKilometre);
-    }
+    validateField(
+      context,
+      "distanceKilometres",
+      positiveDistanceSchema,
+      value.distanceKilometres,
+    );
+    validateDuration(context, value, true);
+    validateField(context, "pacePerKilometre", pace, value.pacePerKilometre);
   });
 
 export type AddActivityFormValues = z.infer<typeof addActivityFormSchema>;
@@ -68,7 +59,7 @@ export type AddActivityFormValues = z.infer<typeof addActivityFormSchema>;
 export const defaultAddActivityFormValues: AddActivityFormValues = {
   title: "",
   activityType: "RUN",
-  targetType: "DISTANCE_DURATION",
+  derivedMetric: null,
   timeOfDay: "ANY",
   description: "",
   distanceKilometres: "",
@@ -101,35 +92,12 @@ export function toCreateTrainingSessionRequest(
 
   const distance = Number(parsed.distanceKilometres) * 1000;
   const duration = durationFieldsToSeconds(parsed);
-  const [paceMinutes, paceSeconds] = parsed.pacePerKilometre
-    .split(":")
-    .map(Number);
-  const paceSecondsPerKilometre = paceMinutes * 60 + paceSeconds;
-
-  if (parsed.targetType === "DISTANCE_DURATION") {
-    return createTrainingSessionRequestSchema.parse({
-      ...base,
-      activityType: "RUN",
-      targetType: parsed.targetType,
-      targetDistanceMetres: distance,
-      targetDurationSeconds: duration,
-    });
-  }
-  if (parsed.targetType === "DISTANCE_PACE") {
-    return createTrainingSessionRequestSchema.parse({
-      ...base,
-      activityType: "RUN",
-      targetType: parsed.targetType,
-      targetDistanceMetres: distance,
-      targetPaceSecondsPerKilometre: paceSecondsPerKilometre,
-    });
-  }
   return createTrainingSessionRequestSchema.parse({
     ...base,
     activityType: "RUN",
-    targetType: parsed.targetType,
+    targetType: "DISTANCE_DURATION",
+    targetDistanceMetres: distance,
     targetDurationSeconds: duration,
-    targetPaceSecondsPerKilometre: paceSecondsPerKilometre,
   });
 }
 
@@ -158,7 +126,11 @@ function validateDuration(
   const result = durationFieldsSchema.safeParse(values);
   if (!result.success) {
     for (const issue of result.error.issues) {
-      context.addIssue({ code: "custom", path: issue.path, message: issue.message });
+      context.addIssue({
+        code: "custom",
+        path: issue.path,
+        message: issue.message,
+      });
     }
   }
   if (required && durationFieldsToSeconds(values) === 0) {

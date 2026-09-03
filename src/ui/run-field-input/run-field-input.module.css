@@ -1,0 +1,10 @@
+.durationInputs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.durationInputs input {
+  width: 3.75rem;
+  text-align: center;
+}

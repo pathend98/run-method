@@ -14,6 +14,7 @@ test("converts friendly run values into the create request", () => {
         description: "  Controlled  ",
         distanceKilometres: "6.25",
         durationMinutes: "40",
+        pacePerKilometre: "6:24",
       },
       "2026-08-17",
     ),
@@ -29,23 +30,7 @@ test("converts friendly run values into the create request", () => {
   });
 });
 
-test("supports pace runs and optional strength duration", () => {
-  expect(
-    toCreateTrainingSessionRequest(
-      {
-        ...defaultAddActivityFormValues,
-        title: "Progression",
-        targetType: "DURATION_PACE",
-        durationMinutes: "30",
-        pacePerKilometre: "4:30",
-      },
-      "2026-08-17",
-    ),
-  ).toMatchObject({
-    targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: 270,
-  });
-
+test("supports optional strength duration", () => {
   expect(
     toCreateTrainingSessionRequest(
       {
@@ -58,15 +43,16 @@ test("supports pace runs and optional strength duration", () => {
   ).toMatchObject({ activityType: "STRENGTH", targetDurationSeconds: null });
 });
 
-test("converts distance and pace runs", () => {
+test("always converts runs to distance and duration without pace", () => {
   expect(
     toCreateTrainingSessionRequest(
       {
         ...defaultAddActivityFormValues,
         title: "Intervals",
-        targetType: "DISTANCE_PACE",
+        derivedMetric: "duration",
         timeOfDay: "PM",
         distanceKilometres: "5",
+        durationMinutes: "20",
         pacePerKilometre: "4:05",
       },
       "2026-08-17",
@@ -74,12 +60,12 @@ test("converts distance and pace runs", () => {
   ).toEqual({
     title: "Intervals",
     activityType: "RUN",
-    targetType: "DISTANCE_PACE",
+    targetType: "DISTANCE_DURATION",
     date: "2026-08-17",
     timeOfDay: "PM",
     description: null,
     targetDistanceMetres: 5000,
-    targetPaceSecondsPerKilometre: 245,
+    targetDurationSeconds: 1200,
   });
 });
 
@@ -114,12 +100,12 @@ test.each([
   { distanceKilometres: "0", durationMinutes: "30" },
   { distanceKilometres: "5" },
   {
-    targetType: "DISTANCE_PACE" as const,
     distanceKilometres: "5",
+    durationMinutes: "30",
     pacePerKilometre: "0:00",
   },
   {
-    targetType: "DURATION_PACE" as const,
+    distanceKilometres: "5",
     durationMinutes: "30",
     pacePerKilometre: "invalid",
   },
@@ -137,20 +123,14 @@ test.each([
   ).toBe(false);
 });
 
-test.each([
-  ["DISTANCE_DURATION", { pacePerKilometre: "invalid" }],
-  ["DISTANCE_PACE", { durationMinutes: "invalid" }],
-  ["DURATION_PACE", { distanceKilometres: "invalid" }],
-] as const)("ignores metrics excluded by %s", (targetType, excludedMetric) => {
+test("requires all three displayed run metrics", () => {
   expect(
     addActivityFormSchema.safeParse({
       ...defaultAddActivityFormValues,
       title: "Run",
-      targetType,
       distanceKilometres: "5",
       durationMinutes: "30",
-      pacePerKilometre: "5:00",
-      ...excludedMetric,
+      pacePerKilometre: "invalid",
     }).success,
-  ).toBe(true);
+  ).toBe(false);
 });

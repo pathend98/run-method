@@ -29,22 +29,12 @@ function RunActivityFieldsHarness({ children }: { children: ReactNode }) {
 test("shows fields for every run target", () => {
   render(
     <RunActivityFieldsHarness>
-      <RunActivityFields />
+      <RunActivityFields onPendingChange={vi.fn()} />
     </RunActivityFieldsHarness>,
   );
 
-  const targetType = screen.getByLabelText("Run target");
+  expect(screen.queryByLabelText("Run target")).toBeNull();
   expect(screen.getByLabelText("Distance (km)")).toBeDefined();
-  expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toBeDefined();
-  expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
-
-  fireEvent.change(targetType, { target: { value: "DISTANCE_PACE" } });
-  expect(screen.getByLabelText("Distance (km)")).toBeDefined();
-  expect(screen.queryByLabelText("Duration (hh:mm:ss) hours")).toBeNull();
-  expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
-
-  fireEvent.change(targetType, { target: { value: "DURATION_PACE" } });
-  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
   expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toBeDefined();
   expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
 });
@@ -52,17 +42,15 @@ test("shows fields for every run target", () => {
 test("renders validation errors for the selected run target", async () => {
   render(
     <RunActivityFieldsHarness>
-      <RunActivityFields />
+      <RunActivityFields onPendingChange={vi.fn()} />
     </RunActivityFieldsHarness>,
   );
 
-  fireEvent.change(screen.getByLabelText("Run target"), {
-    target: { value: "DISTANCE_PACE" },
-  });
   fireEvent.click(screen.getByRole("button", { name: "Submit" }));
 
   expect(
     await screen.findByText("Enter a distance in kilometres"),
   ).toBeDefined();
+  expect(screen.getByText("Duration must be greater than zero")).toBeDefined();
   expect(screen.getByText("Enter pace as mm:ss")).toBeDefined();
 });
