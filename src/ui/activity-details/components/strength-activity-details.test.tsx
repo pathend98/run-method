@@ -24,7 +24,7 @@ function strengthActivity(
   };
 }
 
-test("renders strength planned and actual durations", () => {
+test("renders scheduled strength planned and actual durations", () => {
   render(<StrengthActivityDetails activity={strengthActivity()} />);
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("PM")).toBeNull();
@@ -33,6 +33,44 @@ test("renders strength planned and actual durations", () => {
   expect(screen.getByText("00:45:00")).toBeDefined();
   expect(screen.getByText("Actual duration")).toBeDefined();
   expect(screen.getByText("00:40:00")).toBeDefined();
+});
+
+test("prioritizes completed strength actual duration and keeps its target secondary", () => {
+  render(
+    <StrengthActivityDetails
+      activity={strengthActivity({ status: "COMPLETED" })}
+    />,
+  );
+
+  const completedMetrics = screen.getByLabelText("Completed activity metrics");
+  const durationCard = within(completedMetrics)
+    .getByText("Actual duration")
+    .closest("div");
+
+  expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
+  expect(within(completedMetrics).getByText("00:40:00")).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 00:45:00")).toBeDefined();
+  expect(durationCard?.classList.contains("bg-teal-50")).toBe(true);
+  expect(durationCard?.querySelector("dd")?.classList.contains("text-2xl")).toBe(
+    true,
+  );
+  expect(screen.queryByText("Actual duration")).toBeDefined();
+});
+
+test("shows no target duration as secondary completed strength information", () => {
+  render(
+    <StrengthActivityDetails
+      activity={strengthActivity({
+        status: "COMPLETED",
+        targetDurationSeconds: null,
+      })}
+    />,
+  );
+
+  const completedMetrics = screen.getByLabelText("Completed activity metrics");
+  expect(
+    within(completedMetrics).getByText("Target: No target duration"),
+  ).toBeDefined();
 });
 
 test("renders missing planned values and omits a missing actual duration", () => {

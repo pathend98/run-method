@@ -1,5 +1,8 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
-import { resolveRunTargets } from "./run-targets";
+import {
+  calculatePaceSecondsPerKilometre,
+  resolveRunTargets,
+} from "./run-targets";
 
 function runTargets(
   targets: Pick<
@@ -21,4 +24,8 @@ test("derives pace from distance and duration", () => {
     durationSeconds: 2400,
     paceSecondsPerKilometre: 400,
   });
+});
+
+test("rounds pace from recorded distance and duration", () => {
+  expect(calculatePaceSecondsPerKilometre(5900, 1500)).toBe(254);
 });

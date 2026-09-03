@@ -26,7 +26,7 @@ function runActivity(override: RunOverride = {}): RunTrainingSession {
   } as RunTrainingSession;
 }
 
-test("renders full run targets and actual values", () => {
+test("renders scheduled run targets and actual values", () => {
   render(<RunActivityDetails activity={runActivity()} />);
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   const details = screen
@@ -72,6 +72,43 @@ test("renders run targets as three equally styled responsive cards", () => {
     expect(value?.classList.contains("text-lg")).toBe(true);
     expect(value?.classList.contains("text-3xl")).toBe(false);
   }
+});
+
+test("prioritizes completed run actuals and shows their targets as supporting text", () => {
+  render(
+    <RunActivityDetails
+      activity={runActivity({ status: "COMPLETED", actualDurationSeconds: 1500 })}
+    />,
+  );
+
+  const completedMetrics = screen.getByLabelText("Completed activity metrics");
+
+  expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
+  expect(
+    [...completedMetrics.querySelectorAll("dt")].map((term) => term.textContent),
+  ).toEqual(["Actual distance", "Actual pace", "Actual duration"]);
+  expect(within(completedMetrics).getByText("5.9 km")).toBeDefined();
+  expect(within(completedMetrics).getByText("4:14 / km")).toBeDefined();
+  expect(within(completedMetrics).getByText("00:25:00")).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 6.0 km")).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 4:15 / km")).toBeDefined();
+  expect(
+    within(completedMetrics).getByText("Target: 00:25:30"),
+  ).toBeDefined();
+
+  for (const label of ["Actual distance", "Actual pace", "Actual duration"]) {
+    const card = within(completedMetrics).getByText(label).closest("div");
+    expect(card?.classList.contains("bg-teal-50")).toBe(true);
+    expect(card?.querySelector("dd")?.classList.contains("text-2xl")).toBe(
+      true,
+    );
+  }
+
+  const details = screen
+    .getByRole("heading", { level: 3, name: "Details" })
+    .closest("section");
+  expect(within(details!).queryByText("Actual distance")).toBeNull();
+  expect(within(details!).queryByText("Actual duration")).toBeNull();
 });
 
 test.each([
