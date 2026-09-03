@@ -121,6 +121,14 @@ test("renders nothing when add activity is not active", () => {
   expect(screen.queryByRole("dialog", { name: "Add activity" })).toBeNull();
 });
 
+test("uses the large modal layout", () => {
+  renderAddActivityModal();
+
+  expect(
+    screen.getByRole("dialog", { name: "Add activity" }).classList,
+  ).toContain("max-w-4xl");
+});
+
 test("shows its submitting state", async () => {
   renderAddActivityModal({ onCreate: () => new Promise(() => undefined) });
   fireEvent.change(screen.getByLabelText("Title"), {

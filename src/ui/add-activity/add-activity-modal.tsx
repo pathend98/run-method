@@ -83,6 +83,7 @@ export function AddActivityModal() {
       ]}
       isBusy={createMutation.isPending}
       onClose={closeModal}
+      size="large"
       title="Add activity"
     >
       <FormProvider {...form}>

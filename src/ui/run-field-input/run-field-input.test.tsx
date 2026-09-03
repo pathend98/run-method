@@ -30,6 +30,10 @@ function Harness({
 test("shows all metrics and derives pace from the first two valid values", () => {
   const { unmount } = render(<Harness />);
 
+  const metricGrid = screen.getByLabelText("Distance (km)").closest("div.grid");
+  expect(metricGrid?.classList).toContain("md:grid-cols-3");
+  expect(metricGrid?.classList).not.toContain("sm:grid-cols-3");
+
   fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "8" },
   });
