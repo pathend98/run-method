@@ -1,14 +1,11 @@
 import { FormField } from "@/ui/components/form-field";
-import { RunDurationField } from "./components/run-duration-field";
-import { useRunFieldInputController } from "./hooks/use-run-field-input-controller";
+import { useRunFieldInputController } from "../hooks/use-run-field-input-controller";
 import {
   metricLabel,
   type RunFieldInputValue,
   type RunFieldMetric,
-} from "./utils/run-field-calculations";
-
-export type { RunFieldInputValue, RunFieldMetric };
-export { calculateDerivedMetric } from "./utils/run-field-calculations";
+} from "../utils/run-field-calculations";
+import { RunDurationField } from "./run-duration-field";
 
 export type RunFieldInputErrors = Partial<
   Record<RunFieldMetric, string | undefined>

@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 
-import { RunFieldInput, type RunFieldInputValue } from "./run-field-input";
+import type { RunFieldInputValue } from "../utils/run-field-calculations";
+import { RunFieldInput } from "./run-field-input";
 
 const initialValue: RunFieldInputValue = {
   distanceKilometres: "",

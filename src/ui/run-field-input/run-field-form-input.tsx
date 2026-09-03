@@ -1,9 +1,10 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import {
-  RunFieldInput,
-  type RunFieldInputValue,
-} from "./run-field-input";
+import { RunFieldInput } from "./components/run-field-input";
+import type { RunFieldInputValue } from "./utils/run-field-calculations";
+
+export type { RunFieldInputValue, RunFieldMetric } from "./utils/run-field-calculations";
+export { calculateDerivedMetric } from "./utils/run-field-calculations";
 
 type RunFieldFormInputProps = {
   disabled?: boolean;

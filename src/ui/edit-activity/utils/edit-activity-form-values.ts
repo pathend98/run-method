@@ -2,7 +2,7 @@ import type { TrainingSession } from "@/domain/training-sessions";
 import {
   calculateDerivedMetric,
   type RunFieldMetric,
-} from "@/ui/run-field-input/run-field-input";
+} from "@/ui/run-field-input/run-field-form-input";
 import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
 import { formatPace } from "@/ui/training-sessions/training-session-metric-formatters";
 import type { EditActivityFormValues } from "./edit-activity-form-schema";

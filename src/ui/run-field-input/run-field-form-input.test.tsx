@@ -3,8 +3,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { RunFieldInputValue } from "./run-field-input";
-import { RunFieldFormInput } from "./run-field-form-input";
+import {
+  RunFieldFormInput,
+  type RunFieldInputValue,
+} from "./run-field-form-input";
 
 const defaultValues: RunFieldInputValue = {
   distanceKilometres: "5",
