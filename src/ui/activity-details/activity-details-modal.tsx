@@ -31,6 +31,7 @@ export function ActivityDetailsModal() {
   const [transitionMode, setTransitionMode] = useState<
     "complete" | "skip" | null
   >(null);
+  const [runFieldsPending, setRunFieldsPending] = useState(false);
 
   if (activeModal?.kind !== "details") {
     return null;
@@ -143,6 +144,8 @@ export function ActivityDetailsModal() {
                 variant: "secondary",
               },
               {
+                disabled:
+                  transitionMode === "complete" && runFieldsPending,
                 form: "activity-transition-form",
                 label:
                   transitionMode === "skip"
@@ -182,6 +185,7 @@ export function ActivityDetailsModal() {
           isSubmitting={skipMutation.isPending || completeMutation.isPending}
           mode={transitionMode}
           onComplete={completeActivity}
+          onRunFieldsPendingChange={setRunFieldsPending}
           onSkip={skipActivity}
         />
       ) : null}

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -20,6 +20,9 @@ function RunActivityFieldsHarness({ children }: { children: ReactNode }) {
     <FormProvider {...form}>
       <form noValidate onSubmit={form.handleSubmit(() => undefined)}>
         {children}
+        <output data-testid="dirty-fields">
+          {JSON.stringify(form.formState.dirtyFields)}
+        </output>
         <button type="submit">Submit</button>
       </form>
     </FormProvider>
@@ -29,22 +32,12 @@ function RunActivityFieldsHarness({ children }: { children: ReactNode }) {
 test("shows fields for every run target", () => {
   render(
     <RunActivityFieldsHarness>
-      <RunActivityFields />
+      <RunActivityFields onPendingChange={vi.fn()} />
     </RunActivityFieldsHarness>,
   );
 
-  const targetType = screen.getByLabelText("Run target");
+  expect(screen.queryByLabelText("Run target")).toBeNull();
   expect(screen.getByLabelText("Distance (km)")).toBeDefined();
-  expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toBeDefined();
-  expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
-
-  fireEvent.change(targetType, { target: { value: "DISTANCE_PACE" } });
-  expect(screen.getByLabelText("Distance (km)")).toBeDefined();
-  expect(screen.queryByLabelText("Duration (hh:mm:ss) hours")).toBeNull();
-  expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
-
-  fireEvent.change(targetType, { target: { value: "DURATION_PACE" } });
-  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
   expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toBeDefined();
   expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
 });
@@ -52,17 +45,57 @@ test("shows fields for every run target", () => {
 test("renders validation errors for the selected run target", async () => {
   render(
     <RunActivityFieldsHarness>
-      <RunActivityFields />
+      <RunActivityFields onPendingChange={vi.fn()} />
     </RunActivityFieldsHarness>,
   );
 
-  fireEvent.change(screen.getByLabelText("Run target"), {
-    target: { value: "DISTANCE_PACE" },
-  });
   fireEvent.click(screen.getByRole("button", { name: "Submit" }));
 
   expect(
     await screen.findByText("Enter a distance in kilometres"),
   ).toBeDefined();
+  expect(screen.getByText("Duration must be greater than zero")).toBeDefined();
   expect(screen.getByText("Enter pace as mm:ss")).toBeDefined();
+});
+
+test("does not validate untouched metrics when distance is entered", () => {
+  render(
+    <RunActivityFieldsHarness>
+      <RunActivityFields onPendingChange={vi.fn()} />
+    </RunActivityFieldsHarness>,
+  );
+
+  fireEvent.change(screen.getByPlaceholderText("8"), {
+    target: { value: "8" },
+  });
+
+  expect(screen.queryByText("Duration must be greater than zero")).toBeNull();
+  expect(screen.queryByText("Enter pace as mm:ss")).toBeNull();
+  expect(screen.getByTestId("dirty-fields").textContent).toBe(
+    JSON.stringify({ distanceKilometres: true }),
+  );
+});
+
+test("revalidates run metrics after the first submission", async () => {
+  render(
+    <RunActivityFieldsHarness>
+      <RunActivityFields onPendingChange={vi.fn()} />
+    </RunActivityFieldsHarness>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+  expect(
+    await screen.findByText("Duration must be greater than zero"),
+  ).toBeDefined();
+
+  fireEvent.change(screen.getByPlaceholderText("8"), {
+    target: { value: "8" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "45" },
+  });
+
+  await waitFor(() => {
+    expect(screen.queryByText("Duration must be greater than zero")).toBeNull();
+    expect(screen.queryByText("Enter pace as mm:ss")).toBeNull();
+  });
 });

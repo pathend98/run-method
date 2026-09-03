@@ -1,4 +1,8 @@
 import type { TrainingSession } from "@/domain/training-sessions";
+import {
+  calculateDerivedMetric,
+  type RunFieldMetric,
+} from "@/ui/run-field-input/run-field-form-input";
 import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
 import { formatPace } from "@/ui/training-sessions/training-session-metric-formatters";
 import type { EditActivityFormValues } from "./edit-activity-form-schema";
@@ -10,6 +14,7 @@ export function getEditActivityFormValues(
     title: activity.title,
     timeOfDay: activity.timeOfDay ?? "ANY",
     description: activity.description ?? "",
+    derivedMetric: null,
     distanceKilometres: "",
     ...durationSecondsToFields(activity.targetDurationSeconds),
     pacePerKilometre: "",
@@ -17,7 +22,7 @@ export function getEditActivityFormValues(
 
   if (activity.activityType === "STRENGTH") return values;
 
-  return {
+  const runValues = {
     ...values,
     distanceKilometres:
       activity.targetDistanceMetres === null
@@ -29,5 +34,22 @@ export function getEditActivityFormValues(
         : formatPace(activity.targetPaceSecondsPerKilometre, {
             includeUnit: false,
           }),
+  };
+
+  const derivedMetric: Record<
+    typeof activity.targetType,
+    RunFieldMetric
+  > = {
+    DISTANCE_DURATION: "pace",
+    DISTANCE_PACE: "duration",
+    DURATION_PACE: "distance",
+  };
+
+  return {
+    ...runValues,
+    ...(calculateDerivedMetric(
+      runValues,
+      derivedMetric[activity.targetType],
+    ) ?? { derivedMetric: derivedMetric[activity.targetType] }),
   };
 }

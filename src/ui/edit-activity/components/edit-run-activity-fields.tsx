@@ -1,49 +1,11 @@
-import { useFormContext } from "react-hook-form";
-
-import type { RunTrainingSession } from "@/domain/training-sessions";
-import { DurationInput } from "@/ui/components/duration-input";
-import { FormField } from "@/ui/components/form-field";
-import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
-import type { EditActivityFormValues } from "../utils/edit-activity-form-schema";
+import { RunFieldFormInput } from "@/ui/run-field-input/run-field-form-input";
 
 type EditRunActivityFieldsProps = {
-  targetType: RunTrainingSession["targetType"];
+  onPendingChange: (pending: boolean) => void;
 };
 
 export function EditRunActivityFields({
-  targetType,
+  onPendingChange,
 }: EditRunActivityFieldsProps) {
-  const {
-    formState: { errors },
-    register,
-  } = useFormContext<EditActivityFormValues>();
-  const {
-    distance: showDistance,
-    duration: showDuration,
-    pace: showPace,
-  } = getRunTargetMetrics(targetType);
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {showDistance ? (
-        <FormField
-          error={errors.distanceKilometres?.message}
-          label="Distance (km)"
-        >
-          <input inputMode="decimal" {...register("distanceKilometres")} />
-        </FormField>
-      ) : null}
-      {showDuration ? (
-        <DurationInput error={errors.durationHours?.message ?? errors.durationMinutes?.message ?? errors.durationSeconds?.message} hoursName="durationHours" label="Duration (hh:mm:ss)" minutesName="durationMinutes" register={register} secondsName="durationSeconds" />
-      ) : null}
-      {showPace ? (
-        <FormField
-          error={errors.pacePerKilometre?.message}
-          label="Pace (mm:ss / km)"
-        >
-          <input {...register("pacePerKilometre")} />
-        </FormField>
-      ) : null}
-    </div>
-  );
+  return <RunFieldFormInput onPendingChange={onPendingChange} />;
 }

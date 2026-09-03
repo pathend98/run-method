@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 import { FormField } from "@/ui/components/form-field";
@@ -15,6 +16,7 @@ import {
 } from "./utils/add-activity-form";
 
 export function AddActivityModal() {
+  const [runFieldsPending, setRunFieldsPending] = useState(false);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const createMutation = useCreateTrainingSessionMutation();
@@ -64,6 +66,7 @@ export function AddActivityModal() {
           variant: "secondary",
         },
         {
+          disabled: activityType === "RUN" && runFieldsPending,
           form: "add-activity-form",
           label: createMutation.isPending ? "Adding…" : "Add activity",
           type: "submit",
@@ -80,6 +83,7 @@ export function AddActivityModal() {
       ]}
       isBusy={createMutation.isPending}
       onClose={closeModal}
+      size="large"
       title="Add activity"
     >
       <FormProvider {...form}>
@@ -116,7 +120,7 @@ export function AddActivityModal() {
             </FormField>
           </div>
           {activityType === "RUN" ? (
-            <RunActivityFields />
+            <RunActivityFields onPendingChange={setRunFieldsPending} />
           ) : (
             <StrengthActivityFields />
           )}

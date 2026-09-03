@@ -118,3 +118,24 @@ test("shows its submitting state", async () => {
     true,
   );
 });
+
+test("disables saving while an automatic metric edit needs a choice", () => {
+  renderEditActivityModal();
+  const dialog = screen.getByRole("dialog", { name: "Edit activity" });
+  expect(dialog.classList).toContain("max-w-4xl");
+
+  const durationMinutes = screen.getByLabelText("Duration (minutes)");
+  fireEvent.focus(durationMinutes);
+  fireEvent.change(durationMinutes, { target: { value: "30" } });
+  fireEvent.blur(durationMinutes);
+
+  expect(screen.getByRole("button", { name: "Save changes" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Keep distance" }));
+  expect(screen.getByRole("button", { name: "Save changes" })).toHaveProperty(
+    "disabled",
+    false,
+  );
+});

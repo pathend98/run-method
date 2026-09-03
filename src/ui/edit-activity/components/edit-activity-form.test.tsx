@@ -51,6 +51,15 @@ test("renders pre-populated editable fields for a scheduled run", () => {
     "value",
     "4:15",
   );
+  expect(screen.getByText("Duration (hh:mm:ss) · Auto")).toBeDefined();
+  expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
+    "value",
+    "25",
+  );
+  expect(screen.getByLabelText("Duration (hh:mm:ss) seconds")).toHaveProperty(
+    "value",
+    "30",
+  );
 });
 
 test("submits an edit and closes the form", async () => {
