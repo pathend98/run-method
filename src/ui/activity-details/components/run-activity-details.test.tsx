@@ -3,19 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import { RunActivityDetails } from "./run-activity-details";
 
-// Loosen the discriminated union's correlated target fields for partial test overrides.
-type RunOverride = Omit<
-  Partial<RunTrainingSession>,
-  | "targetDistanceMetres"
-  | "targetDurationSeconds"
-  | "targetPaceSecondsPerKilometre"
-  | "targetType"
-> & {
-  targetDistanceMetres?: number | null;
-  targetDurationSeconds?: number | null;
-  targetPaceSecondsPerKilometre?: number | null;
-  targetType?: "DISTANCE_DURATION" | "DISTANCE_PACE" | "DURATION_PACE";
-};
+type RunOverride = Partial<RunTrainingSession>;
 
 function runActivity(override: RunOverride = {}): RunTrainingSession {
   return {
@@ -30,10 +18,8 @@ function runActivity(override: RunOverride = {}): RunTrainingSession {
     createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T11:30:00.000Z",
     activityType: "RUN",
-    targetType: "DISTANCE_PACE",
     targetDistanceMetres: 6000,
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: 255,
+    targetDurationSeconds: 1530,
     actualDistanceMetres: 5900,
     actualDurationSeconds: 1500,
     ...override,
@@ -53,7 +39,7 @@ test("renders full run targets and actual values", () => {
   expect(screen.getByText("6.0 km")).toBeDefined();
   expect(screen.getByText("00:25:30")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
-  expect(screen.getByText("Distance + Pace")).toBeDefined();
+  expect(screen.queryByText("Target type")).toBeNull();
   expect(screen.getByText("5.9 km")).toBeDefined();
   expect(screen.getByText("00:25:00")).toBeDefined();
 });
@@ -90,50 +76,41 @@ test("renders run targets as three equally styled responsive cards", () => {
 
 test.each([
   {
-    expectedTarget: "Distance + Duration",
     expectedDerivedTarget: "6:40 / km",
     expectedDuration: "00:40:00",
     override: {
-      targetType: "DISTANCE_DURATION",
       targetDurationSeconds: 2400,
-      targetPaceSecondsPerKilometre: null,
     },
   },
   {
-    expectedTarget: "Duration + Pace",
-    expectedDerivedTarget: "7.1 km",
+    expectedDerivedTarget: "6:00 / km",
     expectedDuration: "00:30:00",
     override: {
-      targetType: "DURATION_PACE",
-      targetDistanceMetres: null,
+      targetDistanceMetres: 5000,
       targetDurationSeconds: 1800,
     },
   },
 ] satisfies Array<{
-  expectedTarget: string;
   expectedDerivedTarget: string;
   expectedDuration: string;
   override: RunOverride;
 }>)(
-  "$expectedTarget",
-  ({ expectedDerivedTarget, expectedDuration, expectedTarget, override }) => {
+  "derives $expectedDerivedTarget",
+  ({ expectedDerivedTarget, expectedDuration, override }) => {
     render(<RunActivityDetails activity={runActivity(override)} />);
-    expect(screen.getByText(expectedTarget)).toBeDefined();
     expect(screen.getByText(expectedDuration)).toBeDefined();
     expect(screen.getByText(expectedDerivedTarget)).toBeDefined();
   },
 );
 
-test("renders missing planned values and no actual metrics", () => {
+test("renders derived pace and no actual metrics", () => {
   render(
     <RunActivityDetails
       activity={runActivity({
         actualDistanceMetres: null,
         actualDurationSeconds: null,
-        targetDistanceMetres: null,
-        targetDurationSeconds: null,
-        targetPaceSecondsPerKilometre: null,
-        targetType: "DURATION_PACE",
+        targetDistanceMetres: 5000,
+        targetDurationSeconds: 1800,
         timeOfDay: null,
       })}
     />,
@@ -141,9 +118,9 @@ test("renders missing planned values and no actual metrics", () => {
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
   expect(screen.getByText("Any time")).toBeDefined();
-  expect(screen.getByText("No target distance")).toBeDefined();
-  expect(screen.getByText("No target duration")).toBeDefined();
-  expect(screen.getByText("No target pace")).toBeDefined();
+  expect(screen.getByText("5.0 km")).toBeDefined();
+  expect(screen.getByText("00:30:00")).toBeDefined();
+  expect(screen.getByText("6:00 / km")).toBeDefined();
   expect(screen.queryByText("Actual distance")).toBeNull();
   expect(screen.queryByText("Actual duration")).toBeNull();
 });

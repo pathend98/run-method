@@ -20,10 +20,8 @@ const runSession: TrainingSession = {
   skipReason: null,
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1500,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 };
@@ -33,7 +31,6 @@ const runEdit: EditTrainingSessionRequest = {
   description: "Keep it relaxed",
   timeOfDay: "AM",
   activityType: "RUN",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1500,
 };
@@ -50,18 +47,7 @@ test("rejects activity type changes", () => {
   ).toThrow("activityType cannot be changed");
 });
 
-test("rejects run target type changes", () => {
-  expect(() =>
-    validator.validateEdit(runSession, {
-      ...runEdit,
-      targetType: "DISTANCE_PACE",
-      targetDistanceMetres: 5000,
-      targetPaceSecondsPerKilometre: 300,
-    }),
-  ).toThrow("targetType cannot be changed");
-});
-
-test("allows scheduled run target changes within the existing target type", () => {
+test("allows scheduled run target changes", () => {
   expect(() =>
     validator.validateEdit(runSession, {
       ...runEdit,
@@ -91,103 +77,41 @@ test.each([
     current: { ...runSession, status: "SKIPPED" as const },
     request: { ...runEdit, targetDurationSeconds: 1501 },
   },
-  {
-    name: "pace",
-    current: {
-      ...runSession,
-      status: "COMPLETED" as const,
-      targetType: "DISTANCE_PACE" as const,
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 300,
-    },
-    request: {
-      ...runEdit,
-      targetType: "DISTANCE_PACE" as const,
-      targetDistanceMetres: 5000,
-      targetPaceSecondsPerKilometre: 301,
-    },
-  },
 ])("rejects terminal run $name target changes", ({ current, request }) => {
   expect(() => validator.validateEdit(current, request)).toThrow(
     "run targets cannot be changed for completed or skipped sessions",
   );
 });
 
-test.each([
-  {
-    targetType: "DISTANCE_DURATION" as const,
-    currentTargets: {
-      targetDistanceMetres: 5000,
-      targetDurationSeconds: 1500,
-      targetPaceSecondsPerKilometre: null,
-    },
-    requestTargets: {
-      targetDistanceMetres: 5000,
-      targetDurationSeconds: 1500,
-    },
-  },
-  {
-    targetType: "DISTANCE_PACE" as const,
-    currentTargets: {
-      targetDistanceMetres: 5000,
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 300,
-    },
-    requestTargets: {
-      targetDistanceMetres: 5000,
-      targetPaceSecondsPerKilometre: 300,
-    },
-  },
-  {
-    targetType: "DURATION_PACE" as const,
-    currentTargets: {
-      targetDistanceMetres: null,
-      targetDurationSeconds: 1800,
-      targetPaceSecondsPerKilometre: 300,
-    },
-    requestTargets: {
-      targetDurationSeconds: 1800,
-      targetPaceSecondsPerKilometre: 300,
-    },
-  },
-])(
-  "allows terminal $targetType runs when targets are unchanged",
-  ({ targetType, currentTargets, requestTargets }) => {
-    const current = {
-      ...runSession,
-      status: "COMPLETED" as const,
-      targetType,
-      ...currentTargets,
-    } as TrainingSession;
-    const request = {
-      title: runEdit.title,
-      description: runEdit.description,
-      timeOfDay: runEdit.timeOfDay,
-      activityType: "RUN" as const,
-      targetType,
-      ...requestTargets,
-    } as EditTrainingSessionRequest;
-
-    expect(() => validator.validateEdit(current, request)).not.toThrow();
-  },
-);
+test("allows terminal runs when targets are unchanged", () => {
+  expect(() =>
+    validator.validateEdit({ ...runSession, status: "COMPLETED" }, runEdit),
+  ).not.toThrow();
+});
 
 test.each(["COMPLETED", "SKIPPED"] as const)(
   "rejects skipping a %s session",
   (status) => {
     expect(() =>
-      validator.validateSkip({
-        ...runSession,
-        status,
-        skipReason: status === "SKIPPED" ? "Recovery" : null,
-      }, timeZone),
+      validator.validateSkip(
+        {
+          ...runSession,
+          status,
+          skipReason: status === "SKIPPED" ? "Recovery" : null,
+        },
+        timeZone,
+      ),
     ).toThrow("only scheduled training sessions can be skipped");
   },
 );
 
 test.each([
-  ["skip", "skipped", (validator: DefaultTrainingSessionsValidator) =>
-    validator.validateSkip({ ...runSession, date: "2026-08-27" }, timeZone)],
+  [
+    "skip",
+    "skipped",
+    (validator: DefaultTrainingSessionsValidator) =>
+      validator.validateSkip({ ...runSession, date: "2026-08-27" }, timeZone),
+  ],
   [
     "complete",
     "completed",
@@ -300,10 +224,14 @@ test("requires distance to complete runs", () => {
 
 test("allows run completion actuals", () => {
   expect(() =>
-    validator.validateComplete(runSession, {
-      actualDurationSeconds: 1500,
-      actualDistanceMetres: 5000,
-    }, timeZone),
+    validator.validateComplete(
+      runSession,
+      {
+        actualDurationSeconds: 1500,
+        actualDistanceMetres: 5000,
+      },
+      timeZone,
+    ),
   ).not.toThrow();
 });
 
@@ -325,10 +253,14 @@ test("rejects distance when completing strength sessions", () => {
   };
 
   expect(() =>
-    validator.validateComplete(strength, {
-      actualDurationSeconds: 1500,
-      actualDistanceMetres: 5000,
-    }, timeZone),
+    validator.validateComplete(
+      strength,
+      {
+        actualDurationSeconds: 1500,
+        actualDistanceMetres: 5000,
+      },
+      timeZone,
+    ),
   ).toThrow("actualDistanceMetres is not allowed for strength sessions");
 });
 

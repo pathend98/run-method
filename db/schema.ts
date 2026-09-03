@@ -69,30 +69,20 @@ export const runDetails = pgTable(
     trainingSessionId: uuid("training_session_id")
       .notNull()
       .references(() => trainingSessions.id, { onDelete: "cascade" }),
-    targetType: text("target_type").notNull(),
-    targetDistanceMetres: integer("target_distance_metres"),
-    targetDurationSeconds: integer("target_duration_seconds"),
-    targetPaceSecondsPerKilometre: integer("target_pace_seconds_per_kilometre"),
+    targetDistanceMetres: integer("target_distance_metres").notNull(),
+    targetDurationSeconds: integer("target_duration_seconds").notNull(),
     actualDistanceMetres: integer("actual_distance_metres"),
     actualDurationSeconds: integer("actual_duration_seconds"),
   },
   (table) => [
     primaryKey({ columns: [table.trainingSessionId] }),
     check(
-      "run_details_target_type_valid",
-      sql`${table.targetType} in ('DISTANCE_DURATION', 'DISTANCE_PACE', 'DURATION_PACE')`,
-    ),
-    check(
       "run_details_target_distance_positive",
-      sql`${table.targetDistanceMetres} is null or ${table.targetDistanceMetres} > 0`,
+      sql`${table.targetDistanceMetres} > 0`,
     ),
     check(
       "run_details_target_duration_positive",
-      sql`${table.targetDurationSeconds} is null or ${table.targetDurationSeconds} > 0`,
-    ),
-    check(
-      "run_details_target_pace_positive",
-      sql`${table.targetPaceSecondsPerKilometre} is null or ${table.targetPaceSecondsPerKilometre} > 0`,
+      sql`${table.targetDurationSeconds} > 0`,
     ),
     check(
       "run_details_actual_distance_positive",
@@ -101,10 +91,6 @@ export const runDetails = pgTable(
     check(
       "run_details_actual_duration_positive",
       sql`${table.actualDurationSeconds} is null or ${table.actualDurationSeconds} > 0`,
-    ),
-    check(
-      "run_details_target_shape_valid",
-      sql`(${table.targetType} = 'DISTANCE_DURATION' and ${table.targetDistanceMetres} is not null and ${table.targetDurationSeconds} is not null and ${table.targetPaceSecondsPerKilometre} is null) or (${table.targetType} = 'DISTANCE_PACE' and ${table.targetDistanceMetres} is not null and ${table.targetDurationSeconds} is null and ${table.targetPaceSecondsPerKilometre} is not null) or (${table.targetType} = 'DURATION_PACE' and ${table.targetDistanceMetres} is null and ${table.targetDurationSeconds} is not null and ${table.targetPaceSecondsPerKilometre} is not null)`,
     ),
   ],
 );

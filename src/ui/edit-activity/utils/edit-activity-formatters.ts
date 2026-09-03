@@ -2,7 +2,6 @@ import type { TrainingSession } from "@/domain/training-sessions";
 import {
   formatDistance,
   formatDuration,
-  formatPace,
 } from "@/ui/training-sessions/training-session-metric-formatters";
 
 export function formatLockedTargets(activity: TrainingSession) {
@@ -15,7 +14,6 @@ export function formatLockedTargets(activity: TrainingSession) {
   return [
     formatDistance(activity.targetDistanceMetres),
     formatDuration(activity.targetDurationSeconds),
-    formatPace(activity.targetPaceSecondsPerKilometre),
   ]
     .filter((value): value is string => value !== null)
     .join(" · ");

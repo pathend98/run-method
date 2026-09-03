@@ -34,10 +34,8 @@ const completedSession = {
   skipReason: null,
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-31T10:00:00.000Z",
-  targetType: "DISTANCE_DURATION" as const,
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1500,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: 5000,
   actualDurationSeconds: 1500,
 };

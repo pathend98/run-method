@@ -1,5 +1,4 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
-import { formatTargetType } from "@/ui/training-sessions/training-session-label-formatters";
 import {
   formatDistance,
   formatDuration,
@@ -29,7 +28,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
           Distance
         </dt>
         <dd className="mt-1 text-lg font-semibold text-zinc-950">
-          {targetDistance ?? "No target distance"}
+          {targetDistance}
         </dd>
       </div>
       <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
@@ -37,7 +36,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
           Target pace
         </dt>
         <dd className="mt-1 text-lg font-semibold text-zinc-950">
-          {targetPace ?? "No target pace"}
+          {targetPace}
         </dd>
       </div>
       <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
@@ -45,7 +44,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
           Duration
         </dt>
         <dd className="mt-1 text-lg font-semibold text-zinc-950">
-          {targetDuration ?? "No target duration"}
+          {targetDuration}
         </dd>
       </div>
     </dl>
@@ -53,14 +52,6 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
 
   const detailMetricItems = (
     <>
-      <div>
-        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Target type
-        </dt>
-        <dd className="mt-1 text-sm text-zinc-950">
-          {formatTargetType(activity.targetType)}
-        </dd>
-      </div>
       {activity.actualDistanceMetres !== null ? (
         <div>
           <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">

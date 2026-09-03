@@ -22,10 +22,8 @@ function runActivity(
   return {
     ...baseActivity,
     activityType: "RUN",
-    targetType: "DISTANCE_PACE",
     targetDistanceMetres: 6000,
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: 255,
+    targetDurationSeconds: 1530,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
     ...override,
@@ -70,9 +68,7 @@ test.each([
 
 test("does not render descriptions in the planner overview", () => {
   render(
-    <TrainingActivityCard
-      activity={runActivity({ title: "Easy run" })}
-    />,
+    <TrainingActivityCard activity={runActivity({ title: "Easy run" })} />,
   );
 
   expect(

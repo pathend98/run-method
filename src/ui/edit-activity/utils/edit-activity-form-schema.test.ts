@@ -22,10 +22,8 @@ function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
   return {
     ...base,
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 8000,
     targetDurationSeconds: 2700,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
     ...override,
@@ -90,26 +88,8 @@ test.each([
   [run(), "distanceKilometres", "0", "greater than zero"],
   [run(), "durationMinutes", "1.5", "Enter a whole number"],
   [run(), "durationMinutes", "0", "greater than zero"],
-  [
-    run({
-      targetType: "DISTANCE_PACE",
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 300,
-    }),
-    "pacePerKilometre",
-    "5:99",
-    "Enter pace",
-  ],
-  [
-    run({
-      targetType: "DURATION_PACE",
-      targetDistanceMetres: null,
-      targetPaceSecondsPerKilometre: 300,
-    }),
-    "pacePerKilometre",
-    "0:00",
-    "greater than zero",
-  ],
+  [run(), "pacePerKilometre", "5:99", "Enter pace"],
+  [run(), "pacePerKilometre", "0:00", "greater than zero"],
 ] as const)(
   "validates scheduled target field %s",
   (activity, field, value, message) => {
@@ -122,7 +102,7 @@ test.each([
   },
 );
 
-test("accepts every valid scheduled run target combination", () => {
+test("accepts a valid scheduled run target", () => {
   expect(
     createEditActivityFormSchema(run()).safeParse({
       ...getEditActivityFormValues(run()),
@@ -130,59 +110,7 @@ test("accepts every valid scheduled run target combination", () => {
       durationMinutes: "50",
     }).success,
   ).toBe(true);
-  const distancePace = run({
-    targetType: "DISTANCE_PACE",
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: 300,
-  });
-  expect(
-    createEditActivityFormSchema(distancePace).safeParse({
-      ...getEditActivityFormValues(distancePace),
-      pacePerKilometre: "4:20",
-    }).success,
-  ).toBe(true);
-  const durationPace = run({
-    targetType: "DURATION_PACE",
-    targetDistanceMetres: null,
-    targetPaceSecondsPerKilometre: 300,
-  });
-  expect(
-    createEditActivityFormSchema(durationPace).safeParse({
-      ...getEditActivityFormValues(durationPace),
-      pacePerKilometre: "5:10",
-    }).success,
-  ).toBe(true);
 });
-
-test.each([
-  [run(), { pacePerKilometre: "invalid" }],
-  [
-    run({
-      targetType: "DISTANCE_PACE",
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 300,
-    }),
-    { durationMinutes: "invalid" },
-  ],
-  [
-    run({
-      targetType: "DURATION_PACE",
-      targetDistanceMetres: null,
-      targetPaceSecondsPerKilometre: 300,
-    }),
-    { distanceKilometres: "invalid" },
-  ],
-] as const)(
-  "does not validate metrics excluded by %s",
-  (activity, excludedMetric) => {
-    expect(
-      createEditActivityFormSchema(activity).safeParse({
-        ...getEditActivityFormValues(activity),
-        ...excludedMetric,
-      }).success,
-    ).toBe(true);
-  },
-);
 
 test("validates the title independently", () => {
   expect(

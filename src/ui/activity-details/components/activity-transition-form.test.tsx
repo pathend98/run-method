@@ -18,10 +18,8 @@ const runActivity = {
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
   activityType: "RUN",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
@@ -97,7 +95,9 @@ test("shows validation errors without submitting", async () => {
     screen.getByLabelText("Duration (minutes)").closest("form")!,
   );
 
-  expect(await screen.findByText("Duration must be greater than zero")).toBeDefined();
+  expect(
+    await screen.findByText("Duration must be greater than zero"),
+  ).toBeDefined();
   expect(screen.getByText("Enter a distance in kilometres")).toBeDefined();
   expect(onComplete).not.toHaveBeenCalled();
 });

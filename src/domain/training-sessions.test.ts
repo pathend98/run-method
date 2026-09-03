@@ -1,5 +1,6 @@
 import {
   completeTrainingSessionRequestSchema,
+  createTrainingSessionRequestSchema,
   editTrainingSessionRequestSchema,
   skipTrainingSessionRequestSchema,
   trainingSessionSchema,
@@ -23,20 +24,16 @@ test("trainingSessionSchema validates run read models", () => {
     trainingSessionSchema.parse({
       ...baseSession,
       activityType: "RUN",
-      targetType: "DISTANCE_DURATION",
       targetDistanceMetres: 8000,
       targetDurationSeconds: 2700,
-      targetPaceSecondsPerKilometre: null,
       actualDistanceMetres: null,
       actualDurationSeconds: null,
     }),
   ).toEqual({
     ...baseSession,
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 8000,
     targetDurationSeconds: 2700,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   });
@@ -70,10 +67,8 @@ test("trainingSessionSchema validates completed runs with required actuals", () 
       ...baseSession,
       status: "COMPLETED",
       activityType: "RUN",
-      targetType: "DISTANCE_DURATION",
       targetDistanceMetres: 8000,
       targetDurationSeconds: 2700,
-      targetPaceSecondsPerKilometre: null,
       actualDistanceMetres: 8050,
       actualDurationSeconds: 2680,
     }),
@@ -104,10 +99,8 @@ test.each([
   const session = {
     ...baseSession,
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 8000,
     targetDurationSeconds: 2700,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   };
@@ -164,60 +157,15 @@ test.each([
   ["missing skipped reason", { status: "SKIPPED", skipReason: null }],
   ["unexpected skip reason", { skipReason: "Sick" }],
   ["negative run distance", { targetDistanceMetres: -1 }],
-  ["invalid run target type", { targetType: "DISTANCE" }],
-  [
-    "missing distance duration distance",
-    { targetType: "DISTANCE_DURATION", targetDistanceMetres: null },
-  ],
-  [
-    "unexpected distance duration pace",
-    {
-      targetType: "DISTANCE_DURATION",
-      targetPaceSecondsPerKilometre: 300,
-    },
-  ],
-  [
-    "missing distance pace pace",
-    {
-      targetType: "DISTANCE_PACE",
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: null,
-    },
-  ],
-  [
-    "unexpected distance pace duration",
-    {
-      targetType: "DISTANCE_PACE",
-      targetDurationSeconds: 2700,
-      targetPaceSecondsPerKilometre: 300,
-    },
-  ],
-  [
-    "missing duration pace duration",
-    {
-      targetType: "DURATION_PACE",
-      targetDistanceMetres: null,
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 300,
-    },
-  ],
-  [
-    "unexpected duration pace distance",
-    {
-      targetType: "DURATION_PACE",
-      targetDistanceMetres: 8000,
-      targetPaceSecondsPerKilometre: 300,
-    },
-  ],
+  ["missing run distance", { targetDistanceMetres: null }],
+  ["missing run duration", { targetDurationSeconds: null }],
 ])("trainingSessionSchema rejects %s", (_caseName, override) => {
   expect(() =>
     trainingSessionSchema.parse({
       ...baseSession,
       activityType: "RUN",
-      targetType: "DISTANCE_DURATION",
       targetDistanceMetres: 8000,
       targetDurationSeconds: 2700,
-      targetPaceSecondsPerKilometre: null,
       actualDistanceMetres: null,
       actualDurationSeconds: null,
       ...override,
@@ -228,21 +176,8 @@ test.each([
 test.each([
   {
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1500,
-  },
-  {
-    activityType: "RUN",
-    targetType: "DISTANCE_PACE",
-    targetDistanceMetres: 5000,
-    targetPaceSecondsPerKilometre: 300,
-  },
-  {
-    activityType: "RUN",
-    targetType: "DURATION_PACE",
-    targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: 300,
   },
   { activityType: "STRENGTH", targetDurationSeconds: 1800 },
   { activityType: "STRENGTH", targetDurationSeconds: null },
@@ -277,7 +212,6 @@ test.each([
       description: null,
       timeOfDay: "AM",
       activityType: "RUN",
-      targetType: "DISTANCE_DURATION",
       targetDistanceMetres: 5000,
       targetDurationSeconds: 1500,
       ...override,
@@ -299,3 +233,29 @@ test.each([undefined, 0, -1, 1.5, "1800"])(
     ).toThrow();
   },
 );
+
+test("run write schemas reject legacy target fields", () => {
+  expect(() =>
+    createTrainingSessionRequestSchema.parse({
+      title: "Easy run",
+      date: "2026-08-27",
+      description: null,
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetDistanceMetres: 5000,
+      targetDurationSeconds: 1500,
+      targetType: "DISTANCE_DURATION",
+    }),
+  ).toThrow();
+  expect(() =>
+    editTrainingSessionRequestSchema.parse({
+      title: "Easy run",
+      description: null,
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetDistanceMetres: 5000,
+      targetDurationSeconds: 1500,
+      targetPaceSecondsPerKilometre: 300,
+    }),
+  ).toThrow();
+});

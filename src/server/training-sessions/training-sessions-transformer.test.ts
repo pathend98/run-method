@@ -37,10 +37,8 @@ const strengthSession = {
 
 const runDetails = {
   trainingSessionId: "11111111-1111-4111-8111-111111111111",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 8000,
   targetDurationSeconds: 2700,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 };
@@ -59,7 +57,7 @@ test("transforms run rows into training sessions", () => {
       session: runSession,
       runDetails,
       strengthDetails: null,
-    } as TrainingSessionRow),
+    } as unknown as TrainingSessionRow),
   ).toEqual({
     id: "11111111-1111-4111-8111-111111111111",
     title: "Easy run",
@@ -72,10 +70,8 @@ test("transforms run rows into training sessions", () => {
     skipReason: null,
     createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T10:30:00.000Z",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 8000,
     targetDurationSeconds: 2700,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   });
@@ -203,6 +199,6 @@ test("rejects rows that do not match the domain read model", () => {
         targetDurationSeconds: null,
       },
       strengthDetails: null,
-    } as TrainingSessionRow),
+    } as unknown as TrainingSessionRow),
   ).toThrow(TrainingSessionsDataIntegrityError);
 });

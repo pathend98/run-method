@@ -18,10 +18,8 @@ const runActivity = {
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
   activityType: "RUN",
-  targetType: "DISTANCE_PACE",
   targetDistanceMetres: 6000,
-  targetDurationSeconds: null,
-  targetPaceSecondsPerKilometre: 255,
+  targetDurationSeconds: 1530,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
@@ -35,12 +33,12 @@ const strengthActivity = {
   actualDurationSeconds: null,
 } satisfies StrengthTrainingSession;
 
-test("renders scheduled run discriminators without locked targets", () => {
+test("renders scheduled run summary without locked targets", () => {
   render(<EditActivitySummary activity={runActivity} />);
 
   expect(screen.getByText("Run")).toBeDefined();
   expect(screen.getByText("Scheduled")).toBeDefined();
-  expect(screen.getByText("Distance + Pace")).toBeDefined();
+  expect(screen.queryByText("Run target")).toBeNull();
   expect(screen.queryByText("Target details")).toBeNull();
   expect(screen.queryByText("Time of day")).toBeNull();
 });
@@ -50,16 +48,13 @@ test.each([
     ...runActivity,
     status: "COMPLETED" as const,
     timeOfDay: null,
-    targetType: "DISTANCE_DURATION" as const,
     targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: null,
   },
   {
     ...runActivity,
     status: "SKIPPED" as const,
     skipReason: "Rest",
-    targetType: "DURATION_PACE" as const,
-    targetDistanceMetres: null,
+    targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
   },
 ])("renders terminal run timing and locked targets", (activity) => {
@@ -67,7 +62,7 @@ test.each([
 
   expect(screen.getByText("Time of day")).toBeDefined();
   expect(
-    screen.getByText(/6\.0 km · 00:30:00|00:30:00 · 4:15 \/ km/),
+    screen.getByText(/6\.0 km · 00:30:00|5\.0 km · 00:30:00/),
   ).toBeDefined();
 });
 

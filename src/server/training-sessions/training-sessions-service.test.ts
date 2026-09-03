@@ -162,9 +162,9 @@ test("completes a scheduled training session", async () => {
   vi.mocked(repository.findById).mockResolvedValue(runSession);
   vi.mocked(repository.complete).mockResolvedValue(completed);
 
-  await expect(service.complete(runSession.id, request, timeZone)).resolves.toBe(
-    completed,
-  );
+  await expect(
+    service.complete(runSession.id, request, timeZone),
+  ).resolves.toBe(completed);
   expect(validator.validateComplete).toHaveBeenCalledWith(
     runSession,
     request,
@@ -181,7 +181,11 @@ test.each(["skip", "complete"] as const)(
     const result =
       operation === "skip"
         ? service.skip("invalid", { skipReason: "Recovery" }, timeZone)
-        : service.complete("invalid", { actualDurationSeconds: 1500 }, timeZone);
+        : service.complete(
+            "invalid",
+            { actualDurationSeconds: 1500 },
+            timeZone,
+          );
 
     await expect(result).rejects.toThrow(
       "training session id must be a valid UUID",
@@ -199,7 +203,11 @@ test.each(["skip", "complete"] as const)(
     const result =
       operation === "skip"
         ? service.skip(runSession.id, { skipReason: "Recovery" }, timeZone)
-        : service.complete(runSession.id, { actualDurationSeconds: 1500 }, timeZone);
+        : service.complete(
+            runSession.id,
+            { actualDurationSeconds: 1500 },
+            timeZone,
+          );
 
     await expect(result).rejects.toBeInstanceOf(TrainingSessionNotFoundError);
   },
@@ -215,10 +223,14 @@ test.each(["skip", "complete"] as const)(
     const result =
       operation === "skip"
         ? service.skip(runSession.id, { skipReason: "Recovery" }, timeZone)
-        : service.complete(runSession.id, {
-            actualDurationSeconds: 1500,
-            actualDistanceMetres: 5000,
-          }, timeZone);
+        : service.complete(
+            runSession.id,
+            {
+              actualDurationSeconds: 1500,
+              actualDistanceMetres: 5000,
+            },
+            timeZone,
+          );
 
     await expect(result).rejects.toThrow(
       "training session is no longer scheduled",
@@ -238,10 +250,8 @@ const runSession: TrainingSession = {
   skipReason: null,
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1500,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 };
@@ -251,7 +261,6 @@ const runEdit: EditTrainingSessionRequest = {
   description: "Keep it relaxed",
   timeOfDay: "PM",
   activityType: "RUN",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 8000,
   targetDurationSeconds: 2700,
 };
@@ -281,7 +290,6 @@ test("validates and edits a scheduled run", async () => {
   vi.mocked(repository.edit).mockResolvedValue({
     ...runSession,
     ...runEdit,
-    targetPaceSecondsPerKilometre: null,
   });
 
   await service.edit(runSession.id, runEdit);
@@ -303,7 +311,6 @@ test("validates before returning an unchanged session", async () => {
       description: runSession.description,
       timeOfDay: runSession.timeOfDay,
       activityType: "RUN",
-      targetType: runSession.targetType,
       targetDistanceMetres: runSession.targetDistanceMetres,
       targetDurationSeconds: runSession.targetDurationSeconds,
     }),
@@ -341,7 +348,6 @@ test("returns unchanged sessions without writing", async () => {
     description: runSession.description,
     timeOfDay: runSession.timeOfDay,
     activityType: runSession.activityType,
-    targetType: runSession.targetType,
     targetDistanceMetres: runSession.targetDistanceMetres,
     targetDurationSeconds: runSession.targetDurationSeconds,
   } satisfies EditTrainingSessionRequest;
@@ -448,38 +454,16 @@ test.each([2400, null])(
   },
 );
 
-test.each([
-  {
-    targetType: "DISTANCE_PACE" as const,
-    targetDistanceMetres: 5000,
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: 300,
-    request: {
-      targetType: "DISTANCE_PACE" as const,
-      targetDistanceMetres: 5000,
-      targetPaceSecondsPerKilometre: 300,
-    },
-  },
-  {
-    targetType: "DURATION_PACE" as const,
-    targetDistanceMetres: null,
-    targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: 300,
-    request: {
-      targetType: "DURATION_PACE" as const,
-      targetDurationSeconds: 1800,
-      targetPaceSecondsPerKilometre: 300,
-    },
-  },
-])("detects unchanged $targetType runs", async (targets) => {
+test("detects unchanged canonical run targets", async () => {
   const { repository, service } = createService();
-  const current: TrainingSession = { ...runSession, ...targets };
+  const current = runSession;
   const request = {
     title: current.title,
     description: current.description,
     timeOfDay: current.timeOfDay,
     activityType: "RUN" as const,
-    ...targets.request,
+    targetDistanceMetres: current.targetDistanceMetres,
+    targetDurationSeconds: current.targetDurationSeconds,
   };
   vi.mocked(repository.findById).mockResolvedValue(current);
 
@@ -487,7 +471,7 @@ test.each([
   expect(repository.edit).not.toHaveBeenCalled();
 });
 
-test("writes changed duration and pace targets after validation", async () => {
+test("writes changed canonical targets after validation", async () => {
   const durationService = createService();
   const currentDuration = runSession;
   vi.mocked(durationService.repository.findById).mockResolvedValue(
@@ -498,7 +482,6 @@ test("writes changed duration and pace targets after validation", async () => {
     description: currentDuration.description,
     timeOfDay: currentDuration.timeOfDay,
     activityType: "RUN" as const,
-    targetType: "DISTANCE_DURATION" as const,
     targetDistanceMetres: currentDuration.targetDistanceMetres,
     targetDurationSeconds: currentDuration.targetDurationSeconds + 1,
   };
@@ -508,27 +491,21 @@ test("writes changed duration and pace targets after validation", async () => {
     durationEdit,
   );
 
-  const paceService = createService();
-  const currentPace: TrainingSession = {
-    ...runSession,
-    targetType: "DISTANCE_PACE",
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: 300,
-  };
-  vi.mocked(paceService.repository.findById).mockResolvedValue(currentPace);
-  const paceEdit = {
-    title: currentPace.title,
-    description: currentPace.description,
-    timeOfDay: currentPace.timeOfDay,
+  const distanceService = createService();
+  const distanceEdit = {
+    title: currentDuration.title,
+    description: currentDuration.description,
+    timeOfDay: currentDuration.timeOfDay,
     activityType: "RUN" as const,
-    targetType: "DISTANCE_PACE" as const,
-    targetDistanceMetres: currentPace.targetDistanceMetres,
-    targetPaceSecondsPerKilometre:
-      currentPace.targetPaceSecondsPerKilometre + 1,
+    targetDistanceMetres: currentDuration.targetDistanceMetres + 1,
+    targetDurationSeconds: currentDuration.targetDurationSeconds,
   };
-  await paceService.service.edit(currentPace.id, paceEdit);
-  expect(paceService.repository.edit).toHaveBeenCalledWith(
-    currentPace,
-    paceEdit,
+  vi.mocked(distanceService.repository.findById).mockResolvedValue(
+    currentDuration,
+  );
+  await distanceService.service.edit(currentDuration.id, distanceEdit);
+  expect(distanceService.repository.edit).toHaveBeenCalledWith(
+    currentDuration,
+    distanceEdit,
   );
 });

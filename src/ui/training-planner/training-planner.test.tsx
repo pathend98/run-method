@@ -75,10 +75,8 @@ test("TrainingPlanner renders loaded planner data", async () => {
           skipReason: null,
           createdAt: "2026-08-01T10:00:00.000Z",
           updatedAt: "2026-08-01T10:00:00.000Z",
-          targetType: "DISTANCE_DURATION",
           targetDistanceMetres: 8000,
           targetDurationSeconds: 2700,
-          targetPaceSecondsPerKilometre: null,
           actualDistanceMetres: null,
           actualDurationSeconds: null,
         },
@@ -122,36 +120,98 @@ test("TrainingPlanner renders error state", async () => {
 
 test("TrainingPlanner skips and completes activities through the API", async () => {
   const session = {
-    id: "11111111-1111-4111-8111-111111111111", title: "Easy run", activityType: "RUN", status: "SCHEDULED",
-    date: getCurrentWeekRange().from, timeOfDay: "AM", description: null, sortOrder: 0, skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z", updatedAt: "2026-08-01T10:00:00.000Z", targetType: "DISTANCE_DURATION",
-    targetDistanceMetres: 5000, targetDurationSeconds: 1800, targetPaceSecondsPerKilometre: null,
-    actualDistanceMetres: null, actualDurationSeconds: null,
+    id: "11111111-1111-4111-8111-111111111111",
+    title: "Easy run",
+    activityType: "RUN",
+    status: "SCHEDULED",
+    date: getCurrentWeekRange().from,
+    timeOfDay: "AM",
+    description: null,
+    sortOrder: 0,
+    skipReason: null,
+    createdAt: "2026-08-01T10:00:00.000Z",
+    updatedAt: "2026-08-01T10:00:00.000Z",
+    targetDistanceMetres: 5000,
+    targetDurationSeconds: 1800,
+    actualDistanceMetres: null,
+    actualDurationSeconds: null,
   };
   const fetchMock = vi.fn().mockImplementation((url) => {
-    if (url.endsWith("/skip")) return Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue({ ...session, status: "SKIPPED", skipReason: "Recovery" }) });
-    if (url.endsWith("/complete")) return Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue({ ...session, status: "COMPLETED", actualDistanceMetres: 5000, actualDurationSeconds: 1800 }) });
-    return Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue([session]) });
+    if (url.endsWith("/skip"))
+      return Promise.resolve({
+        ok: true,
+        json: vi
+          .fn()
+          .mockResolvedValue({
+            ...session,
+            status: "SKIPPED",
+            skipReason: "Recovery",
+          }),
+      });
+    if (url.endsWith("/complete"))
+      return Promise.resolve({
+        ok: true,
+        json: vi
+          .fn()
+          .mockResolvedValue({
+            ...session,
+            status: "COMPLETED",
+            actualDistanceMetres: 5000,
+            actualDurationSeconds: 1800,
+          }),
+      });
+    return Promise.resolve({
+      ok: true,
+      json: vi.fn().mockResolvedValue([session]),
+    });
   });
   vi.stubGlobal("fetch", fetchMock);
 
-  const first = render(<QueryProvider><TrainingPlanner /></QueryProvider>);
+  const first = render(
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>,
+  );
   await screen.findByRole("button", { name: "View Easy run details" });
-  fireEvent.click(screen.getByRole("button", { name: "View Easy run details" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Easy run details" }),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
-  fireEvent.change(screen.getByLabelText("Skip reason"), { target: { value: "Recovery" } });
+  fireEvent.change(screen.getByLabelText("Skip reason"), {
+    target: { value: "Recovery" },
+  });
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/skip"), expect.any(Object)));
+  await waitFor(() =>
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/skip"),
+      expect.any(Object),
+    ),
+  );
 
   first.unmount();
-  render(<QueryProvider><TrainingPlanner /></QueryProvider>);
+  render(
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>,
+  );
   await screen.findByRole("button", { name: "View Easy run details" });
-  fireEvent.click(screen.getByRole("button", { name: "View Easy run details" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Easy run details" }),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
-  fireEvent.change(screen.getByLabelText("Duration (minutes)"), { target: { value: "30" } });
-  fireEvent.change(screen.getByLabelText("Distance (km)"), { target: { value: "5" } });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "30" },
+  });
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "5" },
+  });
   fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/complete"), expect.any(Object)));
+  await waitFor(() =>
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/complete"),
+      expect.any(Object),
+    ),
+  );
 });
 
 test("TrainingPlanner creates an activity and refreshes its week", async () => {
@@ -172,10 +232,8 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
           skipReason: null,
           createdAt: "2026-08-01T10:00:00.000Z",
           updatedAt: "2026-08-01T10:00:00.000Z",
-          targetType: "DISTANCE_DURATION",
           targetDistanceMetres: 5000,
           targetDurationSeconds: 1800,
-          targetPaceSecondsPerKilometre: null,
           actualDistanceMetres: null,
           actualDurationSeconds: null,
         }),
@@ -237,10 +295,8 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     skipReason: null,
     createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T10:00:00.000Z",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   };
@@ -310,10 +366,8 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     skipReason: null,
     createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T10:00:00.000Z",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   };
@@ -344,7 +398,9 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
 
   await waitFor(() =>
     expect(
-      fetchMock.mock.calls.filter(([, options]) => options?.method === "DELETE"),
+      fetchMock.mock.calls.filter(
+        ([, options]) => options?.method === "DELETE",
+      ),
     ).toHaveLength(1),
   );
   expect(fetchMock).toHaveBeenCalledWith(
