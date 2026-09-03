@@ -1,6 +1,6 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
 
-function calculatePaceSecondsPerKilometre(
+export function calculatePaceSecondsPerKilometre(
   distanceMetres: number,
   durationSeconds: number,
 ) {

@@ -10,7 +10,26 @@ export function StrengthActivityDetails({
   activity,
 }: StrengthActivityDetailsProps) {
   const targetDuration = formatDuration(activity.targetDurationSeconds);
-  const detailMetricItems =
+  const actualDuration = activity.actualDurationSeconds;
+  const hasCompletedActual =
+    activity.status === "COMPLETED" && actualDuration !== null;
+  const completedMetrics =
+    activity.status === "COMPLETED" && actualDuration !== null ? (
+    <dl aria-label="Completed activity metrics" className="mt-6 grid gap-3">
+      <div className="rounded-lg border border-teal-200 bg-teal-50 p-3">
+        <dt className="text-xs font-semibold uppercase tracking-wide text-teal-700">
+          Actual duration
+        </dt>
+        <dd className="mt-1 text-2xl font-semibold text-zinc-950">
+          {formatDuration(actualDuration)}
+        </dd>
+        <p className="mt-2 text-sm text-zinc-600">
+          Target: {targetDuration ?? "No target duration"}
+        </p>
+      </div>
+    </dl>
+  ) : null;
+  const detailMetricItems = !hasCompletedActual &&
     activity.actualDurationSeconds !== null ? (
       <div>
         <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -39,7 +58,7 @@ export function StrengthActivityDetails({
     <ActivityDetailsBody
       activity={activity}
       detailMetricItems={detailMetricItems}
-      plannedMetrics={plannedMetrics}
+      plannedMetrics={completedMetrics ?? plannedMetrics}
     />
   );
 }

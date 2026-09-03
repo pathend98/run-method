@@ -4,7 +4,10 @@ import {
   formatDuration,
   formatPace,
 } from "@/ui/training-sessions/training-session-metric-formatters";
-import { resolveRunTargets } from "../utils/run-targets";
+import {
+  calculatePaceSecondsPerKilometre,
+  resolveRunTargets,
+} from "../utils/run-targets";
 import { ActivityDetailsBody } from "./activity-details-body";
 
 type RunActivityDetailsProps = {
@@ -17,6 +20,56 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
   const targetDistance = formatDistance(distanceMetres);
   const targetDuration = formatDuration(durationSeconds);
   const targetPace = formatPace(paceSecondsPerKilometre);
+  const isCompleted = activity.status === "COMPLETED";
+  const actualDistance = activity.actualDistanceMetres;
+  const actualDuration = activity.actualDurationSeconds;
+  const hasCompletedActuals =
+    isCompleted && actualDistance !== null && actualDuration !== null;
+
+  const completedMetrics =
+    isCompleted && actualDistance !== null && actualDuration !== null ? (
+    <dl
+      aria-label="Completed activity metrics"
+      className="mt-6 grid gap-3 sm:grid-cols-3"
+    >
+      <div className="rounded-lg border border-teal-200 bg-teal-50 p-3">
+        <dt className="text-xs font-semibold uppercase tracking-wide text-teal-700">
+          Actual distance
+        </dt>
+        <dd className="mt-1 text-2xl font-semibold text-zinc-950">
+          {formatDistance(actualDistance)}
+        </dd>
+        <p className="mt-2 text-sm text-zinc-600">
+          Target: {targetDistance}
+        </p>
+      </div>
+      <div className="rounded-lg border border-teal-200 bg-teal-50 p-3">
+        <dt className="text-xs font-semibold uppercase tracking-wide text-teal-700">
+          Actual pace
+        </dt>
+        <dd className="mt-1 text-2xl font-semibold text-zinc-950">
+          {formatPace(
+            calculatePaceSecondsPerKilometre(
+              actualDistance,
+              actualDuration,
+            ),
+          )}
+        </dd>
+        <p className="mt-2 text-sm text-zinc-600">Target: {targetPace}</p>
+      </div>
+      <div className="rounded-lg border border-teal-200 bg-teal-50 p-3">
+        <dt className="text-xs font-semibold uppercase tracking-wide text-teal-700">
+          Actual duration
+        </dt>
+        <dd className="mt-1 text-2xl font-semibold text-zinc-950">
+          {formatDuration(actualDuration)}
+        </dd>
+        <p className="mt-2 text-sm text-zinc-600">
+          Target: {targetDuration}
+        </p>
+      </div>
+    </dl>
+  ) : null;
 
   const plannedMetrics = (
     <dl
@@ -50,7 +103,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
     </dl>
   );
 
-  const detailMetricItems = (
+  const detailMetricItems = hasCompletedActuals ? null : (
     <>
       {activity.actualDistanceMetres !== null ? (
         <div>
@@ -79,7 +132,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
     <ActivityDetailsBody
       activity={activity}
       detailMetricItems={detailMetricItems}
-      plannedMetrics={plannedMetrics}
+      plannedMetrics={completedMetrics ?? plannedMetrics}
     />
   );
 }
