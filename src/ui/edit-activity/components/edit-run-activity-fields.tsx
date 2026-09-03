@@ -1,49 +1,75 @@
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 
-import type { RunTrainingSession } from "@/domain/training-sessions";
-import { DurationInput } from "@/ui/components/duration-input";
-import { FormField } from "@/ui/components/form-field";
-import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
+import {
+  RunFieldInput,
+  type RunFieldInputValue,
+} from "@/ui/run-field-input/run-field-input";
 import type { EditActivityFormValues } from "../utils/edit-activity-form-schema";
 
 type EditRunActivityFieldsProps = {
-  targetType: RunTrainingSession["targetType"];
+  onPendingChange: (pending: boolean) => void;
 };
 
 export function EditRunActivityFields({
-  targetType,
+  onPendingChange,
 }: EditRunActivityFieldsProps) {
   const {
-    formState: { errors },
-    register,
+    control,
+    formState: { errors, isSubmitted },
+    setValue,
+    trigger,
   } = useFormContext<EditActivityFormValues>();
-  const {
-    distance: showDistance,
-    duration: showDuration,
-    pace: showPace,
-  } = getRunTargetMetrics(targetType);
+  const fields = useWatch({
+    control,
+    name: [
+      "distanceKilometres",
+      "durationHours",
+      "durationMinutes",
+      "durationSeconds",
+      "pacePerKilometre",
+      "derivedMetric",
+    ],
+  });
+  const value: RunFieldInputValue = {
+    distanceKilometres: fields[0],
+    durationHours: fields[1],
+    durationMinutes: fields[2],
+    durationSeconds: fields[3],
+    pacePerKilometre: fields[4],
+    derivedMetric: fields[5],
+  };
+
+  function changeValue(next: RunFieldInputValue) {
+    const fieldNames = [
+      "distanceKilometres",
+      "durationHours",
+      "durationMinutes",
+      "durationSeconds",
+      "pacePerKilometre",
+      "derivedMetric",
+    ] as const;
+
+    for (const fieldName of fieldNames) {
+      setValue(fieldName, next[fieldName], {
+        shouldDirty: next[fieldName] !== value[fieldName],
+      });
+    }
+    if (isSubmitted) void trigger(fieldNames);
+  }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {showDistance ? (
-        <FormField
-          error={errors.distanceKilometres?.message}
-          label="Distance (km)"
-        >
-          <input inputMode="decimal" {...register("distanceKilometres")} />
-        </FormField>
-      ) : null}
-      {showDuration ? (
-        <DurationInput error={errors.durationHours?.message ?? errors.durationMinutes?.message ?? errors.durationSeconds?.message} hoursName="durationHours" label="Duration (hh:mm:ss)" minutesName="durationMinutes" register={register} secondsName="durationSeconds" />
-      ) : null}
-      {showPace ? (
-        <FormField
-          error={errors.pacePerKilometre?.message}
-          label="Pace (mm:ss / km)"
-        >
-          <input {...register("pacePerKilometre")} />
-        </FormField>
-      ) : null}
-    </div>
+    <RunFieldInput
+      errors={{
+        distance: errors.distanceKilometres?.message,
+        duration:
+          errors.durationHours?.message ??
+          errors.durationMinutes?.message ??
+          errors.durationSeconds?.message,
+        pace: errors.pacePerKilometre?.message,
+      }}
+      onChange={changeValue}
+      onPendingChange={onPendingChange}
+      value={value}
+    />
   );
 }

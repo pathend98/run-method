@@ -13,6 +13,7 @@ import {
 } from "./utils/run-field-calculations";
 
 export type { RunFieldInputValue, RunFieldMetric };
+export { calculateDerivedMetric } from "./utils/run-field-calculations";
 
 export type RunFieldInputErrors = Partial<
   Record<RunFieldMetric, string | undefined>

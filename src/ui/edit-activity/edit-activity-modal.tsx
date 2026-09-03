@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import type { EditTrainingSessionRequest } from "@/domain/training-sessions";
 import { Modal } from "@/ui/components/modal";
 import { EditActivityForm } from "./components/edit-activity-form";
@@ -7,6 +9,7 @@ import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 
 export function EditActivityModal() {
+  const [runFieldsPending, setRunFieldsPending] = useState(false);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const replaceActivityAndShowDetails = useTrainingPlannerStore(
     (state) => state.replaceActivityAndShowDetails,
@@ -41,6 +44,7 @@ export function EditActivityModal() {
           variant: "secondary",
         },
         {
+          disabled: runFieldsPending,
           form: "edit-activity-form",
           label: editMutation.isPending ? "Saving…" : "Save changes",
           type: "submit",
@@ -57,6 +61,7 @@ export function EditActivityModal() {
       ]}
       isBusy={editMutation.isPending}
       onClose={returnToActivityDetails}
+      size="large"
       title="Edit activity"
     >
       <EditActivitySummary activity={activity} />
@@ -64,6 +69,7 @@ export function EditActivityModal() {
         activity={activity}
         onClose={returnToActivityDetails}
         onEdit={editActivity}
+        onRunFieldsPendingChange={setRunFieldsPending}
       />
     </Modal>
   );

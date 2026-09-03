@@ -45,11 +45,12 @@ test("initializes common and run target values", () => {
     title: "Tempo run",
     timeOfDay: "AM",
     description: "Controlled effort",
+    derivedMetric: "pace",
     distanceKilometres: "8",
     durationHours: "00",
     durationMinutes: "45",
     durationSeconds: "00",
-    pacePerKilometre: "",
+    pacePerKilometre: "5:38",
   });
 });
 
@@ -68,7 +69,8 @@ test("maps null values and formats pace", () => {
     title: "Tempo run",
     timeOfDay: "ANY",
     description: "",
-    distanceKilometres: "",
+    derivedMetric: "distance",
+    distanceKilometres: "10.588",
     durationHours: "00",
     durationMinutes: "45",
     durationSeconds: "00",
@@ -79,6 +81,23 @@ test("maps null values and formats pace", () => {
       run({ targetDurationSeconds: null, targetType: "DISTANCE_PACE" }),
   ).durationMinutes,
   ).toBe("00");
+});
+
+test("derives duration for a distance and pace target", () => {
+  expect(
+    getEditActivityFormValues(
+      run({
+        targetType: "DISTANCE_PACE",
+        targetDurationSeconds: null,
+        targetPaceSecondsPerKilometre: 300,
+      }),
+    ),
+  ).toMatchObject({
+    derivedMetric: "duration",
+    durationHours: "00",
+    durationMinutes: "40",
+    durationSeconds: "00",
+  });
 });
 
 test("initializes the optional duration for strength activities", () => {

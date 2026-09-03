@@ -1,4 +1,5 @@
-import { render, renderHook, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import type { EditActivityFormValues } from "../utils/edit-activity-form-schema";
@@ -8,6 +9,7 @@ const defaultValues: EditActivityFormValues = {
   title: "Run",
   timeOfDay: "AM",
   description: "",
+  derivedMetric: "pace",
   distanceKilometres: "5",
   durationHours: "00",
   durationMinutes: "30",
@@ -15,48 +17,101 @@ const defaultValues: EditActivityFormValues = {
   pacePerKilometre: "5:00",
 };
 
-test.each([
-  ["DISTANCE_DURATION", ["Distance (km)", "Duration (hh:mm:ss) hours"]],
-  ["DISTANCE_PACE", ["Distance (km)", "Pace (mm:ss / km)"]],
-  ["DURATION_PACE", ["Duration (hh:mm:ss) hours", "Pace (mm:ss / km)"]],
-] as const)("renders the fixed %s target fields", (targetType, labels) => {
-  const { result } = renderHook(() =>
-    useForm<EditActivityFormValues>({ defaultValues }),
+function Harness({ children }: { children: ReactNode }) {
+  const form = useForm<EditActivityFormValues>({ defaultValues });
+  return (
+    <FormProvider {...form}>
+      <form onSubmit={form.handleSubmit(() => undefined)}>
+        {children}
+        <output data-testid="dirty-fields">
+          {JSON.stringify(form.formState.dirtyFields)}
+        </output>
+        <output data-testid="submitted">{String(form.formState.isSubmitted)}</output>
+        <button type="submit">Submit</button>
+      </form>
+    </FormProvider>
   );
+}
+
+test("renders every run metric and identifies the derived metric", () => {
   render(
-    <FormProvider {...result.current}>
-      <EditRunActivityFields targetType={targetType} />
-    </FormProvider>,
+    <Harness>
+      <EditRunActivityFields onPendingChange={vi.fn()} />
+    </Harness>,
   );
 
-  for (const label of labels)
-    expect(screen.getByLabelText(label)).toBeDefined();
-  expect(screen.getAllByRole("textbox")).toHaveLength(targetType === "DISTANCE_PACE" ? 2 : 4);
+  expect(screen.getByLabelText("Distance (km)")).toBeDefined();
+  expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toBeDefined();
+  expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toBeDefined();
 });
 
-test("renders field errors from the form", () => {
-  const { result } = renderHook(() =>
-    useForm<EditActivityFormValues>({
-      defaultValues,
-      errors: {
-        distanceKilometres: { type: "custom", message: "Bad distance" },
-        durationMinutes: { type: "custom", message: "Bad duration" },
-        pacePerKilometre: { type: "custom", message: "Bad pace" },
-      },
-    }),
+test("recalculates the derived metric and tracks changed fields", () => {
+  render(
+    <Harness>
+      <EditRunActivityFields onPendingChange={vi.fn()} />
+    </Harness>,
   );
-  const { rerender } = render(
-    <FormProvider {...result.current}>
-      <EditRunActivityFields targetType="DISTANCE_DURATION" />
-    </FormProvider>,
-  );
-  expect(screen.getByText("Bad distance")).toBeDefined();
-  expect(screen.getByText("Bad duration")).toBeDefined();
 
-  rerender(
-    <FormProvider {...result.current}>
-      <EditRunActivityFields targetType="DURATION_PACE" />
-    </FormProvider>,
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "10" },
+  });
+
+  expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
+    "value",
+    "3:00",
   );
+  expect(screen.getByTestId("dirty-fields").textContent).toContain(
+    '"distanceKilometres":true',
+  );
+  expect(screen.getByTestId("dirty-fields").textContent).toContain(
+    '"pacePerKilometre":true',
+  );
+});
+
+test("renders field errors from the form after submission", async () => {
+  function ErrorHarness() {
+    const form = useForm<EditActivityFormValues>({ defaultValues });
+    return (
+      <FormProvider {...form}>
+        <EditRunActivityFields onPendingChange={vi.fn()} />
+        <button
+          onClick={() => {
+            form.setError("distanceKilometres", { message: "Bad distance" });
+            form.setError("durationMinutes", { message: "Bad duration" });
+            form.setError("pacePerKilometre", { message: "Bad pace" });
+          }}
+          type="button"
+        >
+          Set errors
+        </button>
+      </FormProvider>
+    );
+  }
+  render(<ErrorHarness />);
+  fireEvent.click(screen.getByRole("button", { name: "Set errors" }));
+
+  await waitFor(() => expect(screen.getByText("Bad distance")).toBeDefined());
+  expect(screen.getByText("Bad duration")).toBeDefined();
   expect(screen.getByText("Bad pace")).toBeDefined();
+});
+
+test("revalidates run metrics after the form has been submitted", async () => {
+  render(
+    <Harness>
+      <EditRunActivityFields onPendingChange={vi.fn()} />
+    </Harness>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+  await waitFor(() =>
+    expect(screen.getByTestId("submitted").textContent).toBe("true"),
+  );
+
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "9" },
+  });
+
+  expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
+    "value",
+    "3:20",
+  );
 });

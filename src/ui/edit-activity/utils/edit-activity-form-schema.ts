@@ -24,6 +24,7 @@ const editActivityFormBaseSchema = z.object({
   title: z.string().trim().min(1, "Enter an activity title"),
   timeOfDay: z.enum(["AM", "ANY", "PM"]),
   description: z.string(),
+  derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
   distanceKilometres: z.string(),
   durationHours: z.string(),
   durationMinutes: z.string(),
