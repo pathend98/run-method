@@ -17,9 +17,7 @@ export interface TrainingSessionsTransformer {
   transform(row: TrainingSessionRow): TrainingSession;
 }
 
-export class DefaultTrainingSessionsTransformer
-  implements TrainingSessionsTransformer
-{
+export class DefaultTrainingSessionsTransformer implements TrainingSessionsTransformer {
   transform(row: TrainingSessionRow): TrainingSession {
     const timeOfDayResult = timeOfDaySchema.safeParse(row.session.timeOfDay);
     const statusResult = trainingSessionStatusSchema.safeParse(
@@ -61,11 +59,8 @@ export class DefaultTrainingSessionsTransformer
       return this.parseTrainingSession({
         ...base,
         activityType: "RUN",
-        targetType: row.runDetails.targetType,
         targetDistanceMetres: row.runDetails.targetDistanceMetres,
         targetDurationSeconds: row.runDetails.targetDurationSeconds,
-        targetPaceSecondsPerKilometre:
-          row.runDetails.targetPaceSecondsPerKilometre,
         actualDistanceMetres: row.runDetails.actualDistanceMetres,
         actualDurationSeconds: row.runDetails.actualDurationSeconds,
       });

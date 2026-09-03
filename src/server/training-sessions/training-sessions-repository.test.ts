@@ -30,10 +30,8 @@ const rows: TrainingSessionRow[] = [
     },
     runDetails: {
       trainingSessionId: "11111111-1111-4111-8111-111111111111",
-      targetType: "DISTANCE_DURATION",
       targetDistanceMetres: 8000,
       targetDurationSeconds: 2700,
-      targetPaceSecondsPerKilometre: null,
       actualDistanceMetres: null,
       actualDurationSeconds: null,
     },
@@ -75,10 +73,8 @@ const transformedRows: TrainingSession[] = [
     skipReason: null,
     createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T10:30:00.000Z",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 8000,
     targetDurationSeconds: 2700,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   },
@@ -196,10 +192,8 @@ function createRepositoryForCreation(request: CreateTrainingSessionRequest) {
   };
   const runRow = {
     trainingSessionId: session.id,
-    targetType: request.activityType === "RUN" ? request.targetType : "",
-    targetDistanceMetres: null,
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: null,
+    targetDistanceMetres: 5000,
+    targetDurationSeconds: 1500,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   };
@@ -255,31 +249,10 @@ const createRequests: CreateTrainingSessionRequest[] = [
   {
     title: "Distance duration",
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1500,
     date: "2026-08-26",
     timeOfDay: "AM",
-    description: null,
-  },
-  {
-    title: "Distance pace",
-    activityType: "RUN",
-    targetType: "DISTANCE_PACE",
-    targetDistanceMetres: 5000,
-    targetPaceSecondsPerKilometre: 300,
-    date: "2026-08-26",
-    timeOfDay: null,
-    description: "Steady",
-  },
-  {
-    title: "Duration pace",
-    activityType: "RUN",
-    targetType: "DURATION_PACE",
-    targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: 285,
-    date: "2026-08-26",
-    timeOfDay: "PM",
     description: null,
   },
   {
@@ -327,19 +300,8 @@ test.each(createRequests)(
 
     if (request.activityType === "RUN") {
       expect(insertedValues[1]).toMatchObject({
-        targetType: request.targetType,
-        targetDistanceMetres:
-          "targetDistanceMetres" in request
-            ? request.targetDistanceMetres
-            : null,
-        targetDurationSeconds:
-          "targetDurationSeconds" in request
-            ? request.targetDurationSeconds
-            : null,
-        targetPaceSecondsPerKilometre:
-          "targetPaceSecondsPerKilometre" in request
-            ? request.targetPaceSecondsPerKilometre
-            : null,
+        targetDistanceMetres: request.targetDistanceMetres,
+        targetDurationSeconds: request.targetDurationSeconds,
       });
     } else {
       expect(insertedValues[1]).toMatchObject({
@@ -364,18 +326,13 @@ function createRepositoryForEdit(
   const runRow = {
     ...rows[0].runDetails!,
     targetDistanceMetres:
-      request.activityType === "RUN" && "targetDistanceMetres" in request
+      request.activityType === "RUN"
         ? request.targetDistanceMetres
-        : null,
+        : rows[0].runDetails!.targetDistanceMetres,
     targetDurationSeconds:
-      request.activityType === "RUN" && "targetDurationSeconds" in request
+      request.activityType === "RUN"
         ? request.targetDurationSeconds
-        : null,
-    targetPaceSecondsPerKilometre:
-      request.activityType === "RUN" &&
-      "targetPaceSecondsPerKilometre" in request
-        ? request.targetPaceSecondsPerKilometre
-        : null,
+        : rows[0].runDetails!.targetDurationSeconds,
   };
   const strengthRow = {
     ...rows[1].strengthDetails!,
@@ -435,7 +392,6 @@ test("edits a scheduled run and appends time-bucket moves", async () => {
     description: "Keep it relaxed",
     timeOfDay: "PM",
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 10000,
     targetDurationSeconds: 3600,
   } satisfies EditTrainingSessionRequest;
@@ -456,7 +412,6 @@ test("edits a scheduled run and appends time-bucket moves", async () => {
   expect(updateValues[1]).toEqual({
     targetDistanceMetres: 10000,
     targetDurationSeconds: 3600,
-    targetPaceSecondsPerKilometre: null,
   });
   expect(transformer.transform).toHaveBeenCalledWith({
     session: expect.objectContaining({ sortOrder: 4 }),
@@ -522,42 +477,20 @@ test.each([3600, null])(
   },
 );
 
-test.each([
-  {
-    targetType: "DISTANCE_PACE" as const,
+test("updates canonical run target columns", async () => {
+  const targets = {
     targetDistanceMetres: 5000,
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: 300,
-    timeOfDay: "AM" as const,
-    request: {
-      targetType: "DISTANCE_PACE" as const,
-      targetDistanceMetres: 6000,
-      targetPaceSecondsPerKilometre: 285,
-    },
-    expected: {
-      targetDistanceMetres: 6000,
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 285,
-    },
-  },
-  {
-    targetType: "DURATION_PACE" as const,
-    targetDistanceMetres: null,
     targetDurationSeconds: 1800,
-    targetPaceSecondsPerKilometre: 300,
     timeOfDay: null,
     request: {
-      targetType: "DURATION_PACE" as const,
+      targetDistanceMetres: 6000,
       targetDurationSeconds: 2400,
-      targetPaceSecondsPerKilometre: 290,
     },
     expected: {
-      targetDistanceMetres: null,
+      targetDistanceMetres: 6000,
       targetDurationSeconds: 2400,
-      targetPaceSecondsPerKilometre: 290,
     },
-  },
-])("updates $targetType target columns", async (targets) => {
+  } as const;
   const current: TrainingSession = {
     ...transformedRows[0],
     ...targets,
@@ -581,10 +514,7 @@ test.each([
 });
 
 test("preserves terminal run details while editing common fields", async () => {
-  const baseRun = transformedRows[0] as Extract<
-    RunTrainingSession,
-    { targetType: "DISTANCE_DURATION" }
-  >;
+  const baseRun = transformedRows[0] as RunTrainingSession;
   const current: typeof baseRun = {
     ...baseRun,
     status: "COMPLETED",
@@ -596,7 +526,6 @@ test("preserves terminal run details while editing common fields", async () => {
     description: "Felt good",
     timeOfDay: current.timeOfDay,
     activityType: "RUN",
-    targetType: current.targetType,
     targetDistanceMetres: current.targetDistanceMetres,
     targetDurationSeconds: current.targetDurationSeconds,
   } satisfies EditTrainingSessionRequest;
@@ -612,10 +541,8 @@ test("preserves terminal run details while editing common fields", async () => {
     session: expect.any(Object),
     runDetails: {
       trainingSessionId: current.id,
-      targetType: current.targetType,
       targetDistanceMetres: current.targetDistanceMetres,
       targetDurationSeconds: current.targetDurationSeconds,
-      targetPaceSecondsPerKilometre: current.targetPaceSecondsPerKilometre,
       actualDistanceMetres: current.actualDistanceMetres,
       actualDurationSeconds: current.actualDurationSeconds,
     },

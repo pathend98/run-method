@@ -14,10 +14,8 @@ const run: Extract<TrainingSession, { activityType: "RUN" }> = {
   skipReason: null,
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:30:00.000Z",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 8000,
   targetDurationSeconds: 2700,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 };
@@ -68,11 +66,8 @@ function createRepository(returnSession = true) {
               "actualDistanceMetres" in (values as object)
                 ? {
                     trainingSessionId: run.id,
-                    targetType: run.targetType,
                     targetDistanceMetres: run.targetDistanceMetres,
                     targetDurationSeconds: run.targetDurationSeconds,
-                    targetPaceSecondsPerKilometre:
-                      run.targetPaceSecondsPerKilometre,
                     actualDistanceMetres: null,
                     actualDurationSeconds: null,
                     ...(values as object),

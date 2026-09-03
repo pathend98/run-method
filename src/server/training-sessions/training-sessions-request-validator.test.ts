@@ -48,7 +48,6 @@ test("validates a run creation request and applies optional defaults", () => {
       title: " Easy run ",
       date: "2026-08-26",
       activityType: "RUN",
-      targetType: "DISTANCE_DURATION",
       targetDistanceMetres: 1000,
       targetDurationSeconds: 240,
     }),
@@ -58,7 +57,6 @@ test("validates a run creation request and applies optional defaults", () => {
     timeOfDay: null,
     description: null,
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 1000,
     targetDurationSeconds: 240,
   });
@@ -84,7 +82,6 @@ test("reports fields from the matching activity branch", () => {
       title: "test",
       date: "2026-08-26",
       activityType: "RUN",
-      targetType: "DISTANCE_DURATION",
       targetDistanceMetres: 1000,
       targeDurationSeconds: 240,
     });
@@ -113,7 +110,10 @@ test("reports an invalid activity type without unrelated branch errors", () => {
     expect(
       (error as TrainingSessionsRequestValidationError).fieldErrors,
     ).toEqual({
-      activityType: ['Invalid input: expected "STRENGTH"'],
+      activityType: [
+        'Invalid input: expected "RUN"',
+        'Invalid input: expected "STRENGTH"',
+      ],
     });
   }
 });
@@ -132,20 +132,22 @@ test("reports primitive bodies once at the body path", () => {
   }
 });
 
-test("reports invalid run target discriminators", () => {
+test("reports missing canonical run targets", () => {
   try {
     validator.validateCreate({
       title: "Run",
       date: "2026-08-26",
       activityType: "RUN",
-      targetType: "INVALID",
     });
   } catch (error) {
     expect(
       (error as TrainingSessionsRequestValidationError).fieldErrors,
     ).toEqual({
-      targetType: [
-        "Invalid discriminator value. Expected 'DISTANCE_DURATION' | 'DISTANCE_PACE' | 'DURATION_PACE'",
+      targetDistanceMetres: [
+        "Invalid input: expected number, received undefined",
+      ],
+      targetDurationSeconds: [
+        "Invalid input: expected number, received undefined",
       ],
     });
   }
@@ -191,18 +193,16 @@ test("validates an edit request and trims editable text", () => {
       description: " Aerobic work ",
       timeOfDay: "AM",
       activityType: "RUN",
-      targetType: "DISTANCE_PACE",
       targetDistanceMetres: 5000,
-      targetPaceSecondsPerKilometre: 300,
+      targetDurationSeconds: 1500,
     }),
   ).toEqual({
     title: "Easy run",
     description: "Aerobic work",
     timeOfDay: "AM",
     activityType: "RUN",
-    targetType: "DISTANCE_PACE",
     targetDistanceMetres: 5000,
-    targetPaceSecondsPerKilometre: 300,
+    targetDurationSeconds: 1500,
   });
 });
 

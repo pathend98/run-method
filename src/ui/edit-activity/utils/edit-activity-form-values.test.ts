@@ -21,10 +21,8 @@ function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
   return {
     ...base,
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 8000,
     targetDurationSeconds: 2700,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
     ...override,
@@ -54,49 +52,24 @@ test("initializes common and run target values", () => {
   });
 });
 
-test("maps null values and formats pace", () => {
+test("maps nullable common values and derives pace", () => {
   expect(
     getEditActivityFormValues(
       run({
         timeOfDay: null,
         description: null,
-        targetType: "DURATION_PACE",
-        targetDistanceMetres: null,
-        targetPaceSecondsPerKilometre: 255,
       }),
     ),
   ).toEqual({
     title: "Tempo run",
     timeOfDay: "ANY",
     description: "",
-    derivedMetric: "distance",
-    distanceKilometres: "10.588",
+    derivedMetric: "pace",
+    distanceKilometres: "8",
     durationHours: "00",
     durationMinutes: "45",
     durationSeconds: "00",
-    pacePerKilometre: "4:15",
-  });
-  expect(
-    getEditActivityFormValues(
-      run({ targetDurationSeconds: null, targetType: "DISTANCE_PACE" }),
-  ).durationMinutes,
-  ).toBe("00");
-});
-
-test("derives duration for a distance and pace target", () => {
-  expect(
-    getEditActivityFormValues(
-      run({
-        targetType: "DISTANCE_PACE",
-        targetDurationSeconds: null,
-        targetPaceSecondsPerKilometre: 300,
-      }),
-    ),
-  ).toMatchObject({
-    derivedMetric: "duration",
-    durationHours: "00",
-    durationMinutes: "40",
-    durationSeconds: "00",
+    pacePerKilometre: "5:38",
   });
 });
 

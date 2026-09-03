@@ -28,7 +28,6 @@ const editRequest = {
   description: "Keep it relaxed",
   timeOfDay: "PM" as const,
   activityType: "RUN" as const,
-  targetType: "DISTANCE_DURATION" as const,
   targetDistanceMetres: 8000,
   targetDurationSeconds: 2700,
 };
@@ -41,7 +40,6 @@ const editedSession = {
   skipReason: null,
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-31T10:00:00.000Z",
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 };

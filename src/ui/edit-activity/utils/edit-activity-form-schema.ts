@@ -6,7 +6,6 @@ import {
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/training-sessions/duration-fields";
-import { getRunTargetMetrics } from "@/ui/training-sessions/run-target-metrics";
 
 const positiveDistanceSchema = z
   .string()
@@ -47,27 +46,19 @@ export function createEditActivityFormSchema(activity: TrainingSession) {
       return;
     }
 
-    const targetMetrics = getRunTargetMetrics(activity.targetType);
-
-    if (targetMetrics.distance) {
-      validateField(
-        context,
-        "distanceKilometres",
-        positiveDistanceSchema,
-        values.distanceKilometres,
-      );
-    }
-    if (targetMetrics.duration) {
-      validateDuration(context, values, true);
-    }
-    if (targetMetrics.pace) {
-      validateField(
-        context,
-        "pacePerKilometre",
-        paceSchema,
-        values.pacePerKilometre,
-      );
-    }
+    validateField(
+      context,
+      "distanceKilometres",
+      positiveDistanceSchema,
+      values.distanceKilometres,
+    );
+    validateDuration(context, values, true);
+    validateField(
+      context,
+      "pacePerKilometre",
+      paceSchema,
+      values.pacePerKilometre,
+    );
   });
 }
 
@@ -95,7 +86,11 @@ function validateDuration(
   const result = durationFieldsSchema.safeParse(values);
   if (!result.success) {
     for (const issue of result.error.issues) {
-      context.addIssue({ code: "custom", path: issue.path, message: issue.message });
+      context.addIssue({
+        code: "custom",
+        path: issue.path,
+        message: issue.message,
+      });
     }
   }
   if (required && durationFieldsToSeconds(values) === 0) {

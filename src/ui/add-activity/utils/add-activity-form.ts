@@ -95,7 +95,6 @@ export function toCreateTrainingSessionRequest(
   return createTrainingSessionRequestSchema.parse({
     ...base,
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: distance,
     targetDurationSeconds: duration,
   });

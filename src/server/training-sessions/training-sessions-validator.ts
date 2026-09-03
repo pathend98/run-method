@@ -58,18 +58,6 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
       );
     }
 
-    if (current.activityType === "RUN") {
-      const runRequest = request as Extract<
-        EditTrainingSessionRequest,
-        { activityType: "RUN" }
-      >;
-      if (current.targetType !== runRequest.targetType) {
-        throw new TrainingSessionsValidationError(
-          "targetType cannot be changed",
-        );
-      }
-    }
-
     if (current.status === "SCHEDULED") return;
 
     if (current.timeOfDay !== request.timeOfDay) {
@@ -147,19 +135,9 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
     current: RunTrainingSession,
     request: Extract<EditTrainingSessionRequest, { activityType: "RUN" }>,
   ): boolean {
-    const requestDistance =
-      "targetDistanceMetres" in request ? request.targetDistanceMetres : null;
-    const requestDuration =
-      "targetDurationSeconds" in request ? request.targetDurationSeconds : null;
-    const requestPace =
-      "targetPaceSecondsPerKilometre" in request
-        ? request.targetPaceSecondsPerKilometre
-        : null;
-
     return (
-      current.targetDistanceMetres === requestDistance &&
-      current.targetDurationSeconds === requestDuration &&
-      current.targetPaceSecondsPerKilometre === requestPace
+      current.targetDistanceMetres === request.targetDistanceMetres &&
+      current.targetDurationSeconds === request.targetDurationSeconds
     );
   }
 }

@@ -18,10 +18,8 @@ const runActivity = {
   skipReason: null,
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1500,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
@@ -46,7 +44,14 @@ test.each([
   ["same-day scheduled run", runActivity, true],
   ["past scheduled run", { ...runActivity, date: "2026-08-25" }, true],
   ["future scheduled strength activity", strengthActivity, false],
-  ["completed activity", { ...runActivity, status: "COMPLETED" as const }, false],
-])("allows transitions for a %s only when expected", (_description, activity, expected) => {
-  expect(canTransitionActivity(activity, now)).toBe(expected);
-});
+  [
+    "completed activity",
+    { ...runActivity, status: "COMPLETED" as const },
+    false,
+  ],
+])(
+  "allows transitions for a %s only when expected",
+  (_description, activity, expected) => {
+    expect(canTransitionActivity(activity, now)).toBe(expected);
+  },
+);

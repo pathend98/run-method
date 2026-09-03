@@ -48,10 +48,8 @@ const runActivity = {
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T11:30:00.000Z",
   activityType: "RUN",
-  targetType: "DISTANCE_PACE",
   targetDistanceMetres: 6000,
-  targetDurationSeconds: null,
-  targetPaceSecondsPerKilometre: 255,
+  targetDurationSeconds: 1530,
   actualDistanceMetres: 5900,
   actualDurationSeconds: 1500,
 } satisfies RunTrainingSession;
@@ -238,7 +236,7 @@ test("dispatches run activities to the run details component", () => {
     />,
   );
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
-  expect(within(modal).getByText("Distance + Pace")).toBeDefined();
+  expect(within(modal).queryByText("Target type")).toBeNull();
   expect(within(modal).getByText("4:15 / km")).toBeDefined();
 });
 
@@ -499,15 +497,13 @@ test("disables completion while an automatic metric edit needs a choice", () => 
   fireEvent.change(pace, { target: { value: "5:10" } });
   fireEvent.blur(pace);
 
-  expect(screen.getByRole("button", { name: "Complete activity" })).toHaveProperty(
-    "disabled",
-    true,
-  );
+  expect(
+    screen.getByRole("button", { name: "Complete activity" }),
+  ).toHaveProperty("disabled", true);
   fireEvent.click(screen.getByRole("button", { name: "Keep distance" }));
-  expect(screen.getByRole("button", { name: "Complete activity" })).toHaveProperty(
-    "disabled",
-    false,
-  );
+  expect(
+    screen.getByRole("button", { name: "Complete activity" }),
+  ).toHaveProperty("disabled", false);
 });
 
 test("disables the transition form and dismissal while submitting", async () => {

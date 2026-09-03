@@ -18,10 +18,8 @@ const runActivity = {
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
   activityType: "RUN",
-  targetType: "DISTANCE_PACE",
   targetDistanceMetres: 6000,
-  targetDurationSeconds: null,
-  targetPaceSecondsPerKilometre: 255,
+  targetDurationSeconds: 1530,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
@@ -47,11 +45,11 @@ test("renders pre-populated editable fields for a scheduled run", () => {
   expect(screen.getByLabelText("Title")).toHaveProperty("value", "Tempo run");
   expect(screen.getByLabelText("Time of day")).toHaveProperty("value", "AM");
   expect(screen.getByLabelText("Distance (km)")).toHaveProperty("value", "6");
-  expect(screen.getByLabelText("Pace (mm:ss / km)")).toHaveProperty(
+  expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
     "value",
     "4:15",
   );
-  expect(screen.getByText("Duration (hh:mm:ss) · Auto")).toBeDefined();
+  expect(screen.getByText("Duration (hh:mm:ss)")).toBeDefined();
   expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
     "value",
     "25",
@@ -84,7 +82,6 @@ test("submits an edit and closes the form", async () => {
   expect(onEdit).toHaveBeenCalledWith(
     expect.objectContaining({
       activityType: "RUN",
-      targetType: "DISTANCE_PACE",
       title: "Updated tempo",
       timeOfDay: "PM",
     }),

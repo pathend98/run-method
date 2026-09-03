@@ -116,26 +116,12 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
       let runDetailsRow: typeof runDetails.$inferSelect | null = null;
       let strengthDetailsRow: typeof strengthDetails.$inferSelect | null = null;
       if (request.activityType === "RUN") {
-        const targetDistanceMetres =
-          "targetDistanceMetres" in request
-            ? request.targetDistanceMetres
-            : null;
-        const targetDurationSeconds =
-          "targetDurationSeconds" in request
-            ? request.targetDurationSeconds
-            : null;
-        const targetPaceSecondsPerKilometre =
-          "targetPaceSecondsPerKilometre" in request
-            ? request.targetPaceSecondsPerKilometre
-            : null;
         [runDetailsRow] = await tx
           .insert(runDetails)
           .values({
             trainingSessionId: session.id,
-            targetType: request.targetType,
-            targetDistanceMetres,
-            targetDurationSeconds,
-            targetPaceSecondsPerKilometre,
+            targetDistanceMetres: request.targetDistanceMetres,
+            targetDurationSeconds: request.targetDurationSeconds,
             actualDistanceMetres: null,
             actualDurationSeconds: null,
           })
@@ -194,11 +180,8 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         current.activityType === "RUN"
           ? {
               trainingSessionId: current.id,
-              targetType: current.targetType,
               targetDistanceMetres: current.targetDistanceMetres,
               targetDurationSeconds: current.targetDurationSeconds,
-              targetPaceSecondsPerKilometre:
-                current.targetPaceSecondsPerKilometre,
               actualDistanceMetres: null,
               actualDurationSeconds: null,
             }
@@ -307,18 +290,8 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
           const [updatedRunDetails] = await tx
             .update(runDetails)
             .set({
-              targetDistanceMetres:
-                "targetDistanceMetres" in request
-                  ? request.targetDistanceMetres
-                  : null,
-              targetDurationSeconds:
-                "targetDurationSeconds" in request
-                  ? request.targetDurationSeconds
-                  : null,
-              targetPaceSecondsPerKilometre:
-                "targetPaceSecondsPerKilometre" in request
-                  ? request.targetPaceSecondsPerKilometre
-                  : null,
+              targetDistanceMetres: request.targetDistanceMetres,
+              targetDurationSeconds: request.targetDurationSeconds,
             })
             .where(eq(runDetails.trainingSessionId, current.id))
             .returning();
@@ -326,11 +299,8 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         } else {
           runDetailsRow = {
             trainingSessionId: current.id,
-            targetType: current.targetType,
             targetDistanceMetres: current.targetDistanceMetres,
             targetDurationSeconds: current.targetDurationSeconds,
-            targetPaceSecondsPerKilometre:
-              current.targetPaceSecondsPerKilometre,
             actualDistanceMetres: current.actualDistanceMetres,
             actualDurationSeconds: current.actualDurationSeconds,
           };

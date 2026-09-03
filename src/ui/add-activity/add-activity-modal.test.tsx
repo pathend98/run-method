@@ -61,7 +61,6 @@ test("submits a converted activity for its selected day and closes", async () =>
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         date: day.date,
-        targetType: "DISTANCE_DURATION",
         targetDistanceMetres: 8000,
         targetDurationSeconds: 2700,
       }),

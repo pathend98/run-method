@@ -20,10 +20,8 @@ const base = {
 const run = {
   ...base,
   activityType: "RUN",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1800,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
@@ -37,22 +35,6 @@ const strength = {
 
 test("formats the available locked run targets", () => {
   expect(formatLockedTargets(run)).toBe("6.0 km · 00:30:00");
-  expect(
-    formatLockedTargets({
-      ...run,
-      targetType: "DISTANCE_PACE",
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 255,
-    }),
-  ).toBe("6.0 km · 4:15 / km");
-  expect(
-    formatLockedTargets({
-      ...run,
-      targetType: "DURATION_PACE",
-      targetDistanceMetres: null,
-      targetPaceSecondsPerKilometre: 255,
-    }),
-  ).toBe("00:30:00 · 4:15 / km");
 });
 
 test("formats strength duration with a missing-target fallback", () => {

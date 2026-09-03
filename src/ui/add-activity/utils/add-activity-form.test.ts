@@ -21,7 +21,6 @@ test("converts friendly run values into the create request", () => {
   ).toEqual({
     title: "Tempo run",
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     date: "2026-08-17",
     timeOfDay: "AM",
     description: "Controlled",
@@ -60,7 +59,6 @@ test("always converts runs to distance and duration without pace", () => {
   ).toEqual({
     title: "Intervals",
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     date: "2026-08-17",
     timeOfDay: "PM",
     description: null,

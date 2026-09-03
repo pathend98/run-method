@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { TrainingPlannerView } from "./training-planner-view";
-import type { TrainingActivity, TrainingDay } from "../types/training-planner-types";
+import type {
+  TrainingActivity,
+  TrainingDay,
+} from "../types/training-planner-types";
 
 const activity = {
   id: "activity",
@@ -15,10 +18,8 @@ const activity = {
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
   activityType: "RUN",
-  targetType: "DISTANCE_DURATION",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
-  targetPaceSecondsPerKilometre: null,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
   day: "Monday",
@@ -34,10 +35,24 @@ const week: TrainingDay[] = [
   { day: "Sunday", date: "2026-08-23", activities: [] },
 ];
 
-function renderView(overrides: Partial<React.ComponentProps<typeof TrainingPlannerView>> = {}) {
+function renderView(
+  overrides: Partial<React.ComponentProps<typeof TrainingPlannerView>> = {},
+) {
   const onAddActivity = vi.fn();
   const onSelectActivity = vi.fn();
-  render(<TrainingPlannerView isCurrentWeek onAddActivity={onAddActivity} onCurrentWeek={vi.fn()} onNextWeek={vi.fn()} onPreviousWeek={vi.fn()} onSelectActivity={onSelectActivity} week={week} weekRange={{ from: "2026-08-17", to: "2026-08-23" }} {...overrides} />);
+  render(
+    <TrainingPlannerView
+      isCurrentWeek
+      onAddActivity={onAddActivity}
+      onCurrentWeek={vi.fn()}
+      onNextWeek={vi.fn()}
+      onPreviousWeek={vi.fn()}
+      onSelectActivity={onSelectActivity}
+      week={week}
+      weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
+      {...overrides}
+    />,
+  );
   return { onAddActivity, onSelectActivity };
 }
 
@@ -50,7 +65,9 @@ test("renders the weekly grid without modal UI", () => {
 
 test("forwards activity and add selections through its private grid", () => {
   const { onAddActivity, onSelectActivity } = renderView();
-  fireEvent.click(screen.getByRole("button", { name: "View Tempo run details" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Tempo run details" }),
+  );
   fireEvent.click(screen.getAllByRole("button", { name: "Add activity" })[0]);
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
   expect(onAddActivity).toHaveBeenCalledWith(week[0]);

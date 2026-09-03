@@ -182,19 +182,9 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     current: RunTrainingSession,
     request: Extract<EditTrainingSessionRequest, { activityType: "RUN" }>,
   ) {
-    const requestDistance =
-      "targetDistanceMetres" in request ? request.targetDistanceMetres : null;
-    const requestDuration =
-      "targetDurationSeconds" in request ? request.targetDurationSeconds : null;
-    const requestPace =
-      "targetPaceSecondsPerKilometre" in request
-        ? request.targetPaceSecondsPerKilometre
-        : null;
-
     return (
-      current.targetDistanceMetres === requestDistance &&
-      current.targetDurationSeconds === requestDuration &&
-      current.targetPaceSecondsPerKilometre === requestPace
+      current.targetDistanceMetres === request.targetDistanceMetres &&
+      current.targetDurationSeconds === request.targetDurationSeconds
     );
   }
 }

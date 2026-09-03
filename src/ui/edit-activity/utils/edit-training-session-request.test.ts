@@ -22,10 +22,8 @@ function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
   return {
     ...base,
     activityType: "RUN",
-    targetType: "DISTANCE_DURATION",
     targetDistanceMetres: 8000,
     targetDurationSeconds: 2700,
-    targetPaceSecondsPerKilometre: null,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
     ...override,
@@ -44,57 +42,29 @@ function strength(
   };
 }
 
-test.each([
-  [
-    "DISTANCE_DURATION",
-    run(),
-    { distanceKilometres: "10.125", durationMinutes: "50" },
-    { targetDistanceMetres: 10125, targetDurationSeconds: 3000 },
-  ],
-  [
-    "DISTANCE_PACE",
-    run({
-      targetType: "DISTANCE_PACE",
-      targetDurationSeconds: null,
-      targetPaceSecondsPerKilometre: 300,
-    }),
-    { distanceKilometres: "5", pacePerKilometre: "4:20" },
-    { targetDistanceMetres: 5000, targetPaceSecondsPerKilometre: 260 },
-  ],
-  [
-    "DURATION_PACE",
-    run({
-      targetType: "DURATION_PACE",
-      targetDistanceMetres: null,
-      targetPaceSecondsPerKilometre: 300,
-    }),
-    { durationHours: "01", durationMinutes: "00", pacePerKilometre: "5:10" },
-    { targetDurationSeconds: 3600, targetPaceSecondsPerKilometre: 310 },
-  ],
-] as const)(
-  "converts scheduled %s run edits",
-  (_name, activity, fields, expected) => {
-    const request = toEditTrainingSessionRequest(
-      {
-        ...getEditActivityFormValues(activity),
-        title: " Updated run ",
-        description: " ",
-        timeOfDay: "ANY",
-        ...fields,
-      },
-      activity,
-    );
+test("converts scheduled run edits to canonical targets", () => {
+  const activity = run();
+  const request = toEditTrainingSessionRequest(
+    {
+      ...getEditActivityFormValues(activity),
+      title: " Updated run ",
+      description: " ",
+      timeOfDay: "ANY",
+      distanceKilometres: "10.125",
+      durationMinutes: "50",
+    },
+    activity,
+  );
 
-    expect(request).toMatchObject({
-      title: "Updated run",
-      description: null,
-      timeOfDay: null,
-      activityType: "RUN",
-      targetType: activity.targetType,
-      ...expected,
-    });
-  },
-);
+  expect(request).toEqual({
+    title: "Updated run",
+    description: null,
+    timeOfDay: null,
+    activityType: "RUN",
+    targetDistanceMetres: 10125,
+    targetDurationSeconds: 3000,
+  });
+});
 
 test.each([
   [{ durationHours: "01", durationMinutes: "00", durationSeconds: "00" }, 3600],
@@ -147,15 +117,6 @@ test.each([
   run({
     status: "SKIPPED",
     skipReason: "Tired",
-    targetType: "DISTANCE_PACE",
-    targetDurationSeconds: null,
-    targetPaceSecondsPerKilometre: 300,
-  }),
-  run({
-    status: "COMPLETED",
-    targetType: "DURATION_PACE",
-    targetDistanceMetres: null,
-    targetPaceSecondsPerKilometre: 300,
   }),
 ])("preserves locked terminal run values", (activity) => {
   const request = toEditTrainingSessionRequest(
@@ -172,6 +133,7 @@ test.each([
 
   expect(request.timeOfDay).toBe(activity.timeOfDay);
   if (request.activityType === "RUN") {
-    expect(request.targetType).toBe(activity.targetType);
+    expect(request.targetDistanceMetres).toBe(activity.targetDistanceMetres);
+    expect(request.targetDurationSeconds).toBe(activity.targetDurationSeconds);
   }
 });

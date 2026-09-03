@@ -37,35 +37,13 @@ export const baseTrainingSessionSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
-export const runTrainingSessionSchema = z.discriminatedUnion("targetType", [
-  baseTrainingSessionSchema
-    .extend({
-      activityType: z.literal("RUN"),
-      targetType: z.literal("DISTANCE_DURATION"),
-      targetDistanceMetres: positiveIntegerSchema,
-      targetDurationSeconds: positiveIntegerSchema,
-      targetPaceSecondsPerKilometre: z.null(),
-    })
-    .extend(runActualsSchema.shape),
-  baseTrainingSessionSchema
-    .extend({
-      activityType: z.literal("RUN"),
-      targetType: z.literal("DISTANCE_PACE"),
-      targetDistanceMetres: positiveIntegerSchema,
-      targetDurationSeconds: z.null(),
-      targetPaceSecondsPerKilometre: positiveIntegerSchema,
-    })
-    .extend(runActualsSchema.shape),
-  baseTrainingSessionSchema
-    .extend({
-      activityType: z.literal("RUN"),
-      targetType: z.literal("DURATION_PACE"),
-      targetDistanceMetres: z.null(),
-      targetDurationSeconds: positiveIntegerSchema,
-      targetPaceSecondsPerKilometre: positiveIntegerSchema,
-    })
-    .extend(runActualsSchema.shape),
-]);
+export const runTrainingSessionSchema = baseTrainingSessionSchema
+  .extend({
+    activityType: z.literal("RUN"),
+    targetDistanceMetres: positiveIntegerSchema,
+    targetDurationSeconds: positiveIntegerSchema,
+  })
+  .extend(runActualsSchema.shape);
 
 export const strengthTrainingSessionSchema = baseTrainingSessionSchema.extend({
   activityType: z.literal("STRENGTH"),
@@ -146,26 +124,11 @@ const createBaseSchema = z
   })
   .strict();
 
-const createRunSchema = z.discriminatedUnion("targetType", [
-  createBaseSchema.extend({
-    activityType: z.literal("RUN"),
-    targetType: z.literal("DISTANCE_DURATION"),
-    targetDistanceMetres: positiveIntegerSchema,
-    targetDurationSeconds: positiveIntegerSchema,
-  }),
-  createBaseSchema.extend({
-    activityType: z.literal("RUN"),
-    targetType: z.literal("DISTANCE_PACE"),
-    targetDistanceMetres: positiveIntegerSchema,
-    targetPaceSecondsPerKilometre: positiveIntegerSchema,
-  }),
-  createBaseSchema.extend({
-    activityType: z.literal("RUN"),
-    targetType: z.literal("DURATION_PACE"),
-    targetDurationSeconds: positiveIntegerSchema,
-    targetPaceSecondsPerKilometre: positiveIntegerSchema,
-  }),
-]);
+const createRunSchema = createBaseSchema.extend({
+  activityType: z.literal("RUN"),
+  targetDistanceMetres: positiveIntegerSchema,
+  targetDurationSeconds: positiveIntegerSchema,
+});
 
 export const createTrainingSessionRequestSchema = z.union([
   createRunSchema,
@@ -186,26 +149,11 @@ const editBaseSchema = z
   })
   .strict();
 
-const editRunSchema = z.discriminatedUnion("targetType", [
-  editBaseSchema.extend({
-    activityType: z.literal("RUN"),
-    targetType: z.literal("DISTANCE_DURATION"),
-    targetDistanceMetres: positiveIntegerSchema,
-    targetDurationSeconds: positiveIntegerSchema,
-  }),
-  editBaseSchema.extend({
-    activityType: z.literal("RUN"),
-    targetType: z.literal("DISTANCE_PACE"),
-    targetDistanceMetres: positiveIntegerSchema,
-    targetPaceSecondsPerKilometre: positiveIntegerSchema,
-  }),
-  editBaseSchema.extend({
-    activityType: z.literal("RUN"),
-    targetType: z.literal("DURATION_PACE"),
-    targetDurationSeconds: positiveIntegerSchema,
-    targetPaceSecondsPerKilometre: positiveIntegerSchema,
-  }),
-]);
+const editRunSchema = editBaseSchema.extend({
+  activityType: z.literal("RUN"),
+  targetDistanceMetres: positiveIntegerSchema,
+  targetDurationSeconds: positiveIntegerSchema,
+});
 
 export const editTrainingSessionRequestSchema = z.union([
   editRunSchema,

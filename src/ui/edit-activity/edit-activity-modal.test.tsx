@@ -30,10 +30,8 @@ const activity = {
   createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:00:00.000Z",
   activityType: "RUN",
-  targetType: "DISTANCE_PACE",
   targetDistanceMetres: 6000,
-  targetDurationSeconds: null,
-  targetPaceSecondsPerKilometre: 255,
+  targetDurationSeconds: 1530,
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 } satisfies RunTrainingSession;
@@ -124,10 +122,10 @@ test("disables saving while an automatic metric edit needs a choice", () => {
   const dialog = screen.getByRole("dialog", { name: "Edit activity" });
   expect(dialog.classList).toContain("max-w-4xl");
 
-  const durationMinutes = screen.getByLabelText("Duration (minutes)");
-  fireEvent.focus(durationMinutes);
-  fireEvent.change(durationMinutes, { target: { value: "30" } });
-  fireEvent.blur(durationMinutes);
+  const pace = screen.getByLabelText("Pace (mm:ss / km) · Auto");
+  fireEvent.focus(pace);
+  fireEvent.change(pace, { target: { value: "4:10" } });
+  fireEvent.blur(pace);
 
   expect(screen.getByRole("button", { name: "Save changes" })).toHaveProperty(
     "disabled",
