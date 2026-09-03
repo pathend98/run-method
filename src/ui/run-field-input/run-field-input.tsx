@@ -20,6 +20,7 @@ export type RunFieldInputErrors = Partial<
 >;
 
 type RunFieldInputProps = {
+  disabled?: boolean;
   errors?: RunFieldInputErrors;
   onChange: (value: RunFieldInputValue) => void;
   onPendingChange?: (pending: boolean) => void;
@@ -31,6 +32,7 @@ const metricOrder: RunFieldMetric[] = ["distance", "duration", "pace"];
 function doNothing() {}
 
 export function RunFieldInput({
+  disabled = false,
   errors = {},
   onChange,
   onPendingChange = doNothing,
@@ -142,6 +144,7 @@ export function RunFieldInput({
           )}
         >
           <input
+            disabled={disabled}
             inputMode="decimal"
             onBlur={() => finishAutoEdit("distance")}
             onChange={(event) =>
@@ -170,6 +173,7 @@ export function RunFieldInput({
           >
             <input
               aria-label="Duration (hh:mm:ss) hours"
+              disabled={disabled}
               inputMode="numeric"
               onChange={(event) => {
                 setDurationEdited(true);
@@ -184,6 +188,7 @@ export function RunFieldInput({
             <span aria-hidden="true">:</span>
             <input
               aria-label="Duration (minutes)"
+              disabled={disabled}
               inputMode="numeric"
               maxLength={2}
               onChange={(event) => {
@@ -199,6 +204,7 @@ export function RunFieldInput({
             <span aria-hidden="true">:</span>
             <input
               aria-label="Duration (hh:mm:ss) seconds"
+              disabled={disabled}
               inputMode="numeric"
               maxLength={2}
               onChange={(event) => {
@@ -222,6 +228,7 @@ export function RunFieldInput({
           )}
         >
           <input
+            disabled={disabled}
             onBlur={() => finishAutoEdit("pace")}
             onChange={(event) =>
               changeMetric("pace", {
@@ -249,6 +256,7 @@ export function RunFieldInput({
             {authoritativeMetrics.map((metric) => (
               <button
                 className="rounded-md border border-teal-700 bg-white px-3 py-1.5 text-sm font-medium text-teal-800 hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+                disabled={disabled}
                 key={metric}
                 onClick={() => keepMetric(metric)}
                 type="button"

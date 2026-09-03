@@ -148,8 +148,8 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   await screen.findByRole("button", { name: "View Easy run details" });
   fireEvent.click(screen.getByRole("button", { name: "View Easy run details" }));
   fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
-  fireEvent.change(screen.getByLabelText("Actual duration (minutes)"), { target: { value: "30" } });
-  fireEvent.change(screen.getByLabelText("Actual distance (km)"), { target: { value: "5" } });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), { target: { value: "30" } });
+  fireEvent.change(screen.getByLabelText("Distance (km)"), { target: { value: "5" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
   await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining("/complete"), expect.any(Object)));
 });

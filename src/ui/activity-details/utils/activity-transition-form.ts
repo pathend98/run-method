@@ -21,7 +21,9 @@ export const skipActivityFormSchema = z.object({
 
 export const completeActivityFormSchema = z.object({
   ...durationFieldsSchema.shape,
+  derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
   distanceKilometres: z.string(),
+  pacePerKilometre: z.string(),
 }).superRefine((values, context) => {
   if (durationFieldsToSeconds(values) === 0) {
     context.addIssue({
@@ -66,7 +68,9 @@ export function createActivityTransitionFormSchema(
     .object({
       skipReason: z.string(),
       ...durationFieldsSchema.shape,
+      derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
       distanceKilometres: z.string(),
+      pacePerKilometre: z.string(),
     })
     .superRefine((values, context) => {
       const result = transitionSchema.safeParse(values);

@@ -457,10 +457,10 @@ test("collects run actuals, handles errors, and can cancel completion", async ()
     await screen.findByText("Duration must be greater than zero"),
   ).toBeDefined();
   expect(screen.getByText("Enter a distance in kilometres")).toBeDefined();
-  fireEvent.change(screen.getByLabelText("Actual duration (minutes)"), {
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "42" },
   });
-  fireEvent.change(screen.getByLabelText("Actual distance (km)"), {
+  fireEvent.change(screen.getByPlaceholderText("8"), {
     target: { value: "6.2" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
@@ -474,7 +474,40 @@ test("collects run actuals, handles errors, and can cancel completion", async ()
     "Unable to complete activity",
   );
   fireEvent.click(screen.getAllByRole("button", { name: "Cancel" })[1]);
-  expect(screen.queryByLabelText("Actual duration (minutes)")).toBeNull();
+  expect(screen.queryByLabelText("Duration (minutes)")).toBeNull();
+});
+
+test("disables completion while an automatic metric edit needs a choice", () => {
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting={false}
+      onClose={vi.fn()}
+      onDelete={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "6" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "30" },
+  });
+  const pace = screen.getByLabelText("Pace (mm:ss / km) · Auto");
+  fireEvent.focus(pace);
+  fireEvent.change(pace, { target: { value: "5:10" } });
+  fireEvent.blur(pace);
+
+  expect(screen.getByRole("button", { name: "Complete activity" })).toHaveProperty(
+    "disabled",
+    true,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Keep distance" }));
+  expect(screen.getByRole("button", { name: "Complete activity" })).toHaveProperty(
+    "disabled",
+    false,
+  );
 });
 
 test("disables the transition form and dismissal while submitting", async () => {

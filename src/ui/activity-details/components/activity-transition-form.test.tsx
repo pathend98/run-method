@@ -64,8 +64,9 @@ test("renders the fields required for each transition", () => {
     />,
   );
 
-  expect(screen.getByLabelText("Actual duration (minutes)")).toBeDefined();
-  expect(screen.getByLabelText("Actual distance (km)")).toBeDefined();
+  expect(screen.getByLabelText("Duration (minutes)")).toBeDefined();
+  expect(screen.getByLabelText("Distance (km)")).toBeDefined();
+  expect(screen.getByLabelText("Pace (mm:ss / km)")).toBeDefined();
 
   rerender(
     <ActivityTransitionForm
@@ -76,7 +77,7 @@ test("renders the fields required for each transition", () => {
       onSkip={vi.fn()}
     />,
   );
-  expect(screen.queryByLabelText("Actual distance (km)")).toBeNull();
+  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
 
   rerender(
     <ActivityTransitionForm
@@ -93,7 +94,7 @@ test("renders the fields required for each transition", () => {
 test("shows validation errors without submitting", async () => {
   const { onComplete } = renderForm();
   fireEvent.submit(
-    screen.getByLabelText("Actual duration (minutes)").closest("form")!,
+    screen.getByLabelText("Duration (minutes)").closest("form")!,
   );
 
   expect(await screen.findByText("Duration must be greater than zero")).toBeDefined();
@@ -115,14 +116,18 @@ test("submits a converted skip request", async () => {
 
 test("submits converted run and strength completion requests", async () => {
   const run = renderForm();
-  fireEvent.change(screen.getByLabelText("Actual duration (minutes)"), {
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "42" },
   });
-  fireEvent.change(screen.getByLabelText("Actual distance (km)"), {
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "6.2" },
   });
+  expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
+    "value",
+    "6:46",
+  );
   fireEvent.submit(
-    screen.getByLabelText("Actual duration (minutes)").closest("form")!,
+    screen.getByLabelText("Duration (minutes)").closest("form")!,
   );
   await waitFor(() =>
     expect(run.onComplete).toHaveBeenCalledWith({
@@ -149,14 +154,14 @@ test("reports a rejected submission", async () => {
   const { onComplete } = renderForm({
     onComplete: vi.fn().mockRejectedValue(new Error("nope")),
   });
-  fireEvent.change(screen.getByLabelText("Actual duration (minutes)"), {
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "30" },
   });
-  fireEvent.change(screen.getByLabelText("Actual distance (km)"), {
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "5" },
   });
   fireEvent.submit(
-    screen.getByLabelText("Actual duration (minutes)").closest("form")!,
+    screen.getByLabelText("Duration (minutes)").closest("form")!,
   );
 
   expect((await screen.findByRole("alert")).textContent).toContain(
@@ -168,11 +173,15 @@ test("reports a rejected submission", async () => {
 test("disables transition inputs while submitting", () => {
   renderForm({ isSubmitting: true });
 
-  expect(screen.getByLabelText("Actual duration (minutes)")).toHaveProperty(
+  expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
     "disabled",
     true,
   );
-  expect(screen.getByLabelText("Actual distance (km)")).toHaveProperty(
+  expect(screen.getByLabelText("Distance (km)")).toHaveProperty(
+    "disabled",
+    true,
+  );
+  expect(screen.getByLabelText("Pace (mm:ss / km)")).toHaveProperty(
     "disabled",
     true,
   );
