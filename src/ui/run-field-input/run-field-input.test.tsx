@@ -33,6 +33,30 @@ test("shows all metrics and derives pace from the first two valid values", () =>
   const metricGrid = screen.getByLabelText("Distance (km)").closest("div.grid");
   expect(metricGrid?.classList).toContain("md:grid-cols-3");
   expect(metricGrid?.classList).not.toContain("sm:grid-cols-3");
+  expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toHaveProperty(
+    "value",
+    "",
+  );
+  expect(screen.getByLabelText("Duration (hh:mm:ss) hours")).toHaveProperty(
+    "placeholder",
+    "hh",
+  );
+  expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
+    "value",
+    "",
+  );
+  expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
+    "placeholder",
+    "mm",
+  );
+  expect(screen.getByLabelText("Duration (hh:mm:ss) seconds")).toHaveProperty(
+    "value",
+    "",
+  );
+  expect(screen.getByLabelText("Duration (hh:mm:ss) seconds")).toHaveProperty(
+    "placeholder",
+    "ss",
+  );
 
   fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "8" },

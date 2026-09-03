@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import {
@@ -14,8 +13,9 @@ type RunActivityFieldsProps = {
 export function RunActivityFields({ onPendingChange }: RunActivityFieldsProps) {
   const {
     control,
-    formState: { errors },
+    formState: { errors, isSubmitted },
     setValue,
+    trigger,
   } = useFormContext<AddActivityFormValues>();
   const fields = useWatch({
     control,
@@ -37,35 +37,36 @@ export function RunActivityFields({ onPendingChange }: RunActivityFieldsProps) {
     derivedMetric: fields[5],
   };
 
-  const changeValue = useCallback(
-    (next: RunFieldInputValue) => {
-      setValue("distanceKilometres", next.distanceKilometres, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setValue("durationHours", next.durationHours, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setValue("durationMinutes", next.durationMinutes, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setValue("durationSeconds", next.durationSeconds, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setValue("pacePerKilometre", next.pacePerKilometre, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      setValue("derivedMetric", next.derivedMetric, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    },
-    [setValue],
-  );
+  function changeValue(next: RunFieldInputValue) {
+    setValue("distanceKilometres", next.distanceKilometres, {
+      shouldDirty: next.distanceKilometres !== value.distanceKilometres,
+    });
+    setValue("durationHours", next.durationHours, {
+      shouldDirty: next.durationHours !== value.durationHours,
+    });
+    setValue("durationMinutes", next.durationMinutes, {
+      shouldDirty: next.durationMinutes !== value.durationMinutes,
+    });
+    setValue("durationSeconds", next.durationSeconds, {
+      shouldDirty: next.durationSeconds !== value.durationSeconds,
+    });
+    setValue("pacePerKilometre", next.pacePerKilometre, {
+      shouldDirty: next.pacePerKilometre !== value.pacePerKilometre,
+    });
+    setValue("derivedMetric", next.derivedMetric, {
+      shouldDirty: next.derivedMetric !== value.derivedMetric,
+    });
+    if (isSubmitted) {
+      void trigger([
+        "distanceKilometres",
+        "durationHours",
+        "durationMinutes",
+        "durationSeconds",
+        "pacePerKilometre",
+        "derivedMetric",
+      ]);
+    }
+  }
 
   return (
     <RunFieldInput

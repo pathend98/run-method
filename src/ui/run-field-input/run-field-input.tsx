@@ -41,6 +41,9 @@ export function RunFieldInput({
   const [pendingMetric, setPendingMetric] = useState<RunFieldMetric | null>(
     null,
   );
+  const [durationEdited, setDurationEdited] = useState(
+    () => !isZeroDuration(value),
+  );
   const autoValueOnFocus = useRef<RunFieldInputValue | null>(null);
 
   useEffect(
@@ -125,6 +128,7 @@ export function RunFieldInput({
   const authoritativeMetrics = value.derivedMetric
     ? metricOrder.filter((metric) => metric !== value.derivedMetric)
     : [];
+  const showDurationValue = durationEdited || !isZeroDuration(value);
 
   return (
     <div className="space-y-4">
@@ -166,42 +170,45 @@ export function RunFieldInput({
             <input
               aria-label="Duration (hh:mm:ss) hours"
               inputMode="numeric"
-              onChange={(event) =>
+              onChange={(event) => {
+                setDurationEdited(true);
                 changeMetric("duration", {
                   ...value,
                   durationHours: event.target.value,
-                })
-              }
+                });
+              }}
               placeholder="hh"
-              value={value.durationHours}
+              value={showDurationValue ? value.durationHours : ""}
             />
             <span aria-hidden="true">:</span>
             <input
               aria-label="Duration (minutes)"
               inputMode="numeric"
               maxLength={2}
-              onChange={(event) =>
+              onChange={(event) => {
+                setDurationEdited(true);
                 changeMetric("duration", {
                   ...value,
                   durationMinutes: event.target.value,
-                })
-              }
+                });
+              }}
               placeholder="mm"
-              value={value.durationMinutes}
+              value={showDurationValue ? value.durationMinutes : ""}
             />
             <span aria-hidden="true">:</span>
             <input
               aria-label="Duration (hh:mm:ss) seconds"
               inputMode="numeric"
               maxLength={2}
-              onChange={(event) =>
+              onChange={(event) => {
+                setDurationEdited(true);
                 changeMetric("duration", {
                   ...value,
                   durationSeconds: event.target.value,
-                })
-              }
+                });
+              }}
               placeholder="ss"
-              value={value.durationSeconds}
+              value={showDurationValue ? value.durationSeconds : ""}
             />
           </span>
         </FormField>
@@ -263,6 +270,14 @@ export function RunFieldInput({
 
 function fieldLabel(label: string, auto: boolean) {
   return auto ? `${label} · Auto` : label;
+}
+
+function isZeroDuration(value: RunFieldInputValue) {
+  return (
+    value.durationHours === "00" &&
+    value.durationMinutes === "00" &&
+    value.durationSeconds === "00"
+  );
 }
 
 function metricHasSameValue(

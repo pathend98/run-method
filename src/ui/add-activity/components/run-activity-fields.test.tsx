@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -20,6 +20,9 @@ function RunActivityFieldsHarness({ children }: { children: ReactNode }) {
     <FormProvider {...form}>
       <form noValidate onSubmit={form.handleSubmit(() => undefined)}>
         {children}
+        <output data-testid="dirty-fields">
+          {JSON.stringify(form.formState.dirtyFields)}
+        </output>
         <button type="submit">Submit</button>
       </form>
     </FormProvider>
@@ -53,4 +56,46 @@ test("renders validation errors for the selected run target", async () => {
   ).toBeDefined();
   expect(screen.getByText("Duration must be greater than zero")).toBeDefined();
   expect(screen.getByText("Enter pace as mm:ss")).toBeDefined();
+});
+
+test("does not validate untouched metrics when distance is entered", () => {
+  render(
+    <RunActivityFieldsHarness>
+      <RunActivityFields onPendingChange={vi.fn()} />
+    </RunActivityFieldsHarness>,
+  );
+
+  fireEvent.change(screen.getByPlaceholderText("8"), {
+    target: { value: "8" },
+  });
+
+  expect(screen.queryByText("Duration must be greater than zero")).toBeNull();
+  expect(screen.queryByText("Enter pace as mm:ss")).toBeNull();
+  expect(screen.getByTestId("dirty-fields").textContent).toBe(
+    JSON.stringify({ distanceKilometres: true }),
+  );
+});
+
+test("revalidates run metrics after the first submission", async () => {
+  render(
+    <RunActivityFieldsHarness>
+      <RunActivityFields onPendingChange={vi.fn()} />
+    </RunActivityFieldsHarness>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+  expect(
+    await screen.findByText("Duration must be greater than zero"),
+  ).toBeDefined();
+
+  fireEvent.change(screen.getByPlaceholderText("8"), {
+    target: { value: "8" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "45" },
+  });
+
+  await waitFor(() => {
+    expect(screen.queryByText("Duration must be greater than zero")).toBeNull();
+    expect(screen.queryByText("Enter pace as mm:ss")).toBeNull();
+  });
 });
