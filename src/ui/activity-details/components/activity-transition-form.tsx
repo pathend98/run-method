@@ -7,7 +7,7 @@ import type {
   TrainingSession,
 } from "@/domain/training-sessions";
 import { defaultDurationFields } from "@/ui/training-sessions/duration-fields";
-import { DurationInput } from "@/ui/components/duration-input";
+import { DurationFormInput } from "@/ui/components/duration-form-input";
 import { FormField } from "@/ui/components/form-field";
 import { RunFieldFormInput } from "@/ui/run-field-input/run-field-form-input";
 import {
@@ -104,19 +104,10 @@ export function ActivityTransitionForm({
           </fieldset>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
-            <DurationInput
+            <DurationFormInput
               autoFocus
               disabled={isSubmitting}
-              error={
-                errors.durationHours?.message ??
-                errors.durationMinutes?.message ??
-                errors.durationSeconds?.message
-              }
-              hoursName="durationHours"
               label="Actual duration (hh:mm:ss)"
-              minutesName="durationMinutes"
-              register={register}
-              secondsName="durationSeconds"
             />
           </div>
         )}

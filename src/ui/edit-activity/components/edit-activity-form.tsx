@@ -5,7 +5,7 @@ import type {
   EditTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
-import { DurationInput } from "@/ui/components/duration-input";
+import { DurationFormInput } from "@/ui/components/duration-form-input";
 import { FormField } from "@/ui/components/form-field";
 import {
   createEditActivityFormSchema,
@@ -87,7 +87,7 @@ export function EditActivityForm({
           />
         ) : null}
         {isScheduled && activity.activityType === "STRENGTH" ? (
-          <DurationInput error={errors.durationHours?.message ?? errors.durationMinutes?.message ?? errors.durationSeconds?.message} hoursName="durationHours" label="Duration (hh:mm:ss, optional)" minutesName="durationMinutes" register={register} secondsName="durationSeconds" />
+          <DurationFormInput label="Duration (hh:mm:ss, optional)" />
         ) : null}
         <FormField label="Description (optional)">
           <textarea className="min-h-24" {...register("description")} />

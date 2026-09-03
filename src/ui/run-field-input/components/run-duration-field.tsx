@@ -1,7 +1,9 @@
 import { useState, type FocusEvent } from "react";
 
-import { FormField } from "@/ui/components/form-field";
-import styles from "../run-field-input.module.css";
+import {
+  DurationInput,
+  type DurationInputValue,
+} from "@/ui/components/duration-input";
 import type { RunFieldInputValue } from "../utils/run-field-calculations";
 
 type RunDurationFieldProps = {
@@ -27,11 +29,15 @@ export function RunDurationField({
   const showValue = edited || !isZeroDuration(value);
 
   function changeDuration(
-    field: "durationHours" | "durationMinutes" | "durationSeconds",
-    next: string,
+    next: DurationInputValue,
   ) {
     setEdited(true);
-    onChange({ ...value, [field]: next });
+    onChange({
+      ...value,
+      durationHours: next.hours,
+      durationMinutes: next.minutes,
+      durationSeconds: next.seconds,
+    });
   }
 
   function finishEdit(event: FocusEvent<HTMLSpanElement>) {
@@ -41,51 +47,25 @@ export function RunDurationField({
   }
 
   return (
-    <FormField
+    <DurationInput
+      disabled={disabled}
+      displayValue={{
+        hours: showValue ? value.durationHours : "",
+        minutes: showValue ? value.durationMinutes : "",
+        seconds: showValue ? value.durationSeconds : "",
+      }}
       error={error}
+      inputLabel="Duration (hh:mm:ss)"
       label={auto ? "Duration (hh:mm:ss) · Auto" : "Duration (hh:mm:ss)"}
-    >
-      <span
-        className={styles.durationInputs}
-        onBlur={finishEdit}
-        onFocus={onAutoEditStart}
-      >
-        <input
-          aria-label="Duration (hh:mm:ss) hours"
-          disabled={disabled}
-          inputMode="numeric"
-          onChange={(event) =>
-            changeDuration("durationHours", event.target.value)
-          }
-          placeholder="hh"
-          value={showValue ? value.durationHours : ""}
-        />
-        <span aria-hidden="true">:</span>
-        <input
-          aria-label="Duration (minutes)"
-          disabled={disabled}
-          inputMode="numeric"
-          maxLength={2}
-          onChange={(event) =>
-            changeDuration("durationMinutes", event.target.value)
-          }
-          placeholder="mm"
-          value={showValue ? value.durationMinutes : ""}
-        />
-        <span aria-hidden="true">:</span>
-        <input
-          aria-label="Duration (hh:mm:ss) seconds"
-          disabled={disabled}
-          inputMode="numeric"
-          maxLength={2}
-          onChange={(event) =>
-            changeDuration("durationSeconds", event.target.value)
-          }
-          placeholder="ss"
-          value={showValue ? value.durationSeconds : ""}
-        />
-      </span>
-    </FormField>
+      onBlur={finishEdit}
+      onChange={changeDuration}
+      onFocus={onAutoEditStart}
+      value={{
+        hours: value.durationHours,
+        minutes: value.durationMinutes,
+        seconds: value.durationSeconds,
+      }}
+    />
   );
 }
 

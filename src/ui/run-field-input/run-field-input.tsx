@@ -2,7 +2,6 @@ import { FormField } from "@/ui/components/form-field";
 import { RunDurationField } from "./components/run-duration-field";
 import { useRunFieldInputController } from "./hooks/use-run-field-input-controller";
 import {
-  calculateDerivedMetric,
   metricLabel,
   type RunFieldInputValue,
   type RunFieldMetric,
