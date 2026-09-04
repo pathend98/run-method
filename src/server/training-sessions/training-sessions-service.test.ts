@@ -1,6 +1,7 @@
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import type {
   EditTrainingSessionRequest,
+  StrengthTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
 import {
@@ -355,6 +356,87 @@ test("returns unchanged sessions without writing", async () => {
   await expect(service.edit(runSession.id, unchanged)).resolves.toBe(
     runSession,
   );
+  expect(repository.edit).not.toHaveBeenCalled();
+});
+
+test("writes changed completed run actuals", async () => {
+  const { repository, service } = createService();
+  const completed = {
+    ...runSession,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 5000,
+    actualDurationSeconds: 1500,
+  };
+  const edit = {
+    title: completed.title,
+    description: completed.description,
+    timeOfDay: completed.timeOfDay,
+    activityType: "RUN" as const,
+    targetDistanceMetres: completed.targetDistanceMetres,
+    targetDurationSeconds: completed.targetDurationSeconds,
+    actualDistanceMetres: 5100,
+    actualDurationSeconds: 1530,
+  };
+  vi.mocked(repository.findById).mockResolvedValue(completed);
+  vi.mocked(repository.edit).mockResolvedValue({ ...completed, ...edit });
+
+  await service.edit(completed.id, edit);
+
+  expect(repository.edit).toHaveBeenCalledWith(completed, edit);
+});
+
+test("does not write unchanged completed actuals", async () => {
+  const { repository, service } = createService();
+  const completed = {
+    ...runSession,
+    status: "COMPLETED" as const,
+    actualDistanceMetres: 5000,
+    actualDurationSeconds: 1500,
+  };
+  const edit = {
+    title: completed.title,
+    description: completed.description,
+    timeOfDay: completed.timeOfDay,
+    activityType: "RUN" as const,
+    targetDistanceMetres: completed.targetDistanceMetres,
+    targetDurationSeconds: completed.targetDurationSeconds,
+    actualDistanceMetres: completed.actualDistanceMetres,
+    actualDurationSeconds: completed.actualDurationSeconds,
+  };
+  vi.mocked(repository.findById).mockResolvedValue(completed);
+
+  await expect(service.edit(completed.id, edit)).resolves.toBe(completed);
+  expect(repository.edit).not.toHaveBeenCalled();
+});
+
+test("does not write an unchanged completed strength actual duration", async () => {
+  const { repository, service } = createService();
+  const completed: StrengthTrainingSession = {
+    id: "22222222-2222-4222-8222-222222222222",
+    title: "Strength",
+    activityType: "STRENGTH",
+    status: "COMPLETED",
+    date: "2026-08-26",
+    timeOfDay: null,
+    description: null,
+    sortOrder: 0,
+    skipReason: null,
+    createdAt: "2026-08-01T10:00:00.000Z",
+    updatedAt: "2026-08-01T10:00:00.000Z",
+    targetDurationSeconds: 1800,
+    actualDurationSeconds: 1750,
+  };
+  const edit = {
+    title: completed.title,
+    description: completed.description,
+    timeOfDay: completed.timeOfDay,
+    activityType: "STRENGTH" as const,
+    targetDurationSeconds: completed.targetDurationSeconds,
+    actualDurationSeconds: 1750,
+  };
+  vi.mocked(repository.findById).mockResolvedValue(completed);
+
+  await expect(service.edit(completed.id, edit)).resolves.toBe(completed);
   expect(repository.edit).not.toHaveBeenCalled();
 });
 

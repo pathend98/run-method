@@ -153,6 +153,8 @@ const editRunSchema = editBaseSchema.extend({
   activityType: z.literal("RUN"),
   targetDistanceMetres: positiveIntegerSchema,
   targetDurationSeconds: positiveIntegerSchema,
+  actualDistanceMetres: positiveIntegerSchema.optional(),
+  actualDurationSeconds: positiveIntegerSchema.optional(),
 });
 
 export const editTrainingSessionRequestSchema = z.union([
@@ -160,6 +162,7 @@ export const editTrainingSessionRequestSchema = z.union([
   editBaseSchema.extend({
     activityType: z.literal("STRENGTH"),
     targetDurationSeconds: positiveIntegerSchema.nullable(),
+    actualDurationSeconds: positiveIntegerSchema.optional(),
   }),
 ]);
 

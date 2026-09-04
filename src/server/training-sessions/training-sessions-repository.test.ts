@@ -550,6 +550,84 @@ test("preserves terminal run details while editing common fields", async () => {
   });
 });
 
+test("updates completed run actuals without changing targets", async () => {
+  const current: RunTrainingSession = {
+    ...(transformedRows[0] as RunTrainingSession),
+    status: "COMPLETED",
+    actualDistanceMetres: 8050,
+    actualDurationSeconds: 2680,
+  };
+  const request = {
+    title: current.title,
+    description: current.description,
+    timeOfDay: current.timeOfDay,
+    activityType: "RUN" as const,
+    targetDistanceMetres: current.targetDistanceMetres,
+    targetDurationSeconds: current.targetDurationSeconds,
+    actualDistanceMetres: 8100,
+    actualDurationSeconds: 2700,
+  };
+  const { repository, updateValues } = createRepositoryForEdit(current, request);
+
+  await repository.edit(current, request);
+
+  expect(updateValues).toHaveLength(2);
+  expect(updateValues[1]).toEqual({
+    actualDistanceMetres: request.actualDistanceMetres,
+    actualDurationSeconds: request.actualDurationSeconds,
+  });
+});
+
+test.each([
+  { actualDistanceMetres: 8100 },
+  { actualDurationSeconds: 2700 },
+])("updates one completed run actual metric", async (actuals) => {
+  const current: RunTrainingSession = {
+    ...(transformedRows[0] as RunTrainingSession),
+    status: "COMPLETED",
+    actualDistanceMetres: 8050,
+    actualDurationSeconds: 2680,
+  };
+  const request = {
+    title: current.title,
+    description: current.description,
+    timeOfDay: current.timeOfDay,
+    activityType: "RUN" as const,
+    targetDistanceMetres: current.targetDistanceMetres,
+    targetDurationSeconds: current.targetDurationSeconds,
+    ...actuals,
+  };
+  const { repository, updateValues } = createRepositoryForEdit(current, request);
+
+  await repository.edit(current, request);
+
+  expect(updateValues[1]).toEqual(actuals);
+});
+
+test("updates completed strength actual duration without changing its target", async () => {
+  const current: TrainingSession = {
+    ...transformedRows[1],
+    status: "COMPLETED",
+    actualDurationSeconds: 1750,
+  };
+  const request = {
+    title: current.title,
+    description: current.description,
+    timeOfDay: current.timeOfDay,
+    activityType: "STRENGTH" as const,
+    targetDurationSeconds: current.targetDurationSeconds,
+    actualDurationSeconds: 1800,
+  };
+  const { repository, updateValues } = createRepositoryForEdit(current, request);
+
+  await repository.edit(current, request);
+
+  expect(updateValues).toHaveLength(2);
+  expect(updateValues[1]).toEqual({
+    actualDurationSeconds: request.actualDurationSeconds,
+  });
+});
+
 test("rejects mismatched aggregate and request activity types defensively", async () => {
   const current = transformedRows[0];
   const request = {

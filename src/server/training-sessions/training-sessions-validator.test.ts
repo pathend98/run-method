@@ -89,6 +89,27 @@ test("allows terminal runs when targets are unchanged", () => {
   ).not.toThrow();
 });
 
+test.each(["SCHEDULED", "SKIPPED"] as const)(
+  "rejects actual metric edits for %s sessions",
+  (status) => {
+    expect(() =>
+      validator.validateEdit(
+        { ...runSession, status, skipReason: status === "SKIPPED" ? "Sick" : null },
+        { ...runEdit, actualDistanceMetres: 5100 },
+      ),
+    ).toThrow("actual metrics can only be changed for completed sessions");
+  },
+);
+
+test("allows actual metric edits for completed sessions", () => {
+  expect(() =>
+    validator.validateEdit(
+      { ...runSession, status: "COMPLETED", actualDistanceMetres: 5000, actualDurationSeconds: 1500 },
+      { ...runEdit, actualDistanceMetres: 5100, actualDurationSeconds: 1530 },
+    ),
+  ).not.toThrow();
+});
+
 test.each(["COMPLETED", "SKIPPED"] as const)(
   "rejects skipping a %s session",
   (status) => {

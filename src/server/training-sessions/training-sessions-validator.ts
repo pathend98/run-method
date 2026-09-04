@@ -58,7 +58,20 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
       );
     }
 
-    if (current.status === "SCHEDULED") return;
+    if (current.status === "SCHEDULED") {
+      if (this.hasActuals(request)) {
+        throw new TrainingSessionsValidationError(
+          "actual metrics can only be changed for completed sessions",
+        );
+      }
+      return;
+    }
+
+    if (current.status === "SKIPPED" && this.hasActuals(request)) {
+      throw new TrainingSessionsValidationError(
+        "actual metrics can only be changed for completed sessions",
+      );
+    }
 
     if (current.timeOfDay !== request.timeOfDay) {
       throw new TrainingSessionsValidationError(
@@ -138,6 +151,14 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
     return (
       current.targetDistanceMetres === request.targetDistanceMetres &&
       current.targetDurationSeconds === request.targetDurationSeconds
+    );
+  }
+
+  private hasActuals(request: EditTrainingSessionRequest): boolean {
+    return (
+      request.actualDurationSeconds !== undefined ||
+      (request.activityType === "RUN" &&
+        request.actualDistanceMetres !== undefined)
     );
   }
 }

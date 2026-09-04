@@ -204,7 +204,7 @@ test.each([
   ["missing target", { targetDurationSeconds: undefined }],
   ["invalid target", { targetDistanceMetres: 0 }],
   ["immutable date", { date: "2026-08-27" }],
-  ["immutable actual", { actualDurationSeconds: 1500 }],
+  ["invalid actual", { actualDurationSeconds: 0 }],
 ])("editTrainingSessionRequestSchema rejects %s", (_caseName, override) => {
   expect(() =>
     editTrainingSessionRequestSchema.parse({

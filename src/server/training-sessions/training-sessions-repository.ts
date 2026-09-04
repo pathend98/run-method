@@ -297,13 +297,32 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
             .returning();
           runDetailsRow = updatedRunDetails;
         } else {
-          runDetailsRow = {
-            trainingSessionId: current.id,
-            targetDistanceMetres: current.targetDistanceMetres,
-            targetDurationSeconds: current.targetDurationSeconds,
-            actualDistanceMetres: current.actualDistanceMetres,
-            actualDurationSeconds: current.actualDurationSeconds,
-          };
+          if (
+            request.actualDistanceMetres !== undefined ||
+            request.actualDurationSeconds !== undefined
+          ) {
+            const [updatedRunDetails] = await tx
+              .update(runDetails)
+              .set({
+                ...(request.actualDistanceMetres !== undefined
+                  ? { actualDistanceMetres: request.actualDistanceMetres }
+                  : {}),
+                ...(request.actualDurationSeconds !== undefined
+                  ? { actualDurationSeconds: request.actualDurationSeconds }
+                  : {}),
+              })
+              .where(eq(runDetails.trainingSessionId, current.id))
+              .returning();
+            runDetailsRow = updatedRunDetails;
+          } else {
+            runDetailsRow = {
+              trainingSessionId: current.id,
+              targetDistanceMetres: current.targetDistanceMetres,
+              targetDurationSeconds: current.targetDurationSeconds,
+              actualDistanceMetres: current.actualDistanceMetres,
+              actualDurationSeconds: current.actualDurationSeconds,
+            };
+          }
         }
 
         return this.transformer.transform({
@@ -328,11 +347,20 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
             .returning();
           strengthDetailsRow = updatedStrengthDetails;
         } else {
-          strengthDetailsRow = {
-            trainingSessionId: current.id,
-            targetDurationSeconds: current.targetDurationSeconds,
-            actualDurationSeconds: current.actualDurationSeconds,
-          };
+          if (request.actualDurationSeconds !== undefined) {
+            const [updatedStrengthDetails] = await tx
+              .update(strengthDetails)
+              .set({ actualDurationSeconds: request.actualDurationSeconds })
+              .where(eq(strengthDetails.trainingSessionId, current.id))
+              .returning();
+            strengthDetailsRow = updatedStrengthDetails;
+          } else {
+            strengthDetailsRow = {
+              trainingSessionId: current.id,
+              targetDurationSeconds: current.targetDurationSeconds,
+              actualDurationSeconds: current.actualDurationSeconds,
+            };
+          }
         }
 
         return this.transformer.transform({
