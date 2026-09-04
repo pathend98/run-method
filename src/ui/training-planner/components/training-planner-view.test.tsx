@@ -61,7 +61,11 @@ test("renders the weekly grid without modal UI", () => {
   expect(
     screen.getByRole("heading", { level: 1, name: "Training Plan" }),
   ).toBeDefined();
-  expect(screen.getByText("17 Aug – 23 Aug")).toBeDefined();
+  const navigation = screen.getByRole("navigation", {
+    name: "Week navigation",
+  });
+  expect(within(navigation).getByText("17 Aug – 23 Aug")).toBeDefined();
+  expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
   expect(screen.queryByText("Weekly schedule")).toBeNull();
   expect(
     screen.queryByText(
@@ -93,4 +97,13 @@ test("forwards week navigation callbacks", () => {
   fireEvent.click(screen.getByRole("button", { name: "Next week" }));
   expect(onPreviousWeek).toHaveBeenCalledOnce();
   expect(onNextWeek).toHaveBeenCalledOnce();
+});
+
+test("shows Today for a non-current week", () => {
+  const onCurrentWeek = vi.fn();
+  renderView({ isCurrentWeek: false, onCurrentWeek });
+
+  fireEvent.click(screen.getByRole("button", { name: "Today" }));
+
+  expect(onCurrentWeek).toHaveBeenCalledOnce();
 });

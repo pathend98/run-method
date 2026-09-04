@@ -140,25 +140,21 @@ test("TrainingPlanner skips and completes activities through the API", async () 
     if (url.endsWith("/skip"))
       return Promise.resolve({
         ok: true,
-        json: vi
-          .fn()
-          .mockResolvedValue({
-            ...session,
-            status: "SKIPPED",
-            skipReason: "Recovery",
-          }),
+        json: vi.fn().mockResolvedValue({
+          ...session,
+          status: "SKIPPED",
+          skipReason: "Recovery",
+        }),
       });
     if (url.endsWith("/complete"))
       return Promise.resolve({
         ok: true,
-        json: vi
-          .fn()
-          .mockResolvedValue({
-            ...session,
-            status: "COMPLETED",
-            actualDistanceMetres: 5000,
-            actualDurationSeconds: 1800,
-          }),
+        json: vi.fn().mockResolvedValue({
+          ...session,
+          status: "COMPLETED",
+          actualDistanceMetres: 5000,
+          actualDurationSeconds: 1800,
+        }),
       });
     return Promise.resolve({
       ok: true,
@@ -487,7 +483,7 @@ test("TrainingPlanner removes only the week parameter for the current-week navig
   const { rerender } = render(planner);
 
   await screen.findByRole("list", { name: "Weekly training planner" });
-  fireEvent.click(screen.getByRole("button", { name: "Current week" }));
+  fireEvent.click(screen.getByRole("button", { name: "Today" }));
   expect(navigation.push).toHaveBeenLastCalledWith("/?view=compact", {
     scroll: false,
   });
@@ -498,6 +494,6 @@ test("TrainingPlanner removes only the week parameter for the current-week navig
       <TrainingPlanner />
     </QueryProvider>,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Current week" }));
+  fireEvent.click(screen.getByRole("button", { name: "Today" }));
   expect(navigation.push).toHaveBeenLastCalledWith("/", { scroll: false });
 });
