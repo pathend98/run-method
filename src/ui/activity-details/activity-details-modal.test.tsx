@@ -2,7 +2,6 @@ import {
   fireEvent,
   render as testingRender,
   screen,
-  waitFor,
   within,
 } from "@testing-library/react";
 import { addDays, format } from "date-fns";
@@ -222,95 +221,20 @@ test("calls the edit handler", () => {
   expect(onEdit).toHaveBeenCalledOnce();
 });
 
-test("asks for confirmation and allows cancellation", () => {
-  const onDelete = vi.fn();
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={onDelete}
-      onEdit={vi.fn()}
-    />,
+test("opens the separate delete modal flow", () => {
+  const store = createTrainingPlannerStore();
+  store.getState().openActivityDetails({ ...runActivity, day: "Monday" });
+  testingRender(
+    <TrainingPlannerStoreProvider store={store}>
+      <QueryProvider>
+        <ActualActivityDetailsModal />
+      </QueryProvider>
+    </TrainingPlannerStoreProvider>,
   );
 
   selectMoreActivityAction("Delete activity");
-  expect(screen.getByText("Delete “Tempo run”?")).toBeDefined();
-  expect(screen.getByText("This action cannot be undone.")).toBeDefined();
-
-  fireEvent.click(screen.getAllByRole("button", { name: "Cancel" })[0]);
-  expect(screen.queryByText("Delete “Tempo run”?")).toBeNull();
-  expect(onDelete).not.toHaveBeenCalled();
-});
-
-test("deletes the activity and closes after success", async () => {
-  const onClose = vi.fn();
-  const onDelete = vi.fn().mockResolvedValue(undefined);
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={onDelete}
-      onEdit={vi.fn()}
-    />,
-  );
-
-  selectMoreActivityAction("Delete activity");
-  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
-
-  await waitFor(() => expect(onDelete).toHaveBeenCalledOnce());
-  expect(onClose).toHaveBeenCalledOnce();
-});
-
-test("keeps confirmation open and reports deletion failures", async () => {
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn().mockRejectedValue(new Error("nope"))}
-      onEdit={vi.fn()}
-    />,
-  );
-
-  selectMoreActivityAction("Delete activity");
-  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
-
-  expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to delete activity",
-  );
-  expect(
-    screen.getByRole("button", { name: "Delete permanently" }),
-  ).toBeDefined();
-});
-
-test("disables confirmation and dismissal while deleting", async () => {
-  const onClose = vi.fn();
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={() => new Promise(() => undefined)}
-      onEdit={vi.fn()}
-    />,
-  );
-  selectMoreActivityAction("Delete activity");
-  fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
-
-  expect(
-    await screen.findByRole("button", { name: "Deleting…" }),
-  ).toHaveProperty("disabled", true);
-  expect(screen.getByRole("button", { name: "Cancel" })).toHaveProperty(
-    "disabled",
-    true,
-  );
-  expect(
-    screen.getByRole("button", { name: "Dismiss activity details" }),
-  ).toHaveProperty("disabled", true);
-  fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
-  expect(onClose).not.toHaveBeenCalled();
+  expect(store.getState().activeModal).toMatchObject({ kind: "delete" });
+  expect(screen.queryByText("Delete “Tempo run”? ")).toBeNull();
 });
 
 test("puts complete in the footer and skip in more actions for eligible activities", () => {
