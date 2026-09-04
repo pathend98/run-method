@@ -67,6 +67,7 @@ export function DayColumn({
               key={section.label}
               activities={section.activities}
               day={day.day}
+              isToday={isToday}
               label={section.label}
               onSelectActivity={onSelectActivity}
             />
