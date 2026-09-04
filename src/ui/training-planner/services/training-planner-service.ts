@@ -1,8 +1,6 @@
 import {
   addDays,
   format,
-  isSameMonth,
-  isSameYear,
   parseISO,
   startOfWeek,
 } from "date-fns";
@@ -52,15 +50,7 @@ export function formatWeekRange(weekRange: TrainingSessionDateRange) {
   const monday = parseISO(weekRange.from);
   const sunday = parseISO(weekRange.to);
 
-  if (!isSameYear(monday, sunday)) {
-    return `${format(monday, "d MMMM yyyy")}–${format(sunday, "d MMMM yyyy")}`;
-  }
-
-  if (!isSameMonth(monday, sunday)) {
-    return `${format(monday, "d MMMM")}–${format(sunday, "d MMMM yyyy")}`;
-  }
-
-  return `${format(monday, "d")}–${format(sunday, "d MMMM yyyy")}`;
+  return `${format(monday, "d MMM")} – ${format(sunday, "d MMM")}`;
 }
 
 export function formatDayDate(date: string) {

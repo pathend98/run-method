@@ -34,9 +34,9 @@ test("getAdjacentWeekStart moves to the previous or next Monday", () => {
 });
 
 test.each([
-  [{ from: "2026-08-17", to: "2026-08-23" }, "17–23 August 2026"],
-  [{ from: "2026-08-31", to: "2026-09-06" }, "31 August–6 September 2026"],
-  [{ from: "2025-12-29", to: "2026-01-04" }, "29 December 2025–4 January 2026"],
+  [{ from: "2026-08-17", to: "2026-08-23" }, "17 Aug – 23 Aug"],
+  [{ from: "2026-08-31", to: "2026-09-06" }, "31 Aug – 6 Sep"],
+  [{ from: "2025-12-29", to: "2026-01-04" }, "29 Dec – 4 Jan"],
 ])("formatWeekRange formats %#", (range, expected) => {
   expect(formatWeekRange(range)).toBe(expected);
 });

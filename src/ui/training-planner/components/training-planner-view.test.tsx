@@ -58,6 +58,16 @@ function renderView(
 
 test("renders the weekly grid without modal UI", () => {
   renderView();
+  expect(
+    screen.getByRole("heading", { level: 1, name: "Training Plan" }),
+  ).toBeDefined();
+  expect(screen.getByText("17 Aug – 23 Aug")).toBeDefined();
+  expect(screen.queryByText("Weekly schedule")).toBeNull();
+  expect(
+    screen.queryByText(
+      "A simple week view for arranging runs, workouts, recovery, and rest across morning, flexible, and evening slots.",
+    ),
+  ).toBeNull();
   const planner = screen.getByRole("list", { name: "Weekly training planner" });
   expect(within(planner).getAllByRole("listitem")).toHaveLength(8);
   expect(screen.queryByRole("dialog")).toBeNull();

@@ -29,7 +29,7 @@ test("Home", () => {
 
   expect(screen.getByRole("main")).toBeDefined();
   expect(
-    screen.getByRole("heading", { level: 1, name: "Training planner" }),
+    screen.getByRole("heading", { level: 1, name: "Training Plan" }),
   ).toBeDefined();
   expect(screen.getByText("Loading training planner...")).toBeDefined();
 });
@@ -40,7 +40,7 @@ test("Home renders its planner fallback while URL parameters resolve", () => {
   render(<Home />);
 
   expect(
-    screen.getByRole("heading", { level: 1, name: "Training planner" }),
+    screen.getByRole("heading", { level: 1, name: "Training Plan" }),
   ).toBeDefined();
   expect(screen.getByText("Loading training planner...")).toBeDefined();
 });

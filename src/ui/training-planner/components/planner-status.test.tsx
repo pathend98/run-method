@@ -5,7 +5,7 @@ import { PlannerStatus } from "./planner-status";
 test("PlannerStatus renders status text", () => {
   render(<PlannerStatus message="Loading training planner..." />);
 
-  expect(screen.getByText("Training planner")).toBeDefined();
+  expect(screen.getByText("Training Plan")).toBeDefined();
   expect(screen.getByText("Loading training planner...")).toBeDefined();
 });
 
