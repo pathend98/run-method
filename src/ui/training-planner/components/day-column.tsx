@@ -36,19 +36,20 @@ export function DayColumn({
     <article
       aria-label={day.day}
       aria-labelledby={`${day.day.toLowerCase()}-heading`}
-      className="flex min-h-64 flex-col rounded-lg border border-zinc-200 bg-zinc-50"
+      className="flex min-h-64 min-w-0 flex-col px-3 py-4"
       role="listitem"
     >
-      <header className="flex items-baseline justify-between gap-2 border-b border-zinc-200 px-3 py-3">
+      <header className="flex items-baseline gap-1.5">
         <h2
+          aria-label={day.day}
           id={`${day.day.toLowerCase()}-heading`}
-          className="text-base font-semibold text-zinc-950"
+          className="text-sm font-semibold uppercase tracking-wide text-zinc-950"
         >
-          {day.day}
+          {day.day.slice(0, 3)}
         </h2>
         {day.date ? (
           <time
-            className="text-xs font-medium text-zinc-500"
+            className="text-sm font-medium text-zinc-500"
             dateTime={day.date}
           >
             {formatDayDate(day.date)}
@@ -56,7 +57,7 @@ export function DayColumn({
         ) : null}
       </header>
 
-      <div className="flex flex-1 flex-col gap-3 p-3">
+      <div className="flex flex-1 flex-col gap-4 pt-5">
         {populatedTimeSections.length > 0 ? (
           populatedTimeSections.map((section) => (
             <TimeOfDaySection
@@ -71,9 +72,9 @@ export function DayColumn({
           <p className="text-sm text-zinc-500">No activity scheduled</p>
         )}
       </div>
-      <footer className="border-t border-zinc-200 p-3">
+      <footer className="pt-4">
         <button
-          className="w-full rounded-md border border-teal-700 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+          className="rounded-md px-1 py-1 text-sm font-semibold text-teal-800 hover:bg-teal-50 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
           onClick={() => onAddActivity?.(day)}
           type="button"
         >

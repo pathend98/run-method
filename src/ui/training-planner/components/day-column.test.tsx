@@ -72,6 +72,7 @@ test("renders populated time buckets in day order", () => {
   expect(
     within(column).getByRole("heading", { level: 2, name: "Monday" }),
   ).toBeDefined();
+  expect(within(column).getByText("Mon")).toBeDefined();
   expect(
     within(column)
       .getAllByRole("heading", { level: 3 })

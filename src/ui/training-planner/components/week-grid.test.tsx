@@ -33,6 +33,10 @@ test("renders a labelled weekly planner list with day columns", () => {
   render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
 
   const planner = screen.getByRole("list", { name: "Weekly training planner" });
+  expect(planner.className).toContain("overflow-x-auto");
+  expect(planner.className).toContain("rounded-lg");
+  expect(planner.className).toContain("border");
+  expect(planner.firstElementChild?.className).toContain("divide-x");
   expect(
     within(planner).getByRole("listitem", { name: "Monday" }),
   ).toBeDefined();
