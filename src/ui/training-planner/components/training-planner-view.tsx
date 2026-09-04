@@ -41,42 +41,47 @@ export function TrainingPlannerView({
         >
           Training Plan
         </h1>
-        <p aria-live="polite" className="text-lg font-semibold text-zinc-900">
-          {formatWeekRange(weekRange)}
-        </p>
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <nav
-            aria-label="Week navigation"
-            className="flex flex-wrap items-center gap-2"
-          >
+        <nav
+          aria-label="Week navigation"
+          className="flex flex-wrap items-center gap-3"
+        >
+          <div className="flex items-center overflow-hidden rounded-md border border-zinc-300 bg-white shadow-sm">
             <button
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              aria-label="Previous week"
+              className="grid size-9 place-items-center text-lg font-semibold text-zinc-700 hover:bg-zinc-100 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-600"
               onClick={onPreviousWeek}
               type="button"
             >
-              Previous week
+              ‹
             </button>
-            {!isCurrentWeek ? (
-              <button
-                className="rounded-md border border-teal-700 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-                onClick={onCurrentWeek}
-                type="button"
-              >
-                Current week
-              </button>
-            ) : null}
+            <p
+              aria-live="polite"
+              className="border-x border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-900"
+            >
+              {formatWeekRange(weekRange)}
+            </p>
             <button
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              aria-label="Next week"
+              className="grid size-9 place-items-center text-lg font-semibold text-zinc-700 hover:bg-zinc-100 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-600"
               onClick={onNextWeek}
               type="button"
             >
-              Next week
+              ›
             </button>
-          </nav>
-        </div>
+          </div>
+          {!isCurrentWeek ? (
+            <button
+              className="rounded-md px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              onClick={onCurrentWeek}
+              type="button"
+            >
+              Today
+            </button>
+          ) : null}
+        </nav>
         <WeekGrid
           onAddActivity={onAddActivity}
           onSelectActivity={onSelectActivity}
