@@ -33,13 +33,17 @@ const day = {
   activities: [],
 } satisfies TrainingDay;
 
-test("transitions through add, details, edit, and closed modal states", () => {
+test("transitions through add, details, edit, completion, and closed modal states", () => {
   const store = createTrainingPlannerStore();
   store.getState().openAddActivity(day);
   expect(store.getState().activeModal).toEqual({ kind: "add", day });
   store.getState().openActivityDetails(activity);
   store.getState().openEditActivity();
   expect(store.getState().activeModal).toEqual({ kind: "edit", activity });
+  store.getState().returnToActivityDetails();
+  expect(store.getState().activeModal).toEqual({ kind: "details", activity });
+  store.getState().openCompleteActivity();
+  expect(store.getState().activeModal).toEqual({ kind: "complete", activity });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
   store.getState().closeModal();
@@ -49,6 +53,7 @@ test("transitions through add, details, edit, and closed modal states", () => {
 test("replaces an edited activity and ignores invalid detail transitions", () => {
   const store = createTrainingPlannerStore();
   store.getState().openEditActivity();
+  store.getState().openCompleteActivity();
   expect(store.getState().activeModal).toBeNull();
   store.getState().returnToActivityDetails();
   store

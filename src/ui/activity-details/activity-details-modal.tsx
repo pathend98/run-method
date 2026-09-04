@@ -1,9 +1,6 @@
 import { useState } from "react";
 
-import type {
-  CompleteTrainingSessionRequest,
-  SkipTrainingSessionRequest,
-} from "@/domain/training-sessions";
+import type { SkipTrainingSessionRequest } from "@/domain/training-sessions";
 import { Modal, type ModalAction } from "@/ui/components/modal";
 import {
   formatActivityType,
@@ -16,7 +13,6 @@ import { ActivityTransitionForm } from "./components/activity-transition-form";
 import { canTransitionActivity } from "./utils/activity-transition-availability";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import {
-  useCompleteTrainingSessionMutation,
   useDeleteTrainingSessionMutation,
   useSkipTrainingSessionMutation,
 } from "@/ui/training-sessions/training-session-mutations";
@@ -27,15 +23,14 @@ export function ActivityDetailsModal() {
   const openEditActivity = useTrainingPlannerStore(
     (state) => state.openEditActivity,
   );
+  const openCompleteActivity = useTrainingPlannerStore(
+    (state) => state.openCompleteActivity,
+  );
   const deleteMutation = useDeleteTrainingSessionMutation();
   const skipMutation = useSkipTrainingSessionMutation();
-  const completeMutation = useCompleteTrainingSessionMutation();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [transitionMode, setTransitionMode] = useState<
-    "complete" | "skip" | null
-  >(null);
-  const [runFieldsPending, setRunFieldsPending] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
   if (activeModal?.kind !== "details") {
     return null;
@@ -59,21 +54,14 @@ export function ActivityDetailsModal() {
     setIsConfirmingDelete(false);
   }
 
-  async function completeActivity(request: CompleteTrainingSessionRequest) {
-    await completeMutation.mutateAsync({ id: activity.id, request });
-    closeModal();
-  }
-
   async function skipActivity(request: SkipTrainingSessionRequest) {
     await skipMutation.mutateAsync({ id: activity.id, request });
     closeModal();
   }
 
-  const isTransitioningActivity = transitionMode !== null;
   const isBusy =
     deleteMutation.isPending ||
-    skipMutation.isPending ||
-    completeMutation.isPending;
+    skipMutation.isPending;
 
   const canTransition = canTransitionActivity(activity);
   const primaryHeaderActions: ModalAction[] = isConfirmingDelete
@@ -89,11 +77,11 @@ export function ActivityDetailsModal() {
           variant: "danger",
         },
       ]
-      : isTransitioningActivity
+      : isSkipping
       ? [
           {
             label: "Cancel",
-            onClick: () => setTransitionMode(null),
+            onClick: () => setIsSkipping(false),
             variant: "secondary",
           },
         ]
@@ -106,13 +94,13 @@ export function ActivityDetailsModal() {
         ];
 
   const secondaryHeaderActions: ModalAction[] =
-    !isConfirmingDelete && !isTransitioningActivity
+    !isConfirmingDelete && !isSkipping
       ? [
           ...(canTransition
             ? [
                 {
                   label: "Skip activity",
-                  onClick: () => setTransitionMode("skip"),
+                  onClick: () => setIsSkipping(true),
                   variant: "danger-outline" as const,
                 },
               ]
@@ -130,34 +118,25 @@ export function ActivityDetailsModal() {
       dismissLabel="Dismiss activity details"
       closeLabel="Close activity details"
       footerActions={
-        transitionMode
+        isSkipping
           ? [
               {
                 label: "Cancel",
-                onClick: () => setTransitionMode(null),
+                onClick: () => setIsSkipping(false),
                 variant: "secondary",
               },
               {
-                disabled:
-                  transitionMode === "complete" && runFieldsPending,
                 form: "activity-transition-form",
-                label:
-                  transitionMode === "skip"
-                    ? skipMutation.isPending
-                      ? "Skipping…"
-                      : "Skip activity"
-                    : completeMutation.isPending
-                      ? "Completing…"
-                      : "Complete activity",
+                label: skipMutation.isPending ? "Skipping…" : "Skip activity",
                 type: "submit",
-                variant: transitionMode === "skip" ? "danger" : "primary",
+                variant: "danger",
               },
             ]
           : canTransition
             ? [
                 {
                   label: "Complete activity",
-                  onClick: () => setTransitionMode("complete"),
+                  onClick: openCompleteActivity,
                   variant: "primary",
                 },
               ]
@@ -183,13 +162,9 @@ export function ActivityDetailsModal() {
         </div>
       ) : null}
 
-      {transitionMode ? (
+      {isSkipping ? (
         <ActivityTransitionForm
-          activity={activity}
-          isSubmitting={skipMutation.isPending || completeMutation.isPending}
-          mode={transitionMode}
-          onComplete={completeActivity}
-          onRunFieldsPendingChange={setRunFieldsPending}
+          isSubmitting={skipMutation.isPending}
           onSkip={skipActivity}
         />
       ) : null}
