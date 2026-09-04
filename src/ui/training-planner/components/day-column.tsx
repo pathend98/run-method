@@ -14,9 +14,9 @@ type DayColumnProps = {
 };
 
 const timeSections: { label: string; value: TimeOfDay }[] = [
-  { label: "AM", value: "AM" },
-  { label: "Any time", value: null },
-  { label: "PM", value: "PM" },
+  { label: "Morning", value: "AM" },
+  { label: "Anytime", value: null },
+  { label: "Evening", value: "PM" },
 ];
 
 export function DayColumn({

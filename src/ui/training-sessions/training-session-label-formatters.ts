@@ -12,6 +12,6 @@ export function formatStatus(status: TrainingSession["status"]) {
 
 export function formatTimeOfDay(timeOfDay: TrainingSession["timeOfDay"]) {
   if (timeOfDay === "AM") return "Morning";
-  if (timeOfDay === "PM") return "Afternoon";
-  return "Any time";
+  if (timeOfDay === "PM") return "Evening";
+  return "Anytime";
 }

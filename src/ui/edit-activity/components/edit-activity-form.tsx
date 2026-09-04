@@ -76,9 +76,9 @@ export function EditActivityForm({
         {isScheduled ? (
           <FormField label="Time of day">
             <select {...register("timeOfDay")}>
-              <option value="ANY">Any time</option>
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
+              <option value="AM">Morning</option>
+              <option value="ANY">Anytime</option>
+              <option value="PM">Evening</option>
             </select>
           </FormField>
         ) : null}

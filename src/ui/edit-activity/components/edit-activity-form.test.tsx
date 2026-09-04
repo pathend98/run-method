@@ -44,6 +44,15 @@ test("renders pre-populated editable fields for a scheduled run", () => {
 
   expect(screen.getByLabelText("Title")).toHaveProperty("value", "Tempo run");
   expect(screen.getByLabelText("Time of day")).toHaveProperty("value", "AM");
+  expect(
+    Array.from(
+      screen.getByLabelText("Time of day").querySelectorAll("option"),
+    ).map((option) => [option.textContent, option.value]),
+  ).toEqual([
+    ["Morning", "AM"],
+    ["Anytime", "ANY"],
+    ["Evening", "PM"],
+  ]);
   expect(screen.getByLabelText("Distance (km)")).toHaveProperty("value", "6");
   expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
     "value",

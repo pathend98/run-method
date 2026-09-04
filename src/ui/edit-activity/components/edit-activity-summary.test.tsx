@@ -62,8 +62,25 @@ test.each([
 
   expect(screen.getByText("Time of day")).toBeDefined();
   expect(
+    screen.getByText(activity.timeOfDay === null ? "Anytime" : "Morning"),
+  ).toBeDefined();
+  expect(
     screen.getByText(/6\.0 km · 00:30:00|5\.0 km · 00:30:00/),
   ).toBeDefined();
+});
+
+test("formats terminal AM and PM values for display", () => {
+  const { rerender } = render(
+    <EditActivitySummary activity={{ ...runActivity, status: "COMPLETED" }} />,
+  );
+  expect(screen.getByText("Morning")).toBeDefined();
+
+  rerender(
+    <EditActivitySummary
+      activity={{ ...runActivity, status: "SKIPPED", timeOfDay: "PM" }}
+    />,
+  );
+  expect(screen.getByText("Evening")).toBeDefined();
 });
 
 test("hides the editable target duration for scheduled strength activities", () => {
