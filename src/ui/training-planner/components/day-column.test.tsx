@@ -95,7 +95,7 @@ test("renders an empty state for days without activities", () => {
   );
 
   expect(screen.getByRole("listitem", { name: "Tuesday" })).toBeDefined();
-  expect(screen.getByText("No activity scheduled")).toBeDefined();
+  expect(screen.getByText("Rest day")).toBeDefined();
   expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
 });
 

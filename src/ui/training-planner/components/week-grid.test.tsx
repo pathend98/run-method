@@ -48,7 +48,7 @@ test("renders a labelled weekly planner list with day columns", () => {
     within(planner).getByRole("listitem", { name: "Tuesday" }),
   ).toBeDefined();
   expect(within(planner).getByText("Tempo run")).toBeDefined();
-  expect(within(planner).getByText("No activity scheduled")).toBeDefined();
+  expect(within(planner).getByText("Rest day")).toBeDefined();
 });
 
 test("passes activity selection through from day columns", () => {

@@ -73,7 +73,7 @@ export function DayColumn({
             />
           ))
         ) : (
-          <p className="text-sm text-zinc-500">No activity scheduled</p>
+          <p className="text-sm text-zinc-500">Rest day</p>
         )}
       </div>
       <footer className="pt-4">
