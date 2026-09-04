@@ -140,7 +140,7 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
 
 function selectMoreActivityAction(name: "Skip activity" | "Delete activity") {
   fireEvent.click(
-    screen.getByRole("button", { name: "More activity actions" }),
+    screen.getByRole("button", { name: "More actions" }),
   );
   fireEvent.click(screen.getByRole("menuitem", { name }));
 }
@@ -335,7 +335,7 @@ test("puts complete in the footer and skip in more actions for eligible activiti
   );
   expect(screen.getByRole("button", { name: "Edit activity" })).toBeDefined();
   expect(
-    screen.getByRole("button", { name: "More activity actions" }),
+    screen.getByRole("button", { name: "More actions" }),
   ).toBeDefined();
   expect(
     screen.getByRole("button", { name: "Close activity details" }),
@@ -344,7 +344,7 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     screen.getByRole("button", { name: "Complete activity" }),
   ).toBeDefined();
   fireEvent.click(
-    screen.getByRole("button", { name: "More activity actions" }),
+    screen.getByRole("button", { name: "More actions" }),
   );
   expect(screen.getByRole("menuitem", { name: "Skip activity" })).toBeDefined();
   expect(
@@ -381,7 +381,7 @@ test("hides skip and complete actions for future scheduled activities", () => {
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "More activity actions" }),
+    screen.getByRole("button", { name: "More actions" }),
   );
   expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
   expect(
@@ -405,7 +405,7 @@ test("dismisses more actions with Escape before dismissing the modal", () => {
   );
 
   const trigger = screen.getByRole("button", {
-    name: "More activity actions",
+    name: "More actions",
   });
   fireEvent.click(trigger);
   const menu = screen.getByRole("menu");
@@ -430,7 +430,7 @@ test("dismisses more actions when interacting outside the menu", () => {
   );
 
   fireEvent.click(
-    screen.getByRole("button", { name: "More activity actions" }),
+    screen.getByRole("button", { name: "More actions" }),
   );
   fireEvent.pointerDown(screen.getByRole("menuitem", { name: "Skip activity" }));
   expect(screen.getByRole("menu")).toBeDefined();

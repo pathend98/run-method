@@ -173,7 +173,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "More activity actions" }),
+    screen.getByRole("button", { name: "More actions" }),
   );
   fireEvent.click(screen.getByRole("menuitem", { name: "Skip activity" }));
   fireEvent.change(screen.getByLabelText("Skip reason"), {
@@ -395,7 +395,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "More activity actions" }),
+    screen.getByRole("button", { name: "More actions" }),
   );
   fireEvent.click(
     screen.getByRole("menuitem", { name: "Delete activity" }),

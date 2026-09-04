@@ -18,7 +18,9 @@ test("renders an accessible medium dialog and handles dismissal", () => {
   const dialog = screen.getByRole("dialog", { name: "Example modal" });
   expect(dialog.classList.contains("max-w-xl")).toBe(true);
   expect(within(dialog).getByText("Modal content")).toBeDefined();
-  expect(within(dialog).queryByRole("button")).toBeNull();
+  expect(
+    within(dialog).getByRole("button", { name: "Close modal" }),
+  ).toBeDefined();
 
   fireEvent.keyDown(window, { key: "Tab" });
   expect(onClose).not.toHaveBeenCalled();
@@ -31,7 +33,7 @@ test("renders an accessible medium dialog and handles dismissal", () => {
   expect(onClose).toHaveBeenCalledTimes(2);
 });
 
-test("renders and wires ordered header and footer actions", () => {
+test("renders and wires primary, secondary, and footer actions", () => {
   const onOpen = vi.fn();
   const onClose = vi.fn();
   const onDelete = vi.fn();
@@ -39,6 +41,7 @@ test("renders and wires ordered header and footer actions", () => {
   render(
     <Modal
       dismissLabel="Dismiss actions"
+      closeLabel="Close actions"
       eyebrow="Activity · Today"
       footerActions={[
         {
@@ -59,20 +62,12 @@ test("renders and wires ordered header and footer actions", () => {
           variant: "primary",
         },
       ]}
-      headerActions={[
+      primaryHeaderActions={[
         { label: "Open", onClick: onOpen, variant: "primary" },
-        {
-          ariaLabel: "Close example",
-          label: "Close",
-          onClick: onClose,
-          variant: "secondary",
-        },
       ]}
-      headerActionContent={
-        <button onClick={onOpen} type="button">
-          More actions
-        </button>
-      }
+      secondaryHeaderActions={[
+        { label: "Archive", onClick: onOpen, variant: "secondary" },
+      ]}
       onClose={onClose}
       size="large"
       title="Actions"
@@ -84,15 +79,14 @@ test("renders and wires ordered header and footer actions", () => {
   const dialog = screen.getByRole("dialog", { name: "Actions" });
   expect(dialog.classList.contains("max-w-4xl")).toBe(true);
   expect(within(dialog).getByText("Activity · Today")).toBeDefined();
-  expect(
-    within(dialog)
-      .getAllByRole("button")
-      .map((button) => button.textContent),
-  ).toEqual(["Open", "Close", "More actions", "Delete", "Remove", "Save"]);
-
   fireEvent.click(screen.getByRole("button", { name: "Open" }));
-  fireEvent.click(screen.getByRole("button", { name: "Close example" }));
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+  const secondaryMenu = screen.getByRole("menu");
+  expect(secondaryMenu.classList.contains("flex")).toBe(true);
+  expect(secondaryMenu.classList.contains("flex-col")).toBe(true);
+  expect(secondaryMenu.classList.contains("gap-2")).toBe(true);
+  fireEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
+  fireEvent.click(screen.getByRole("button", { name: "Close actions" }));
   fireEvent.click(screen.getByRole("button", { name: "Remove" }));
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
@@ -112,7 +106,7 @@ test("disables every action and dismissal route while busy", () => {
   render(
     <Modal
       dismissLabel="Dismiss busy modal"
-      headerActions={[
+      primaryHeaderActions={[
         { label: "Continue", onClick: onAction, variant: "primary" },
       ]}
       isBusy
@@ -127,12 +121,15 @@ test("disables every action and dismissal route while busy", () => {
     name: "Dismiss busy modal",
   });
   const actionButton = screen.getByRole("button", { name: "Continue" });
+  const closeButton = screen.getByRole("button", { name: "Close modal" });
   expect(dismissButton).toHaveProperty("disabled", true);
   expect(actionButton).toHaveProperty("disabled", true);
+  expect(closeButton).toHaveProperty("disabled", true);
 
   fireEvent.keyDown(window, { key: "Escape" });
   fireEvent.click(dismissButton);
   fireEvent.click(actionButton);
+  fireEvent.click(closeButton);
   expect(onClose).not.toHaveBeenCalled();
   expect(onAction).not.toHaveBeenCalled();
 });

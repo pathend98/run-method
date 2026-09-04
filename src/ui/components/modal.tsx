@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useId, type ReactNode } from "react";
+import { Ellipsis, X } from "lucide-react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from "react";
 
 export type ModalAction = {
   ariaLabel?: string;
@@ -14,13 +22,14 @@ export type ModalAction = {
 
 type ModalProps = {
   children: ReactNode;
+  closeLabel?: string;
   dismissLabel: string;
   eyebrow?: string;
-  headerActionContent?: ReactNode;
   footerActions?: ModalAction[];
-  headerActions?: ModalAction[];
   isBusy?: boolean;
   onClose: () => void;
+  primaryHeaderActions?: ModalAction[];
+  secondaryHeaderActions?: ModalAction[];
   size?: "medium" | "large";
   title: string;
 };
@@ -38,17 +47,21 @@ const actionClasses: Record<ModalAction["variant"], string> = {
 
 export function Modal({
   children,
+  closeLabel = "Close modal",
   dismissLabel,
   eyebrow,
-  headerActionContent,
   footerActions = [],
-  headerActions = [],
   isBusy = false,
   onClose,
+  primaryHeaderActions = [],
+  secondaryHeaderActions = [],
   size = "medium",
   title,
 }: ModalProps) {
   const titleId = useId();
+  const [isSecondaryMenuOpen, setIsSecondaryMenuOpen] = useState(false);
+  const secondaryMenuRef = useRef<HTMLDivElement>(null);
+  const secondaryMenuTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -59,17 +72,63 @@ export function Modal({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [isBusy, onClose]);
 
-  function renderAction(action: ModalAction, placement: "header" | "footer") {
+  useEffect(() => {
+    if (!isSecondaryMenuOpen) {
+      return;
+    }
+
+    function closeOnOutsidePointerDown(event: PointerEvent) {
+      if (!secondaryMenuRef.current?.contains(event.target as Node)) {
+        setIsSecondaryMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown);
+    return () =>
+      document.removeEventListener("pointerdown", closeOnOutsidePointerDown);
+  }, [isSecondaryMenuOpen]);
+
+  function closeSecondaryMenu() {
+    setIsSecondaryMenuOpen(false);
+  }
+
+  function closeSecondaryMenuAndReturnFocus() {
+    closeSecondaryMenu();
+    secondaryMenuTriggerRef.current?.focus();
+  }
+
+  function handleSecondaryMenuKeyDown(
+    event: ReactKeyboardEvent<HTMLDivElement>,
+  ) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      closeSecondaryMenuAndReturnFocus();
+    }
+  }
+
+  function renderAction(
+    action: ModalAction,
+    placement: "header" | "footer" | "secondary-menu",
+  ) {
     return (
       <button
         aria-label={action.ariaLabel}
         className={`rounded-md ${
           placement === "header" ? "px-3 py-1" : "px-3 py-2"
+        } ${
+          placement === "secondary-menu" ? "w-full text-left" : ""
         } text-sm disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${actionClasses[action.variant]}`}
         disabled={isBusy || action.disabled}
         form={action.form}
         key={`${placement}-${action.label}`}
-        onClick={action.onClick}
+        onClick={() => {
+          if (placement === "secondary-menu") {
+            closeSecondaryMenu();
+          }
+          action.onClick?.();
+        }}
+        role={placement === "secondary-menu" ? "menuitem" : undefined}
         type={action.type ?? "button"}
       >
         {action.label}
@@ -96,7 +155,7 @@ export function Modal({
       >
         <div
           className={
-            headerActions.length > 1 || headerActionContent
+            primaryHeaderActions.length > 1
               ? "flex flex-col items-start justify-between gap-3 sm:flex-row"
               : "flex items-start justify-between gap-3"
           }
@@ -111,12 +170,51 @@ export function Modal({
               {title}
             </h2>
           </div>
-          {headerActions.length > 0 || headerActionContent ? (
-            <div className="flex flex-wrap gap-2">
-              {headerActions.map((action) => renderAction(action, "header"))}
-              {headerActionContent}
-            </div>
-          ) : null}
+          <div className="flex flex-wrap items-start gap-2">
+            {primaryHeaderActions.map((action) =>
+              renderAction(action, "header"),
+            )}
+            {secondaryHeaderActions.length > 0 ? (
+              <div className="relative" ref={secondaryMenuRef}>
+                <button
+                  aria-controls={
+                    isSecondaryMenuOpen ? "modal-secondary-actions" : undefined
+                  }
+                  aria-expanded={isSecondaryMenuOpen}
+                  aria-haspopup="menu"
+                  aria-label="More actions"
+                  className="rounded-md border border-zinc-200 p-1.5 text-zinc-700 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isBusy}
+                  onClick={() => setIsSecondaryMenuOpen((open) => !open)}
+                  ref={secondaryMenuTriggerRef}
+                  type="button"
+                >
+                  <Ellipsis aria-hidden="true" className="size-4" />
+                </button>
+                {isSecondaryMenuOpen ? (
+                  <div
+                    className="absolute right-0 z-20 mt-2 flex w-44 flex-col gap-2 rounded-md border border-zinc-200 bg-white p-1 shadow-lg"
+                    id="modal-secondary-actions"
+                    onKeyDown={handleSecondaryMenuKeyDown}
+                    role="menu"
+                  >
+                    {secondaryHeaderActions.map((action) =>
+                      renderAction(action, "secondary-menu"),
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            <button
+              aria-label={closeLabel}
+              className="rounded-md border border-zinc-200 p-1.5 text-zinc-700 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isBusy}
+              onClick={onClose}
+              type="button"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          </div>
         </div>
 
         {children}

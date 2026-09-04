@@ -9,7 +9,6 @@ import { formatActivityType } from "@/ui/training-sessions/training-session-labe
 import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
 import { ActivityTransitionForm } from "./components/activity-transition-form";
-import { ActivityDetailsHeaderActions } from "./components/activity-details-header-actions";
 import { canTransitionActivity } from "./utils/activity-transition-availability";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import {
@@ -73,7 +72,7 @@ export function ActivityDetailsModal() {
     completeMutation.isPending;
 
   const canTransition = canTransitionActivity(activity);
-  const headerActions: ModalAction[] = isConfirmingDelete
+  const primaryHeaderActions: ModalAction[] = isConfirmingDelete
     ? [
         {
           label: "Cancel",
@@ -86,18 +85,38 @@ export function ActivityDetailsModal() {
           variant: "danger",
         },
       ]
-    : isTransitioningActivity
+      : isTransitioningActivity
       ? [
           {
             label: "Cancel",
             onClick: () => setTransitionMode(null),
             variant: "secondary",
           },
+        ]
+      : [
           {
-            ariaLabel: "Close activity details",
-            label: "Close",
-            onClick: closeModal,
-            variant: "secondary",
+            label: "Edit activity",
+            onClick: openEditActivity,
+            variant: "primary",
+          },
+        ];
+
+  const secondaryHeaderActions: ModalAction[] =
+    !isConfirmingDelete && !isTransitioningActivity
+      ? [
+          ...(canTransition
+            ? [
+                {
+                  label: "Skip activity",
+                  onClick: () => setTransitionMode("skip"),
+                  variant: "danger-outline" as const,
+                },
+              ]
+            : []),
+          {
+            label: "Delete activity",
+            onClick: () => setIsConfirmingDelete(true),
+            variant: "danger-outline",
           },
         ]
       : [];
@@ -105,6 +124,7 @@ export function ActivityDetailsModal() {
   return (
     <Modal
       dismissLabel="Dismiss activity details"
+      closeLabel="Close activity details"
       eyebrow={formatActivityType(activity.activityType)}
       footerActions={
         transitionMode
@@ -140,21 +160,10 @@ export function ActivityDetailsModal() {
               ]
             : []
       }
-      headerActionContent={
-        !isConfirmingDelete && !isTransitioningActivity ? (
-          <ActivityDetailsHeaderActions
-            canSkip={canTransition}
-            disabled={isBusy}
-            onClose={closeModal}
-            onDelete={() => setIsConfirmingDelete(true)}
-            onEdit={openEditActivity}
-            onSkip={() => setTransitionMode("skip")}
-          />
-        ) : undefined
-      }
-      headerActions={headerActions}
       isBusy={isBusy}
       onClose={closeModal}
+      primaryHeaderActions={primaryHeaderActions}
+      secondaryHeaderActions={secondaryHeaderActions}
       size="large"
       title={activity.title}
     >
