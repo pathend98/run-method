@@ -24,15 +24,15 @@ function strengthActivity(
   };
 }
 
-test("renders scheduled strength planned and actual durations", () => {
+test("renders scheduled strength targets without recorded actual duration", () => {
   render(<StrengthActivityDetails activity={strengthActivity()} />);
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("PM")).toBeNull();
-  expect(screen.getByText("Time of day")).toBeDefined();
-  expect(screen.getByText("PM")).toBeDefined();
+  expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
   expect(screen.getByText("00:45:00")).toBeDefined();
-  expect(screen.getByText("Actual duration")).toBeDefined();
-  expect(screen.getByText("00:40:00")).toBeDefined();
+  expect(screen.queryByText("Actual duration")).toBeNull();
+  expect(screen.queryByText("00:40:00")).toBeNull();
 });
 
 test("prioritizes completed strength actual duration and keeps its target secondary", () => {
@@ -89,7 +89,6 @@ test("renders missing planned values and omits a missing actual duration", () =>
   );
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
-  expect(screen.getByText("Any time")).toBeDefined();
   expect(screen.getByText("No target duration")).toBeDefined();
   expect(screen.queryByText("Actual duration")).toBeNull();
 });

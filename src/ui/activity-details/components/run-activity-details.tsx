@@ -23,9 +23,6 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
   const isCompleted = activity.status === "COMPLETED";
   const actualDistance = activity.actualDistanceMetres;
   const actualDuration = activity.actualDurationSeconds;
-  const hasCompletedActuals =
-    isCompleted && actualDistance !== null && actualDuration !== null;
-
   const completedMetrics =
     isCompleted && actualDistance !== null && actualDuration !== null ? (
     <dl
@@ -103,35 +100,9 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
     </dl>
   );
 
-  const detailMetricItems = hasCompletedActuals ? null : (
-    <>
-      {activity.actualDistanceMetres !== null ? (
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Actual distance
-          </dt>
-          <dd className="mt-1 text-sm text-zinc-950">
-            {formatDistance(activity.actualDistanceMetres)}
-          </dd>
-        </div>
-      ) : null}
-      {activity.actualDurationSeconds !== null ? (
-        <div>
-          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Actual duration
-          </dt>
-          <dd className="mt-1 text-sm text-zinc-950">
-            {formatDuration(activity.actualDurationSeconds)}
-          </dd>
-        </div>
-      ) : null}
-    </>
-  );
-
   return (
     <ActivityDetailsBody
       activity={activity}
-      detailMetricItems={detailMetricItems}
       plannedMetrics={completedMetrics ?? plannedMetrics}
     />
   );

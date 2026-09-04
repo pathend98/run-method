@@ -26,22 +26,19 @@ function runActivity(override: RunOverride = {}): RunTrainingSession {
   } as RunTrainingSession;
 }
 
-test("renders scheduled run targets and actual values", () => {
+test("renders scheduled run targets without recorded actual values", () => {
   render(<RunActivityDetails activity={runActivity()} />);
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
-  const details = screen
-    .getByRole("heading", { level: 3, name: "Details" })
-    .closest("section");
 
   expect(within(plannedMetrics).queryByText("AM")).toBeNull();
-  expect(within(details!).getByText("Time of day")).toBeDefined();
-  expect(within(details!).getByText("AM")).toBeDefined();
+  expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
   expect(screen.getByText("6.0 km")).toBeDefined();
   expect(screen.getByText("00:25:30")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
   expect(screen.queryByText("Target type")).toBeNull();
-  expect(screen.getByText("5.9 km")).toBeDefined();
-  expect(screen.getByText("00:25:00")).toBeDefined();
+  expect(screen.queryByText("5.9 km")).toBeNull();
+  expect(screen.queryByText("00:25:00")).toBeNull();
 });
 
 test("renders run targets as spacious responsive metric groups", () => {
@@ -109,11 +106,7 @@ test("prioritizes completed run actuals and shows their targets as supporting te
     );
   }
 
-  const details = screen
-    .getByRole("heading", { level: 3, name: "Details" })
-    .closest("section");
-  expect(within(details!).queryByText("Actual distance")).toBeNull();
-  expect(within(details!).queryByText("Actual duration")).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
 });
 
 test.each([
@@ -159,7 +152,6 @@ test("renders derived pace and no actual metrics", () => {
   );
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
-  expect(screen.getByText("Any time")).toBeDefined();
   expect(screen.getByText("5.0 km")).toBeDefined();
   expect(screen.getByText("00:30:00")).toBeDefined();
   expect(screen.getByText("6:00 / km")).toBeDefined();
@@ -171,16 +163,9 @@ test.each([
   ["distance", { actualDurationSeconds: null }, "Actual distance"],
   ["duration", { actualDistanceMetres: null }, "Actual duration"],
 ] satisfies Array<[string, RunOverride, string]>)(
-  "renders actual %s independently",
+  "omits non-completed actual %s",
   (_name, override, expectedLabel) => {
     render(<RunActivityDetails activity={runActivity(override)} />);
-    expect(screen.getByText(expectedLabel)).toBeDefined();
-    expect(
-      screen.queryByText(
-        expectedLabel === "Actual distance"
-          ? "Actual duration"
-          : "Actual distance",
-      ),
-    ).toBeNull();
+    expect(screen.queryByText(expectedLabel)).toBeNull();
   },
 );

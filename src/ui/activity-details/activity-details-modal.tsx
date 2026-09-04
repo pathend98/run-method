@@ -5,7 +5,11 @@ import type {
   SkipTrainingSessionRequest,
 } from "@/domain/training-sessions";
 import { Modal, type ModalAction } from "@/ui/components/modal";
-import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
+import {
+  formatActivityType,
+  formatStatus,
+  formatTimeOfDay,
+} from "@/ui/training-sessions/training-session-label-formatters";
 import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
 import { ActivityTransitionForm } from "./components/activity-transition-form";
@@ -125,7 +129,6 @@ export function ActivityDetailsModal() {
     <Modal
       dismissLabel="Dismiss activity details"
       closeLabel="Close activity details"
-      eyebrow={formatActivityType(activity.activityType)}
       footerActions={
         transitionMode
           ? [
@@ -165,6 +168,7 @@ export function ActivityDetailsModal() {
       primaryHeaderActions={primaryHeaderActions}
       secondaryHeaderActions={secondaryHeaderActions}
       size="large"
+      subtitle={`${formatActivityType(activity.activityType)} · ${formatStatus(activity.status)} · ${formatTimeOfDay(activity.timeOfDay)}`}
       title={activity.title}
     >
       {isConfirmingDelete ? (
