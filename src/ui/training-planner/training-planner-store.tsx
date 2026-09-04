@@ -12,6 +12,7 @@ import type {
 export type TrainingPlannerActiveModal =
   | { kind: "add"; day: TrainingDay }
   | { kind: "details"; activity: TrainingActivity }
+  | { kind: "complete"; activity: TrainingActivity }
   | { kind: "edit"; activity: TrainingActivity }
   | null;
 
@@ -23,6 +24,7 @@ type TrainingPlannerStoreActions = {
   closeModal: () => void;
   openAddActivity: (day: TrainingDay) => void;
   openActivityDetails: (activity: TrainingActivity) => void;
+  openCompleteActivity: () => void;
   openEditActivity: () => void;
   replaceActivityAndShowDetails: (activity: TrainingActivity) => void;
   returnToActivityDetails: () => void;
@@ -40,6 +42,17 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
     openAddActivity: (day) => set({ activeModal: { kind: "add", day } }),
     openActivityDetails: (activity) =>
       set({ activeModal: { kind: "details", activity } }),
+    openCompleteActivity: () =>
+      set((state) =>
+        state.activeModal?.kind === "details"
+          ? {
+              activeModal: {
+                kind: "complete",
+                activity: state.activeModal.activity,
+              },
+            }
+          : state,
+      ),
     openEditActivity: () =>
       set((state) =>
         state.activeModal?.kind === "details"
@@ -55,7 +68,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
       set({ activeModal: { kind: "details", activity } }),
     returnToActivityDetails: () =>
       set((state) =>
-        state.activeModal?.kind === "edit"
+        state.activeModal?.kind === "edit" || state.activeModal?.kind === "complete"
           ? {
               activeModal: {
                 kind: "details",

@@ -9,6 +9,7 @@ import { TrainingPlannerView } from "./components/training-planner-view";
 import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
 import { AddActivityModal } from "@/ui/add-activity/add-activity-modal";
 import { EditActivityModal } from "@/ui/edit-activity/edit-activity-modal";
+import { CompleteActivityModal } from "@/ui/complete-activity/complete-activity-modal";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
@@ -83,6 +84,7 @@ export function TrainingPlanner() {
       />
       {activeModalKind === "details" ? <ActivityDetailsModal /> : null}
       {activeModalKind === "edit" ? <EditActivityModal /> : null}
+      {activeModalKind === "complete" ? <CompleteActivityModal /> : null}
       {activeModalKind === "add" ? <AddActivityModal /> : null}
     </>
   );
