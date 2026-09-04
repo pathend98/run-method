@@ -46,7 +46,7 @@ test("renders the skip reason before planned metrics and description", () => {
   expect(screen.getByText("Travel day")).toBeDefined();
 });
 
-test("renders the description fallback and omits absent skip metadata", () => {
+test("omits the description section and absent skip metadata when unavailable", () => {
   render(
     <ActivityDetailsBody
       activity={{
@@ -59,7 +59,10 @@ test("renders the description fallback and omits absent skip metadata", () => {
       plannedMetrics={null}
     />,
   );
-  expect(screen.getByText("No description")).toBeDefined();
+  expect(
+    screen.queryByRole("heading", { level: 3, name: "Description" }),
+  ).toBeNull();
+  expect(screen.queryByText("No description")).toBeNull();
   expect(
     screen.queryByRole("heading", { name: "Recorded metrics" }),
   ).toBeNull();
