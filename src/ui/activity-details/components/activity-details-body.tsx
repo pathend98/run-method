@@ -25,12 +25,14 @@ export function ActivityDetailsBody({
 
       {plannedMetrics}
 
-      <section className="mt-6 border-t border-zinc-200 pt-5">
-        <h3 className="text-sm font-semibold text-zinc-950">Description</h3>
-        <p className="mt-2 text-sm leading-6 text-zinc-600">
-          {activity.description ?? "No description"}
-        </p>
-      </section>
+      {activity.description ? (
+        <section className="mt-6 border-t border-zinc-200 pt-5">
+          <h3 className="text-sm font-semibold text-zinc-950">Description</h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
+            {activity.description}
+          </p>
+        </section>
+      ) : null}
     </>
   );
 }
