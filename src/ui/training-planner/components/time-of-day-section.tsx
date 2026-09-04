@@ -7,6 +7,7 @@ import type {
 type TimeOfDaySectionProps = {
   activities: TrainingActivity[];
   day: TrainingDay["day"];
+  isToday?: boolean;
   label: string;
   onSelectActivity: (activity: TrainingActivity) => void;
 };
@@ -14,6 +15,7 @@ type TimeOfDaySectionProps = {
 export function TimeOfDaySection({
   activities,
   day,
+  isToday = false,
   label,
   onSelectActivity,
 }: TimeOfDaySectionProps) {
@@ -33,6 +35,7 @@ export function TimeOfDaySection({
           <li key={activity.id}>
             <TrainingActivityCard
               activity={activity}
+              isToday={isToday}
               onSelect={() => onSelectActivity(activity)}
             />
           </li>

@@ -37,18 +37,20 @@ test("renders a compact activity summary", () => {
 
   expect(card).toBeDefined();
   expect(screen.getByText("Tempo run").className).toContain("line-clamp-2");
+  expect(screen.getByText("6.0 km · 25m 30s")).toBeDefined();
   expect(screen.getByText("Scheduled")).toBeDefined();
-  expect(screen.getByText("Run")).toBeDefined();
+  expect(screen.getByText("Run", { selector: ".sr-only" })).toBeDefined();
+  expect(document.querySelector("svg.lucide-sport-shoe")).not.toBeNull();
   expect(screen.queryByText("Controlled effort")).toBeNull();
 });
 
 test.each([
-  ["SCHEDULED", "bg-zinc-400", "text-zinc-700"],
-  ["COMPLETED", "bg-green-600", "text-green-800"],
-  ["SKIPPED", "bg-amber-500", "text-amber-800"],
+  ["SCHEDULED", "lucide-clock-3", "text-zinc-600"],
+  ["COMPLETED", "lucide-circle-check", "text-green-700"],
+  ["SKIPPED", "lucide-circle-minus", "text-amber-700"],
 ] as const)(
-  "renders %s activities with a status label and accent",
-  (status, indicatorClass, labelClass) => {
+  "renders %s activities with a status icon and label",
+  (status, iconClass, labelClass) => {
     render(<TrainingActivityCard activity={runActivity({ status })} />);
 
     const card = screen.getByRole("button", {
@@ -58,13 +60,55 @@ test.each([
       status.charAt(0) + status.slice(1).toLowerCase(),
     );
 
-    expect(card.className).not.toContain("border");
+    expect(card.className).toContain("border-zinc-200");
+    expect(card.className).toContain("bg-white");
     expect(card.className).not.toContain("shadow");
-    expect(card.className).not.toMatch(/(^|\s)bg-/);
     expect(statusLabel.className).toContain(labelClass);
-    expect(card.querySelector("span")?.className).toContain(indicatorClass);
+    expect(card.querySelector(`svg.${iconClass}`)).not.toBeNull();
   },
 );
+
+test("shows actual run metrics after completion", () => {
+  render(
+    <TrainingActivityCard
+      activity={
+        runActivity({
+          status: "COMPLETED",
+          actualDistanceMetres: 6250,
+          actualDurationSeconds: 1575,
+        })
+      }
+    />,
+  );
+
+  expect(screen.getByText("6.3 km · 26m 15s")).toBeDefined();
+  expect(screen.queryByText("6.0 km · 25m 30s")).toBeNull();
+});
+
+test("shows duration only for strength activities", () => {
+  render(
+    <TrainingActivityCard
+      activity={{
+        ...runActivity(),
+        activityType: "STRENGTH",
+        targetDurationSeconds: 5400,
+        actualDurationSeconds: null,
+      }}
+    />,
+  );
+
+  expect(screen.getByText("1h 30m")).toBeDefined();
+  expect(screen.getByText("Strength", { selector: ".sr-only" })).toBeDefined();
+  expect(document.querySelector("svg.lucide-dumbbell")).not.toBeNull();
+});
+
+test("adds a restrained accent to today's activities", () => {
+  render(<TrainingActivityCard activity={runActivity()} isToday />);
+
+  const card = screen.getByRole("button", { name: "View Tempo run details" });
+  expect(card.className).toContain("border-teal-300");
+  expect(card.className).not.toContain("ring-");
+});
 
 test("does not render descriptions in the planner overview", () => {
   render(

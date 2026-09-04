@@ -115,6 +115,24 @@ test("passes the selected activity to the select handler", () => {
   expect(onSelectActivity).toHaveBeenCalledWith(selectedActivity);
 });
 
+test("adds the today accent to its activity cards", () => {
+  render(
+    <DayColumn
+      day={{
+        day: "Monday",
+        date: "2026-08-17",
+        activities: [runActivity()],
+      }}
+      isToday
+      onSelectActivity={vi.fn()}
+    />,
+  );
+
+  const card = screen.getByRole("button", { name: "View Tempo run details" });
+  expect(card.className).toContain("border-teal-300");
+  expect(card.className).not.toContain("ring-");
+});
+
 test("passes its day to the add handler", () => {
   const onAddActivity = vi.fn();
   const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
