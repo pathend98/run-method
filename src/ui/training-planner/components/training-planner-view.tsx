@@ -48,10 +48,10 @@ export function TrainingPlannerView({
           aria-label="Week navigation"
           className="flex flex-wrap items-center gap-3"
         >
-          <div className="flex items-center overflow-hidden rounded-md border border-zinc-300 bg-white shadow-sm">
+          <div className="flex items-center">
             <button
               aria-label="Previous week"
-              className="grid size-9 place-items-center text-lg font-semibold text-zinc-700 hover:bg-zinc-100 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-600"
+              className="grid size-9 place-items-center rounded-md text-lg font-semibold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
               onClick={onPreviousWeek}
               type="button"
             >
@@ -59,13 +59,13 @@ export function TrainingPlannerView({
             </button>
             <p
               aria-live="polite"
-              className="border-x border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-900"
+              className="px-3 py-2 text-sm font-medium text-zinc-800"
             >
               {formatWeekRange(weekRange)}
             </p>
             <button
               aria-label="Next week"
-              className="grid size-9 place-items-center text-lg font-semibold text-zinc-700 hover:bg-zinc-100 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-teal-600"
+              className="grid size-9 place-items-center rounded-md text-lg font-semibold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
               onClick={onNextWeek}
               type="button"
             >
@@ -74,7 +74,7 @@ export function TrainingPlannerView({
           </div>
           {!isCurrentWeek ? (
             <button
-              className="rounded-md px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              className="rounded-md px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
               onClick={onCurrentWeek}
               type="button"
             >
