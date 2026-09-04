@@ -15,9 +15,9 @@ export function StrengthActivityDetails({
     activity.status === "COMPLETED" && actualDuration !== null;
   const completedMetrics =
     activity.status === "COMPLETED" && actualDuration !== null ? (
-    <dl aria-label="Completed activity metrics" className="mt-6 grid gap-3">
-      <div className="rounded-lg border border-teal-200 bg-teal-50 p-3">
-        <dt className="text-xs font-semibold uppercase tracking-wide text-teal-700">
+    <dl aria-label="Completed activity metrics" className="mt-6 grid gap-8">
+      <div>
+        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Actual duration
         </dt>
         <dd className="mt-1 text-2xl font-semibold text-zinc-950">
@@ -42,8 +42,8 @@ export function StrengthActivityDetails({
     ) : null;
 
   const plannedMetrics = (
-    <dl aria-label="Planned activity metrics" className="mt-6 grid gap-3">
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+    <dl aria-label="Planned activity metrics" className="mt-6 grid gap-8">
+      <div>
         <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Duration
         </dt>

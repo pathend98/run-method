@@ -50,7 +50,11 @@ test("prioritizes completed strength actual duration and keeps its target second
   expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
   expect(within(completedMetrics).getByText("00:40:00")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 00:45:00")).toBeDefined();
-  expect(durationCard?.classList.contains("bg-teal-50")).toBe(true);
+  expect(completedMetrics.classList.contains("gap-8")).toBe(true);
+  expect(durationCard?.classList.contains("bg-teal-50")).toBe(false);
+  expect(durationCard?.classList.contains("border")).toBe(false);
+  expect(durationCard?.classList.contains("rounded-lg")).toBe(false);
+  expect(durationCard?.classList.contains("p-3")).toBe(false);
   expect(durationCard?.querySelector("dd")?.classList.contains("text-2xl")).toBe(
     true,
   );
