@@ -4,8 +4,6 @@ Training Brain is a run-coaching app.
 
 The project is currently bootstrapped as a single-package Next.js application using the App Router, TypeScript, pnpm, Node.js 24, and Docker-ready production builds.
 
-For the broader roadmap, see [PLAN.md](PLAN.md). For architecture decisions, see [ADRs.md](ADRs.md).
-
 ## Project Structure
 
 Training Brain is organised around deep modules: each meaningful folder should expose a small, stable interface and keep implementation details private. This follows John Ousterhout's distinction between a module's interface and its implementation.
@@ -61,7 +59,6 @@ Apply committed migrations and verify connectivity:
 
 ```bash
 pnpm db:migrate
-pnpm db:check
 ```
 
 Start the development server:
@@ -81,7 +78,7 @@ pnpm format:check
 pnpm build
 pnpm db:up
 pnpm db:migrate
-pnpm db:check
+pnpm db:view
 pnpm start
 ```
 
