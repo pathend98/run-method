@@ -57,6 +57,12 @@ test("renders time-of-day labels while retaining their request values", () => {
   expect(options.map((option) => option.value)).toEqual(["AM", "ANY", "PM"]);
 });
 
+test("renders the selected date in a human-readable format", () => {
+  renderAddActivityModal();
+
+  expect(screen.getByText("Monday, 17 August")).toBeDefined();
+});
+
 test("submits a converted activity for its selected day and closes", async () => {
   const onCreate = vi.fn().mockResolvedValue(undefined);
   const { store } = renderAddActivityModal({ onCreate });

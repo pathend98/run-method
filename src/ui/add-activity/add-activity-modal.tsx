@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format, parseISO } from "date-fns";
 import { useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
@@ -40,7 +41,6 @@ export function AddActivityModal() {
   }
 
   const date = dayDate;
-  const { day } = activeModal;
 
   async function submit(values: AddActivityFormValues) {
     try {
@@ -59,7 +59,7 @@ export function AddActivityModal() {
     <Modal
       dismissLabel="Dismiss add activity"
       closeLabel="Close add activity"
-      eyebrow={`${day.day} · ${day.date}`}
+      eyebrow={format(parseISO(date), "EEEE, d MMMM")}
       footerActions={[
         {
           label: "Cancel",
