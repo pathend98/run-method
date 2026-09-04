@@ -8,6 +8,7 @@ import type {
 
 type DayColumnProps = {
   day: TrainingDay;
+  isToday?: boolean;
   onAddActivity?: (day: TrainingDay) => void;
   onSelectActivity: (activity: TrainingActivity) => void;
 };
@@ -20,6 +21,7 @@ const timeSections: { label: string; value: TimeOfDay }[] = [
 
 export function DayColumn({
   day,
+  isToday = false,
   onAddActivity,
   onSelectActivity,
 }: DayColumnProps) {
@@ -36,19 +38,20 @@ export function DayColumn({
     <article
       aria-label={day.day}
       aria-labelledby={`${day.day.toLowerCase()}-heading`}
-      className="group flex min-h-64 min-w-0 flex-col px-3 py-4"
+      className={`group flex min-h-64 min-w-0 flex-col px-3 py-4 ${isToday ? "bg-teal-100/60" : ""}`}
       role="listitem"
     >
       <header className="flex items-baseline gap-1.5">
         <h2
           aria-label={day.day}
           id={`${day.day.toLowerCase()}-heading`}
-          className="text-sm font-semibold uppercase tracking-wide text-zinc-950"
+          className="text-sm font-semibold text-zinc-950"
         >
-          {day.day.slice(0, 3)}
+          {day.day}
         </h2>
         {day.date ? (
           <time
+            aria-current={isToday ? "date" : undefined}
             className="text-sm font-medium text-zinc-500"
             dateTime={day.date}
           >

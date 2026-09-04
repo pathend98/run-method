@@ -1,4 +1,5 @@
 import { DayColumn } from "./day-column";
+import { format } from "date-fns";
 import type {
   TrainingActivity,
   TrainingDay,
@@ -15,6 +16,8 @@ export function WeekGrid({
   onSelectActivity,
   week,
 }: WeekGridProps) {
+  const today = format(new Date(), "yyyy-MM-dd");
+
   return (
     <div
       aria-label="Weekly training planner"
@@ -26,6 +29,7 @@ export function WeekGrid({
           <DayColumn
             key={day.day}
             day={day}
+            isToday={day.date === today}
             onAddActivity={onAddActivity}
             onSelectActivity={onSelectActivity}
           />
