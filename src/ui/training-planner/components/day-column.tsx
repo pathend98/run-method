@@ -36,7 +36,7 @@ export function DayColumn({
     <article
       aria-label={day.day}
       aria-labelledby={`${day.day.toLowerCase()}-heading`}
-      className="flex min-h-64 min-w-0 flex-col px-3 py-4"
+      className="group flex min-h-64 min-w-0 flex-col px-3 py-4"
       role="listitem"
     >
       <header className="flex items-baseline gap-1.5">
@@ -74,11 +74,12 @@ export function DayColumn({
       </div>
       <footer className="pt-4">
         <button
-          className="rounded-md px-1 py-1 text-sm font-semibold text-teal-800 hover:bg-teal-50 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+          aria-label={`Add activity to ${day.day}`}
+          className="rounded-md px-1 py-1 text-xs font-medium text-zinc-500 transition-opacity hover:text-teal-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
           onClick={() => onAddActivity?.(day)}
           type="button"
         >
-          Add activity
+          + Add
         </button>
       </footer>
     </article>

@@ -253,7 +253,9 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
   );
 
   await screen.findByRole("list", { name: "Weekly training planner" });
-  fireEvent.click(screen.getAllByRole("button", { name: "Add activity" })[0]);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Add activity to Monday" }),
+  );
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Easy run" },
   });
