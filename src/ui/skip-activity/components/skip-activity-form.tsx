@@ -7,21 +7,19 @@ import {
   skipActivityFormSchema,
   toSkipTrainingSessionRequest,
   type SkipActivityFormValues,
-} from "../utils/activity-transition-form";
+} from "../utils/skip-activity-form";
 
-type ActivityTransitionFormProps = {
+type SkipActivityFormProps = {
   isSubmitting: boolean;
   onSkip: (request: SkipTrainingSessionRequest) => Promise<unknown>;
 };
 
-export function ActivityTransitionForm({
+export function SkipActivityForm({
   isSubmitting,
   onSkip,
-}: ActivityTransitionFormProps) {
+}: SkipActivityFormProps) {
   const form = useForm<SkipActivityFormValues>({
-    defaultValues: {
-      skipReason: "",
-    },
+    defaultValues: { skipReason: "" },
     resolver: zodResolver(skipActivityFormSchema),
   });
   const {
@@ -30,6 +28,7 @@ export function ActivityTransitionForm({
     register,
     setError,
   } = form;
+
   async function submit(values: SkipActivityFormValues) {
     try {
       await onSkip(toSkipTrainingSessionRequest(values));
@@ -42,29 +41,28 @@ export function ActivityTransitionForm({
 
   return (
     <FormProvider {...form}>
-      <form
-        className="mt-6 space-y-4 rounded-lg border border-teal-200 bg-teal-50 p-4"
-        id="activity-transition-form"
-        noValidate
-        onSubmit={handleSubmit(submit)}
-      >
-        <h3 className="text-sm font-semibold text-zinc-950">
-          Skip activity
+      <form id="skip-activity-form" noValidate onSubmit={handleSubmit(submit)}>
+        <h3 className="mt-6 text-base font-semibold text-zinc-950">
+          Why are you skipping this activity?
         </h3>
         {errors.root ? (
-          <p className="text-sm text-red-700" role="alert">
+          <p className="mt-4 text-sm text-red-700" role="alert">
             {errors.root.message}
           </p>
         ) : null}
-        <FormField error={errors.skipReason?.message} label="Skip reason">
-          <textarea
-            aria-label="Skip reason"
-            autoFocus
-            className="min-h-24"
-            disabled={isSubmitting}
-            {...register("skipReason")}
-          />
-        </FormField>
+        <fieldset className="mt-4" disabled={isSubmitting}>
+          <FormField error={errors.skipReason?.message} label="Skip reason">
+            <textarea
+              aria-label="Skip reason"
+              autoFocus
+              className="min-h-24"
+              disabled={isSubmitting}
+              placeholder="Tell us why you're skipping this workout..."
+              {...register("skipReason")}
+            />
+          </FormField>
+          <p className="mt-2 text-sm text-zinc-600">Required</p>
+        </fieldset>
       </form>
     </FormProvider>
   );

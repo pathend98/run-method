@@ -11,7 +11,6 @@ import { QueryProvider } from "@/app/query-provider";
 import type {
   CompleteTrainingSessionRequest,
   RunTrainingSession,
-  SkipTrainingSessionRequest,
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
 import { ActivityDetailsModal as ActualActivityDetailsModal } from "./activity-details-modal";
@@ -23,7 +22,6 @@ import {
 const api = vi.hoisted(() => ({
   completeTrainingSession: vi.fn(),
   deleteTrainingSession: vi.fn(),
-  skipTrainingSession: vi.fn(),
 }));
 
 vi.mock(
@@ -32,7 +30,6 @@ vi.mock(
     ...(await importOriginal()),
     completeTrainingSession: api.completeTrainingSession,
     deleteTrainingSession: api.deleteTrainingSession,
-    skipTrainingSession: api.skipTrainingSession,
   }),
 );
 
@@ -75,10 +72,6 @@ type ActivityDetailsModalTestProps = {
     request: CompleteTrainingSessionRequest,
   ) => Promise<unknown>;
   onDelete?: (id: string) => Promise<void>;
-  onSkip?: (
-    id: string,
-    request: SkipTrainingSessionRequest,
-  ) => Promise<unknown>;
 };
 
 const ActivityDetailsModal = ActualActivityDetailsModal as unknown as (
@@ -91,9 +84,6 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
   function configureMutationHandlers() {
     api.deleteTrainingSession.mockImplementation(
       currentProps.onDelete ?? vi.fn().mockResolvedValue(undefined),
-    );
-    api.skipTrainingSession.mockImplementation(
-      currentProps.onSkip ?? vi.fn().mockResolvedValue(undefined),
     );
     api.completeTrainingSession.mockImplementation(
       currentProps.onComplete ?? vi.fn().mockResolvedValue(undefined),
@@ -139,13 +129,13 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
 }
 
 function selectMoreActivityAction(name: "Skip activity" | "Delete activity") {
-  fireEvent.click(
-    screen.getByRole("button", { name: "More actions" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name }));
 }
 
-function renderActivityDetails(overrides: Partial<ActivityDetailsModalTestProps> = {}) {
+function renderActivityDetails(
+  overrides: Partial<ActivityDetailsModalTestProps> = {},
+) {
   return render(
     <ActivityDetailsModal
       activity={runActivity}
@@ -334,18 +324,14 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     />,
   );
   expect(screen.getByRole("button", { name: "Edit activity" })).toBeDefined();
-  expect(
-    screen.getByRole("button", { name: "More actions" }),
-  ).toBeDefined();
+  expect(screen.getByRole("button", { name: "More actions" })).toBeDefined();
   expect(
     screen.getByRole("button", { name: "Close activity details" }),
   ).toBeDefined();
   expect(
     screen.getByRole("button", { name: "Complete activity" }),
   ).toBeDefined();
-  fireEvent.click(
-    screen.getByRole("button", { name: "More actions" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   expect(screen.getByRole("menuitem", { name: "Skip activity" })).toBeDefined();
   expect(
     screen.getByRole("menuitem", { name: "Delete activity" }),
@@ -380,9 +366,7 @@ test("hides skip and complete actions for future scheduled activities", () => {
     />,
   );
 
-  fireEvent.click(
-    screen.getByRole("button", { name: "More actions" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
   expect(
     screen.getByRole("menuitem", { name: "Delete activity" }),
@@ -429,93 +413,28 @@ test("dismisses more actions when interacting outside the menu", () => {
     />,
   );
 
-  fireEvent.click(
-    screen.getByRole("button", { name: "More actions" }),
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+  fireEvent.pointerDown(
+    screen.getByRole("menuitem", { name: "Skip activity" }),
   );
-  fireEvent.pointerDown(screen.getByRole("menuitem", { name: "Skip activity" }));
   expect(screen.getByRole("menu")).toBeDefined();
   fireEvent.pointerDown(screen.getByText("Target pace"));
 
   expect(screen.queryByRole("menu")).toBeNull();
 });
 
-test("validates a skip reason and closes after a successful skip", async () => {
-  const onClose = vi.fn();
-  const onSkip = vi.fn().mockResolvedValue(undefined);
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-      onSkip={onSkip}
-    />,
+test("opens the separate skip modal flow", () => {
+  const store = createTrainingPlannerStore();
+  store.getState().openActivityDetails({ ...runActivity, day: "Monday" });
+  testingRender(
+    <TrainingPlannerStoreProvider store={store}>
+      <QueryProvider>
+        <ActualActivityDetailsModal />
+      </QueryProvider>
+    </TrainingPlannerStoreProvider>,
   );
-  selectMoreActivityAction("Skip activity");
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
-  expect(await screen.findByText("Enter a skip reason")).toBeDefined();
-  fireEvent.change(screen.getByLabelText("Skip reason"), {
-    target: { value: "Recovery" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
-  await waitFor(() =>
-    expect(onSkip).toHaveBeenCalledWith("run", { skipReason: "Recovery" }),
-  );
-  expect(onClose).toHaveBeenCalledOnce();
-});
 
-test("cancels a transition from the header", () => {
-  render(
-    <ActivityDetailsModal
-      activity={strengthActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
   selectMoreActivityAction("Skip activity");
-  fireEvent.click(screen.getAllByRole("button", { name: "Cancel" })[1]);
+  expect(store.getState().activeModal).toMatchObject({ kind: "skip" });
   expect(screen.queryByLabelText("Skip reason")).toBeNull();
-});
-
-test("reports skip failures and labels a pending skip", async () => {
-  const { rerender } = render(
-    <ActivityDetailsModal
-      activity={strengthActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-      onSkip={vi.fn().mockRejectedValue(new Error("nope"))}
-    />,
-  );
-  selectMoreActivityAction("Skip activity");
-  fireEvent.change(screen.getByLabelText("Skip reason"), {
-    target: { value: "Rest" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
-  expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to skip activity",
-  );
-  rerender(
-    <ActivityDetailsModal
-      activity={strengthActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-      onSkip={() => new Promise(() => undefined)}
-    />,
-  );
-  fireEvent.click(screen.getAllByRole("button", { name: "Cancel" })[0]);
-  selectMoreActivityAction("Skip activity");
-  fireEvent.change(screen.getByLabelText("Skip reason"), {
-    target: { value: "Rest" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
-  expect(
-    await screen.findByRole("button", { name: "Skipping…" }),
-  ).toHaveProperty("disabled", true);
 });

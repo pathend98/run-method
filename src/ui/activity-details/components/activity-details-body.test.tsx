@@ -19,7 +19,7 @@ const activity = {
   actualDurationSeconds: null,
 } satisfies StrengthTrainingSession;
 
-test("renders the description and skip reason", () => {
+test("renders the skip reason before planned metrics and description", () => {
   render(
     <ActivityDetailsBody
       activity={activity}
@@ -31,12 +31,18 @@ test("renders the description and skip reason", () => {
     level: 3,
     name: "Description",
   });
+  const skipReason = screen.getByRole("heading", {
+    level: 3,
+    name: "Why it was skipped",
+  });
+  expect(skipReason.compareDocumentPosition(planned)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
   expect(planned.compareDocumentPosition(description)).toBe(
     Node.DOCUMENT_POSITION_FOLLOWING,
   );
   expect(screen.getByText("Single-leg stability")).toBeDefined();
   expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
-  expect(screen.getByText("Skip reason")).toBeDefined();
   expect(screen.getByText("Travel day")).toBeDefined();
 });
 
@@ -54,6 +60,8 @@ test("renders the description fallback and omits absent skip metadata", () => {
     />,
   );
   expect(screen.getByText("No description")).toBeDefined();
-  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
-  expect(screen.queryByText("Skip reason")).toBeNull();
+  expect(
+    screen.queryByRole("heading", { name: "Recorded metrics" }),
+  ).toBeNull();
+  expect(screen.queryByText("Why it was skipped")).toBeNull();
 });

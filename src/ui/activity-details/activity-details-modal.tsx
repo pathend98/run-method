@@ -1,6 +1,4 @@
 import { useState } from "react";
-
-import type { SkipTrainingSessionRequest } from "@/domain/training-sessions";
 import { Modal, type ModalAction } from "@/ui/components/modal";
 import {
   formatActivityType,
@@ -9,13 +7,9 @@ import {
 } from "@/ui/training-sessions/training-session-label-formatters";
 import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
-import { ActivityTransitionForm } from "./components/activity-transition-form";
 import { canTransitionActivity } from "./utils/activity-transition-availability";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import {
-  useDeleteTrainingSessionMutation,
-  useSkipTrainingSessionMutation,
-} from "@/ui/training-sessions/training-session-mutations";
+import { useDeleteTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 
 export function ActivityDetailsModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
@@ -26,11 +20,12 @@ export function ActivityDetailsModal() {
   const openCompleteActivity = useTrainingPlannerStore(
     (state) => state.openCompleteActivity,
   );
+  const openSkipActivity = useTrainingPlannerStore(
+    (state) => state.openSkipActivity,
+  );
   const deleteMutation = useDeleteTrainingSessionMutation();
-  const skipMutation = useSkipTrainingSessionMutation();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isSkipping, setIsSkipping] = useState(false);
 
   if (activeModal?.kind !== "details") {
     return null;
@@ -54,14 +49,7 @@ export function ActivityDetailsModal() {
     setIsConfirmingDelete(false);
   }
 
-  async function skipActivity(request: SkipTrainingSessionRequest) {
-    await skipMutation.mutateAsync({ id: activity.id, request });
-    closeModal();
-  }
-
-  const isBusy =
-    deleteMutation.isPending ||
-    skipMutation.isPending;
+  const isBusy = deleteMutation.isPending;
 
   const canTransition = canTransitionActivity(activity);
   const primaryHeaderActions: ModalAction[] = isConfirmingDelete
@@ -77,70 +65,47 @@ export function ActivityDetailsModal() {
           variant: "danger",
         },
       ]
-      : isSkipping
-      ? [
-          {
-            label: "Cancel",
-            onClick: () => setIsSkipping(false),
-            variant: "secondary",
-          },
-        ]
-      : [
-          {
-            label: "Edit activity",
-            onClick: openEditActivity,
-            variant: "primary",
-          },
-        ];
+    : [
+        {
+          label: "Edit activity",
+          onClick: openEditActivity,
+          variant: "primary",
+        },
+      ];
 
-  const secondaryHeaderActions: ModalAction[] =
-    !isConfirmingDelete && !isSkipping
-      ? [
-          ...(canTransition
-            ? [
-                {
-                  label: "Skip activity",
-                  onClick: () => setIsSkipping(true),
-                  variant: "danger-outline" as const,
-                },
-              ]
-            : []),
-          {
-            label: "Delete activity",
-            onClick: () => setIsConfirmingDelete(true),
-            variant: "danger-outline",
-          },
-        ]
-      : [];
+  const secondaryHeaderActions: ModalAction[] = !isConfirmingDelete
+    ? [
+        ...(canTransition
+          ? [
+              {
+                label: "Skip activity",
+                onClick: openSkipActivity,
+                variant: "danger-outline" as const,
+              },
+            ]
+          : []),
+        {
+          label: "Delete activity",
+          onClick: () => setIsConfirmingDelete(true),
+          variant: "danger-outline",
+        },
+      ]
+    : [];
 
   return (
     <Modal
       dismissLabel="Dismiss activity details"
       closeLabel="Close activity details"
       footerActions={
-        isSkipping
+        canTransition
           ? [
               {
-                label: "Cancel",
-                onClick: () => setIsSkipping(false),
-                variant: "secondary",
-              },
-              {
-                form: "activity-transition-form",
-                label: skipMutation.isPending ? "Skipping…" : "Skip activity",
-                type: "submit",
-                variant: "danger",
+                label: "Complete activity",
+                onClick: openCompleteActivity,
+                variant: "primary",
               },
             ]
-          : canTransition
-            ? [
-                {
-                  label: "Complete activity",
-                  onClick: openCompleteActivity,
-                  variant: "primary",
-                },
-              ]
-            : []
+          : []
       }
       isBusy={isBusy}
       onClose={closeModal}
@@ -160,13 +125,6 @@ export function ActivityDetailsModal() {
             </p>
           ) : null}
         </div>
-      ) : null}
-
-      {isSkipping ? (
-        <ActivityTransitionForm
-          isSubmitting={skipMutation.isPending}
-          onSkip={skipActivity}
-        />
       ) : null}
 
       {activity.activityType === "RUN" ? (
