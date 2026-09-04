@@ -58,6 +58,7 @@ export function AddActivityModal() {
   return (
     <Modal
       dismissLabel="Dismiss add activity"
+      closeLabel="Close add activity"
       eyebrow={`${day.day} · ${day.date}`}
       footerActions={[
         {
@@ -71,14 +72,6 @@ export function AddActivityModal() {
           label: createMutation.isPending ? "Adding…" : "Add activity",
           type: "submit",
           variant: "primary",
-        },
-      ]}
-      headerActions={[
-        {
-          ariaLabel: "Close add activity",
-          label: "Close",
-          onClick: closeModal,
-          variant: "secondary",
         },
       ]}
       isBusy={createMutation.isPending}

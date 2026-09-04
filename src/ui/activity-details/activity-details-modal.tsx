@@ -71,7 +71,8 @@ export function ActivityDetailsModal() {
     skipMutation.isPending ||
     completeMutation.isPending;
 
-  const headerActions: ModalAction[] = isConfirmingDelete
+  const canTransition = canTransitionActivity(activity);
+  const primaryHeaderActions: ModalAction[] = isConfirmingDelete
     ? [
         {
           label: "Cancel",
@@ -84,28 +85,27 @@ export function ActivityDetailsModal() {
           variant: "danger",
         },
       ]
-    : isTransitioningActivity
+      : isTransitioningActivity
       ? [
           {
             label: "Cancel",
             onClick: () => setTransitionMode(null),
             variant: "secondary",
           },
-          {
-            ariaLabel: "Close activity details",
-            label: "Close",
-            onClick: closeModal,
-            variant: "secondary",
-          },
         ]
       : [
-          ...(canTransitionActivity(activity)
+          {
+            label: "Edit activity",
+            onClick: openEditActivity,
+            variant: "primary",
+          },
+        ];
+
+  const secondaryHeaderActions: ModalAction[] =
+    !isConfirmingDelete && !isTransitioningActivity
+      ? [
+          ...(canTransition
             ? [
-                {
-                  label: "Complete activity",
-                  onClick: () => setTransitionMode("complete"),
-                  variant: "primary" as const,
-                },
                 {
                   label: "Skip activity",
                   onClick: () => setTransitionMode("skip"),
@@ -114,26 +114,17 @@ export function ActivityDetailsModal() {
               ]
             : []),
           {
-            label: "Edit activity",
-            onClick: openEditActivity,
-            variant: "primary",
-          },
-          {
             label: "Delete activity",
             onClick: () => setIsConfirmingDelete(true),
             variant: "danger-outline",
           },
-          {
-            ariaLabel: "Close activity details",
-            label: "Close",
-            onClick: closeModal,
-            variant: "secondary",
-          },
-        ];
+        ]
+      : [];
 
   return (
     <Modal
       dismissLabel="Dismiss activity details"
+      closeLabel="Close activity details"
       eyebrow={formatActivityType(activity.activityType)}
       footerActions={
         transitionMode
@@ -159,11 +150,20 @@ export function ActivityDetailsModal() {
                 variant: transitionMode === "skip" ? "danger" : "primary",
               },
             ]
-          : []
+          : canTransition
+            ? [
+                {
+                  label: "Complete activity",
+                  onClick: () => setTransitionMode("complete"),
+                  variant: "primary",
+                },
+              ]
+            : []
       }
-      headerActions={headerActions}
       isBusy={isBusy}
       onClose={closeModal}
+      primaryHeaderActions={primaryHeaderActions}
+      secondaryHeaderActions={secondaryHeaderActions}
       size="large"
       title={activity.title}
     >

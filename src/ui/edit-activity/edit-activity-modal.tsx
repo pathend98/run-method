@@ -36,6 +36,7 @@ export function EditActivityModal() {
   return (
     <Modal
       dismissLabel="Dismiss edit activity"
+      closeLabel="Close edit activity"
       eyebrow={`${formatActivityType(activity.activityType)} · ${activity.date}`}
       footerActions={[
         {
@@ -49,14 +50,6 @@ export function EditActivityModal() {
           label: editMutation.isPending ? "Saving…" : "Save changes",
           type: "submit",
           variant: "primary",
-        },
-      ]}
-      headerActions={[
-        {
-          ariaLabel: "Close edit activity",
-          label: "Close",
-          onClick: returnToActivityDetails,
-          variant: "secondary",
         },
       ]}
       isBusy={editMutation.isPending}

@@ -138,17 +138,27 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
   };
 }
 
-test("calls the close handler from the close button", () => {
-  const onClose = vi.fn();
-  render(
+function selectMoreActivityAction(name: "Skip activity" | "Delete activity") {
+  fireEvent.click(
+    screen.getByRole("button", { name: "More actions" }),
+  );
+  fireEvent.click(screen.getByRole("menuitem", { name }));
+}
+
+function renderActivityDetails(overrides: Partial<ActivityDetailsModalTestProps> = {}) {
+  return render(
     <ActivityDetailsModal
       activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={vi.fn()}
+      onClose={vi.fn()}
       onEdit={vi.fn()}
+      {...overrides}
     />,
   );
+}
+
+test("calls the close handler from the close button", () => {
+  const onClose = vi.fn();
+  renderActivityDetails({ onClose });
   fireEvent.click(
     screen.getByRole("button", { name: "Close activity details" }),
   );
@@ -157,15 +167,7 @@ test("calls the close handler from the close button", () => {
 
 test("calls the close handler from the backdrop", () => {
   const onClose = vi.fn();
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderActivityDetails({ onClose });
   fireEvent.click(
     screen.getByRole("button", { name: "Dismiss activity details" }),
   );
@@ -174,44 +176,20 @@ test("calls the close handler from the backdrop", () => {
 
 test("calls the close handler from the Escape key", () => {
   const onClose = vi.fn();
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderActivityDetails({ onClose });
   fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
 test("ignores non-Escape keys", () => {
   const onClose = vi.fn();
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderActivityDetails({ onClose });
   fireEvent.keyDown(window, { key: "Enter", code: "Enter" });
   expect(onClose).not.toHaveBeenCalled();
 });
 
 test("renders as an accessible large centered modal", () => {
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderActivityDetails();
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
   const overlay = modal.parentElement;
   expect(overlay?.classList.contains("items-center")).toBe(true);
@@ -226,30 +204,14 @@ test("renders as an accessible large centered modal", () => {
 });
 
 test("dispatches run activities to the run details component", () => {
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderActivityDetails();
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
   expect(within(modal).queryByText("Target type")).toBeNull();
   expect(within(modal).getByText("4:15 / km")).toBeDefined();
 });
 
 test("dispatches strength activities to the strength details component", () => {
-  render(
-    <ActivityDetailsModal
-      activity={strengthActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderActivityDetails({ activity: strengthActivity });
   const modal = screen.getByRole("dialog", { name: "Strength" });
   expect(within(modal).getByText("00:45:00")).toBeDefined();
   expect(within(modal).queryByText("Target pace")).toBeNull();
@@ -282,7 +244,7 @@ test("asks for confirmation and allows cancellation", () => {
     />,
   );
 
-  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  selectMoreActivityAction("Delete activity");
   expect(screen.getByText("Delete “Tempo run”?")).toBeDefined();
   expect(screen.getByText("This action cannot be undone.")).toBeDefined();
 
@@ -304,7 +266,7 @@ test("deletes the activity and closes after success", async () => {
     />,
   );
 
-  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  selectMoreActivityAction("Delete activity");
   fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
 
   await waitFor(() => expect(onDelete).toHaveBeenCalledOnce());
@@ -322,7 +284,7 @@ test("keeps confirmation open and reports deletion failures", async () => {
     />,
   );
 
-  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  selectMoreActivityAction("Delete activity");
   fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
 
   expect((await screen.findByRole("alert")).textContent).toContain(
@@ -344,7 +306,7 @@ test("disables confirmation and dismissal while deleting", async () => {
       onEdit={vi.fn()}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Delete activity" }));
+  selectMoreActivityAction("Delete activity");
   fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
 
   expect(
@@ -361,7 +323,7 @@ test("disables confirmation and dismissal while deleting", async () => {
   expect(onClose).not.toHaveBeenCalled();
 });
 
-test("shows skip and complete actions only for scheduled activities on or before today", () => {
+test("puts complete in the footer and skip in more actions for eligible activities", () => {
   const { rerender } = render(
     <ActivityDetailsModal
       activity={runActivity}
@@ -371,9 +333,22 @@ test("shows skip and complete actions only for scheduled activities on or before
       onEdit={vi.fn()}
     />,
   );
-  expect(screen.getByRole("button", { name: "Skip activity" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "Edit activity" })).toBeDefined();
+  expect(
+    screen.getByRole("button", { name: "More actions" }),
+  ).toBeDefined();
+  expect(
+    screen.getByRole("button", { name: "Close activity details" }),
+  ).toBeDefined();
   expect(
     screen.getByRole("button", { name: "Complete activity" }),
+  ).toBeDefined();
+  fireEvent.click(
+    screen.getByRole("button", { name: "More actions" }),
+  );
+  expect(screen.getByRole("menuitem", { name: "Skip activity" })).toBeDefined();
+  expect(
+    screen.getByRole("menuitem", { name: "Delete activity" }),
   ).toBeDefined();
 
   rerender(
@@ -385,7 +360,7 @@ test("shows skip and complete actions only for scheduled activities on or before
       onEdit={vi.fn()}
     />,
   );
-  expect(screen.queryByRole("button", { name: "Skip activity" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
   expect(
     screen.queryByRole("button", { name: "Complete activity" }),
   ).toBeNull();
@@ -405,10 +380,63 @@ test("hides skip and complete actions for future scheduled activities", () => {
     />,
   );
 
-  expect(screen.queryByRole("button", { name: "Skip activity" })).toBeNull();
+  fireEvent.click(
+    screen.getByRole("button", { name: "More actions" }),
+  );
+  expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
+  expect(
+    screen.getByRole("menuitem", { name: "Delete activity" }),
+  ).toBeDefined();
   expect(
     screen.queryByRole("button", { name: "Complete activity" }),
   ).toBeNull();
+});
+
+test("dismisses more actions with Escape before dismissing the modal", () => {
+  const onClose = vi.fn();
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting={false}
+      onClose={onClose}
+      onDelete={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  const trigger = screen.getByRole("button", {
+    name: "More actions",
+  });
+  fireEvent.click(trigger);
+  const menu = screen.getByRole("menu");
+  fireEvent.keyDown(menu, { key: "Enter" });
+  expect(screen.getByRole("menu")).toBeDefined();
+  fireEvent.keyDown(menu, { key: "Escape" });
+
+  expect(screen.queryByRole("menu")).toBeNull();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(document.activeElement).toBe(trigger);
+});
+
+test("dismisses more actions when interacting outside the menu", () => {
+  render(
+    <ActivityDetailsModal
+      activity={runActivity}
+      isDeleting={false}
+      onClose={vi.fn()}
+      onDelete={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "More actions" }),
+  );
+  fireEvent.pointerDown(screen.getByRole("menuitem", { name: "Skip activity" }));
+  expect(screen.getByRole("menu")).toBeDefined();
+  fireEvent.pointerDown(screen.getByText("Target pace"));
+
+  expect(screen.queryByRole("menu")).toBeNull();
 });
 
 test("validates a skip reason and closes after a successful skip", async () => {
@@ -424,7 +452,7 @@ test("validates a skip reason and closes after a successful skip", async () => {
       onSkip={onSkip}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  selectMoreActivityAction("Skip activity");
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
   expect(await screen.findByText("Enter a skip reason")).toBeDefined();
   fireEvent.change(screen.getByLabelText("Skip reason"), {
@@ -541,7 +569,7 @@ test("uses default transition handlers when none are supplied", async () => {
       onEdit={vi.fn()}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  selectMoreActivityAction("Skip activity");
   fireEvent.change(screen.getByLabelText("Skip reason"), {
     target: { value: "Rest" },
   });
@@ -576,7 +604,7 @@ test("cancels a transition from the header", () => {
       onEdit={vi.fn()}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  selectMoreActivityAction("Skip activity");
   fireEvent.click(screen.getAllByRole("button", { name: "Cancel" })[0]);
   expect(screen.queryByLabelText("Skip reason")).toBeNull();
 });
@@ -592,7 +620,7 @@ test("reports skip failures and labels a pending skip", async () => {
       onSkip={vi.fn().mockRejectedValue(new Error("nope"))}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  selectMoreActivityAction("Skip activity");
   fireEvent.change(screen.getByLabelText("Skip reason"), {
     target: { value: "Rest" },
   });
@@ -611,7 +639,7 @@ test("reports skip failures and labels a pending skip", async () => {
     />,
   );
   fireEvent.click(screen.getAllByRole("button", { name: "Cancel" })[0]);
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  selectMoreActivityAction("Skip activity");
   fireEvent.change(screen.getByLabelText("Skip reason"), {
     target: { value: "Rest" },
   });
