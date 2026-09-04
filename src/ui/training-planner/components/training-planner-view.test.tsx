@@ -68,7 +68,9 @@ test("forwards activity and add selections through its private grid", () => {
   fireEvent.click(
     screen.getByRole("button", { name: "View Tempo run details" }),
   );
-  fireEvent.click(screen.getAllByRole("button", { name: "Add activity" })[0]);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Add activity to Monday" }),
+  );
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
   expect(onAddActivity).toHaveBeenCalledWith(week[0]);
 });

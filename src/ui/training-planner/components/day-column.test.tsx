@@ -126,7 +126,22 @@ test("passes its day to the add handler", () => {
     />,
   );
 
-  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  const addActivity = screen.getByRole("button", {
+    name: "Add activity to Monday",
+  });
+  expect(addActivity.textContent).toBe("+ Add");
+  expect(addActivity.className).toContain("[@media(hover:hover)]:opacity-0");
+  expect(addActivity.className).toContain(
+    "[@media(hover:hover)]:group-hover:opacity-100",
+  );
+  expect(addActivity.className).toContain(
+    "[@media(hover:hover)]:group-focus-within:opacity-100",
+  );
+  expect(addActivity.className).not.toContain("lg:");
+  expect(addActivity.className).not.toContain("border");
+  expect(addActivity.className).not.toMatch(/(^|\s)bg-/);
+
+  fireEvent.click(addActivity);
   expect(onAddActivity).toHaveBeenCalledWith(day);
 });
 
@@ -139,6 +154,8 @@ test("allows an omitted add handler", () => {
   );
 
   expect(() =>
-    fireEvent.click(screen.getByRole("button", { name: "Add activity" })),
+    fireEvent.click(
+      screen.getByRole("button", { name: "Add activity to Monday" }),
+    ),
   ).not.toThrow();
 });
