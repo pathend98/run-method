@@ -64,6 +64,7 @@ test("renders and wires primary, secondary, and footer actions", () => {
       ]}
       primaryHeaderActions={[
         { label: "Open", onClick: onOpen, variant: "primary" },
+        { label: "Preview", onClick: onOpen, variant: "secondary" },
       ]}
       secondaryHeaderActions={[
         { label: "Archive", onClick: onOpen, variant: "secondary" },

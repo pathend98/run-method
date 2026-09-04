@@ -13,6 +13,7 @@ export type TrainingPlannerActiveModal =
   | { kind: "add"; day: TrainingDay }
   | { kind: "details"; activity: TrainingActivity }
   | { kind: "complete"; activity: TrainingActivity }
+  | { kind: "delete"; activity: TrainingActivity }
   | { kind: "edit"; activity: TrainingActivity }
   | { kind: "skip"; activity: TrainingActivity }
   | null;
@@ -26,6 +27,7 @@ type TrainingPlannerStoreActions = {
   openAddActivity: (day: TrainingDay) => void;
   openActivityDetails: (activity: TrainingActivity) => void;
   openCompleteActivity: () => void;
+  openDeleteActivity: () => void;
   openEditActivity: () => void;
   openSkipActivity: () => void;
   replaceActivityAndShowDetails: (activity: TrainingActivity) => void;
@@ -50,6 +52,17 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
           ? {
               activeModal: {
                 kind: "complete",
+                activity: state.activeModal.activity,
+              },
+            }
+          : state,
+      ),
+    openDeleteActivity: () =>
+      set((state) =>
+        state.activeModal?.kind === "details"
+          ? {
+              activeModal: {
+                kind: "delete",
                 activity: state.activeModal.activity,
               },
             }
@@ -83,6 +96,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
       set((state) =>
         state.activeModal?.kind === "edit" ||
         state.activeModal?.kind === "complete" ||
+        state.activeModal?.kind === "delete" ||
         state.activeModal?.kind === "skip"
           ? {
               activeModal: {
