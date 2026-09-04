@@ -273,6 +273,31 @@ test("editTrainingSession patches and parses the edited session", async () => {
   );
 });
 
+test("editTrainingSession sends optional completed actual metrics", async () => {
+  const completedEdit = {
+    ...editRequest,
+    actualDurationSeconds: 1800,
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        ...editedSession,
+        status: "COMPLETED",
+        actualDurationSeconds: 1800,
+      }),
+    }),
+  );
+
+  await editTrainingSession(createdSession.id, completedEdit);
+
+  expect(fetch).toHaveBeenCalledWith(
+    `/api/v1/training-sessions/${createdSession.id}`,
+    expect.objectContaining({ body: JSON.stringify(completedEdit) }),
+  );
+});
+
 test("editTrainingSession returns API messages and field errors", async () => {
   vi.stubGlobal(
     "fetch",

@@ -224,6 +224,53 @@ test("validates a nullable strength duration edit", () => {
   });
 });
 
+test("validates optional actual metrics on matching edit activity types", () => {
+  expect(
+    validator.validateEdit({
+      title: "Completed run",
+      description: null,
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetDistanceMetres: 5000,
+      targetDurationSeconds: 1500,
+      actualDistanceMetres: 5100,
+      actualDurationSeconds: 1530,
+    }),
+  ).toMatchObject({ actualDistanceMetres: 5100, actualDurationSeconds: 1530 });
+
+  expect(
+    validator.validateEdit({
+      title: "Completed strength",
+      description: null,
+      timeOfDay: null,
+      activityType: "STRENGTH",
+      targetDurationSeconds: null,
+      actualDurationSeconds: 1800,
+    }),
+  ).toMatchObject({ actualDurationSeconds: 1800 });
+});
+
+test("rejects invalid and mismatched actual metrics on edits", () => {
+  try {
+    validator.validateEdit({
+      title: "Strength",
+      description: null,
+      timeOfDay: null,
+      activityType: "STRENGTH",
+      targetDurationSeconds: null,
+      actualDurationSeconds: 0,
+      actualDistanceMetres: 5000,
+    });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({
+      actualDurationSeconds: ["Too small: expected number to be >0"],
+      actualDistanceMetres: ['Unrecognized key: "actualDistanceMetres"'],
+    });
+  }
+});
+
 test("reports strength duration edit errors from the matching branch", () => {
   try {
     validator.validateEdit({

@@ -161,9 +161,20 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     }
 
     if (request.activityType === "STRENGTH") {
-      return current.targetDurationSeconds === request.targetDurationSeconds;
+      return (
+        current.targetDurationSeconds === request.targetDurationSeconds &&
+        (request.actualDurationSeconds === undefined ||
+          current.actualDurationSeconds === request.actualDurationSeconds)
+      );
     }
-    return this.runTargetsEqual(current as RunTrainingSession, request);
+    const runCurrent = current as RunTrainingSession;
+    return (
+      this.runTargetsEqual(runCurrent, request) &&
+      (request.actualDistanceMetres === undefined ||
+        runCurrent.actualDistanceMetres === request.actualDistanceMetres) &&
+      (request.actualDurationSeconds === undefined ||
+        runCurrent.actualDurationSeconds === request.actualDurationSeconds)
+    );
   }
 
   private async findForTransition(id: string): Promise<TrainingSession> {
