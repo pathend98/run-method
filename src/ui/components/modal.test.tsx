@@ -68,6 +68,11 @@ test("renders and wires ordered header and footer actions", () => {
           variant: "secondary",
         },
       ]}
+      headerActionContent={
+        <button onClick={onOpen} type="button">
+          More actions
+        </button>
+      }
       onClose={onClose}
       size="large"
       title="Actions"
@@ -83,14 +88,15 @@ test("renders and wires ordered header and footer actions", () => {
     within(dialog)
       .getAllByRole("button")
       .map((button) => button.textContent),
-  ).toEqual(["Open", "Close", "Delete", "Remove", "Save"]);
+  ).toEqual(["Open", "Close", "More actions", "Delete", "Remove", "Save"]);
 
   fireEvent.click(screen.getByRole("button", { name: "Open" }));
   fireEvent.click(screen.getByRole("button", { name: "Close example" }));
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("button", { name: "Remove" }));
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  expect(onOpen).toHaveBeenCalledOnce();
+  expect(onOpen).toHaveBeenCalledTimes(2);
   expect(onClose).toHaveBeenCalledOnce();
   expect(onDelete).toHaveBeenCalledOnce();
   expect(screen.getByRole("button", { name: "Delete" })).toHaveProperty(

@@ -16,6 +16,7 @@ type ModalProps = {
   children: ReactNode;
   dismissLabel: string;
   eyebrow?: string;
+  headerActionContent?: ReactNode;
   footerActions?: ModalAction[];
   headerActions?: ModalAction[];
   isBusy?: boolean;
@@ -39,6 +40,7 @@ export function Modal({
   children,
   dismissLabel,
   eyebrow,
+  headerActionContent,
   footerActions = [],
   headerActions = [],
   isBusy = false,
@@ -94,7 +96,7 @@ export function Modal({
       >
         <div
           className={
-            headerActions.length > 1
+            headerActions.length > 1 || headerActionContent
               ? "flex flex-col items-start justify-between gap-3 sm:flex-row"
               : "flex items-start justify-between gap-3"
           }
@@ -109,9 +111,10 @@ export function Modal({
               {title}
             </h2>
           </div>
-          {headerActions.length > 0 ? (
+          {headerActions.length > 0 || headerActionContent ? (
             <div className="flex flex-wrap gap-2">
               {headerActions.map((action) => renderAction(action, "header"))}
+              {headerActionContent}
             </div>
           ) : null}
         </div>
