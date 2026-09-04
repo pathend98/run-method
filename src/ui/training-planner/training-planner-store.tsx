@@ -14,6 +14,7 @@ export type TrainingPlannerActiveModal =
   | { kind: "details"; activity: TrainingActivity }
   | { kind: "complete"; activity: TrainingActivity }
   | { kind: "edit"; activity: TrainingActivity }
+  | { kind: "skip"; activity: TrainingActivity }
   | null;
 
 type TrainingPlannerStoreState = {
@@ -26,6 +27,7 @@ type TrainingPlannerStoreActions = {
   openActivityDetails: (activity: TrainingActivity) => void;
   openCompleteActivity: () => void;
   openEditActivity: () => void;
+  openSkipActivity: () => void;
   replaceActivityAndShowDetails: (activity: TrainingActivity) => void;
   returnToActivityDetails: () => void;
 };
@@ -64,11 +66,24 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
+    openSkipActivity: () =>
+      set((state) =>
+        state.activeModal?.kind === "details"
+          ? {
+              activeModal: {
+                kind: "skip",
+                activity: state.activeModal.activity,
+              },
+            }
+          : state,
+      ),
     replaceActivityAndShowDetails: (activity) =>
       set({ activeModal: { kind: "details", activity } }),
     returnToActivityDetails: () =>
       set((state) =>
-        state.activeModal?.kind === "edit" || state.activeModal?.kind === "complete"
+        state.activeModal?.kind === "edit" ||
+        state.activeModal?.kind === "complete" ||
+        state.activeModal?.kind === "skip"
           ? {
               activeModal: {
                 kind: "details",
