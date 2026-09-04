@@ -1,4 +1,5 @@
 import { Modal } from "@/ui/components/modal";
+import { Button } from "@/ui/components/button";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useDeleteTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 
@@ -39,22 +40,22 @@ export function DeleteActivityModal() {
           </p>
         ) : null}
         <div className="mt-6 flex justify-end gap-3">
-          <button
-            className="rounded-md border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
+          <Button
             disabled={deleteMutation.isPending}
             onClick={returnToActivityDetails}
             type="button"
+            variant="tertiary"
           >
             Cancel
-          </button>
-          <button
-            className="rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+          </Button>
+          <Button
             disabled={deleteMutation.isPending}
             onClick={() => void deleteActivity()}
             type="button"
+            variant="destructive"
           >
             {deleteMutation.isPending ? "Deleting…" : "Delete permanently"}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

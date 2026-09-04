@@ -36,7 +36,7 @@ export function ActivityDetailsModal() {
     {
       label: "Edit activity",
       onClick: openEditActivity,
-      variant: "primary",
+      variant: "secondary",
     },
   ];
 
@@ -46,14 +46,14 @@ export function ActivityDetailsModal() {
           {
             label: "Skip activity",
             onClick: openSkipActivity,
-            variant: "danger-outline" as const,
+            variant: "destructive" as const,
           },
         ]
       : []),
     {
       label: "Delete activity",
       onClick: openDeleteActivity,
-      variant: "danger-outline",
+      variant: "destructive",
     },
   ];
 

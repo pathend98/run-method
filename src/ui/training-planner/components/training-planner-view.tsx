@@ -1,6 +1,7 @@
 "use client";
 
 import type { TrainingSessionDateRange } from "@/domain/training-sessions";
+import { Button } from "@/ui/components/button";
 import { WeekGrid } from "./week-grid";
 import { formatWeekRange } from "../services/training-planner-service";
 import type {
@@ -49,37 +50,41 @@ export function TrainingPlannerView({
           className="flex flex-wrap items-center gap-3"
         >
           <div className="flex items-center">
-            <button
+            <Button
               aria-label="Previous week"
-              className="grid size-9 place-items-center rounded-md text-lg font-semibold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              className="text-lg font-semibold"
               onClick={onPreviousWeek}
+              size="icon"
               type="button"
+              variant="tertiary"
             >
               ‹
-            </button>
+            </Button>
             <p
               aria-live="polite"
               className="px-3 py-2 text-sm font-medium text-zinc-800"
             >
               {formatWeekRange(weekRange)}
             </p>
-            <button
+            <Button
               aria-label="Next week"
-              className="grid size-9 place-items-center rounded-md text-lg font-semibold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              className="text-lg font-semibold text-zinc-600"
               onClick={onNextWeek}
+              size="icon"
               type="button"
+              variant="tertiary"
             >
               ›
-            </button>
+            </Button>
           </div>
           {!isCurrentWeek ? (
-            <button
-              className="rounded-md px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+            <Button
               onClick={onCurrentWeek}
               type="button"
+              variant="tertiary"
             >
               Today
-            </button>
+            </Button>
           ) : null}
         </nav>
         <WeekGrid

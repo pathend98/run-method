@@ -1,4 +1,5 @@
 import { FormField } from "@/ui/components/form-field";
+import { Button } from "@/ui/components/button";
 import { useRunFieldInputController } from "../hooks/use-run-field-input-controller";
 import {
   metricLabel,
@@ -104,15 +105,16 @@ export function RunFieldInput({
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {controller.authoritativeMetrics.map((metric) => (
-              <button
-                className="rounded-md border border-teal-700 bg-white px-3 py-1.5 text-sm font-medium text-teal-800 hover:bg-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+              <Button
                 disabled={disabled}
                 key={metric}
                 onClick={() => controller.keepMetric(metric)}
+                size="compact"
                 type="button"
+                variant="secondary"
               >
                 Keep {metricLabel(metric)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

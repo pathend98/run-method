@@ -42,7 +42,7 @@ export function EditActivityModal() {
         {
           label: "Cancel",
           onClick: returnToActivityDetails,
-          variant: "secondary",
+          variant: "tertiary",
         },
         {
           disabled: runFieldsPending,

@@ -9,6 +9,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import { Button } from "./button";
 
 export type ModalAction = {
   ariaLabel?: string;
@@ -17,7 +18,7 @@ export type ModalAction = {
   label: string;
   onClick?: () => void;
   type?: "button" | "submit";
-  variant: "primary" | "secondary" | "danger" | "danger-outline";
+  variant: "primary" | "secondary" | "tertiary" | "destructive";
 };
 
 type ModalProps = {
@@ -33,17 +34,6 @@ type ModalProps = {
   size?: "medium" | "large";
   subtitle?: string;
   title: string;
-};
-
-const actionClasses: Record<ModalAction["variant"], string> = {
-  primary:
-    "bg-teal-700 font-semibold text-white hover:bg-teal-800 focus-visible:outline-teal-600",
-  secondary:
-    "border border-zinc-200 font-medium text-zinc-700 hover:bg-zinc-50 focus-visible:outline-teal-600",
-  danger:
-    "bg-red-700 font-semibold text-white hover:bg-red-800 focus-visible:outline-red-600",
-  "danger-outline":
-    "border border-red-300 font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-red-600",
 };
 
 export function Modal({
@@ -114,13 +104,11 @@ export function Modal({
     placement: "header" | "footer" | "secondary-menu",
   ) {
     return (
-      <button
+      <Button
         aria-label={action.ariaLabel}
-        className={`rounded-md ${
-          placement === "header" ? "px-3 py-1" : "px-3 py-2"
-        } ${
-          placement === "secondary-menu" ? "w-full text-left" : ""
-        } text-sm disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${actionClasses[action.variant]}`}
+        className={
+          placement === "secondary-menu" ? "w-full justify-start" : undefined
+        }
         disabled={isBusy || action.disabled}
         form={action.form}
         key={`${placement}-${action.label}`}
@@ -131,10 +119,12 @@ export function Modal({
           action.onClick?.();
         }}
         role={placement === "secondary-menu" ? "menuitem" : undefined}
+        size="default"
         type={action.type ?? "button"}
+        variant={action.variant}
       >
         {action.label}
-      </button>
+      </Button>
     );
   }
 
@@ -181,21 +171,22 @@ export function Modal({
             )}
             {secondaryHeaderActions.length > 0 ? (
               <div className="relative" ref={secondaryMenuRef}>
-                <button
+                <Button
                   aria-controls={
                     isSecondaryMenuOpen ? "modal-secondary-actions" : undefined
                   }
                   aria-expanded={isSecondaryMenuOpen}
                   aria-haspopup="menu"
                   aria-label="More actions"
-                  className="rounded-md border border-zinc-200 p-1.5 text-zinc-700 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isBusy}
                   onClick={() => setIsSecondaryMenuOpen((open) => !open)}
                   ref={secondaryMenuTriggerRef}
+                  size="icon"
                   type="button"
+                  variant="tertiary"
                 >
                   <Ellipsis aria-hidden="true" className="size-4" />
-                </button>
+                </Button>
                 {isSecondaryMenuOpen ? (
                   <div
                     className="absolute right-0 z-20 mt-2 flex w-44 flex-col gap-2 rounded-md border border-zinc-200 bg-white p-1 shadow-lg"
@@ -210,15 +201,16 @@ export function Modal({
                 ) : null}
               </div>
             ) : null}
-            <button
+            <Button
               aria-label={closeLabel}
-              className="rounded-md border border-zinc-200 p-1.5 text-zinc-700 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isBusy}
               onClick={onClose}
+              size="icon"
               type="button"
+              variant="tertiary"
             >
               <X aria-hidden="true" className="size-4" />
-            </button>
+            </Button>
           </div>
         </div>
 
