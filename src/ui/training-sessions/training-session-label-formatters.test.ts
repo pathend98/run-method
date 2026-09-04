@@ -21,8 +21,8 @@ test.each([
 
 test.each([
   ["AM", "Morning"],
-  ["PM", "Afternoon"],
-  [null, "Any time"],
+  ["PM", "Evening"],
+  [null, "Anytime"],
 ] as const)("formats %s as %s", (timeOfDay, expected) => {
   expect(formatTimeOfDay(timeOfDay)).toBe(expected);
 });

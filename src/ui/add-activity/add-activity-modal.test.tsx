@@ -42,6 +42,21 @@ function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
   };
 }
 
+test("renders time-of-day labels while retaining their request values", () => {
+  renderAddActivityModal();
+
+  const options = Array.from(
+    screen.getByLabelText("Time of day").querySelectorAll("option"),
+  );
+
+  expect(options.map((option) => option.textContent)).toEqual([
+    "Morning",
+    "Anytime",
+    "Evening",
+  ]);
+  expect(options.map((option) => option.value)).toEqual(["AM", "ANY", "PM"]);
+});
+
 test("submits a converted activity for its selected day and closes", async () => {
   const onCreate = vi.fn().mockResolvedValue(undefined);
   const { store } = renderAddActivityModal({ onCreate });

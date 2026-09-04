@@ -2,6 +2,7 @@ import type { TrainingSession } from "@/domain/training-sessions";
 import {
   formatActivityType,
   formatStatus,
+  formatTimeOfDay,
 } from "@/ui/training-sessions/training-session-label-formatters";
 import { formatLockedTargets } from "../utils/edit-activity-formatters";
 import { ReadOnlyDetail } from "./read-only-detail";
@@ -24,7 +25,7 @@ export function EditActivitySummary({ activity }: EditActivitySummaryProps) {
       {!isScheduled ? (
         <ReadOnlyDetail
           label="Time of day"
-          value={activity.timeOfDay ?? "Any time"}
+          value={formatTimeOfDay(activity.timeOfDay)}
         />
       ) : null}
       {showLockedTargets ? (
