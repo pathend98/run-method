@@ -25,9 +25,13 @@ const activity = {
 } satisfies TrainingActivity;
 
 const week = [
-  { day: "Monday", activities: [activity] },
-  { day: "Tuesday", activities: [] },
+  { day: "Monday", date: "2026-08-17", activities: [activity] },
+  { day: "Tuesday", date: "2026-08-18", activities: [] },
 ] satisfies TrainingDay[];
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 test("renders a labelled weekly planner list with day columns", () => {
   render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
@@ -56,4 +60,32 @@ test("passes activity selection through from day columns", () => {
   );
 
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
+});
+
+test("tints only today's column when the displayed week includes it", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-08-17T12:00:00"));
+
+  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+
+  const monday = screen.getByRole("listitem", { name: "Monday" });
+  const tuesday = screen.getByRole("listitem", { name: "Tuesday" });
+  const today = monday.querySelector('time[aria-current="date"]');
+
+  expect(monday.className).toContain("bg-teal-100/60");
+  expect(today?.textContent).toBe("17 Aug");
+  expect(today?.className).toContain("text-zinc-500");
+  expect(today?.className).not.toContain("rounded-full");
+  expect(tuesday.className).not.toContain("bg-teal-100/60");
+  expect(tuesday.querySelector('time[aria-current="date"]')).toBeNull();
+});
+
+test("does not mark a date outside the displayed week as today", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-08-20T12:00:00"));
+
+  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+
+  expect(document.querySelector('time[aria-current="date"]')).toBeNull();
+  expect(document.querySelector('[class~="bg-teal-100/60"]')).toBeNull();
 });
