@@ -24,15 +24,15 @@ function strengthActivity(
   };
 }
 
-test("renders scheduled strength planned and actual durations", () => {
+test("renders scheduled strength targets without recorded actual duration", () => {
   render(<StrengthActivityDetails activity={strengthActivity()} />);
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("PM")).toBeNull();
-  expect(screen.getByText("Time of day")).toBeDefined();
-  expect(screen.getByText("PM")).toBeDefined();
+  expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
   expect(screen.getByText("00:45:00")).toBeDefined();
-  expect(screen.getByText("Actual duration")).toBeDefined();
-  expect(screen.getByText("00:40:00")).toBeDefined();
+  expect(screen.queryByText("Actual duration")).toBeNull();
+  expect(screen.queryByText("00:40:00")).toBeNull();
 });
 
 test("prioritizes completed strength actual duration and keeps its target secondary", () => {
@@ -50,7 +50,11 @@ test("prioritizes completed strength actual duration and keeps its target second
   expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
   expect(within(completedMetrics).getByText("00:40:00")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 00:45:00")).toBeDefined();
-  expect(durationCard?.classList.contains("bg-teal-50")).toBe(true);
+  expect(completedMetrics.classList.contains("gap-8")).toBe(true);
+  expect(durationCard?.classList.contains("bg-teal-50")).toBe(false);
+  expect(durationCard?.classList.contains("border")).toBe(false);
+  expect(durationCard?.classList.contains("rounded-lg")).toBe(false);
+  expect(durationCard?.classList.contains("p-3")).toBe(false);
   expect(durationCard?.querySelector("dd")?.classList.contains("text-2xl")).toBe(
     true,
   );
@@ -85,7 +89,6 @@ test("renders missing planned values and omits a missing actual duration", () =>
   );
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
-  expect(screen.getByText("Any time")).toBeDefined();
   expect(screen.getByText("No target duration")).toBeDefined();
   expect(screen.queryByText("Actual duration")).toBeNull();
 });

@@ -70,6 +70,7 @@ test("renders and wires primary, secondary, and footer actions", () => {
       ]}
       onClose={onClose}
       size="large"
+      subtitle="Run · Scheduled · Morning"
       title="Actions"
     >
       <form id="example-form" onSubmit={onSubmit} />
@@ -79,6 +80,11 @@ test("renders and wires primary, secondary, and footer actions", () => {
   const dialog = screen.getByRole("dialog", { name: "Actions" });
   expect(dialog.classList.contains("max-w-4xl")).toBe(true);
   expect(within(dialog).getByText("Activity · Today")).toBeDefined();
+  const title = within(dialog).getByRole("heading", { name: "Actions" });
+  const subtitle = within(dialog).getByText("Run · Scheduled · Morning");
+  expect(title.compareDocumentPosition(subtitle)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
   fireEvent.click(screen.getByRole("button", { name: "Open" }));
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   const secondaryMenu = screen.getByRole("menu");

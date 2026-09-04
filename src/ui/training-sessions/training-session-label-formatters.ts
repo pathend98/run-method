@@ -9,3 +9,9 @@ export function formatActivityType(
 export function formatStatus(status: TrainingSession["status"]) {
   return status.charAt(0) + status.slice(1).toLowerCase();
 }
+
+export function formatTimeOfDay(timeOfDay: TrainingSession["timeOfDay"]) {
+  if (timeOfDay === "AM") return "Morning";
+  if (timeOfDay === "PM") return "Afternoon";
+  return "Any time";
+}

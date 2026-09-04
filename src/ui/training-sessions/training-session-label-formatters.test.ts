@@ -1,6 +1,7 @@
 import {
   formatActivityType,
   formatStatus,
+  formatTimeOfDay,
 } from "./training-session-label-formatters";
 
 test.each([
@@ -16,4 +17,12 @@ test.each([
   ["SKIPPED", "Skipped"],
 ] as const)("formats the %s status", (status, expected) => {
   expect(formatStatus(status)).toBe(expected);
+});
+
+test.each([
+  ["AM", "Morning"],
+  ["PM", "Afternoon"],
+  [null, "Any time"],
+] as const)("formats %s as %s", (timeOfDay, expected) => {
+  expect(formatTimeOfDay(timeOfDay)).toBe(expected);
 });

@@ -26,33 +26,31 @@ function runActivity(override: RunOverride = {}): RunTrainingSession {
   } as RunTrainingSession;
 }
 
-test("renders scheduled run targets and actual values", () => {
+test("renders scheduled run targets without recorded actual values", () => {
   render(<RunActivityDetails activity={runActivity()} />);
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
-  const details = screen
-    .getByRole("heading", { level: 3, name: "Details" })
-    .closest("section");
 
   expect(within(plannedMetrics).queryByText("AM")).toBeNull();
-  expect(within(details!).getByText("Time of day")).toBeDefined();
-  expect(within(details!).getByText("AM")).toBeDefined();
+  expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
   expect(screen.getByText("6.0 km")).toBeDefined();
   expect(screen.getByText("00:25:30")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
   expect(screen.queryByText("Target type")).toBeNull();
-  expect(screen.getByText("5.9 km")).toBeDefined();
-  expect(screen.getByText("00:25:00")).toBeDefined();
+  expect(screen.queryByText("5.9 km")).toBeNull();
+  expect(screen.queryByText("00:25:00")).toBeNull();
 });
 
-test("renders run targets as three equally styled responsive cards", () => {
+test("renders run targets as spacious responsive metric groups", () => {
   render(<RunActivityDetails activity={runActivity()} />);
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(plannedMetrics.classList.contains("sm:grid-cols-3")).toBe(true);
+  expect(plannedMetrics.classList.contains("gap-8")).toBe(true);
   expect(
     [...plannedMetrics.querySelectorAll("dt")].map((term) => term.textContent),
   ).toEqual(["Distance", "Target pace", "Duration"]);
 
-  const expectedCardClasses = [
+  const removedCardClasses = [
     "rounded-lg",
     "border",
     "border-zinc-200",
@@ -65,8 +63,8 @@ test("renders run targets as three equally styled responsive cards", () => {
     const card = term.closest("div");
     const value = card?.querySelector("dd");
 
-    for (const className of expectedCardClasses) {
-      expect(card?.classList.contains(className)).toBe(true);
+    for (const className of removedCardClasses) {
+      expect(card?.classList.contains(className)).toBe(false);
     }
     expect(card?.classList.contains("col-span-2")).toBe(false);
     expect(value?.classList.contains("text-lg")).toBe(true);
@@ -84,6 +82,7 @@ test("prioritizes completed run actuals and shows their targets as supporting te
   const completedMetrics = screen.getByLabelText("Completed activity metrics");
 
   expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
+  expect(completedMetrics.classList.contains("gap-8")).toBe(true);
   expect(
     [...completedMetrics.querySelectorAll("dt")].map((term) => term.textContent),
   ).toEqual(["Actual distance", "Actual pace", "Actual duration"]);
@@ -98,17 +97,16 @@ test("prioritizes completed run actuals and shows their targets as supporting te
 
   for (const label of ["Actual distance", "Actual pace", "Actual duration"]) {
     const card = within(completedMetrics).getByText(label).closest("div");
-    expect(card?.classList.contains("bg-teal-50")).toBe(true);
+    expect(card?.classList.contains("bg-teal-50")).toBe(false);
+    expect(card?.classList.contains("border")).toBe(false);
+    expect(card?.classList.contains("rounded-lg")).toBe(false);
+    expect(card?.classList.contains("p-3")).toBe(false);
     expect(card?.querySelector("dd")?.classList.contains("text-2xl")).toBe(
       true,
     );
   }
 
-  const details = screen
-    .getByRole("heading", { level: 3, name: "Details" })
-    .closest("section");
-  expect(within(details!).queryByText("Actual distance")).toBeNull();
-  expect(within(details!).queryByText("Actual duration")).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
 });
 
 test.each([
@@ -154,7 +152,6 @@ test("renders derived pace and no actual metrics", () => {
   );
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
-  expect(screen.getByText("Any time")).toBeDefined();
   expect(screen.getByText("5.0 km")).toBeDefined();
   expect(screen.getByText("00:30:00")).toBeDefined();
   expect(screen.getByText("6:00 / km")).toBeDefined();
@@ -166,16 +163,9 @@ test.each([
   ["distance", { actualDurationSeconds: null }, "Actual distance"],
   ["duration", { actualDistanceMetres: null }, "Actual duration"],
 ] satisfies Array<[string, RunOverride, string]>)(
-  "renders actual %s independently",
+  "omits non-completed actual %s",
   (_name, override, expectedLabel) => {
     render(<RunActivityDetails activity={runActivity(override)} />);
-    expect(screen.getByText(expectedLabel)).toBeDefined();
-    expect(
-      screen.queryByText(
-        expectedLabel === "Actual distance"
-          ? "Actual duration"
-          : "Actual distance",
-      ),
-    ).toBeNull();
+    expect(screen.queryByText(expectedLabel)).toBeNull();
   },
 );

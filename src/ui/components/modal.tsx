@@ -31,6 +31,7 @@ type ModalProps = {
   primaryHeaderActions?: ModalAction[];
   secondaryHeaderActions?: ModalAction[];
   size?: "medium" | "large";
+  subtitle?: string;
   title: string;
 };
 
@@ -56,6 +57,7 @@ export function Modal({
   primaryHeaderActions = [],
   secondaryHeaderActions = [],
   size = "medium",
+  subtitle,
   title,
 }: ModalProps) {
   const titleId = useId();
@@ -169,6 +171,9 @@ export function Modal({
             <h2 className="text-xl font-semibold text-zinc-950" id={titleId}>
               {title}
             </h2>
+            {subtitle ? (
+              <p className="mt-1 text-sm text-zinc-600">{subtitle}</p>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-start gap-2">
             {primaryHeaderActions.map((action) =>
