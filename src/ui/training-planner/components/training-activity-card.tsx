@@ -11,18 +11,15 @@ type TrainingActivityCardProps = {
 
 const statusStyles = {
   SCHEDULED: {
-    card:
-      "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50",
+    indicator: "bg-zinc-400",
     label: "text-zinc-700",
   },
   COMPLETED: {
-    card:
-      "border-green-200 bg-green-50 hover:border-green-300 hover:bg-green-100",
+    indicator: "bg-green-600",
     label: "text-green-800",
   },
   SKIPPED: {
-    card:
-      "border-amber-200 bg-amber-50 hover:border-amber-300 hover:bg-amber-100",
+    indicator: "bg-amber-500",
     label: "text-amber-800",
   },
 } as const;
@@ -36,22 +33,27 @@ export function TrainingActivityCard({
   return (
     <button
       aria-label={`View ${activity.title} details`}
-      className={`w-full rounded-md border px-3 py-2 text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ${statusStyle.card}`}
+      className="w-full rounded-md px-2 py-2 text-left transition hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
       onClick={onSelect}
       type="button"
     >
-      <div className="flex flex-col gap-1.5">
-        <p className="line-clamp-2 text-sm font-semibold text-zinc-950">
-          {activity.title}
-        </p>
+      <div className="flex gap-2">
         <span
-          className={`text-xs font-semibold leading-4 ${statusStyle.label}`}
-        >
-          {formatStatus(activity.status)}
-        </span>
-        <p className="text-xs font-medium text-teal-700">
-          {formatActivityType(activity.activityType)}
-        </p>
+          aria-hidden="true"
+          className={`mt-1.5 size-1.5 shrink-0 rounded-full ${statusStyle.indicator}`}
+        />
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="line-clamp-2 text-sm font-semibold text-zinc-950">
+            {activity.title}
+          </p>
+          <p className="text-xs font-medium leading-4 text-zinc-600">
+            <span className={statusStyle.label}>
+              {formatStatus(activity.status)}
+            </span>
+            <span aria-hidden="true"> · </span>
+            {formatActivityType(activity.activityType)}
+          </p>
+        </div>
       </div>
     </button>
   );

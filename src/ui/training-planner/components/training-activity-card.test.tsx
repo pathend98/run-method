@@ -43,12 +43,12 @@ test("renders a compact activity summary", () => {
 });
 
 test.each([
-  ["SCHEDULED", "border-zinc-200", "text-zinc-700"],
-  ["COMPLETED", "border-green-200", "text-green-800"],
-  ["SKIPPED", "border-amber-200", "text-amber-800"],
+  ["SCHEDULED", "bg-zinc-400", "text-zinc-700"],
+  ["COMPLETED", "bg-green-600", "text-green-800"],
+  ["SKIPPED", "bg-amber-500", "text-amber-800"],
 ] as const)(
-  "renders %s activities with their status label and styling",
-  (status, cardClass, labelClass) => {
+  "renders %s activities with a status label and accent",
+  (status, indicatorClass, labelClass) => {
     render(<TrainingActivityCard activity={runActivity({ status })} />);
 
     const card = screen.getByRole("button", {
@@ -58,11 +58,11 @@ test.each([
       status.charAt(0) + status.slice(1).toLowerCase(),
     );
 
-    expect(card.className).toContain(cardClass);
+    expect(card.className).not.toContain("border");
+    expect(card.className).not.toContain("shadow");
+    expect(card.className).not.toMatch(/(^|\s)bg-/);
     expect(statusLabel.className).toContain(labelClass);
-    expect(statusLabel.className).not.toContain("bg-");
-    expect(statusLabel.className).not.toContain("rounded-full");
-    expect(statusLabel.className).not.toContain("whitespace-nowrap");
+    expect(card.querySelector("span")?.className).toContain(indicatorClass);
   },
 );
 
