@@ -35,26 +35,19 @@ export function TrainingPlannerView({
       className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8"
     >
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-semibold uppercase tracking-wide text-teal-700">
-          Weekly schedule
-        </p>
         <h1
           id="training-planner-heading"
           className="text-3xl font-semibold text-zinc-950 sm:text-4xl"
         >
-          Training planner
+          Training Plan
         </h1>
-        <p className="max-w-2xl text-sm leading-6 text-zinc-600">
-          A simple week view for arranging runs, workouts, recovery, and rest
-          across morning, flexible, and evening slots.
+        <p aria-live="polite" className="text-lg font-semibold text-zinc-900">
+          {formatWeekRange(weekRange)}
         </p>
       </div>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p aria-live="polite" className="text-lg font-semibold text-zinc-900">
-            {formatWeekRange(weekRange)}
-          </p>
           <nav
             aria-label="Week navigation"
             className="flex flex-wrap items-center gap-2"
