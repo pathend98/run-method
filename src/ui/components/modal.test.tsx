@@ -48,12 +48,12 @@ test("renders and wires primary, secondary, and footer actions", () => {
           disabled: true,
           label: "Delete",
           onClick: onDelete,
-          variant: "danger",
+          variant: "destructive",
         },
         {
           label: "Remove",
           onClick: onDelete,
-          variant: "danger-outline",
+          variant: "destructive",
         },
         {
           form: "example-form",

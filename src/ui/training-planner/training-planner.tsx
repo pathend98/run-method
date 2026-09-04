@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+import { Button } from "@/ui/components/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
 import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
@@ -62,7 +63,11 @@ export function TrainingPlanner() {
   if (query.isError) {
     return (
       <PlannerStatus
-        action={<button onClick={() => void query.refetch()}>Retry</button>}
+        action={
+          <Button onClick={() => void query.refetch()} variant="primary">
+            Retry
+          </Button>
+        }
         message="Unable to load training planner."
       />
     );

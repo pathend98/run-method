@@ -27,7 +27,7 @@ export function CompleteActivityModal() {
       dismissLabel="Dismiss complete activity"
       closeLabel="Close complete activity"
       footerActions={[
-        { label: "Cancel", onClick: returnToActivityDetails, variant: "secondary" },
+        { label: "Cancel", onClick: returnToActivityDetails, variant: "tertiary" },
         { disabled: runFieldsPending, form: "complete-activity-form", label: completeMutation.isPending ? "Completing…" : "Complete activity", type: "submit", variant: "primary" },
       ]}
       isBusy={completeMutation.isPending}

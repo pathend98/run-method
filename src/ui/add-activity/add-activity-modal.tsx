@@ -64,7 +64,7 @@ export function AddActivityModal() {
         {
           label: "Cancel",
           onClick: closeModal,
-          variant: "secondary",
+          variant: "tertiary",
         },
         {
           disabled: activityType === "RUN" && runFieldsPending,

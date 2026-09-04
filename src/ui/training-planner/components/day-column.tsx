@@ -1,4 +1,5 @@
 import { TimeOfDaySection } from "./time-of-day-section";
+import { Button } from "@/ui/components/button";
 import { formatDayDate } from "../services/training-planner-service";
 import type {
   TimeOfDay,
@@ -77,14 +78,15 @@ export function DayColumn({
         )}
       </div>
       <footer className="pt-4">
-        <button
+        <Button
           aria-label={`Add activity to ${day.day}`}
-          className="rounded-md px-1 py-1 text-xs font-medium text-zinc-500 transition-opacity hover:text-teal-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
+          className="px-1 py-1 text-xs hover:text-teal-700 hover:underline [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
           onClick={() => onAddActivity?.(day)}
           type="button"
+          variant="tertiary"
         >
           + Add
-        </button>
+        </Button>
       </footer>
     </article>
   );

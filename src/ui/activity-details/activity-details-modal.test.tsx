@@ -247,16 +247,29 @@ test("puts complete in the footer and skip in more actions for eligible activiti
       onEdit={vi.fn()}
     />,
   );
-  expect(screen.getByRole("button", { name: "Edit activity" })).toBeDefined();
-  expect(screen.getByRole("button", { name: "More actions" })).toBeDefined();
+  expect(
+    screen.getByRole("button", { name: "Edit activity" }).classList,
+  ).toContain("border-zinc-200");
+  expect(
+    screen.getByRole("button", { name: "Edit activity" }).classList,
+  ).toContain("py-2");
+  expect(
+    screen.getByRole("button", { name: "More actions" }).classList,
+  ).toContain("size-9");
   expect(
     screen.getByRole("button", { name: "Close activity details" }),
   ).toBeDefined();
   expect(
-    screen.getByRole("button", { name: "Complete activity" }),
-  ).toBeDefined();
+    screen.getByRole("button", { name: "Complete activity" }).classList,
+  ).toContain("py-2");
+  expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
+  expect(
+    screen.queryByRole("menuitem", { name: "Delete activity" }),
+  ).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  expect(screen.getByRole("menuitem", { name: "Skip activity" })).toBeDefined();
+  expect(
+    screen.getByRole("menuitem", { name: "Skip activity" }).classList,
+  ).toContain("bg-red-50");
   expect(
     screen.getByRole("menuitem", { name: "Delete activity" }),
   ).toBeDefined();

@@ -34,13 +34,13 @@ export function SkipActivityModal() {
         {
           label: "Cancel",
           onClick: returnToActivityDetails,
-          variant: "secondary",
+          variant: "tertiary",
         },
         {
           form: "skip-activity-form",
           label: skipMutation.isPending ? "Skipping…" : "Skip activity",
           type: "submit",
-          variant: "danger",
+          variant: "destructive",
         },
       ]}
       isBusy={skipMutation.isPending}
