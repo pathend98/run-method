@@ -41,6 +41,7 @@ export function EditActivityForm({
     setError,
   } = form;
   const isScheduled = activity.status === "SCHEDULED";
+  const isCompleted = activity.status === "COMPLETED";
 
   async function submit(values: EditActivityFormValues) {
     try {
@@ -81,13 +82,22 @@ export function EditActivityForm({
             </select>
           </FormField>
         ) : null}
-        {isScheduled && activity.activityType === "RUN" ? (
-          <EditRunActivityFields
-            onPendingChange={onRunFieldsPendingChange}
-          />
+        {isCompleted ? (
+          <h3 className="text-sm font-semibold text-zinc-950">
+            Actual metrics
+          </h3>
         ) : null}
-        {isScheduled && activity.activityType === "STRENGTH" ? (
-          <DurationFormInput label="Duration (hh:mm:ss, optional)" />
+        {(isScheduled || isCompleted) && activity.activityType === "RUN" ? (
+          <EditRunActivityFields onPendingChange={onRunFieldsPendingChange} />
+        ) : null}
+        {(isScheduled || isCompleted) && activity.activityType === "STRENGTH" ? (
+          <DurationFormInput
+            label={
+              isCompleted
+                ? "Actual duration (hh:mm:ss)"
+                : "Duration (hh:mm:ss, optional)"
+            }
+          />
         ) : null}
         <FormField label="Description (optional)">
           <textarea className="min-h-24" {...register("description")} />

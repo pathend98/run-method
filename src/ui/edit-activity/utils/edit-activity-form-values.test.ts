@@ -29,12 +29,15 @@ function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
   } as RunTrainingSession;
 }
 
-function strength(): StrengthTrainingSession {
+function strength(
+  override: Partial<StrengthTrainingSession> = {},
+): StrengthTrainingSession {
   return {
     ...base,
     activityType: "STRENGTH",
     targetDurationSeconds: 2400,
     actualDurationSeconds: null,
+    ...override,
   };
 }
 
@@ -86,4 +89,25 @@ test("initializes the optional duration for strength activities", () => {
       targetDurationSeconds: null,
     }).durationMinutes,
   ).toBe("00");
+});
+
+test("initializes completed actual metrics instead of targets", () => {
+  expect(
+    getEditActivityFormValues(
+      run({
+        status: "COMPLETED",
+        actualDistanceMetres: 7500,
+        actualDurationSeconds: 2400,
+      }),
+    ),
+  ).toMatchObject({
+    distanceKilometres: "7.5",
+    durationMinutes: "40",
+    pacePerKilometre: "5:20",
+  });
+  expect(
+    getEditActivityFormValues(
+      strength({ status: "COMPLETED", actualDurationSeconds: 2100 }),
+    ),
+  ).toMatchObject({ durationMinutes: "35" });
 });
