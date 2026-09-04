@@ -35,10 +35,24 @@ export function toEditTrainingSessionRequest(
           : durationFieldsToSeconds(parsed) === 0
             ? null
             : durationFieldsToSeconds(parsed),
+      ...(activity.status === "COMPLETED"
+        ? { actualDurationSeconds: durationFieldsToSeconds(parsed) }
+        : {}),
     });
   }
 
-  if (activity.status !== "SCHEDULED") {
+  if (activity.status === "COMPLETED") {
+    return editTrainingSessionRequestSchema.parse({
+      ...base,
+      activityType: activity.activityType,
+      targetDistanceMetres: activity.targetDistanceMetres,
+      targetDurationSeconds: activity.targetDurationSeconds,
+      actualDistanceMetres: Number(parsed.distanceKilometres) * 1000,
+      actualDurationSeconds: durationFieldsToSeconds(parsed),
+    });
+  }
+
+  if (activity.status === "SKIPPED") {
     return editTrainingSessionRequestSchema.parse({
       ...base,
       activityType: activity.activityType,

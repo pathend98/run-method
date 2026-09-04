@@ -122,18 +122,30 @@ test("shows validation errors without submitting", async () => {
   expect(onEdit).not.toHaveBeenCalled();
 });
 
-test("hides locked terminal run fields", () => {
+test("renders editable actual metrics for completed runs", () => {
   render(
     <EditActivityForm
-      activity={{ ...runActivity, status: "COMPLETED" }}
+      activity={{
+        ...runActivity,
+        status: "COMPLETED",
+        actualDistanceMetres: 5900,
+        actualDurationSeconds: 1500,
+      }}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
 
   expect(screen.queryByLabelText("Time of day")).toBeNull();
-  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
-  expect(screen.queryByLabelText("Pace (mm:ss / km)")).toBeNull();
+  expect(screen.getByRole("heading", { name: "Actual metrics" })).toBeDefined();
+  expect(screen.getByLabelText("Distance (km)")).toHaveProperty(
+    "value",
+    "5.9",
+  );
+  expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
+    "value",
+    "4:14",
+  );
 });
 
 test("renders an editable duration for scheduled strength activities", () => {
@@ -153,14 +165,34 @@ test("renders an editable duration for scheduled strength activities", () => {
   expect(screen.queryByLabelText("Distance (km)")).toBeNull();
 });
 
-test("hides the duration for terminal strength activities", () => {
+test("renders editable actual duration for completed strength activities", () => {
   render(
     <EditActivityForm
-      activity={{ ...strengthActivity, status: "COMPLETED" }}
+      activity={{
+        ...strengthActivity,
+        status: "COMPLETED",
+        actualDurationSeconds: 2400,
+      }}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
   );
 
-  expect(screen.queryByLabelText("Duration (minutes, optional)")).toBeNull();
+  expect(screen.getByLabelText("Actual duration (minutes)")).toHaveProperty(
+    "value",
+    "40",
+  );
+});
+
+test("does not render metrics for skipped activities", () => {
+  render(
+    <EditActivityForm
+      activity={{ ...runActivity, status: "SKIPPED", skipReason: "Rest" }}
+      onClose={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  expect(screen.queryByRole("heading", { name: "Actual metrics" })).toBeNull();
+  expect(screen.queryByLabelText("Distance (km)")).toBeNull();
 });

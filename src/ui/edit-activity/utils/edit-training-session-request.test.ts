@@ -137,3 +137,42 @@ test.each([
     expect(request.targetDurationSeconds).toBe(activity.targetDurationSeconds);
   }
 });
+
+test("converts completed actual metrics while preserving run targets", () => {
+  const activity = run({
+    status: "COMPLETED",
+    actualDistanceMetres: 8000,
+    actualDurationSeconds: 2700,
+  });
+  const request = toEditTrainingSessionRequest(
+    {
+      ...getEditActivityFormValues(activity),
+      distanceKilometres: "8.5",
+      durationMinutes: "46",
+    },
+    activity,
+  );
+
+  expect(request).toMatchObject({
+    targetDistanceMetres: activity.targetDistanceMetres,
+    targetDurationSeconds: activity.targetDurationSeconds,
+    actualDistanceMetres: 8500,
+    actualDurationSeconds: 2760,
+  });
+});
+
+test("converts completed strength actual duration while preserving its target", () => {
+  const activity = strength({
+    status: "COMPLETED",
+    actualDurationSeconds: 2400,
+  });
+  const request = toEditTrainingSessionRequest(
+    { ...getEditActivityFormValues(activity), durationMinutes: "45" },
+    activity,
+  );
+
+  expect(request).toMatchObject({
+    targetDurationSeconds: activity.targetDurationSeconds,
+    actualDurationSeconds: 2700,
+  });
+});

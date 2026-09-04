@@ -6,13 +6,18 @@ import type { EditActivityFormValues } from "./edit-activity-form-schema";
 export function getEditActivityFormValues(
   activity: TrainingSession,
 ): EditActivityFormValues {
+  const isCompleted = activity.status === "COMPLETED";
   const values: EditActivityFormValues = {
     title: activity.title,
     timeOfDay: activity.timeOfDay ?? "ANY",
     description: activity.description ?? "",
     derivedMetric: null,
     distanceKilometres: "",
-    ...durationSecondsToFields(activity.targetDurationSeconds),
+    ...durationSecondsToFields(
+      isCompleted
+        ? (activity.actualDurationSeconds ?? activity.targetDurationSeconds)
+        : activity.targetDurationSeconds,
+    ),
     pacePerKilometre: "",
   };
 
@@ -20,7 +25,11 @@ export function getEditActivityFormValues(
 
   const runValues = {
     ...values,
-    distanceKilometres: String(activity.targetDistanceMetres / 1000),
+    distanceKilometres: String(
+      (isCompleted
+        ? (activity.actualDistanceMetres ?? activity.targetDistanceMetres)
+        : activity.targetDistanceMetres) / 1000,
+    ),
   };
 
   return {

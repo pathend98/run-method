@@ -39,7 +39,7 @@ function strength(): StrengthTrainingSession {
   };
 }
 
-test("does not validate hidden target fields", () => {
+test("does not validate hidden skipped metric fields", () => {
   const invalidValues = {
     ...getEditActivityFormValues(strength()),
     distanceKilometres: "bad",
@@ -49,7 +49,7 @@ test("does not validate hidden target fields", () => {
     createEditActivityFormSchema(strength()).safeParse(invalidValues).success,
   ).toBe(true);
   expect(
-    createEditActivityFormSchema(run({ status: "COMPLETED" })).safeParse(
+    createEditActivityFormSchema(run({ status: "SKIPPED", skipReason: "Rest" })).safeParse(
       invalidValues,
     ).success,
   ).toBe(true);
@@ -73,14 +73,24 @@ test.each([
   },
 );
 
-test("does not validate a locked terminal strength duration", () => {
-  const activity = { ...strength(), status: "COMPLETED" as const };
+test("validates completed strength actual duration", () => {
+  const activity = {
+    ...strength(),
+    status: "COMPLETED" as const,
+    actualDurationSeconds: 2400,
+  };
   expect(
     createEditActivityFormSchema(activity).safeParse({
       ...getEditActivityFormValues(activity),
       durationMinutes: "bad",
     }).success,
-  ).toBe(true);
+  ).toBe(false);
+  expect(
+    createEditActivityFormSchema(activity).safeParse({
+      ...getEditActivityFormValues(activity),
+      durationMinutes: "00",
+    }).success,
+  ).toBe(false);
 });
 
 test.each([
@@ -110,6 +120,20 @@ test("accepts a valid scheduled run target", () => {
       durationMinutes: "50",
     }).success,
   ).toBe(true);
+});
+
+test("validates completed run actual metrics", () => {
+  const activity = run({
+    status: "COMPLETED",
+    actualDistanceMetres: 8000,
+    actualDurationSeconds: 2700,
+  });
+  expect(
+    createEditActivityFormSchema(activity).safeParse({
+      ...getEditActivityFormValues(activity),
+      distanceKilometres: "0",
+    }).success,
+  ).toBe(false);
 });
 
 test("validates the title independently", () => {

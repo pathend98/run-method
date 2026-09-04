@@ -35,13 +35,15 @@ export type EditActivityFormValues = z.infer<typeof editActivityFormBaseSchema>;
 
 export function createEditActivityFormSchema(activity: TrainingSession) {
   return editActivityFormBaseSchema.superRefine((values, context) => {
-    if (activity.status !== "SCHEDULED") {
+    if (activity.status === "SKIPPED") {
       return;
     }
 
     if (activity.activityType === "STRENGTH") {
       if (!isZeroDuration(values)) {
-        validateDuration(context, values, false);
+        validateDuration(context, values, activity.status === "COMPLETED");
+      } else if (activity.status === "COMPLETED") {
+        validateDuration(context, values, true);
       }
       return;
     }
