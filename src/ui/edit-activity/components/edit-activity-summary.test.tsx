@@ -65,7 +65,7 @@ test.each([
     screen.getByText(activity.timeOfDay === null ? "Anytime" : "Morning"),
   ).toBeDefined();
   expect(
-    screen.getByText(/6\.0 km · 00:30:00|5\.0 km · 00:30:00/),
+    screen.getByText(/6\.0 km · 30m|5\.0 km · 30m/),
   ).toBeDefined();
 });
 
@@ -87,7 +87,7 @@ test("hides the editable target duration for scheduled strength activities", () 
   render(<EditActivitySummary activity={strengthActivity} />);
 
   expect(screen.queryByText("Target details")).toBeNull();
-  expect(screen.queryByText("00:45:00")).toBeNull();
+  expect(screen.queryByText("45m")).toBeNull();
 });
 
 test("renders locked strength duration and a clear missing-duration fallback", () => {
@@ -96,7 +96,7 @@ test("renders locked strength duration and a clear missing-duration fallback", (
       activity={{ ...strengthActivity, status: "COMPLETED" }}
     />,
   );
-  expect(screen.getByText("00:45:00")).toBeDefined();
+  expect(screen.getByText("45m")).toBeDefined();
 
   rerender(
     <EditActivitySummary

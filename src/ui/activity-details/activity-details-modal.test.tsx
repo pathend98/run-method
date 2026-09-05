@@ -202,7 +202,7 @@ test("dispatches run activities to the run details component", () => {
 test("dispatches strength activities to the strength details component", () => {
   renderActivityDetails({ activity: strengthActivity });
   const modal = screen.getByRole("dialog", { name: "Strength" });
-  expect(within(modal).getByText("00:45:00")).toBeDefined();
+  expect(within(modal).getByText("45m")).toBeDefined();
   expect(within(modal).queryByText("Target pace")).toBeNull();
 });
 

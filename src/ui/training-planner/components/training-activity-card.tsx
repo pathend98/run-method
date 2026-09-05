@@ -6,7 +6,10 @@ import {
   Dumbbell,
   SportShoe,
 } from "lucide-react";
-import { formatDistance } from "@/ui/training-sessions/training-session-metric-formatters";
+import {
+  formatCompactDuration,
+  formatDistance,
+} from "@/ui/training-sessions/training-session-metric-formatters";
 import { formatStatus } from "@/ui/training-sessions/training-session-label-formatters";
 
 type TrainingActivityCardProps = {
@@ -29,21 +32,6 @@ const statusStyles = {
     label: "text-amber-700",
   },
 } as const;
-
-function formatCompactDuration(seconds: number | null) {
-  if (seconds === null) {
-    return null;
-  }
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-  const secondsLabel = remainingSeconds > 0 ? ` ${remainingSeconds}s` : "";
-
-  return hours > 0
-    ? `${hours}h ${minutes}m${secondsLabel}`
-    : `${minutes}m${secondsLabel}`;
-}
 
 export function TrainingActivityCard({
   activity,
