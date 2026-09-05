@@ -46,7 +46,7 @@ export function ActivityDetailsModal() {
           {
             label: "Skip activity",
             onClick: openSkipActivity,
-            variant: "destructive" as const,
+            variant: "warning" as const,
           },
         ]
       : []),

@@ -42,18 +42,18 @@ export function SkipActivityForm({
   return (
     <FormProvider {...form}>
       <form id="skip-activity-form" noValidate onSubmit={handleSubmit(submit)}>
-        <h3 className="mt-6 text-base font-semibold text-zinc-950">
-          Why are you skipping this activity?
-        </h3>
         {errors.root ? (
           <p className="mt-4 text-sm text-red-700" role="alert">
             {errors.root.message}
           </p>
         ) : null}
         <fieldset className="mt-4" disabled={isSubmitting}>
-          <FormField error={errors.skipReason?.message} label="Skip reason">
+          <FormField
+            error={errors.skipReason?.message}
+            label="Why are you skipping this activity?"
+          >
             <textarea
-              aria-label="Skip reason"
+              aria-label="Why are you skipping this activity?"
               autoFocus
               className="min-h-24"
               disabled={isSubmitting}
