@@ -63,6 +63,8 @@ function renderEditActivityModal(props: EditActivityModalTestProps = {}) {
 test("renders the selected activity and returns to details when dismissed", () => {
   const { store } = renderEditActivityModal();
   expect(screen.getByRole("dialog", { name: "Edit activity" })).toBeDefined();
+  expect(screen.getByText("Run · Monday, 17 August")).toBeDefined();
+  expect(screen.queryByText("2026-08-17")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   expect(store.getState().activeModal?.kind).toBe("details");
 });

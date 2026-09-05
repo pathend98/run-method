@@ -1,3 +1,4 @@
+import { format, parseISO } from "date-fns";
 import { useState } from "react";
 
 import type { EditTrainingSessionRequest } from "@/domain/training-sessions";
@@ -37,7 +38,7 @@ export function EditActivityModal() {
     <Modal
       dismissLabel="Dismiss edit activity"
       closeLabel="Close edit activity"
-      eyebrow={`${formatActivityType(activity.activityType)} · ${activity.date}`}
+      eyebrow={`${formatActivityType(activity.activityType)} · ${format(parseISO(activity.date), "EEEE, d MMMM")}`}
       footerActions={[
         {
           label: "Cancel",
