@@ -269,10 +269,10 @@ test("puts complete in the footer and skip in more actions for eligible activiti
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   expect(
     screen.getByRole("menuitem", { name: "Skip activity" }).classList,
-  ).toContain("bg-red-50");
+  ).toContain("bg-orange-50");
   expect(
-    screen.getByRole("menuitem", { name: "Delete activity" }),
-  ).toBeDefined();
+    screen.getByRole("menuitem", { name: "Delete activity" }).classList,
+  ).toContain("bg-red-50");
 
   rerender(
     <ActivityDetailsModal

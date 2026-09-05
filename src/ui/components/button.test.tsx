@@ -6,6 +6,7 @@ test.each([
   ["primary", "bg-teal-700"],
   ["secondary", "border-zinc-200"],
   ["tertiary", "hover:bg-zinc-100"],
+  ["warning", "bg-orange-50"],
   ["destructive", "bg-red-50"],
 ] as const)("renders the %s variant", (variant, expectedClass) => {
   render(<Button variant={variant}>Action</Button>);

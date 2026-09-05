@@ -40,7 +40,7 @@ export function SkipActivityModal() {
           form: "skip-activity-form",
           label: skipMutation.isPending ? "Skipping…" : "Skip activity",
           type: "submit",
-          variant: "destructive",
+          variant: "warning",
         },
       ]}
       isBusy={skipMutation.isPending}

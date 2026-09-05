@@ -2,7 +2,7 @@ import { forwardRef, type ComponentPropsWithoutRef } from "react";
 
 export type ButtonProps = ComponentPropsWithoutRef<"button"> & {
   size?: "default" | "compact" | "icon";
-  variant?: "primary" | "secondary" | "tertiary" | "destructive";
+  variant?: "primary" | "secondary" | "tertiary" | "warning" | "destructive";
 };
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
@@ -12,6 +12,8 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
     "border border-zinc-200 text-zinc-700 hover:bg-zinc-50 focus-visible:outline-teal-600",
   tertiary:
     "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-teal-600",
+  warning:
+    "border border-orange-200 bg-orange-50 text-orange-800 hover:bg-orange-100 focus-visible:outline-orange-600",
   destructive:
     "border border-red-200 bg-red-50 text-red-800 hover:bg-red-100 focus-visible:outline-red-600",
 };

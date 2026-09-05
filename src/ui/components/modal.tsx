@@ -18,7 +18,7 @@ export type ModalAction = {
   label: string;
   onClick?: () => void;
   type?: "button" | "submit";
-  variant: "primary" | "secondary" | "tertiary" | "destructive";
+  variant: "primary" | "secondary" | "tertiary" | "warning" | "destructive";
 };
 
 type ModalProps = {
