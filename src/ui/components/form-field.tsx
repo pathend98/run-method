@@ -10,7 +10,7 @@ type FormFieldProps = {
 
 export function FormField({ children, error, label }: FormFieldProps) {
   return (
-    <label className={styles.field}>
+    <label className={`${styles.field} ${error ? styles.invalid : ""}`}>
       <span>{label}</span>
       <span className={styles.control}>{children}</span>
       {error ? (
