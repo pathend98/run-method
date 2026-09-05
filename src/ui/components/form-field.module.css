@@ -24,6 +24,10 @@
   outline-offset: 2px;
 }
 
+.invalid .control :where(input, select, textarea) {
+  border-color: #dc2626;
+}
+
 .error {
   display: block;
   margin-top: 0.25rem;
