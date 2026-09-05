@@ -176,7 +176,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
     screen.getByRole("button", { name: "More actions" }),
   );
   fireEvent.click(screen.getByRole("menuitem", { name: "Skip activity" }));
-  fireEvent.change(screen.getByLabelText("Skip reason"), {
+  fireEvent.change(screen.getByLabelText("Why are you skipping this activity?"), {
     target: { value: "Recovery" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
