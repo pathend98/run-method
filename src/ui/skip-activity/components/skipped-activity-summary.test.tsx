@@ -20,9 +20,9 @@ const activity = {
   actualDurationSeconds: null,
 } as const;
 
-test("shows compact planned run metrics", () => {
+test("shows planned run metrics with a human-readable duration", () => {
   render(<SkippedActivitySummary activity={activity} />);
-  expect(screen.getByText("8.0 km · 40 min · 5:00 / km")).toBeDefined();
+  expect(screen.getByText("8.0 km · 40m · 5:00 / km")).toBeDefined();
 });
 
 test("shows strength duration without run metrics", () => {
@@ -35,7 +35,7 @@ test("shows strength duration without run metrics", () => {
       }}
     />,
   );
-  expect(screen.getByText("30 min")).toBeDefined();
+  expect(screen.getByText("30m")).toBeDefined();
   expect(screen.queryByText(/km/)).toBeNull();
 });
 

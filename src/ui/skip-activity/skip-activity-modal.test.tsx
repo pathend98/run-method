@@ -53,7 +53,7 @@ test("shows the compact skip dialog and returns to details when cancelled", () =
   const store = renderModal();
   expect(screen.getByRole("dialog", { name: "Easy run" })).toBeDefined();
   expect(screen.getByText("Why are you skipping this activity?")).toBeDefined();
-  expect(screen.getByText("8.0 km · 40 min · 5:00 / km")).toBeDefined();
+  expect(screen.getByText("8.0 km · 40m · 5:00 / km")).toBeDefined();
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   expect(store.getState().activeModal).toMatchObject({ kind: "details" });
 });

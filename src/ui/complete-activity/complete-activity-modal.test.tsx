@@ -27,7 +27,7 @@ test("shows the focused completion dialog and returns to details when cancelled"
   const store = renderModal();
   expect(screen.getByRole("dialog", { name: "Tempo run" })).toBeDefined();
   expect(screen.getByText("How did it go?")).toBeDefined();
-  expect(screen.getByText(/Planned: 6\.0 km/)).toBeDefined();
+  expect(screen.getByText("Planned: 6.0 km · 25m 30s · 4:15 / km")).toBeDefined();
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   expect(store.getState().activeModal).toMatchObject({ kind: "details" });
 });

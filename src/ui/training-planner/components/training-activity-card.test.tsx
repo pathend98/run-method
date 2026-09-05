@@ -102,6 +102,17 @@ test("shows duration only for strength activities", () => {
   expect(document.querySelector("svg.lucide-dumbbell")).not.toBeNull();
 });
 
+test("omits seconds from durations over one hour", () => {
+  render(
+    <TrainingActivityCard
+      activity={runActivity({ targetDurationSeconds: 3849 })}
+    />,
+  );
+
+  expect(screen.getByText("6.0 km · 1h 4m")).toBeDefined();
+  expect(screen.queryByText("6.0 km · 1h 4m 9s")).toBeNull();
+});
+
 test("adds a restrained accent to today's activities", () => {
   render(<TrainingActivityCard activity={runActivity()} isToday />);
 

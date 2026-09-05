@@ -34,11 +34,11 @@ test("renders scheduled run targets without recorded actual values", () => {
   expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
   expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
   expect(screen.getByText("6.0 km")).toBeDefined();
-  expect(screen.getByText("00:25:30")).toBeDefined();
+  expect(screen.getByText("25m 30s")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
   expect(screen.queryByText("Target type")).toBeNull();
   expect(screen.queryByText("5.9 km")).toBeNull();
-  expect(screen.queryByText("00:25:00")).toBeNull();
+  expect(screen.queryByText("25m")).toBeNull();
 });
 
 test("renders run targets as spacious responsive metric groups", () => {
@@ -88,11 +88,11 @@ test("prioritizes completed run actuals and shows their targets as supporting te
   ).toEqual(["Actual distance", "Actual pace", "Actual duration"]);
   expect(within(completedMetrics).getByText("5.9 km")).toBeDefined();
   expect(within(completedMetrics).getByText("4:14 / km")).toBeDefined();
-  expect(within(completedMetrics).getByText("00:25:00")).toBeDefined();
+  expect(within(completedMetrics).getByText("25m")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 6.0 km")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 4:15 / km")).toBeDefined();
   expect(
-    within(completedMetrics).getByText("Target: 00:25:30"),
+    within(completedMetrics).getByText("Target: 25m 30s"),
   ).toBeDefined();
 
   for (const label of ["Actual distance", "Actual pace", "Actual duration"]) {
@@ -112,14 +112,14 @@ test("prioritizes completed run actuals and shows their targets as supporting te
 test.each([
   {
     expectedDerivedTarget: "6:40 / km",
-    expectedDuration: "00:40:00",
+    expectedDuration: "40m",
     override: {
       targetDurationSeconds: 2400,
     },
   },
   {
     expectedDerivedTarget: "6:00 / km",
-    expectedDuration: "00:30:00",
+    expectedDuration: "30m",
     override: {
       targetDistanceMetres: 5000,
       targetDurationSeconds: 1800,
@@ -153,7 +153,7 @@ test("renders derived pace and no actual metrics", () => {
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
   expect(screen.getByText("5.0 km")).toBeDefined();
-  expect(screen.getByText("00:30:00")).toBeDefined();
+  expect(screen.getByText("30m")).toBeDefined();
   expect(screen.getByText("6:00 / km")).toBeDefined();
   expect(screen.queryByText("Actual distance")).toBeNull();
   expect(screen.queryByText("Actual duration")).toBeNull();

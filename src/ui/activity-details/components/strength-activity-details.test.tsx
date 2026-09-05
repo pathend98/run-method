@@ -30,9 +30,9 @@ test("renders scheduled strength targets without recorded actual duration", () =
   expect(within(plannedMetrics).queryByText("PM")).toBeNull();
   expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
   expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
-  expect(screen.getByText("00:45:00")).toBeDefined();
+  expect(screen.getByText("45m")).toBeDefined();
   expect(screen.queryByText("Actual duration")).toBeNull();
-  expect(screen.queryByText("00:40:00")).toBeNull();
+  expect(screen.queryByText("40m")).toBeNull();
 });
 
 test("prioritizes completed strength actual duration and keeps its target secondary", () => {
@@ -48,8 +48,8 @@ test("prioritizes completed strength actual duration and keeps its target second
     .closest("div");
 
   expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
-  expect(within(completedMetrics).getByText("00:40:00")).toBeDefined();
-  expect(within(completedMetrics).getByText("Target: 00:45:00")).toBeDefined();
+  expect(within(completedMetrics).getByText("40m")).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 45m")).toBeDefined();
   expect(completedMetrics.classList.contains("gap-8")).toBe(true);
   expect(durationCard?.classList.contains("bg-teal-50")).toBe(false);
   expect(durationCard?.classList.contains("border")).toBe(false);

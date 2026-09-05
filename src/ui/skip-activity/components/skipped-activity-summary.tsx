@@ -1,6 +1,7 @@
 import type { TrainingSession } from "@/domain/training-sessions";
 import {
   formatDistance,
+  formatDuration,
   formatPace,
 } from "@/ui/training-sessions/training-session-metric-formatters";
 
@@ -12,7 +13,7 @@ export function SkippedActivitySummary({
   if (activity.activityType === "STRENGTH") {
     return activity.targetDurationSeconds === null ? null : (
       <p className="mt-3 text-sm text-zinc-600">
-        {formatMinutes(activity.targetDurationSeconds)}
+        {formatDuration(activity.targetDurationSeconds)}
       </p>
     );
   }
@@ -23,11 +24,7 @@ export function SkippedActivitySummary({
   return (
     <p className="mt-3 text-sm text-zinc-600">
       {formatDistance(activity.targetDistanceMetres)} ·{" "}
-      {formatMinutes(activity.targetDurationSeconds)} · {formatPace(pace)}
+      {formatDuration(activity.targetDurationSeconds)} · {formatPace(pace)}
     </p>
   );
-}
-
-function formatMinutes(durationSeconds: number) {
-  return `${Math.round(durationSeconds / 60)} min`;
 }
