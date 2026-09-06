@@ -17,3 +17,20 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.4
+    container_name: training-brain-keycloak
+    restart: unless-stopped
+    env_file:
+      - .env.local
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        export KC_BOOTSTRAP_ADMIN_USERNAME="$$KEYCLOAK_ADMIN_USERNAME";
+        export KC_BOOTSTRAP_ADMIN_PASSWORD="$$KEYCLOAK_ADMIN_PASSWORD";
+        exec /opt/keycloak/bin/kc.sh start-dev --import-realm
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import:ro

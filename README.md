@@ -55,6 +55,12 @@ Start PostgreSQL:
 pnpm db:up
 ```
 
+Start the local Keycloak OIDC server:
+
+```bash
+pnpm auth:up
+```
+
 Apply committed migrations and verify connectivity:
 
 ```bash
@@ -77,10 +83,27 @@ pnpm test
 pnpm format:check
 pnpm build
 pnpm db:up
+pnpm auth:up
 pnpm db:migrate
 pnpm db:view
 pnpm start
 ```
+
+## Local authentication
+
+Keycloak provides the local OIDC identity provider at
+[http://localhost:8080](http://localhost:8080). Sign in to its Admin Console with
+`KEYCLOAK_ADMIN_USERNAME` and `KEYCLOAK_ADMIN_PASSWORD` from `.env.local`.
+
+On its first container creation, Keycloak imports the `training-brain` realm and
+the public `training-brain` client. The client uses Authorization Code flow with
+PKCE (S256), allows callbacks at `http://localhost:3000/*`, and has no client
+secret. Its seeded `test-user` account uses `KEYCLOAK_TEST_USER_PASSWORD` from
+`.env.local`.
+
+The Keycloak development store lives only in the container. Remove the container
+with `docker compose rm -sf keycloak` to reset it and re-import the seed realm on
+the next `pnpm auth:up`.
 
 ## Docker
 
