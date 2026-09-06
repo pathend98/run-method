@@ -45,4 +45,13 @@ test("forwards native button behavior and disabled state", () => {
   expect(button).toHaveProperty("disabled", true);
   expect(button).toHaveProperty("type", "submit");
   expect(button.getAttribute("form")).toBe("activity-form");
+  expect(button.classList).toContain("disabled:cursor-not-allowed");
+});
+
+test("uses a pointer cursor while enabled", () => {
+  render(<Button>Action</Button>);
+
+  expect(screen.getByRole("button", { name: "Action" }).classList).toContain(
+    "cursor-pointer",
+  );
 });

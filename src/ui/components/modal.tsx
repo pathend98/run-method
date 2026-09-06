@@ -132,7 +132,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <button
         aria-label={dismissLabel}
-        className="absolute inset-0 cursor-default bg-zinc-950/30"
+        className="absolute inset-0 bg-zinc-950/30"
         disabled={isBusy}
         onClick={onClose}
         type="button"
