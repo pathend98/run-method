@@ -72,7 +72,7 @@ test("tints only today's column when the displayed week includes it", () => {
   const tuesday = screen.getByRole("listitem", { name: "Tuesday" });
   const today = monday.querySelector('time[aria-current="date"]');
 
-  expect(monday.className).toContain("bg-teal-100/60");
+  expect(monday.className).toContain("bg-teal-100/40");
   expect(today?.textContent).toBe("17 Aug");
   expect(today?.className).toContain("text-zinc-500");
   expect(today?.className).not.toContain("rounded-full");

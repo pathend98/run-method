@@ -39,7 +39,7 @@ export function DayColumn({
     <article
       aria-label={day.day}
       aria-labelledby={`${day.day.toLowerCase()}-heading`}
-      className={`group flex min-h-64 min-w-0 flex-col px-3 py-4 ${isToday ? "bg-teal-100/60" : ""}`}
+      className={`group flex min-h-64 min-w-0 flex-col px-3 py-4 ${isToday ? "bg-teal-100/40" : ""}`}
       role="listitem"
     >
       <header className="flex items-baseline gap-1.5">
@@ -68,7 +68,6 @@ export function DayColumn({
               key={section.label}
               activities={section.activities}
               day={day.day}
-              isToday={isToday}
               label={section.label}
               onSelectActivity={onSelectActivity}
             />
