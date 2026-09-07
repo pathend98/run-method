@@ -40,7 +40,25 @@ test("renders current-week completed and activity-status lines", () => {
 
   expect(screen.getByText("0.0 km completed")).toBeDefined();
   expect(screen.getByText("5.0 km scheduled")).toBeDefined();
-  expect(screen.getByText("0 skipped · 0 due · 1 upcoming")).toBeDefined();
+  expect(screen.getByText("0 due · 1 upcoming")).toBeDefined();
+  expect(screen.queryByText(/skipped/)).toBeNull();
+});
+
+test("includes skipped activities when present", () => {
+  vi.setSystemTime(new Date(2026, 7, 20, 12));
+  const skippedActivity: TrainingSession = {
+    ...activity,
+    skipReason: "Rest day",
+    status: "SKIPPED",
+  };
+  render(
+    <WeeklySummary
+      activities={[skippedActivity]}
+      weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
+    />,
+  );
+
+  expect(screen.getByText("1 skipped · 0 due")).toBeDefined();
 });
 
 test("renders only scheduled values for a future week", () => {

@@ -24,7 +24,15 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
   );
   const activityStatus = summary.isFutureWeek
     ? `${summary.activities.scheduled} scheduled`
-    : `${summary.activities.skipped} skipped · ${summary.activities.due} due${summary.activities.upcoming > 0 ? ` · ${summary.activities.upcoming} upcoming` : ""}`;
+    : [
+        ...(summary.activities.skipped > 0
+          ? [`${summary.activities.skipped} skipped`]
+          : []),
+        `${summary.activities.due} due`,
+        ...(summary.activities.upcoming > 0
+          ? [`${summary.activities.upcoming} upcoming`]
+          : []),
+      ].join(" · ");
 
   return (
     <section aria-label="Weekly summary" className="grid gap-5 sm:grid-cols-3">
