@@ -28,7 +28,9 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
         ...(summary.activities.skipped > 0
           ? [`${summary.activities.skipped} skipped`]
           : []),
-        `${summary.activities.due} due`,
+        ...(summary.activities.due > 0
+          ? [`${summary.activities.due} due`]
+          : []),
         ...(summary.activities.upcoming > 0
           ? [`${summary.activities.upcoming} upcoming`]
           : []),
@@ -45,11 +47,15 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
         scheduledValue={summary.scheduledDistanceMetres}
       />
       <SummaryMetric
-        completed={formatCompactDuration(summary.completedDurationSeconds)}
+        completed={formatWeeklySummaryDuration(
+          summary.completedDurationSeconds,
+        )}
         completedValue={summary.completedDurationSeconds}
         isFutureWeek={summary.isFutureWeek}
         label="Training time"
-        scheduled={formatCompactDuration(summary.scheduledDurationSeconds)}
+        scheduled={formatWeeklySummaryDuration(
+          summary.scheduledDurationSeconds,
+        )}
         scheduledValue={summary.scheduledDurationSeconds}
       />
       <div className="flex flex-col gap-1">
@@ -61,10 +67,14 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
             ? `${summary.activities.scheduled} scheduled`
             : `${summary.activities.completed} completed`}
         </p>
-        {!summary.isFutureWeek ? (
+        {!summary.isFutureWeek && activityStatus ? (
           <p className="text-sm text-zinc-600">{activityStatus}</p>
         ) : null}
       </div>
     </section>
   );
+}
+
+function formatWeeklySummaryDuration(seconds: number) {
+  return seconds === 0 ? "0m" : formatCompactDuration(seconds);
 }

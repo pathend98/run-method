@@ -42,10 +42,12 @@ test("renders current-week completed and activity-status lines", () => {
   expect(completedDistance.classList.contains("text-2xl")).toBe(true);
   expect(completedDistance.classList.contains("font-semibold")).toBe(true);
   expect(screen.getByText("5.0 km scheduled")).toBeDefined();
+  expect(screen.getByText("0m")).toBeDefined();
   const completedActivities = screen.getByText("0 completed");
   expect(completedActivities.classList.contains("text-2xl")).toBe(true);
   expect(completedActivities.classList.contains("font-semibold")).toBe(true);
-  expect(screen.getByText("0 due · 1 upcoming")).toBeDefined();
+  expect(screen.getByText("1 upcoming")).toBeDefined();
+  expect(screen.queryByText(/due/)).toBeNull();
   expect(screen.queryByText(/skipped/)).toBeNull();
   expect(screen.getAllByRole("progressbar")).toHaveLength(2);
 });
@@ -76,6 +78,7 @@ test("calculates distance and duration progress from completed actuals", () => {
       .getByRole("progressbar", { name: "Training time progress" })
       .getAttribute("aria-valuenow"),
   ).toBe("50");
+  expect(screen.queryByText(/skipped|due|upcoming/)).toBeNull();
 });
 
 test("includes skipped activities when present", () => {
@@ -92,7 +95,20 @@ test("includes skipped activities when present", () => {
     />,
   );
 
-  expect(screen.getByText("1 skipped · 0 due")).toBeDefined();
+  expect(screen.getByText("1 skipped")).toBeDefined();
+  expect(screen.queryByText(/due/)).toBeNull();
+});
+
+test("includes due activities when present", () => {
+  vi.setSystemTime(new Date(2026, 7, 20, 12));
+  render(
+    <WeeklySummary
+      activities={[{ ...activity, date: "2026-08-20" }]}
+      weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
+    />,
+  );
+
+  expect(screen.getByText("1 due")).toBeDefined();
 });
 
 test("renders only scheduled values for a future week", () => {
