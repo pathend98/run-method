@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import type { TrainingSession } from "@/domain/training-sessions";
 import { WeeklySummary } from "./weekly-summary";
 
-const session: TrainingSession = {
+const activity: TrainingSession = {
   activityType: "RUN",
   actualDistanceMetres: null,
   actualDurationSeconds: null,
@@ -21,11 +21,19 @@ const session: TrainingSession = {
   updatedAt: "2026-08-01T10:00:00.000Z",
 };
 
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 test("renders current-week completed and activity-status lines", () => {
+  vi.setSystemTime(new Date(2026, 7, 20, 12));
   render(
     <WeeklySummary
-      sessions={[session]}
-      today="2026-08-20"
+      activities={[activity]}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
@@ -36,10 +44,10 @@ test("renders current-week completed and activity-status lines", () => {
 });
 
 test("renders only scheduled values for a future week", () => {
+  vi.setSystemTime(new Date(2026, 7, 16, 12));
   render(
     <WeeklySummary
-      sessions={[session]}
-      today="2026-08-16"
+      activities={[activity]}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );

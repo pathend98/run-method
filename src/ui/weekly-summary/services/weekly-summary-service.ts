@@ -19,16 +19,16 @@ export type WeeklySummary = {
 };
 
 export function getWeeklySummary(
-  sessions: TrainingSession[],
+  activities: TrainingSession[],
   weekRange: TrainingSessionDateRange,
   today: string,
 ): WeeklySummary {
   const isFutureWeek = weekRange.from > today;
   const isPastWeek = weekRange.to < today;
-  const activities = {
+  const summaryActivities = {
     completed: 0,
     due: 0,
-    scheduled: sessions.length,
+    scheduled: activities.length,
     skipped: 0,
     upcoming: 0,
   };
@@ -37,27 +37,27 @@ export function getWeeklySummary(
   let scheduledDistanceMetres = 0;
   let scheduledDurationSeconds = 0;
 
-  for (const session of sessions) {
-    scheduledDurationSeconds += session.targetDurationSeconds ?? 0;
+  for (const activity of activities) {
+    scheduledDurationSeconds += activity.targetDurationSeconds ?? 0;
 
-    if (session.activityType === "RUN") {
-      scheduledDistanceMetres += session.targetDistanceMetres;
+    if (activity.activityType === "RUN") {
+      scheduledDistanceMetres += activity.targetDistanceMetres;
     }
 
-    if (session.status === "COMPLETED") {
-      activities.completed += 1;
-      completedDurationSeconds += session.actualDurationSeconds ?? 0;
+    if (activity.status === "COMPLETED") {
+      summaryActivities.completed += 1;
+      completedDurationSeconds += activity.actualDurationSeconds ?? 0;
 
-      if (session.activityType === "RUN") {
-        completedDistanceMetres += session.actualDistanceMetres ?? 0;
+      if (activity.activityType === "RUN") {
+        completedDistanceMetres += activity.actualDistanceMetres ?? 0;
       }
-    } else if (session.status === "SKIPPED") {
-      activities.skipped += 1;
+    } else if (activity.status === "SKIPPED") {
+      summaryActivities.skipped += 1;
     } else if (!isFutureWeek) {
-      if (isPastWeek || session.date <= today) {
-        activities.due += 1;
+      if (isPastWeek || activity.date <= today) {
+        summaryActivities.due += 1;
       } else {
-        activities.upcoming += 1;
+        summaryActivities.upcoming += 1;
       }
     }
   }
@@ -68,6 +68,6 @@ export function getWeeklySummary(
     isFutureWeek,
     scheduledDistanceMetres,
     scheduledDurationSeconds,
-    activities,
+    activities: summaryActivities,
   };
 }

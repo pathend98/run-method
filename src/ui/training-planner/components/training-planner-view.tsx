@@ -4,7 +4,7 @@ import type { TrainingSessionDateRange } from "@/domain/training-sessions";
 import { Button } from "@/ui/components/button";
 import type { TrainingSession } from "@/domain/training-sessions";
 import { WeekGrid } from "./week-grid";
-import { WeeklySummary } from "./weekly-summary";
+import { WeeklySummary } from "@/ui/weekly-summary/weekly-summary";
 import { formatWeekRange } from "../services/training-planner-service";
 import type {
   TrainingActivity,
@@ -49,7 +49,7 @@ export function TrainingPlannerView({
       </div>
 
       <div className="flex flex-col gap-4">
-        <WeeklySummary sessions={sessions} weekRange={weekRange} />
+        <WeeklySummary activities={sessions} weekRange={weekRange} />
         <nav
           aria-label="Week navigation"
           className="flex flex-wrap items-center gap-3"

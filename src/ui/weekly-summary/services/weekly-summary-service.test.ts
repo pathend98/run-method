@@ -4,7 +4,7 @@ import type {
 } from "@/domain/training-sessions";
 import { getWeeklySummary } from "./weekly-summary-service";
 
-const baseSession = {
+const baseActivity = {
   date: "2026-08-17",
   description: null,
   id: "11111111-1111-4111-8111-111111111111",
@@ -16,9 +16,9 @@ const baseSession = {
   updatedAt: "2026-08-01T10:00:00.000Z",
 } as const;
 
-const sessions: TrainingSession[] = [
+const activities: TrainingSession[] = [
   {
-    ...baseSession,
+    ...baseActivity,
     activityType: "RUN",
     actualDistanceMetres: 9500,
     actualDurationSeconds: 3600,
@@ -27,7 +27,7 @@ const sessions: TrainingSession[] = [
     targetDurationSeconds: 3000,
   },
   {
-    ...baseSession,
+    ...baseActivity,
     id: "22222222-2222-4222-8222-222222222222",
     activityType: "STRENGTH",
     actualDurationSeconds: 1800,
@@ -35,7 +35,7 @@ const sessions: TrainingSession[] = [
     targetDurationSeconds: null,
   },
   {
-    ...baseSession,
+    ...baseActivity,
     id: "33333333-3333-4333-8333-333333333333",
     date: "2026-08-20",
     activityType: "RUN",
@@ -46,7 +46,7 @@ const sessions: TrainingSession[] = [
     targetDurationSeconds: 1800,
   },
   {
-    ...baseSession,
+    ...baseActivity,
     id: "44444444-4444-4444-8444-444444444444",
     activityType: "STRENGTH",
     actualDurationSeconds: null,
@@ -55,7 +55,7 @@ const sessions: TrainingSession[] = [
     targetDurationSeconds: 1200,
   },
   {
-    ...baseSession,
+    ...baseActivity,
     id: "55555555-5555-4555-8555-555555555555",
     date: "2026-08-22",
     activityType: "STRENGTH",
@@ -67,7 +67,11 @@ const sessions: TrainingSession[] = [
 
 test("summarises current-week actuals, original plan totals, and activity state", () => {
   expect(
-    getWeeklySummary(sessions, { from: "2026-08-17", to: "2026-08-23" }, "2026-08-20"),
+    getWeeklySummary(
+      activities,
+      { from: "2026-08-17", to: "2026-08-23" },
+      "2026-08-20",
+    ),
   ).toEqual({
     completedDistanceMetres: 9500,
     completedDurationSeconds: 5400,
@@ -80,13 +84,16 @@ test("summarises current-week actuals, original plan totals, and activity state"
 
 test("marks outstanding activities as due for a past week", () => {
   expect(
-    getWeeklySummary(sessions, { from: "2026-08-17", to: "2026-08-23" }, "2026-08-24").activities,
+    getWeeklySummary(
+      activities,
+      { from: "2026-08-17", to: "2026-08-23" },
+      "2026-08-24",
+    ).activities,
   ).toEqual({ completed: 2, due: 2, scheduled: 5, skipped: 1, upcoming: 0 });
 });
 
 test("treats absent actual metrics as zero defensively", () => {
-  const completedRun = sessions[0] as RunTrainingSession;
-
+  const completedRun = activities[0] as RunTrainingSession;
   const completedRunWithoutActuals: TrainingSession = {
     ...completedRun,
     actualDistanceMetres: null,
@@ -107,11 +114,24 @@ test("treats absent actual metrics as zero defensively", () => {
 
 test("shows future weeks as entirely scheduled", () => {
   const summary = getWeeklySummary(
-    sessions,
+    activities,
     { from: "2026-08-17", to: "2026-08-23" },
     "2026-08-16",
   );
 
   expect(summary.isFutureWeek).toBe(true);
   expect(summary.activities.scheduled).toBe(5);
+});
+
+test("summarises an empty current week with zero counts", () => {
+  expect(
+    getWeeklySummary(
+      [],
+      { from: "2026-08-17", to: "2026-08-23" },
+      "2026-08-20",
+    ),
+  ).toMatchObject({
+    isFutureWeek: false,
+    activities: { completed: 0, due: 0, scheduled: 0, skipped: 0, upcoming: 0 },
+  });
 });

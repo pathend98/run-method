@@ -8,21 +8,20 @@ import {
   formatCompactDuration,
   formatDistance,
 } from "@/ui/training-sessions/training-session-metric-formatters";
-import { getWeeklySummary } from "../services/weekly-summary-service";
-import { SummaryMetric } from "./summary-metric";
+import { SummaryMetric } from "./components/summary-metric";
+import { getWeeklySummary } from "./services/weekly-summary-service";
 
 type WeeklySummaryProps = {
-  sessions: TrainingSession[];
-  today?: string;
+  activities: TrainingSession[];
   weekRange: TrainingSessionDateRange;
 };
 
-export function WeeklySummary({
-  sessions,
-  today = format(new Date(), "yyyy-MM-dd"),
-  weekRange,
-}: WeeklySummaryProps) {
-  const summary = getWeeklySummary(sessions, weekRange, today);
+export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
+  const summary = getWeeklySummary(
+    activities,
+    weekRange,
+    format(new Date(), "yyyy-MM-dd"),
+  );
   const activityStatus = summary.isFutureWeek
     ? `${summary.activities.scheduled} scheduled`
     : `${summary.activities.skipped} skipped · ${summary.activities.due} due${summary.activities.upcoming > 0 ? ` · ${summary.activities.upcoming} upcoming` : ""}`;
