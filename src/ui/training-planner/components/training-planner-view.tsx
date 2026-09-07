@@ -2,7 +2,9 @@
 
 import type { TrainingSessionDateRange } from "@/domain/training-sessions";
 import { Button } from "@/ui/components/button";
+import type { TrainingSession } from "@/domain/training-sessions";
 import { WeekGrid } from "./week-grid";
+import { WeeklySummary } from "@/ui/weekly-summary/weekly-summary";
 import { formatWeekRange } from "../services/training-planner-service";
 import type {
   TrainingActivity,
@@ -16,6 +18,7 @@ type TrainingPlannerViewProps = {
   onNextWeek: () => void;
   onPreviousWeek: () => void;
   onSelectActivity: (activity: TrainingActivity) => void;
+  sessions: TrainingSession[];
   week: TrainingDay[];
   weekRange: TrainingSessionDateRange;
 };
@@ -27,6 +30,7 @@ export function TrainingPlannerView({
   onNextWeek,
   onPreviousWeek,
   onSelectActivity,
+  sessions,
   week,
   weekRange,
 }: TrainingPlannerViewProps) {
@@ -44,10 +48,10 @@ export function TrainingPlannerView({
         </h1>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col">
         <nav
           aria-label="Week navigation"
-          className="flex flex-wrap items-center gap-3"
+          className="mb-6 flex flex-wrap items-center gap-3"
         >
           <div className="flex items-center">
             <Button
@@ -87,6 +91,9 @@ export function TrainingPlannerView({
             </Button>
           ) : null}
         </nav>
+        <div className="mb-8">
+          <WeeklySummary activities={sessions} weekRange={weekRange} />
+        </div>
         <WeekGrid
           onAddActivity={onAddActivity}
           onSelectActivity={onSelectActivity}

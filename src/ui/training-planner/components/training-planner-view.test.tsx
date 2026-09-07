@@ -48,6 +48,7 @@ function renderView(
       onNextWeek={vi.fn()}
       onPreviousWeek={vi.fn()}
       onSelectActivity={onSelectActivity}
+      sessions={week.flatMap((day) => day.activities)}
       week={week}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
       {...overrides}
@@ -64,7 +65,17 @@ test("renders the weekly grid without modal UI", () => {
   const navigation = screen.getByRole("navigation", {
     name: "Week navigation",
   });
+  expect(navigation.classList.contains("mb-6")).toBe(true);
   expect(within(navigation).getByText("17 Aug – 23 Aug")).toBeDefined();
+  const summary = screen.getByRole("region", { name: "Weekly summary" });
+  expect(summary).toBeDefined();
+  expect(summary.parentElement?.classList.contains("mb-8")).toBe(true);
+  expect(
+    navigation.compareDocumentPosition(summary) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).not.toBe(0);
+  expect(screen.getByText("Running distance")).toBeDefined();
+  expect(screen.getByText(/5\.0 km (scheduled|planned)/)).toBeDefined();
   expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
   expect(screen.queryByText("Weekly schedule")).toBeNull();
   expect(

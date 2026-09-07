@@ -86,6 +86,7 @@ export function TrainingPlanner() {
         }
         onAddActivity={openAddActivity}
         onSelectActivity={openActivityDetails}
+        sessions={query.data}
         week={week}
         weekRange={weekRange}
       />
