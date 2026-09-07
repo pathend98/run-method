@@ -13,6 +13,8 @@ import { EditActivityModal } from "@/ui/edit-activity/edit-activity-modal";
 import { CompleteActivityModal } from "@/ui/complete-activity/complete-activity-modal";
 import { SkipActivityModal } from "@/ui/skip-activity/skip-activity-modal";
 import { DeleteActivityModal } from "@/ui/delete-activity/delete-activity-modal";
+import { ReviewActivitiesModal } from "@/ui/review-activities/review-activities-modal";
+import { PastActivitiesAttentionPanel } from "@/ui/past-activities-attention/past-activities-attention-panel";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
@@ -30,6 +32,9 @@ export function TrainingPlanner() {
   );
   const activeModalKind = useTrainingPlannerStore(
     (state) => state.activeModal?.kind,
+  );
+  const openReviewActivities = useTrainingPlannerStore(
+    (state) => state.openReviewActivities,
   );
   const pathname = usePathname();
   const router = useRouter();
@@ -78,6 +83,11 @@ export function TrainingPlanner() {
   return (
     <>
       <TrainingPlannerView
+        attentionPanel={
+          <PastActivitiesAttentionPanel
+            onReviewActivities={openReviewActivities}
+          />
+        }
         isCurrentWeek={weekRange.from === currentWeekRange.from}
         onCurrentWeek={() => navigateToWeek(null)}
         onNextWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, 1))}
@@ -96,6 +106,7 @@ export function TrainingPlanner() {
       {activeModalKind === "skip" ? <SkipActivityModal /> : null}
       {activeModalKind === "delete" ? <DeleteActivityModal /> : null}
       {activeModalKind === "add" ? <AddActivityModal /> : null}
+      {activeModalKind === "review" ? <ReviewActivitiesModal /> : null}
     </>
   );
 }

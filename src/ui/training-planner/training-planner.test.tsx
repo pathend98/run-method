@@ -4,6 +4,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { format, subDays } from "date-fns";
 
 import { QueryProvider } from "@/app/query-provider";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
@@ -96,6 +97,46 @@ test("TrainingPlanner renders loaded planner data", async () => {
   ).toBeDefined();
 });
 
+test("TrainingPlanner opens the activity review modal from the attention panel", async () => {
+  const pastSession = {
+    id: "11111111-1111-4111-8111-111111111111",
+    title: "Easy run",
+    activityType: "RUN",
+    status: "SCHEDULED",
+    date: format(subDays(new Date(), 1), "yyyy-MM-dd"),
+    timeOfDay: "AM",
+    description: null,
+    sortOrder: 0,
+    skipReason: null,
+    createdAt: "2026-08-01T10:00:00.000Z",
+    updatedAt: "2026-08-01T10:00:00.000Z",
+    targetDistanceMetres: 8000,
+    targetDurationSeconds: 2700,
+    actualDistanceMetres: null,
+    actualDurationSeconds: null,
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue([pastSession]),
+    }),
+  );
+
+  render(
+    <QueryProvider>
+      <TrainingPlanner />
+    </QueryProvider>,
+  );
+
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Review activities" }),
+  );
+  expect(
+    await screen.findByRole("dialog", { name: "Activities needing attention" }),
+  ).toBeDefined();
+});
+
 test("TrainingPlanner renders error state", async () => {
   vi.stubGlobal(
     "fetch",
@@ -172,13 +213,14 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   fireEvent.click(
     screen.getByRole("button", { name: "View Easy run details" }),
   );
-  fireEvent.click(
-    screen.getByRole("button", { name: "More actions" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Skip activity" }));
-  fireEvent.change(screen.getByLabelText("Why are you skipping this activity?"), {
-    target: { value: "Recovery" },
-  });
+  fireEvent.change(
+    screen.getByLabelText("Why are you skipping this activity?"),
+    {
+      target: { value: "Recovery" },
+    },
+  );
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
@@ -278,7 +320,7 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
   await waitFor(() =>
     expect(
       fetchMock.mock.calls.filter(([, options]) => !options?.method),
-    ).toHaveLength(2),
+    ).toHaveLength(4),
   );
 });
 
@@ -346,7 +388,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
   await waitFor(() =>
     expect(
       fetchMock.mock.calls.filter(([, options]) => !options?.method),
-    ).toHaveLength(2),
+    ).toHaveLength(4),
   );
   expect(
     await screen.findByRole("dialog", { name: "Updated easy run" }),
@@ -394,12 +436,8 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
   fireEvent.click(
     screen.getByRole("button", { name: "View Easy run details" }),
   );
-  fireEvent.click(
-    screen.getByRole("button", { name: "More actions" }),
-  );
-  fireEvent.click(
-    screen.getByRole("menuitem", { name: "Delete activity" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete activity" }));
   fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
 
   await waitFor(() =>
@@ -416,7 +454,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
   await waitFor(() =>
     expect(
       fetchMock.mock.calls.filter(([, options]) => !options?.method),
-    ).toHaveLength(2),
+    ).toHaveLength(4),
   );
   expect(screen.queryByRole("dialog", { name: "Easy run" })).toBeNull();
   expect(screen.queryByText("Easy run")).toBeNull();

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import type { TrainingSessionDateRange } from "@/domain/training-sessions";
 import { Button } from "@/ui/components/button";
 import type { TrainingSession } from "@/domain/training-sessions";
@@ -12,6 +14,7 @@ import type {
 } from "../types/training-planner-types";
 
 type TrainingPlannerViewProps = {
+  attentionPanel?: ReactNode;
   isCurrentWeek: boolean;
   onAddActivity?: (day: TrainingDay) => void;
   onCurrentWeek: () => void;
@@ -24,6 +27,7 @@ type TrainingPlannerViewProps = {
 };
 
 export function TrainingPlannerView({
+  attentionPanel,
   isCurrentWeek,
   onAddActivity,
   onCurrentWeek,
@@ -82,11 +86,7 @@ export function TrainingPlannerView({
             </Button>
           </div>
           {!isCurrentWeek ? (
-            <Button
-              onClick={onCurrentWeek}
-              type="button"
-              variant="tertiary"
-            >
+            <Button onClick={onCurrentWeek} type="button" variant="tertiary">
               Today
             </Button>
           ) : null}
@@ -94,6 +94,7 @@ export function TrainingPlannerView({
         <div className="mb-8">
           <WeeklySummary activities={sessions} weekRange={weekRange} />
         </div>
+        {attentionPanel ? <div className="mb-8">{attentionPanel}</div> : null}
         <WeekGrid
           onAddActivity={onAddActivity}
           onSelectActivity={onSelectActivity}
