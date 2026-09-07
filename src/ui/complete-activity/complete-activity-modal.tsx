@@ -9,8 +9,12 @@ import { PlannedRunSummary } from "./components/planned-run-summary";
 
 export function CompleteActivityModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const returnToActivityDetails = useTrainingPlannerStore((state) => state.returnToActivityDetails);
+  const returnFromActivityTransition = useTrainingPlannerStore(
+    (state) => state.returnFromActivityTransition,
+  );
+  const finishActivityTransition = useTrainingPlannerStore(
+    (state) => state.finishActivityTransition,
+  );
   const completeMutation = useCompleteTrainingSessionMutation();
   const [runFieldsPending, setRunFieldsPending] = useState(false);
 
@@ -19,7 +23,7 @@ export function CompleteActivityModal() {
 
   async function completeActivity(request: CompleteTrainingSessionRequest) {
     await completeMutation.mutateAsync({ id: activity.id, request });
-    closeModal();
+    finishActivityTransition();
   }
 
   return (
@@ -27,16 +31,37 @@ export function CompleteActivityModal() {
       dismissLabel="Dismiss complete activity"
       closeLabel="Close complete activity"
       footerActions={[
-        { label: "Cancel", onClick: returnToActivityDetails, variant: "tertiary" },
-        { disabled: runFieldsPending, form: "complete-activity-form", label: completeMutation.isPending ? "Completing…" : "Complete activity", type: "submit", variant: "primary" },
+        {
+          label: "Cancel",
+          onClick: returnFromActivityTransition,
+          variant: "tertiary",
+        },
+        {
+          disabled: runFieldsPending,
+          form: "complete-activity-form",
+          label: completeMutation.isPending
+            ? "Completing…"
+            : "Complete activity",
+          type: "submit",
+          variant: "primary",
+        },
       ]}
       isBusy={completeMutation.isPending}
-      onClose={returnToActivityDetails}
+      onClose={returnFromActivityTransition}
       title={activity.title}
     >
-      <h3 className="mt-6 text-base font-semibold text-zinc-950">How did it go?</h3>
-      <CompleteActivityForm activity={activity} isSubmitting={completeMutation.isPending} onComplete={completeActivity} onRunFieldsPendingChange={setRunFieldsPending} />
-      {activity.activityType === "RUN" ? <PlannedRunSummary activity={activity} /> : null}
+      <h3 className="mt-6 text-base font-semibold text-zinc-950">
+        How did it go?
+      </h3>
+      <CompleteActivityForm
+        activity={activity}
+        isSubmitting={completeMutation.isPending}
+        onComplete={completeActivity}
+        onRunFieldsPendingChange={setRunFieldsPending}
+      />
+      {activity.activityType === "RUN" ? (
+        <PlannedRunSummary activity={activity} />
+      ) : null}
     </Modal>
   );
 }

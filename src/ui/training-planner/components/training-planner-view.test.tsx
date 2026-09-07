@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
+import { QueryProvider } from "@/app/query-provider";
+import { TrainingPlannerStoreProvider } from "@/ui/training-planner/training-planner-store";
 import { TrainingPlannerView } from "./training-planner-view";
 import type {
   TrainingActivity,
@@ -35,24 +37,37 @@ const week: TrainingDay[] = [
   { day: "Sunday", date: "2026-08-23", activities: [] },
 ];
 
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue([]) }),
+  );
+});
+
 function renderView(
   overrides: Partial<React.ComponentProps<typeof TrainingPlannerView>> = {},
 ) {
   const onAddActivity = vi.fn();
   const onSelectActivity = vi.fn();
   render(
-    <TrainingPlannerView
-      isCurrentWeek
-      onAddActivity={onAddActivity}
-      onCurrentWeek={vi.fn()}
-      onNextWeek={vi.fn()}
-      onPreviousWeek={vi.fn()}
-      onSelectActivity={onSelectActivity}
-      sessions={week.flatMap((day) => day.activities)}
-      week={week}
-      weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
-      {...overrides}
-    />,
+    <TrainingPlannerStoreProvider>
+      <QueryProvider>
+        <TrainingPlannerView
+          isCurrentWeek
+          onAddActivity={onAddActivity}
+          onCurrentWeek={vi.fn()}
+          onNextWeek={vi.fn()}
+          onPreviousWeek={vi.fn()}
+          onSelectActivity={onSelectActivity}
+          sessions={week.flatMap((day) => day.activities)}
+          week={week}
+          weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
+          {...overrides}
+        />
+      </QueryProvider>
+    </TrainingPlannerStoreProvider>,
   );
   return { onAddActivity, onSelectActivity };
 }

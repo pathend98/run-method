@@ -12,9 +12,11 @@ import { SkippedActivitySummary } from "./components/skipped-activity-summary";
 
 export function SkipActivityModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const returnToActivityDetails = useTrainingPlannerStore(
-    (state) => state.returnToActivityDetails,
+  const returnFromActivityTransition = useTrainingPlannerStore(
+    (state) => state.returnFromActivityTransition,
+  );
+  const finishActivityTransition = useTrainingPlannerStore(
+    (state) => state.finishActivityTransition,
   );
   const skipMutation = useSkipTrainingSessionMutation();
 
@@ -23,7 +25,7 @@ export function SkipActivityModal() {
 
   async function skipActivity(request: SkipTrainingSessionRequest) {
     await skipMutation.mutateAsync({ id: activity.id, request });
-    closeModal();
+    finishActivityTransition();
   }
 
   return (
@@ -33,7 +35,7 @@ export function SkipActivityModal() {
       footerActions={[
         {
           label: "Cancel",
-          onClick: returnToActivityDetails,
+          onClick: returnFromActivityTransition,
           variant: "tertiary",
         },
         {
@@ -44,7 +46,7 @@ export function SkipActivityModal() {
         },
       ]}
       isBusy={skipMutation.isPending}
-      onClose={returnToActivityDetails}
+      onClose={returnFromActivityTransition}
       subtitle={`${formatActivityType(activity.activityType)} · ${formatStatus(activity.status)} · ${formatTimeOfDay(activity.timeOfDay)}`}
       title={activity.title}
     >

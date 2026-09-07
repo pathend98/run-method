@@ -43,7 +43,11 @@ test("transitions through add, details, edit, completion, skip, delete, and clos
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
   store.getState().openSkipActivity();
-  expect(store.getState().activeModal).toEqual({ kind: "skip", activity });
+  expect(store.getState().activeModal).toEqual({
+    kind: "skip",
+    activity,
+    returnTo: "details",
+  });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
   store.getState().openDeleteActivity();
@@ -51,10 +55,41 @@ test("transitions through add, details, edit, completion, skip, delete, and clos
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
   store.getState().openCompleteActivity();
-  expect(store.getState().activeModal).toEqual({ kind: "complete", activity });
+  expect(store.getState().activeModal).toEqual({
+    kind: "complete",
+    activity,
+    returnTo: "details",
+  });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
   store.getState().closeModal();
+  expect(store.getState().activeModal).toBeNull();
+});
+
+test("returns completed and skipped review activities to the review modal", () => {
+  const store = createTrainingPlannerStore();
+
+  store.getState().openReviewActivities();
+  store.getState().openCompleteActivityFromReview(activity);
+  expect(store.getState().activeModal).toEqual({
+    kind: "complete",
+    activity,
+    returnTo: "review",
+  });
+  store.getState().returnFromActivityTransition();
+  expect(store.getState().activeModal).toEqual({ kind: "review" });
+
+  store.getState().openSkipActivityFromReview(activity);
+  store.getState().finishActivityTransition();
+  expect(store.getState().activeModal).toEqual({ kind: "review" });
+
+  store.getState().openActivityDetails(activity);
+  store.getState().openCompleteActivity();
+  store.getState().finishActivityTransition();
+  expect(store.getState().activeModal).toBeNull();
+
+  store.getState().returnFromActivityTransition();
+  store.getState().finishActivityTransition();
   expect(store.getState().activeModal).toBeNull();
 });
 
