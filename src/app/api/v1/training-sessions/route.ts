@@ -11,10 +11,11 @@ import { TrainingSessionsRequestValidationError } from "@/server/training-sessio
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const sessions = await trainingSessionsService.findBetweenDates(
-      searchParams.get("from"),
-      searchParams.get("to"),
-    );
+    const sessions = await trainingSessionsService.find({
+      from: searchParams.get("from") ?? undefined,
+      to: searchParams.get("to") ?? undefined,
+      status: searchParams.get("status") ?? undefined,
+    });
 
     return NextResponse.json(sessions);
   } catch (error) {

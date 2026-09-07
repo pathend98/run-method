@@ -192,6 +192,12 @@ export type TrainingSessionDateRange = {
   to: string;
 };
 
+export type TrainingSessionsQuery = {
+  from?: string;
+  to?: string;
+  status?: TrainingSessionStatus;
+};
+
 export type CreateTrainingSessionRequest = z.infer<
   typeof createTrainingSessionRequestSchema
 >;

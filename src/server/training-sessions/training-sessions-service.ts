@@ -1,5 +1,3 @@
-import { differenceInCalendarDays } from "date-fns";
-
 import { parseDateFromString } from "@/core/date/date-parsing";
 import type {
   CompleteTrainingSessionRequest,
@@ -8,8 +6,12 @@ import type {
   RunTrainingSession,
   SkipTrainingSessionRequest,
   TrainingSession,
+  TrainingSessionsQuery,
 } from "@/domain/training-sessions";
-import { trainingSessionIdSchema } from "@/domain/training-sessions";
+import {
+  trainingSessionIdSchema,
+  trainingSessionStatusSchema,
+} from "@/domain/training-sessions";
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsValidationError,
@@ -18,10 +20,7 @@ import type { TrainingSessionsRepository } from "./training-sessions-repository"
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 
 export interface TrainingSessionsService {
-  findBetweenDates(
-    from: string | null,
-    to: string | null,
-  ): Promise<TrainingSession[]>;
+  find(query: TrainingSessionsQueryInput): Promise<TrainingSession[]>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
   delete(id: string): Promise<void>;
   skip(
@@ -40,44 +39,49 @@ export interface TrainingSessionsService {
   ): Promise<TrainingSession>;
 }
 
+export type TrainingSessionsQueryInput = {
+  from?: string;
+  to?: string;
+  status?: string;
+};
+
 export class DefaultTrainingSessionsService implements TrainingSessionsService {
   constructor(
     private readonly repository: TrainingSessionsRepository,
     private readonly validator: TrainingSessionsValidator,
   ) {}
 
-  async findBetweenDates(
-    from: string | null,
-    to: string | null,
-  ): Promise<TrainingSession[]> {
-    if (!from || !to) {
+  async find(query: TrainingSessionsQueryInput): Promise<TrainingSession[]> {
+    const { from, to, status } = query;
+    const fromDate = from === undefined ? null : parseDateFromString(from);
+    const toDate = to === undefined ? null : parseDateFromString(to);
+
+    if ((from !== undefined && !fromDate) || (to !== undefined && !toDate)) {
       throw new TrainingSessionsValidationError(
-        "from and to query parameters are required",
+        "from and to must be valid dates in YYYY-MM-DD format when provided",
       );
     }
 
-    const fromDate = parseDateFromString(from);
-    const toDate = parseDateFromString(to);
-
-    if (!fromDate || !toDate) {
-      throw new TrainingSessionsValidationError(
-        "from and to must be valid dates in YYYY-MM-DD format",
-      );
-    }
-
-    if (fromDate > toDate) {
+    if (fromDate && toDate && fromDate > toDate) {
       throw new TrainingSessionsValidationError(
         "from must be before or equal to to",
       );
     }
 
-    if (differenceInCalendarDays(toDate, fromDate) > 31) {
+    const statusResult =
+      status === undefined ? null : trainingSessionStatusSchema.safeParse(status);
+    if (status !== undefined && !statusResult?.success) {
       throw new TrainingSessionsValidationError(
-        "date range must not exceed 31 days",
+        "status must be SCHEDULED, COMPLETED, or SKIPPED",
       );
     }
 
-    return this.repository.findBetweenDates(from, to);
+    const validQuery: TrainingSessionsQuery = {
+      ...(from !== undefined ? { from } : {}),
+      ...(to !== undefined ? { to } : {}),
+      ...(statusResult?.success ? { status: statusResult.data } : {}),
+    };
+    return this.repository.find(validQuery);
   }
 
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession> {
