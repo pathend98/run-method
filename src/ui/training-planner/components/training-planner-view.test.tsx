@@ -66,7 +66,12 @@ test("renders the weekly grid without modal UI", () => {
     name: "Week navigation",
   });
   expect(within(navigation).getByText("17 Aug – 23 Aug")).toBeDefined();
-  expect(screen.getByRole("region", { name: "Weekly summary" })).toBeDefined();
+  const summary = screen.getByRole("region", { name: "Weekly summary" });
+  expect(summary).toBeDefined();
+  expect(
+    navigation.compareDocumentPosition(summary) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).not.toBe(0);
   expect(screen.getByText("Running distance")).toBeDefined();
   expect(screen.getByText("5.0 km scheduled")).toBeDefined();
   expect(screen.queryByRole("button", { name: "Today" })).toBeNull();

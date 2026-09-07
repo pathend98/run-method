@@ -49,7 +49,6 @@ export function TrainingPlannerView({
       </div>
 
       <div className="flex flex-col gap-4">
-        <WeeklySummary activities={sessions} weekRange={weekRange} />
         <nav
           aria-label="Week navigation"
           className="flex flex-wrap items-center gap-3"
@@ -92,6 +91,7 @@ export function TrainingPlannerView({
             </Button>
           ) : null}
         </nav>
+        <WeeklySummary activities={sessions} weekRange={weekRange} />
         <WeekGrid
           onAddActivity={onAddActivity}
           onSelectActivity={onSelectActivity}
