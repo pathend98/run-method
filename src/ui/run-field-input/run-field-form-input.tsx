@@ -26,7 +26,7 @@ export function RunFieldFormInput({
 }: RunFieldFormInputProps) {
   const {
     control,
-    formState: { errors, isSubmitted },
+    formState: { errors },
     setValue,
     trigger,
   } = useFormContext<RunFieldInputValue>();
@@ -46,7 +46,10 @@ export function RunFieldFormInput({
         shouldDirty: next[fieldName] !== value[fieldName],
       });
     }
-    if (isSubmitted) void trigger(fieldNames);
+  }
+
+  function validateFields(fieldsToValidate: readonly (typeof fieldNames)[number][]) {
+    void trigger(fieldsToValidate);
   }
 
   return (
@@ -61,6 +64,17 @@ export function RunFieldFormInput({
         pace: errors.pacePerKilometre?.message,
       }}
       onChange={changeValue}
+      onMetricBlur={(metric) => {
+        if (metric === "distance") validateFields(["distanceKilometres"]);
+        if (metric === "duration") {
+          validateFields([
+            "durationHours",
+            "durationMinutes",
+            "durationSeconds",
+          ]);
+        }
+        if (metric === "pace") validateFields(["pacePerKilometre"]);
+      }}
       onPendingChange={onPendingChange}
       value={value}
     />

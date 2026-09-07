@@ -245,7 +245,7 @@ test("compares every duration part when an Auto duration is edited", () => {
   expect(screen.getByText("Which value should remain fixed?")).toBeDefined();
 });
 
-test("restores an invalid Auto edit and clears Auto while an authority is invalid", () => {
+test("keeps an invalid Auto edit and clears Auto while an authority is invalid", () => {
   render(<Harness />);
   const distance = screen.getByLabelText("Distance (km)");
   fireEvent.change(distance, { target: { value: "8" } });
@@ -256,7 +256,7 @@ test("restores an invalid Auto edit and clears Auto while an authority is invali
   fireEvent.focus(pace);
   fireEvent.change(pace, { target: { value: "bad" } });
   fireEvent.blur(pace);
-  expect(pace).toHaveProperty("value", "5:30");
+  expect(pace).toHaveProperty("value", "bad");
 
   fireEvent.change(distance, { target: { value: "" } });
   expect(pace).toHaveProperty("value", "");

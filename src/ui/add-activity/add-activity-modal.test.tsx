@@ -129,6 +129,33 @@ test("switches activity fields and reports validation errors", async () => {
   expect(await screen.findByText("Enter an activity title")).toBeDefined();
 });
 
+test("validates invalid fields after they lose focus", async () => {
+  renderAddActivityModal();
+
+  fireEvent.blur(screen.getByLabelText("Title"));
+  expect(await screen.findByText("Enter an activity title")).toBeDefined();
+
+  fireEvent.change(screen.getByLabelText("Distance (km)"), {
+    target: { value: "0" },
+  });
+  fireEvent.blur(screen.getByLabelText("Distance (km)"));
+  expect(
+    await screen.findByText("Distance must be greater than zero"),
+  ).toBeDefined();
+
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "1.5" },
+  });
+  fireEvent.blur(screen.getByLabelText("Duration (minutes)"));
+  expect(await screen.findByText("Enter a whole number")).toBeDefined();
+
+  fireEvent.change(screen.getByLabelText(/Pace \(mm:ss \/ km\)/), {
+    target: { value: "5:99" },
+  });
+  fireEvent.blur(screen.getByLabelText(/Pace \(mm:ss \/ km\)/));
+  expect(await screen.findByText("Enter pace as mm:ss")).toBeDefined();
+});
+
 test("renders nothing when add activity is not active", () => {
   render(
     <TrainingPlannerStoreProvider>

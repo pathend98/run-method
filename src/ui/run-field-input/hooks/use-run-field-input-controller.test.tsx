@@ -23,7 +23,7 @@ function useHarness(
     onPendingChange,
     value,
   });
-  return { controller, value };
+  return { controller, setValue, value };
 }
 
 test("derives a metric and recalculates it when an authority changes", () => {
@@ -97,7 +97,7 @@ test("prompts after an Auto override and moves Auto to the unkept metric", () =>
   expect(onPendingChange).toHaveBeenLastCalledWith(false);
 });
 
-test("restores an invalid Auto edit and clears Auto after an invalid authority", () => {
+test("keeps an invalid Auto edit and clears Auto after an invalid authority", () => {
   const initialValue: RunFieldInputValue = {
     distanceKilometres: "8",
     durationHours: "00",
@@ -116,7 +116,7 @@ test("restores an invalid Auto edit and clears Auto after an invalid authority",
     });
   });
   act(() => result.current.controller.finishAutoEdit("pace"));
-  expect(result.current.value.pacePerKilometre).toBe("5:30");
+  expect(result.current.value.pacePerKilometre).toBe("bad");
 
   act(() => {
     result.current.controller.changeMetric("distance", {
@@ -125,4 +125,63 @@ test("restores an invalid Auto edit and clears Auto after an invalid authority",
     });
   });
   expect(result.current.value.pacePerKilometre).toBe("");
+});
+
+test("does not calculate an Auto metric after an authority becomes invalid", () => {
+  const initialValue: RunFieldInputValue = {
+    distanceKilometres: "8",
+    durationHours: "00",
+    durationMinutes: "44",
+    durationSeconds: "00",
+    pacePerKilometre: "5:30",
+    derivedMetric: "pace",
+  };
+  const { result } = renderHook(() => useHarness(initialValue, vi.fn()));
+
+  act(() => {
+    result.current.controller.changeMetric("distance", {
+      ...result.current.value,
+      distanceKilometres: "bad",
+    });
+  });
+  expect(result.current.value.pacePerKilometre).toBe("");
+
+  act(() => result.current.controller.beginAutoEdit("pace"));
+  expect(() => {
+    act(() => result.current.controller.finishAutoEdit("pace"));
+  }).not.toThrow();
+  expect(result.current.value.pacePerKilometre).toBe("");
+});
+
+test("does not apply a stale pending Auto selection after values become invalid", () => {
+  const initialValue: RunFieldInputValue = {
+    distanceKilometres: "8",
+    durationHours: "00",
+    durationMinutes: "44",
+    durationSeconds: "00",
+    pacePerKilometre: "5:30",
+    derivedMetric: "pace",
+  };
+  const { result } = renderHook(() => useHarness(initialValue, vi.fn()));
+
+  act(() => result.current.controller.beginAutoEdit("pace"));
+  act(() => {
+    result.current.controller.changeMetric("pace", {
+      ...result.current.value,
+      pacePerKilometre: "5:20",
+    });
+  });
+  act(() => result.current.controller.finishAutoEdit("pace"));
+  expect(result.current.controller.pendingMetric).toBe("pace");
+
+  act(() => {
+    result.current.setValue({
+      ...result.current.value,
+      distanceKilometres: "bad",
+    });
+  });
+  act(() => result.current.controller.keepMetric("distance"));
+
+  expect(result.current.value.distanceKilometres).toBe("bad");
+  expect(result.current.controller.pendingMetric).toBe("pace");
 });

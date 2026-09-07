@@ -20,6 +20,18 @@ test("prefills run actuals from targets and submits them", async () => {
   await waitFor(() => expect(onComplete).toHaveBeenCalledWith({ actualDistanceMetres: 6000, actualDurationSeconds: 1530 }));
 });
 
+test("validates an invalid actual run metric after blur", async () => {
+  renderForm();
+  const distance = screen.getByLabelText("Distance (km)");
+
+  fireEvent.change(distance, { target: { value: "0" } });
+  fireEvent.blur(distance);
+
+  expect(
+    await screen.findByText("Distance must be greater than zero"),
+  ).toBeDefined();
+});
+
 test("uses a duration-only strength form and reports failed completion", async () => {
   const onComplete = vi.fn().mockRejectedValue(new Error("nope"));
   renderForm(strength, onComplete);

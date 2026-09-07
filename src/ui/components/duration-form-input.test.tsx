@@ -66,7 +66,7 @@ test("binds duration values and dirty state to the current form", () => {
   );
 });
 
-test("aggregates errors and revalidates after submission", async () => {
+test("aggregates errors and revalidates when the duration loses focus", async () => {
   render(<Harness />);
   fireEvent.click(screen.getByRole("button", { name: "Set error" }));
   expect(await screen.findByText("Bad minutes")).toBeDefined();
@@ -76,7 +76,22 @@ test("aggregates errors and revalidates after submission", async () => {
   fireEvent.change(screen.getByPlaceholderText("hh"), {
     target: { value: "01" },
   });
+  expect(screen.getByText("Bad duration")).toBeDefined();
+  fireEvent.blur(screen.getByPlaceholderText("hh"));
   await waitFor(() => expect(screen.queryByText("Bad duration")).toBeNull());
+});
+
+test("waits until focus leaves the duration group before validating", async () => {
+  render(<Harness />);
+  const hours = screen.getByPlaceholderText("hh");
+  const seconds = screen.getByLabelText("Duration (hh:mm:ss) seconds");
+
+  fireEvent.change(seconds, { target: { value: "10" } });
+  fireEvent.blur(seconds, { relatedTarget: hours });
+  expect(screen.queryByText("Bad duration")).toBeNull();
+
+  fireEvent.blur(hours);
+  expect(await screen.findByText("Bad duration")).toBeDefined();
 });
 
 test("forwards the disabled state", () => {

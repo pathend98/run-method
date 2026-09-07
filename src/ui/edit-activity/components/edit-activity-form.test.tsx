@@ -69,6 +69,21 @@ test("renders pre-populated editable fields for a scheduled run", () => {
   );
 });
 
+test("validates an empty title after blur", async () => {
+  render(
+    <EditActivityForm
+      activity={runActivity}
+      onClose={vi.fn()}
+      onEdit={vi.fn()}
+    />,
+  );
+
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "" } });
+  fireEvent.blur(screen.getByLabelText("Title"));
+
+  expect(await screen.findByText("Enter an activity title")).toBeDefined();
+});
+
 test("submits an edit and closes the form", async () => {
   const onClose = vi.fn();
   const onEdit = vi.fn().mockResolvedValue(undefined);

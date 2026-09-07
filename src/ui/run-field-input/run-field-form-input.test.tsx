@@ -111,7 +111,7 @@ test("disables every run field", () => {
   ).toBe(true);
 });
 
-test("revalidates run fields after submission", async () => {
+test("revalidates run fields when the metric loses focus", async () => {
   render(
     <Harness
       initialValues={{
@@ -127,6 +127,8 @@ test("revalidates run fields after submission", async () => {
   fireEvent.change(screen.getByPlaceholderText("8"), {
     target: { value: "5" },
   });
+  expect(screen.getByText("Bad distance")).toBeDefined();
+  fireEvent.blur(screen.getByPlaceholderText("8"));
 
   await waitFor(() => {
     expect(screen.queryByText("Bad distance")).toBeNull();

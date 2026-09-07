@@ -19,6 +19,14 @@ test("validates and submits a skip reason", async () => {
   );
 });
 
+test("validates an empty skip reason after blur", async () => {
+  render(<SkipActivityForm isSubmitting={false} onSkip={vi.fn()} />);
+
+  fireEvent.blur(screen.getByLabelText(skipReasonLabelText));
+
+  expect(await screen.findByText("Enter a skip reason")).toBeDefined();
+});
+
 test("disables the skip field while submitting", () => {
   render(<SkipActivityForm isSubmitting onSkip={vi.fn()} />);
   expect(screen.getByLabelText(skipReasonLabelText)).toHaveProperty("disabled", true);

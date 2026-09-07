@@ -86,7 +86,6 @@ export function useRunFieldInputController({
 
     const calculated = calculateDerivedMetric(value, metric);
     if (!isValidRunMetric(metric, value) || calculated === null) {
-      onChange(calculateDerivedMetric(autoValueOnFocus.current, metric)!);
       autoValueOnFocus.current = null;
       return;
     }
@@ -104,7 +103,9 @@ export function useRunFieldInputController({
   function keepMetric(fixedMetric: RunFieldMetric) {
     const editedMetric = pendingMetric!;
     const nextDerived = otherMetric(editedMetric, fixedMetric);
-    onChange(calculateDerivedMetric(value, nextDerived)!);
+    const calculated = calculateDerivedMetric(value, nextDerived);
+    if (calculated === null) return;
+    onChange(calculated);
     setEnteredMetrics([fixedMetric, editedMetric]);
     setPending(null);
   }

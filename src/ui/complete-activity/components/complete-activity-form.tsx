@@ -28,6 +28,8 @@ export function CompleteActivityForm({
 }: CompleteActivityFormProps) {
   const form = useForm<CompleteActivityFormValues>({
     defaultValues: defaultValues(activity),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(createCompleteActivityFormSchema(activity)),
   });
   const { formState: { errors }, handleSubmit, setError } = form;

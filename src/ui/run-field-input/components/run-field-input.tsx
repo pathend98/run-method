@@ -16,6 +16,7 @@ type RunFieldInputProps = {
   disabled?: boolean;
   errors?: RunFieldInputErrors;
   onChange: (value: RunFieldInputValue) => void;
+  onMetricBlur?: (metric: RunFieldMetric) => void;
   onPendingChange?: (pending: boolean) => void;
   value: RunFieldInputValue;
 };
@@ -26,6 +27,7 @@ export function RunFieldInput({
   disabled = false,
   errors = {},
   onChange,
+  onMetricBlur = doNothing,
   onPendingChange = doNothing,
   value,
 }: RunFieldInputProps) {
@@ -48,7 +50,10 @@ export function RunFieldInput({
           <input
             disabled={disabled}
             inputMode="decimal"
-            onBlur={() => controller.finishAutoEdit("distance")}
+            onBlur={() => {
+              controller.finishAutoEdit("distance");
+              onMetricBlur("distance");
+            }}
             onChange={(event) =>
               controller.changeMetric("distance", {
                 ...value,
@@ -65,7 +70,10 @@ export function RunFieldInput({
           auto={value.derivedMetric === "duration"}
           disabled={disabled}
           error={errors.duration}
-          onAutoEditEnd={() => controller.finishAutoEdit("duration")}
+          onAutoEditEnd={() => {
+            controller.finishAutoEdit("duration");
+            onMetricBlur("duration");
+          }}
           onAutoEditStart={() => controller.beginAutoEdit("duration")}
           onChange={(next) => controller.changeMetric("duration", next)}
           value={value}
@@ -80,7 +88,10 @@ export function RunFieldInput({
         >
           <input
             disabled={disabled}
-            onBlur={() => controller.finishAutoEdit("pace")}
+            onBlur={() => {
+              controller.finishAutoEdit("pace");
+              onMetricBlur("pace");
+            }}
             onChange={(event) =>
               controller.changeMetric("pace", {
                 ...value,
