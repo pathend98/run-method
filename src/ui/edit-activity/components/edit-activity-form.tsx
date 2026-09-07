@@ -32,6 +32,8 @@ export function EditActivityForm({
 }: EditActivityFormProps) {
   const form = useForm<EditActivityFormValues>({
     defaultValues: getEditActivityFormValues(activity),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(createEditActivityFormSchema(activity)),
   });
   const {

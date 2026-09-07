@@ -23,6 +23,8 @@ export function AddActivityModal() {
   const createMutation = useCreateTrainingSessionMutation();
   const form = useForm<AddActivityFormValues>({
     defaultValues: defaultAddActivityFormValues,
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(addActivityFormSchema),
   });
   const {

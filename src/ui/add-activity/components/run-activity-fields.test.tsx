@@ -76,7 +76,29 @@ test("does not validate untouched metrics when distance is entered", () => {
   );
 });
 
-test("revalidates run metrics after the first submission", async () => {
+test("keeps an invalid Auto metric so it can be validated after blur", async () => {
+  render(
+    <RunActivityFieldsHarness>
+      <RunActivityFields onPendingChange={vi.fn()} />
+    </RunActivityFieldsHarness>,
+  );
+
+  fireEvent.change(screen.getByPlaceholderText("8"), {
+    target: { value: "8" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "44" },
+  });
+  const pace = screen.getByLabelText("Pace (mm:ss / km) · Auto");
+  fireEvent.focus(pace);
+  fireEvent.change(pace, { target: { value: "bad" } });
+  fireEvent.blur(pace);
+
+  expect(await screen.findByText("Enter pace as mm:ss")).toBeDefined();
+  expect(pace).toHaveProperty("value", "bad");
+});
+
+test("revalidates run metrics when they lose focus", async () => {
   render(
     <RunActivityFieldsHarness>
       <RunActivityFields onPendingChange={vi.fn()} />
@@ -93,6 +115,9 @@ test("revalidates run metrics after the first submission", async () => {
   fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "45" },
   });
+  fireEvent.blur(screen.getByPlaceholderText("8"));
+  fireEvent.blur(screen.getByLabelText("Duration (minutes)"));
+  fireEvent.blur(screen.getByPlaceholderText("5:30"));
 
   await waitFor(() => {
     expect(screen.queryByText("Duration must be greater than zero")).toBeNull();

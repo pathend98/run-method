@@ -20,6 +20,8 @@ export function SkipActivityForm({
 }: SkipActivityFormProps) {
   const form = useForm<SkipActivityFormValues>({
     defaultValues: { skipReason: "" },
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(skipActivityFormSchema),
   });
   const {

@@ -1,3 +1,4 @@
+import type { FocusEvent } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import {
@@ -30,7 +31,7 @@ export function DurationFormInput({
 }: DurationFormInputProps) {
   const {
     control,
-    formState: { errors, isSubmitted },
+    formState: { errors },
     setValue,
     trigger,
   } = useFormContext<DurationFormValues>();
@@ -57,7 +58,12 @@ export function DurationFormInput({
         shouldDirty: nextFields[fieldName] !== currentFields[fieldName],
       });
     }
-    if (isSubmitted) void trigger(fieldNames);
+  }
+
+  function validateDuration(event: FocusEvent<HTMLSpanElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      void trigger(fieldNames);
+    }
   }
 
   return (
@@ -70,6 +76,7 @@ export function DurationFormInput({
         errors.durationSeconds?.message
       }
       label={label}
+      onBlur={validateDuration}
       onChange={changeValue}
       value={value}
     />
