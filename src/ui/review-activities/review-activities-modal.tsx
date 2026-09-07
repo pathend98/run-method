@@ -71,16 +71,19 @@ export function ReviewActivitiesModal() {
       <p className="mt-2 text-sm text-zinc-600">
         {count} {count === 1 ? "activity" : "activities"} remaining.
       </p>
-      <div className="mt-5 flex flex-col gap-5">
+      <div className="mt-5 divide-y divide-zinc-200">
         {activitiesByDate.map(([date, activities]) => (
-          <section key={date}>
-            <h3 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase">
+          <section
+            className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 py-3"
+            key={date}
+          >
+            <h3 className="pt-1 text-xs font-semibold tracking-wide text-zinc-600 uppercase">
               {format(parseISO(date), "EEE d MMM")}
             </h3>
-            <ul className="mt-2 divide-y divide-zinc-100">
+            <ul className="flex min-w-0 flex-col gap-3">
               {activities.map((activity) => (
                 <li
-                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  className="flex flex-wrap items-start justify-between gap-3"
                   key={activity.id}
                 >
                   <div>

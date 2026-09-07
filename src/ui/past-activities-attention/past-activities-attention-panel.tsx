@@ -5,6 +5,7 @@ import { format, subDays } from "date-fns";
 
 import { Button } from "@/ui/components/button";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 
 function getPastActivitiesQuery() {
   const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
@@ -15,13 +16,10 @@ function getPastActivitiesQuery() {
   };
 }
 
-type PastActivitiesAttentionPanelProps = {
-  onReviewActivities: () => void;
-};
-
-export function PastActivitiesAttentionPanel({
-  onReviewActivities,
-}: PastActivitiesAttentionPanelProps) {
+export function PastActivitiesAttentionPanel() {
+  const openReviewActivities = useTrainingPlannerStore(
+    (state) => state.openReviewActivities,
+  );
   const query = useQuery(getPastActivitiesQuery());
 
   if (query.isPending || query.isError || !query.data?.length) return null;
@@ -43,7 +41,7 @@ export function PastActivitiesAttentionPanel({
           Past activities are waiting to be completed.
         </p>
       </div>
-      <Button onClick={onReviewActivities} size="compact" variant="warning">
+      <Button onClick={openReviewActivities} size="compact" variant="warning">
         Review activities
       </Button>
     </section>

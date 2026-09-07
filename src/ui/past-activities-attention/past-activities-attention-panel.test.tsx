@@ -2,6 +2,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { format, subDays } from "date-fns";
 
 import { QueryProvider } from "@/app/query-provider";
+import {
+  createTrainingPlannerStore,
+  TrainingPlannerStoreProvider,
+} from "@/ui/training-planner/training-planner-store";
 import { PastActivitiesAttentionPanel } from "./past-activities-attention-panel";
 
 const session = {
@@ -22,13 +26,16 @@ const session = {
   actualDurationSeconds: null,
 };
 
-function renderPanel(onReviewActivities = vi.fn()) {
+function renderPanel() {
+  const store = createTrainingPlannerStore();
   render(
-    <QueryProvider>
-      <PastActivitiesAttentionPanel onReviewActivities={onReviewActivities} />
-    </QueryProvider>,
+    <TrainingPlannerStoreProvider store={store}>
+      <QueryProvider>
+        <PastActivitiesAttentionPanel />
+      </QueryProvider>
+    </TrainingPlannerStoreProvider>,
   );
-  return onReviewActivities;
+  return store;
 }
 
 test("renders a compact attention panel and fetches past scheduled activities", async () => {
@@ -42,7 +49,7 @@ test("renders a compact attention panel and fetches past scheduled activities", 
       ]),
   });
   vi.stubGlobal("fetch", fetchMock);
-  const onReviewActivities = renderPanel();
+  const store = renderPanel();
 
   expect(
     await screen.findByText("2 activities need your attention."),
@@ -54,7 +61,7 @@ test("renders a compact attention panel and fetches past scheduled activities", 
     `/api/v1/training-sessions?to=${format(subDays(new Date(), 1), "yyyy-MM-dd")}&status=SCHEDULED`,
   );
   fireEvent.click(screen.getByRole("button", { name: "Review activities" }));
-  expect(onReviewActivities).toHaveBeenCalledOnce();
+  expect(store.getState().activeModal).toEqual({ kind: "review" });
 });
 
 test("does not render when no activity needs attention", async () => {

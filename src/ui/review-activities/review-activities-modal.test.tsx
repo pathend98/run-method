@@ -28,18 +28,18 @@ const sessions = [
   },
   {
     id: "22222222-2222-4222-8222-222222222222",
-    title: "Tempo run",
+    title: "Easy run 2",
     activityType: "RUN",
     status: "SCHEDULED",
-    date: "2026-09-01",
+    date: "2026-08-31",
     timeOfDay: "AM",
     description: null,
     sortOrder: 0,
     skipReason: null,
     createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T10:00:00.000Z",
-    targetDistanceMetres: 10000,
-    targetDurationSeconds: 2880,
+    targetDistanceMetres: 8000,
+    targetDurationSeconds: 2460,
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   },
@@ -74,6 +74,12 @@ test("lists attention activities by date and opens their action flows", async ()
   expect(screen.getByText("2 activities remaining.")).toBeDefined();
   expect(screen.getByText("Mon 31 Aug")).toBeDefined();
   expect(screen.getByText("12.0 km · 56m")).toBeDefined();
+  expect(screen.getByText("Easy run 2")).toBeDefined();
+  expect(screen.getByText("8.0 km · 41m")).toBeDefined();
+  expect(screen.getAllByText("Mon 31 Aug")).toHaveLength(1);
+  const dateGroup = screen.getByText("Mon 31 Aug").closest("section");
+  expect(dateGroup?.classList.contains("grid")).toBe(true);
+  expect(dateGroup?.parentElement?.classList.contains("divide-y")).toBe(true);
   fireEvent.click(screen.getAllByRole("button", { name: "Complete" })[0]);
   expect(store.getState().activeModal).toMatchObject({
     kind: "complete",
