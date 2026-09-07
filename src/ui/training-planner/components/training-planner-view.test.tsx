@@ -65,9 +65,11 @@ test("renders the weekly grid without modal UI", () => {
   const navigation = screen.getByRole("navigation", {
     name: "Week navigation",
   });
+  expect(navigation.classList.contains("mb-6")).toBe(true);
   expect(within(navigation).getByText("17 Aug – 23 Aug")).toBeDefined();
   const summary = screen.getByRole("region", { name: "Weekly summary" });
   expect(summary).toBeDefined();
+  expect(summary.parentElement?.classList.contains("mb-8")).toBe(true);
   expect(
     navigation.compareDocumentPosition(summary) &
       Node.DOCUMENT_POSITION_FOLLOWING,
