@@ -38,15 +38,19 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
     <section aria-label="Weekly summary" className="grid gap-5 sm:grid-cols-3">
       <SummaryMetric
         completed={formatDistance(summary.completedDistanceMetres)}
+        completedValue={summary.completedDistanceMetres}
         isFutureWeek={summary.isFutureWeek}
         label="Running distance"
         scheduled={formatDistance(summary.scheduledDistanceMetres)}
+        scheduledValue={summary.scheduledDistanceMetres}
       />
       <SummaryMetric
         completed={formatCompactDuration(summary.completedDurationSeconds)}
+        completedValue={summary.completedDurationSeconds}
         isFutureWeek={summary.isFutureWeek}
         label="Training time"
         scheduled={formatCompactDuration(summary.scheduledDurationSeconds)}
+        scheduledValue={summary.scheduledDurationSeconds}
       />
       <div className="flex flex-col gap-1">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase">

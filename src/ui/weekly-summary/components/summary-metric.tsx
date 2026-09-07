@@ -1,15 +1,21 @@
+import { SummaryProgress } from "./summary-progress";
+
 type SummaryMetricProps = {
   completed: string | null;
+  completedValue: number;
   isFutureWeek: boolean;
   label: string;
   scheduled: string | null;
+  scheduledValue: number;
 };
 
 export function SummaryMetric({
   completed,
+  completedValue,
   isFutureWeek,
   label,
   scheduled,
+  scheduledValue,
 }: SummaryMetricProps) {
   return (
     <div className="flex flex-col gap-1">
@@ -26,6 +32,11 @@ export function SummaryMetric({
       {!isFutureWeek ? (
         <p className="text-sm text-zinc-600">{scheduled} scheduled</p>
       ) : null}
+      <SummaryProgress
+        completedValue={isFutureWeek ? 0 : completedValue}
+        label={label}
+        scheduledValue={scheduledValue}
+      />
     </div>
   );
 }

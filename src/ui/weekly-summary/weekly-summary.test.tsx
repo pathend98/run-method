@@ -47,6 +47,35 @@ test("renders current-week completed and activity-status lines", () => {
   expect(completedActivities.classList.contains("font-semibold")).toBe(true);
   expect(screen.getByText("0 due · 1 upcoming")).toBeDefined();
   expect(screen.queryByText(/skipped/)).toBeNull();
+  expect(screen.getAllByRole("progressbar")).toHaveLength(2);
+});
+
+test("calculates distance and duration progress from completed actuals", () => {
+  vi.setSystemTime(new Date(2026, 7, 20, 12));
+  const completedActivity: TrainingSession = {
+    ...activity,
+    actualDistanceMetres: 2500,
+    actualDurationSeconds: 900,
+    date: "2026-08-20",
+    status: "COMPLETED",
+  };
+  render(
+    <WeeklySummary
+      activities={[completedActivity]}
+      weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
+    />,
+  );
+
+  expect(
+    screen
+      .getByRole("progressbar", { name: "Running distance progress" })
+      .getAttribute("aria-valuenow"),
+  ).toBe("50");
+  expect(
+    screen
+      .getByRole("progressbar", { name: "Training time progress" })
+      .getAttribute("aria-valuenow"),
+  ).toBe("50");
 });
 
 test("includes skipped activities when present", () => {
@@ -79,4 +108,14 @@ test("renders only scheduled values for a future week", () => {
   const scheduledActivities = screen.getByText("1 scheduled");
   expect(scheduledActivities.classList.contains("text-2xl")).toBe(true);
   expect(scheduledActivities.classList.contains("font-semibold")).toBe(true);
+  expect(
+    screen
+      .getByRole("progressbar", { name: "Running distance progress" })
+      .getAttribute("aria-valuenow"),
+  ).toBe("0");
+  expect(
+    screen
+      .getByRole("progressbar", { name: "Training time progress" })
+      .getAttribute("aria-valuenow"),
+  ).toBe("0");
 });
