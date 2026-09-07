@@ -52,12 +52,14 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
         <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase">
           Activities
         </h2>
+        <p className="text-2xl font-semibold text-zinc-950">
+          {summary.isFutureWeek
+            ? `${summary.activities.scheduled} scheduled`
+            : `${summary.activities.completed} completed`}
+        </p>
         {!summary.isFutureWeek ? (
-          <p className="text-sm text-zinc-950">
-            {summary.activities.completed} completed
-          </p>
+          <p className="text-sm text-zinc-600">{activityStatus}</p>
         ) : null}
-        <p className="text-sm text-zinc-600">{activityStatus}</p>
       </div>
     </section>
   );

@@ -38,8 +38,13 @@ test("renders current-week completed and activity-status lines", () => {
     />,
   );
 
-  expect(screen.getByText("0.0 km completed")).toBeDefined();
+  const completedDistance = screen.getByText("0.0 km");
+  expect(completedDistance.classList.contains("text-2xl")).toBe(true);
+  expect(completedDistance.classList.contains("font-semibold")).toBe(true);
   expect(screen.getByText("5.0 km scheduled")).toBeDefined();
+  const completedActivities = screen.getByText("0 completed");
+  expect(completedActivities.classList.contains("text-2xl")).toBe(true);
+  expect(completedActivities.classList.contains("font-semibold")).toBe(true);
   expect(screen.getByText("0 due · 1 upcoming")).toBeDefined();
   expect(screen.queryByText(/skipped/)).toBeNull();
 });
@@ -70,6 +75,8 @@ test("renders only scheduled values for a future week", () => {
     />,
   );
 
-  expect(screen.queryByText("0.0 km completed")).toBeNull();
-  expect(screen.getByText("1 scheduled")).toBeDefined();
+  expect(screen.queryByText("0.0 km")).toBeNull();
+  const scheduledActivities = screen.getByText("1 scheduled");
+  expect(scheduledActivities.classList.contains("text-2xl")).toBe(true);
+  expect(scheduledActivities.classList.contains("font-semibold")).toBe(true);
 });

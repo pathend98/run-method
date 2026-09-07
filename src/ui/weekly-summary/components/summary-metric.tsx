@@ -17,9 +17,15 @@ export function SummaryMetric({
         {label}
       </h2>
       {!isFutureWeek ? (
-        <p className="text-sm text-zinc-950">{completed} completed</p>
+        <p className="text-2xl font-semibold text-zinc-950">{completed}</p>
+      ) : (
+        <p className="text-2xl font-semibold text-zinc-950">
+          {scheduled} scheduled
+        </p>
+      )}
+      {!isFutureWeek ? (
+        <p className="text-sm text-zinc-600">{scheduled} scheduled</p>
       ) : null}
-      <p className="text-sm text-zinc-600">{scheduled} scheduled</p>
     </div>
   );
 }
