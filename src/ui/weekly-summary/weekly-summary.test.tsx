@@ -99,6 +99,35 @@ test("includes skipped activities when present", () => {
   expect(screen.queryByText(/due/)).toBeNull();
 });
 
+test("shows planned totals and variance for a past week", () => {
+  vi.setSystemTime(new Date(2026, 7, 24, 12));
+  const pastActivity: TrainingSession = {
+    ...activity,
+    actualDistanceMetres: 86700,
+    actualDurationSeconds: 23820,
+    date: "2026-08-17",
+    status: "COMPLETED",
+    targetDistanceMetres: 85600,
+    targetDurationSeconds: 24660,
+  };
+  render(
+    <WeeklySummary
+      activities={[pastActivity]}
+      weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
+    />,
+  );
+
+  expect(screen.getByText("86.7 km")).toBeDefined();
+  expect(screen.getByText("85.6 km planned · +1.1 km")).toBeDefined();
+  expect(screen.getByText("6h 37m")).toBeDefined();
+  expect(screen.getByText("6h 51m planned · −14 min")).toBeDefined();
+  expect(
+    screen
+      .getByRole("progressbar", { name: "Running distance progress" })
+      .getAttribute("aria-valuenow"),
+  ).toBe("100");
+});
+
 test("includes due activities when present", () => {
   vi.setSystemTime(new Date(2026, 7, 20, 12));
   render(

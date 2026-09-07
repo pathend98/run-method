@@ -10,6 +10,10 @@ import {
 } from "@/ui/training-sessions/training-session-metric-formatters";
 import { SummaryMetric } from "./components/summary-metric";
 import { getWeeklySummary } from "./services/weekly-summary-service";
+import {
+  formatDistanceVariance,
+  formatDurationVariance,
+} from "./utils/summary-variance";
 
 type WeeklySummaryProps = {
   activities: TrainingSession[];
@@ -42,9 +46,18 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
         completed={formatDistance(summary.completedDistanceMetres)}
         completedValue={summary.completedDistanceMetres}
         isFutureWeek={summary.isFutureWeek}
+        isPastWeek={summary.isPastWeek}
         label="Running distance"
         scheduled={formatDistance(summary.scheduledDistanceMetres)}
         scheduledValue={summary.scheduledDistanceMetres}
+        variance={
+          summary.isPastWeek
+            ? formatDistanceVariance(
+                summary.completedDistanceMetres -
+                  summary.scheduledDistanceMetres,
+              )
+            : null
+        }
       />
       <SummaryMetric
         completed={formatWeeklySummaryDuration(
@@ -52,11 +65,20 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
         )}
         completedValue={summary.completedDurationSeconds}
         isFutureWeek={summary.isFutureWeek}
+        isPastWeek={summary.isPastWeek}
         label="Training time"
         scheduled={formatWeeklySummaryDuration(
           summary.scheduledDurationSeconds,
         )}
         scheduledValue={summary.scheduledDurationSeconds}
+        variance={
+          summary.isPastWeek
+            ? formatDurationVariance(
+                summary.completedDurationSeconds -
+                  summary.scheduledDurationSeconds,
+              )
+            : null
+        }
       />
       <div className="flex flex-col gap-1">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase">

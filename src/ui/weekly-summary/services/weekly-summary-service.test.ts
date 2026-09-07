@@ -76,6 +76,7 @@ test("summarises current-week actuals, original plan totals, and activity state"
     completedDistanceMetres: 9500,
     completedDurationSeconds: 5400,
     isFutureWeek: false,
+    isPastWeek: false,
     scheduledDistanceMetres: 15000,
     scheduledDurationSeconds: 8700,
     activities: { completed: 2, due: 1, scheduled: 5, skipped: 1, upcoming: 1 },
@@ -83,13 +84,20 @@ test("summarises current-week actuals, original plan totals, and activity state"
 });
 
 test("marks outstanding activities as due for a past week", () => {
-  expect(
-    getWeeklySummary(
-      activities,
-      { from: "2026-08-17", to: "2026-08-23" },
-      "2026-08-24",
-    ).activities,
-  ).toEqual({ completed: 2, due: 2, scheduled: 5, skipped: 1, upcoming: 0 });
+  const summary = getWeeklySummary(
+    activities,
+    { from: "2026-08-17", to: "2026-08-23" },
+    "2026-08-24",
+  );
+
+  expect(summary.isPastWeek).toBe(true);
+  expect(summary.activities).toEqual({
+    completed: 2,
+    due: 2,
+    scheduled: 5,
+    skipped: 1,
+    upcoming: 0,
+  });
 });
 
 test("treats absent actual metrics as zero defensively", () => {

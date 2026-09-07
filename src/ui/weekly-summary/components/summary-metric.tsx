@@ -4,19 +4,28 @@ type SummaryMetricProps = {
   completed: string | null;
   completedValue: number;
   isFutureWeek: boolean;
+  isPastWeek: boolean;
   label: string;
   scheduled: string | null;
   scheduledValue: number;
+  variance: string | null;
 };
 
 export function SummaryMetric({
   completed,
   completedValue,
   isFutureWeek,
+  isPastWeek,
   label,
   scheduled,
   scheduledValue,
+  variance,
 }: SummaryMetricProps) {
+  const plannedValue = `${scheduled} ${isPastWeek ? "planned" : "scheduled"}`;
+  const secondaryValue = variance
+    ? `${plannedValue} · ${variance}`
+    : plannedValue;
+
   return (
     <div className="flex flex-col gap-1">
       <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase">
@@ -30,7 +39,7 @@ export function SummaryMetric({
         </p>
       )}
       {!isFutureWeek ? (
-        <p className="text-sm text-zinc-600">{scheduled} scheduled</p>
+        <p className="text-sm text-zinc-600">{secondaryValue}</p>
       ) : null}
       <SummaryProgress
         completedValue={isFutureWeek ? 0 : completedValue}

@@ -7,6 +7,7 @@ export type WeeklySummary = {
   completedDistanceMetres: number;
   completedDurationSeconds: number;
   isFutureWeek: boolean;
+  isPastWeek: boolean;
   scheduledDistanceMetres: number;
   scheduledDurationSeconds: number;
   activities: {
@@ -66,6 +67,7 @@ export function getWeeklySummary(
     completedDistanceMetres,
     completedDurationSeconds,
     isFutureWeek,
+    isPastWeek,
     scheduledDistanceMetres,
     scheduledDurationSeconds,
     activities: summaryActivities,

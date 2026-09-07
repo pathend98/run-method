@@ -75,7 +75,7 @@ test("renders the weekly grid without modal UI", () => {
       Node.DOCUMENT_POSITION_FOLLOWING,
   ).not.toBe(0);
   expect(screen.getByText("Running distance")).toBeDefined();
-  expect(screen.getByText("5.0 km scheduled")).toBeDefined();
+  expect(screen.getByText(/5\.0 km (scheduled|planned)/)).toBeDefined();
   expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
   expect(screen.queryByText("Weekly schedule")).toBeNull();
   expect(

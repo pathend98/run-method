@@ -16,7 +16,7 @@ export function SummaryProgress({
   return (
     <Progress.Root
       aria-label={`${label} progress`}
-      className="h-1.5 w-[85%] overflow-hidden rounded-full bg-zinc-200"
+      className="h-1.5 w-[75%] overflow-hidden rounded-full bg-zinc-200"
       max={100}
       value={value}
     >

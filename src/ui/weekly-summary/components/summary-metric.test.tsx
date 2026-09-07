@@ -8,9 +8,11 @@ test("renders scheduled values as the primary figure for future weeks", () => {
       completed="5.0 km"
       completedValue={5000}
       isFutureWeek
+      isPastWeek={false}
       label="Running distance"
       scheduled="10.0 km"
       scheduledValue={10000}
+      variance={null}
     />,
   );
 
@@ -27,9 +29,11 @@ test("renders completed values as the primary figure and scheduled values as sec
       completed="5.0 km"
       completedValue={5000}
       isFutureWeek={false}
+      isPastWeek={false}
       label="Running distance"
       scheduled="10.0 km"
       scheduledValue={10000}
+      variance={null}
     />,
   );
 
