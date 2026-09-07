@@ -15,7 +15,7 @@ const timeZone = "UTC";
 
 function createService() {
   const repository: TrainingSessionsRepository = {
-    findBetweenDates: vi.fn().mockResolvedValue([]),
+    find: vi.fn().mockResolvedValue([]),
     findById: vi.fn(),
     create: vi.fn(),
     deleteById: vi.fn(),
@@ -36,42 +36,50 @@ function createService() {
   };
 }
 
-test("requires from and to dates", async () => {
-  const { service } = createService();
-
-  await expect(service.findBetweenDates(null, "2026-08-23")).rejects.toThrow(
-    "from and to query parameters are required",
-  );
-});
-
 test("rejects invalid date strings", async () => {
   const { service } = createService();
 
   await expect(
-    service.findBetweenDates("2026-02-30", "2026-08-23"),
-  ).rejects.toThrow("from and to must be valid dates in YYYY-MM-DD format");
+    service.find({ from: "2026-02-30" }),
+  ).rejects.toThrow(
+    "from and to must be valid dates in YYYY-MM-DD format when provided",
+  );
 });
 
-test("rejects inverted and oversized ranges", async () => {
+test("rejects inverted date ranges", async () => {
   const { service } = createService();
 
   await expect(
-    service.findBetweenDates("2026-08-24", "2026-08-23"),
+    service.find({ from: "2026-08-24", to: "2026-08-23" }),
   ).rejects.toThrow("from must be before or equal to to");
-  await expect(
-    service.findBetweenDates("2026-08-01", "2026-09-02"),
-  ).rejects.toThrow("date range must not exceed 31 days");
 });
 
-test("delegates valid ranges to the repository", async () => {
+test("delegates bounded, unbounded, status, and unrestricted queries to the repository", async () => {
   const { repository, service } = createService();
 
   await expect(
-    service.findBetweenDates("2026-08-17", "2026-08-23"),
+    service.find({ from: "2026-08-17", to: "2026-09-30" }),
   ).resolves.toEqual([]);
-  expect(repository.findBetweenDates).toHaveBeenCalledWith(
-    "2026-08-17",
-    "2026-08-23",
+  await service.find({ from: "2026-08-17" });
+  await service.find({ to: "2026-08-23" });
+  await service.find({ status: "SCHEDULED" });
+  await service.find({});
+
+  expect(repository.find).toHaveBeenNthCalledWith(1, {
+    from: "2026-08-17",
+    to: "2026-09-30",
+  });
+  expect(repository.find).toHaveBeenNthCalledWith(2, { from: "2026-08-17" });
+  expect(repository.find).toHaveBeenNthCalledWith(3, { to: "2026-08-23" });
+  expect(repository.find).toHaveBeenNthCalledWith(4, { status: "SCHEDULED" });
+  expect(repository.find).toHaveBeenNthCalledWith(5, {});
+});
+
+test("rejects invalid statuses", async () => {
+  const { service } = createService();
+
+  await expect(service.find({ status: "DUE" })).rejects.toThrow(
+    "status must be SCHEDULED, COMPLETED, or SKIPPED",
   );
 });
 

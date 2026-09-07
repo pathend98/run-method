@@ -110,6 +110,28 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
   );
 });
 
+test.each([
+  [{ from: "2026-08-17" }, "/api/v1/training-sessions?from=2026-08-17"],
+  [{ to: "2026-08-23" }, "/api/v1/training-sessions?to=2026-08-23"],
+  [{ status: "SCHEDULED" }, "/api/v1/training-sessions?status=SCHEDULED"],
+  [
+    { to: "2026-08-23", status: "SCHEDULED" },
+    "/api/v1/training-sessions?to=2026-08-23&status=SCHEDULED",
+  ],
+  [{}, "/api/v1/training-sessions"],
+] as const)("fetchTrainingSessions serializes optional query filters", async (query, url) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue([]),
+    }),
+  );
+
+  await expect(fetchTrainingSessions(query)).resolves.toEqual([]);
+  expect(fetch).toHaveBeenCalledWith(url);
+});
+
 test("fetchTrainingSessions throws stable API errors", async () => {
   vi.stubGlobal(
     "fetch",

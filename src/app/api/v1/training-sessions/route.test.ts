@@ -13,7 +13,7 @@ import { BadRequestError } from "@/server/errors/bad-request-error";
 
 vi.mock("@/server/server", () => ({
   trainingSessionsService: {
-    findBetweenDates: vi.fn(),
+    find: vi.fn(),
     create: vi.fn(),
   },
   trainingSessionsRequestValidator: {
@@ -32,7 +32,7 @@ class TestDatabaseError extends Error {
 }
 
 test("returns sessions as JSON", async () => {
-  service.findBetweenDates.mockResolvedValue([
+  service.find.mockResolvedValue([
     {
       id: "11111111-1111-4111-8111-111111111111",
       title: "Easy run",
@@ -108,14 +108,32 @@ test("returns sessions as JSON", async () => {
     },
   ]);
   expect(response.status).toBe(200);
-  expect(service.findBetweenDates).toHaveBeenCalledWith(
-    "2026-08-17",
-    "2026-08-23",
+  expect(service.find).toHaveBeenCalledWith({
+    from: "2026-08-17",
+    to: "2026-08-23",
+    status: undefined,
+  });
+});
+
+test.each([
+  ["?from=2026-08-17", { from: "2026-08-17", to: undefined, status: undefined }],
+  ["?to=2026-08-23", { from: undefined, to: "2026-08-23", status: undefined }],
+  ["?status=SCHEDULED", { from: undefined, to: undefined, status: "SCHEDULED" }],
+  ["?to=2026-08-23&status=SCHEDULED", { from: undefined, to: "2026-08-23", status: "SCHEDULED" }],
+  ["", { from: undefined, to: undefined, status: undefined }],
+])("passes optional query filters to the service", async (search, query) => {
+  service.find.mockResolvedValue([]);
+
+  const response = await GET(
+    new NextRequest(`http://localhost/api/v1/training-sessions${search}`),
   );
+
+  expect(response.status).toBe(200);
+  expect(service.find).toHaveBeenCalledWith(query);
 });
 
 test("returns validation errors with 400 status", async () => {
-  service.findBetweenDates.mockRejectedValue(
+  service.find.mockRejectedValue(
     new TrainingSessionsValidationError("Invalid range"),
   );
 
@@ -130,7 +148,7 @@ test("returns validation errors with 400 status", async () => {
 });
 
 test("returns stable server errors with 500 status", async () => {
-  service.findBetweenDates.mockRejectedValue(new TestDatabaseError());
+  service.find.mockRejectedValue(new TestDatabaseError());
 
   const response = await GET(
     new NextRequest(

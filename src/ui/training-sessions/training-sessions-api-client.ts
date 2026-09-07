@@ -6,17 +6,22 @@ import {
   type EditTrainingSessionRequest,
   type SkipTrainingSessionRequest,
   type TrainingSession,
-  type TrainingSessionDateRange,
+  type TrainingSessionsQuery,
 } from "@/domain/training-sessions";
 import { TrainingSessionsApiError } from "./errors/training-sessions-errors";
 
 export async function fetchTrainingSessions({
   from,
   to,
-}: TrainingSessionDateRange): Promise<TrainingSession[]> {
-  const params = new URLSearchParams({ from, to });
+  status,
+}: TrainingSessionsQuery): Promise<TrainingSession[]> {
+  const params = new URLSearchParams();
+  if (from !== undefined) params.set("from", from);
+  if (to !== undefined) params.set("to", to);
+  if (status !== undefined) params.set("status", status);
+  const query = params.toString();
   const response = await fetch(
-    `/api/v1/training-sessions?${params.toString()}`,
+    query ? `/api/v1/training-sessions?${query}` : "/api/v1/training-sessions",
   );
 
   if (!response.ok) {

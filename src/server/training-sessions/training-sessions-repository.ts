@@ -1,4 +1,4 @@
-import { and, asc, between, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { runDetails, strengthDetails, trainingSessions } from "@db/schema";
@@ -8,11 +8,12 @@ import type {
   EditTrainingSessionRequest,
   SkipTrainingSessionRequest,
   TrainingSession,
+  TrainingSessionsQuery,
 } from "@/domain/training-sessions";
 import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
 
 export interface TrainingSessionsRepository {
-  findBetweenDates(from: string, to: string): Promise<TrainingSession[]>;
+  find(query: TrainingSessionsQuery): Promise<TrainingSession[]>;
   findById(id: string): Promise<TrainingSession | null>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
   deleteById(id: string): Promise<boolean>;
@@ -36,7 +37,18 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
     private readonly transformer: TrainingSessionsTransformer,
   ) {}
 
-  async findBetweenDates(from: string, to: string): Promise<TrainingSession[]> {
+  async find(query: TrainingSessionsQuery): Promise<TrainingSession[]> {
+    const predicates = [
+      ...(query.from !== undefined
+        ? [gte(trainingSessions.date, query.from)]
+        : []),
+      ...(query.to !== undefined
+        ? [lte(trainingSessions.date, query.to)]
+        : []),
+      ...(query.status !== undefined
+        ? [eq(trainingSessions.status, query.status)]
+        : []),
+    ];
     const rows = await this.db
       .select({
         session: trainingSessions,
@@ -52,7 +64,7 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         strengthDetails,
         eq(strengthDetails.trainingSessionId, trainingSessions.id),
       )
-      .where(between(trainingSessions.date, from, to))
+      .where(predicates.length > 0 ? and(...predicates) : undefined)
       .orderBy(
         asc(trainingSessions.date),
         sql`case ${trainingSessions.timeOfDay} when 'AM' then 0 when 'PM' then 2 else 1 end`,

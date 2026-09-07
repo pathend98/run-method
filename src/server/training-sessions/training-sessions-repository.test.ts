@@ -119,16 +119,18 @@ function createRepository(transformer: TrainingSessionsTransformer) {
   return { orderBy, repository, transformer, where };
 }
 
-test("findBetweenDates queries ordered rows and delegates transformation in row order", async () => {
+test("find applies supplied filters, orders rows, and delegates transformation in row order", async () => {
   const transformer = new FakeTrainingSessionsTransformer();
   const { orderBy, repository, where } = createRepository(transformer);
 
   await expect(
-    repository.findBetweenDates("2026-08-17", "2026-08-23"),
+    repository.find({
+      from: "2026-08-17",
+      to: "2026-08-23",
+      status: "SCHEDULED",
+    }),
   ).resolves.toEqual(transformedRows);
 
-  expect(where).toHaveBeenCalledOnce();
-  expect(orderBy).toHaveBeenCalledOnce();
   expect(orderBy).toHaveBeenCalledWith(
     expect.anything(),
     expect.anything(),
@@ -137,6 +139,9 @@ test("findBetweenDates queries ordered rows and delegates transformation in row 
   );
   expect(transformer.transform).toHaveBeenNthCalledWith(1, rows[0]);
   expect(transformer.transform).toHaveBeenNthCalledWith(2, rows[1]);
+
+  await repository.find({});
+  expect(where).toHaveBeenLastCalledWith(undefined);
 });
 
 function createRepositoryForFindById(result: TrainingSessionRow[]) {
