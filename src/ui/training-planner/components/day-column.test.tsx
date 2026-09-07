@@ -115,7 +115,7 @@ test("passes the selected activity to the select handler", () => {
   expect(onSelectActivity).toHaveBeenCalledWith(selectedActivity);
 });
 
-test("adds the today accent to its activity cards", () => {
+test("adds a soft today tint while retaining the standard activity card border", () => {
   render(
     <DayColumn
       day={{
@@ -128,8 +128,12 @@ test("adds the today accent to its activity cards", () => {
     />,
   );
 
+  const column = screen.getByRole("listitem", { name: "Monday" });
+  expect(column.className).toContain("bg-teal-100/40");
+
   const card = screen.getByRole("button", { name: "View Tempo run details" });
-  expect(card.className).toContain("border-teal-300");
+  expect(card.className).toContain("border-zinc-200");
+  expect(card.className).not.toContain("border-teal-300");
   expect(card.className).not.toContain("ring-");
 });
 

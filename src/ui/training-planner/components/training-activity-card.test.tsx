@@ -113,11 +113,12 @@ test("omits seconds from durations over one hour", () => {
   expect(screen.queryByText("6.0 km · 1h 4m 9s")).toBeNull();
 });
 
-test("adds a restrained accent to today's activities", () => {
-  render(<TrainingActivityCard activity={runActivity()} isToday />);
+test("uses the standard border for an activity card", () => {
+  render(<TrainingActivityCard activity={runActivity()} />);
 
   const card = screen.getByRole("button", { name: "View Tempo run details" });
-  expect(card.className).toContain("border-teal-300");
+  expect(card.className).toContain("border-zinc-200");
+  expect(card.className).not.toContain("border-teal-300");
   expect(card.className).not.toContain("ring-");
 });
 
