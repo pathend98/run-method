@@ -15,6 +15,9 @@ export function ActivityDetailsModal() {
   const openEditActivity = useTrainingPlannerStore(
     (state) => state.openEditActivity,
   );
+  const openMoveActivity = useTrainingPlannerStore(
+    (state) => state.openMoveActivity,
+  );
   const openCompleteActivity = useTrainingPlannerStore(
     (state) => state.openCompleteActivity,
   );
@@ -41,6 +44,15 @@ export function ActivityDetailsModal() {
   ];
 
   const secondaryHeaderActions: ModalAction[] = [
+    ...(activity.status === "SCHEDULED"
+      ? [
+          {
+            label: "Move activity",
+            onClick: openMoveActivity,
+            variant: "secondary" as const,
+          },
+        ]
+      : []),
     ...(canTransition
       ? [
           {

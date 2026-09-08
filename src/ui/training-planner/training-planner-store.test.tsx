@@ -33,13 +33,17 @@ const day = {
   activities: [],
 } satisfies TrainingDay;
 
-test("transitions through add, details, edit, completion, skip, delete, and closed modal states", () => {
+test("transitions through add, details, edit, move, completion, skip, delete, and closed modal states", () => {
   const store = createTrainingPlannerStore();
   store.getState().openAddActivity(day);
   expect(store.getState().activeModal).toEqual({ kind: "add", day });
   store.getState().openActivityDetails(activity);
   store.getState().openEditActivity();
   expect(store.getState().activeModal).toEqual({ kind: "edit", activity });
+  store.getState().returnToActivityDetails();
+  expect(store.getState().activeModal).toEqual({ kind: "details", activity });
+  store.getState().openMoveActivity();
+  expect(store.getState().activeModal).toEqual({ kind: "move", activity });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
   store.getState().openSkipActivity();
@@ -99,6 +103,7 @@ test("replaces an edited activity and ignores invalid detail transitions", () =>
   store.getState().openCompleteActivity();
   store.getState().openDeleteActivity();
   store.getState().openSkipActivity();
+  store.getState().openMoveActivity();
   expect(store.getState().activeModal).toBeNull();
   store.getState().returnToActivityDetails();
   store
@@ -108,6 +113,17 @@ test("replaces an edited activity and ignores invalid detail transitions", () =>
     kind: "details",
     activity: { title: "Updated tempo" },
   });
+});
+
+test("does not open move activity for non-scheduled details", () => {
+  const store = createTrainingPlannerStore();
+  store
+    .getState()
+    .openActivityDetails({ ...activity, status: "COMPLETED" });
+
+  store.getState().openMoveActivity();
+
+  expect(store.getState().activeModal).toMatchObject({ kind: "details" });
 });
 
 test("requires a provider when using the selector hook", () => {

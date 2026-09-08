@@ -127,8 +127,13 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
   };
 }
 
-function selectMoreActivityAction(name: "Skip activity" | "Delete activity") {
+function selectMoreActivityAction(
+  name: "Move activity" | "Skip activity" | "Delete activity",
+) {
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+  expect(
+    screen.getByRole("menuitem", { name: "Move activity" }).classList,
+  ).toContain("border-zinc-200");
   fireEvent.click(screen.getByRole("menuitem", { name }));
 }
 
@@ -263,6 +268,7 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     screen.getByRole("button", { name: "Complete activity" }).classList,
   ).toContain("py-2");
   expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Move activity" })).toBeNull();
   expect(
     screen.queryByRole("menuitem", { name: "Delete activity" }),
   ).toBeNull();
