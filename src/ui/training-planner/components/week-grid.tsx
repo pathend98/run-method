@@ -1,4 +1,10 @@
+"use client";
+
+import { DragDropProvider, DragOverlay, PointerSensor } from "@dnd-kit/react";
+import { PointerActivationConstraints } from "@dnd-kit/dom";
+import { useState } from "react";
 import { DayColumn } from "./day-column";
+import { TrainingActivityCard } from "./training-activity-card";
 import { format } from "date-fns";
 import type {
   TrainingActivity,
@@ -17,24 +23,56 @@ export function WeekGrid({
   week,
 }: WeekGridProps) {
   const today = format(new Date(), "yyyy-MM-dd");
+  const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
+  const activeActivity = week
+    .flatMap((day) => day.activities)
+    .find((activity) => activity.id === activeActivityId);
+
+  function clearActiveActivity() {
+    setActiveActivityId(null);
+  }
 
   return (
-    <div
-      aria-label="Weekly training planner"
-      className="overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50"
-      role="list"
+    <DragDropProvider
+      onDragEnd={clearActiveActivity}
+      onDragStart={({ operation }) => {
+        setActiveActivityId(String(operation.source!.id));
+      }}
+      sensors={[
+        PointerSensor.configure({
+          activationConstraints: [
+            new PointerActivationConstraints.Distance({ value: 8 }),
+          ],
+          preventActivation: (event) => event.pointerType !== "mouse",
+        }),
+      ]}
     >
-      <div className="grid min-w-[56rem] grid-cols-7 divide-x divide-zinc-200">
-        {week.map((day) => (
-          <DayColumn
-            key={day.day}
-            day={day}
-            isToday={day.date === today}
-            onAddActivity={onAddActivity}
-            onSelectActivity={onSelectActivity}
-          />
-        ))}
+      <div
+        aria-label="Weekly training planner"
+        className="overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50"
+        role="list"
+      >
+        <div className="grid min-w-[56rem] grid-cols-7 divide-x divide-zinc-200">
+          {week.map((day) => (
+            <DayColumn
+              key={day.day}
+              day={day}
+              isDragActive={activeActivity !== undefined}
+              isDragAndDropEnabled
+              isToday={day.date === today}
+              onAddActivity={onAddActivity}
+              onSelectActivity={onSelectActivity}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+      <DragOverlay dropAnimation={null}>
+        {activeActivity ? (
+          <div aria-hidden="true" className="pointer-events-none w-64" inert>
+            <TrainingActivityCard activity={activeActivity} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DragDropProvider>
   );
 }

@@ -1,4 +1,50 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+
+const dndMocks = vi.hoisted(() => ({
+  configure: vi.fn(
+    (sensorOptions: {
+      activationConstraints: unknown[];
+      preventActivation: (event: { pointerType: string }) => boolean;
+    }) => {
+      dndMocks.sensorOptions = sensorOptions;
+      return {};
+    },
+  ),
+  sensorOptions: undefined as
+    | {
+        activationConstraints: unknown[];
+        preventActivation: (event: { pointerType: string }) => boolean;
+      }
+    | undefined,
+}));
+
+vi.mock("@dnd-kit/react", () => ({
+  DragDropProvider: ({
+    children,
+    onDragEnd,
+    onDragStart,
+  }: {
+    children: React.ReactNode;
+    onDragEnd: () => void;
+    onDragStart: (event: { operation: { source: { id: string } } }) => void;
+  }) => (
+    <div>
+      <button
+        aria-label="Start drag"
+        onClick={() =>
+          onDragStart({ operation: { source: { id: "activity" } } })
+        }
+        type="button"
+      />
+      <button aria-label="End drag" onClick={onDragEnd} type="button" />
+      {children}
+    </div>
+  ),
+  DragOverlay: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PointerSensor: { configure: dndMocks.configure },
+  useDraggable: () => ({ isDragSource: false, ref: vi.fn() }),
+  useDroppable: () => ({ isDropTarget: false, ref: vi.fn() }),
+}));
 import { WeekGrid } from "./week-grid";
 import type {
   TrainingActivity,
@@ -60,6 +106,44 @@ test("passes activity selection through from day columns", () => {
   );
 
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
+});
+
+test("shows dashed morning, evening, and anytime zones during a mouse drag", () => {
+  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Start drag" }));
+
+  const monday = screen.getByRole("listitem", { name: "Monday" });
+  const tuesday = screen.getByRole("listitem", { name: "Tuesday" });
+  expect(
+    within(monday)
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent),
+  ).toEqual(["Morning", "Evening", "Anytime"]);
+  expect(
+    within(tuesday)
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent),
+  ).toEqual(["Morning", "Evening", "Anytime"]);
+  expect(screen.queryByText("Rest day")).toBeNull();
+  expect(screen.getAllByText("Tempo run")).toHaveLength(2);
+
+  fireEvent.click(screen.getByRole("button", { name: "End drag" }));
+
+  expect(screen.getByText("Rest day")).toBeDefined();
+});
+
+test("configures a mouse-only sensor with an eight-pixel activation distance", () => {
+  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+
+  const sensorOptions = dndMocks.sensorOptions;
+
+  if (!sensorOptions)
+    throw new Error("Expected the pointer sensor to configure");
+
+  expect(sensorOptions.preventActivation({ pointerType: "mouse" })).toBe(false);
+  expect(sensorOptions.preventActivation({ pointerType: "touch" })).toBe(true);
+  expect(sensorOptions.preventActivation({ pointerType: "pen" })).toBe(true);
 });
 
 test("tints only today's column when the displayed week includes it", () => {
