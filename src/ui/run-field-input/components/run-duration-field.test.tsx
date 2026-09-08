@@ -85,16 +85,14 @@ test("renders its Auto label and error and disables all controls", () => {
   expect(screen.getByText("Duration (hh:mm:ss) · Auto")).toBeDefined();
   expect(screen.getByText("Bad duration")).toBeDefined();
   expect(
-    screen.getByLabelText<HTMLInputElement>(
-      "Duration (hh:mm:ss) hours",
-    ).disabled,
+    screen.getByLabelText<HTMLInputElement>("Duration (hh:mm:ss) hours")
+      .disabled,
   ).toBe(true);
   expect(
     screen.getByLabelText<HTMLInputElement>("Duration (minutes)").disabled,
   ).toBe(true);
   expect(
-    screen.getByLabelText<HTMLInputElement>(
-      "Duration (hh:mm:ss) seconds",
-    ).disabled,
+    screen.getByLabelText<HTMLInputElement>("Duration (hh:mm:ss) seconds")
+      .disabled,
   ).toBe(true);
 });

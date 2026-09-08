@@ -24,22 +24,24 @@ const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
   icon: "size-9 p-0",
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  {
-    className,
-    size = "default",
-    type = "button",
-    variant = "secondary",
-    ...props
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    {
+      className,
+      size = "default",
+      type = "button",
+      variant = "secondary",
+      ...props
+    },
+    ref,
+  ) {
+    return (
+      <button
+        className={`inline-flex cursor-pointer items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${sizeClasses[size]} ${variantClasses[variant]}${className ? ` ${className}` : ""}`}
+        ref={ref}
+        type={type}
+        {...props}
+      />
+    );
   },
-  ref,
-) {
-  return (
-    <button
-      className={`inline-flex cursor-pointer items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${sizeClasses[size]} ${variantClasses[variant]}${className ? ` ${className}` : ""}`}
-      ref={ref}
-      type={type}
-      {...props}
-    />
-  );
-});
+);

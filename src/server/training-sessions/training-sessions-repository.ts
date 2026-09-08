@@ -42,9 +42,7 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
       ...(query.from !== undefined
         ? [gte(trainingSessions.date, query.from)]
         : []),
-      ...(query.to !== undefined
-        ? [lte(trainingSessions.date, query.to)]
-        : []),
+      ...(query.to !== undefined ? [lte(trainingSessions.date, query.to)] : []),
       ...(query.status !== undefined
         ? [eq(trainingSessions.status, query.status)]
         : []),
@@ -269,7 +267,8 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
     return this.db.transaction(async (tx) => {
       const date = request.date ?? current.date;
       const dateChanged = date !== current.date;
-      const movedBucket = dateChanged || request.timeOfDay !== current.timeOfDay;
+      const movedBucket =
+        dateChanged || request.timeOfDay !== current.timeOfDay;
       let sortOrder = current.sortOrder;
       if (movedBucket) {
         const bucket = [
@@ -300,9 +299,7 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         .where(
           and(
             eq(trainingSessions.id, current.id),
-            ...(dateChanged
-              ? [eq(trainingSessions.status, "SCHEDULED")]
-              : []),
+            ...(dateChanged ? [eq(trainingSessions.status, "SCHEDULED")] : []),
           ),
         )
         .returning();

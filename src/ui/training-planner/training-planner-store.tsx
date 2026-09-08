@@ -9,10 +9,7 @@ import type {
   TrainingDay,
 } from "./types/training-planner-types";
 
-export type {
-  TrainingActivity,
-  Weekday,
-} from "./types/training-planner-types";
+export type { TrainingActivity, Weekday } from "./types/training-planner-types";
 
 export type TrainingPlannerActiveModal =
   | { kind: "add"; day: TrainingDay }

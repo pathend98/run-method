@@ -95,7 +95,9 @@ test("TrainingPlanner renders loaded planner data", async () => {
   expect(
     screen.getByRole("list", { name: "Weekly training planner" }),
   ).toBeDefined();
-  fireEvent.click(screen.getByRole("button", { name: "View Easy run details" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "View Easy run details" }),
+  );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Move" }));
   expect(screen.getByRole("dialog", { name: "Move Easy run" })).toBeDefined();

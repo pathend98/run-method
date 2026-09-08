@@ -40,8 +40,7 @@ export function TrainingActivityCard({
 }: TrainingActivityCardProps) {
   const statusStyle = statusStyles[activity.status];
   const StatusIcon = statusStyle.icon;
-  const ActivityIcon =
-    activity.activityType === "RUN" ? SportShoe : Dumbbell;
+  const ActivityIcon = activity.activityType === "RUN" ? SportShoe : Dumbbell;
   const isCompleted = activity.status === "COMPLETED";
   const distance =
     activity.activityType === "RUN"

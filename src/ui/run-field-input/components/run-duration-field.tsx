@@ -28,9 +28,7 @@ export function RunDurationField({
   const [edited, setEdited] = useState(() => !isZeroDuration(value));
   const showValue = edited || !isZeroDuration(value);
 
-  function changeDuration(
-    next: DurationInputValue,
-  ) {
+  function changeDuration(next: DurationInputValue) {
     setEdited(true);
     onChange({
       ...value,

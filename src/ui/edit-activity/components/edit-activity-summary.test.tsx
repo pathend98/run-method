@@ -64,9 +64,7 @@ test.each([
   expect(
     screen.getByText(activity.timeOfDay === null ? "Anytime" : "Morning"),
   ).toBeDefined();
-  expect(
-    screen.getByText(/6\.0 km · 30m|5\.0 km · 30m/),
-  ).toBeDefined();
+  expect(screen.getByText(/6\.0 km · 30m|5\.0 km · 30m/)).toBeDefined();
 });
 
 test("formats terminal AM and PM values for display", () => {

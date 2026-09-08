@@ -76,13 +76,11 @@ test("supports errors, autofocus, disabled state, and group focus events", () =>
     />,
   );
   expect(hours.disabled).toBe(true);
-  expect(screen.getByLabelText<HTMLInputElement>("Duration (minutes)").disabled).toBe(
-    true,
-  );
   expect(
-    screen.getByLabelText<HTMLInputElement>(
-      "Duration (hh:mm:ss) seconds",
-    ).disabled,
+    screen.getByLabelText<HTMLInputElement>("Duration (minutes)").disabled,
   ).toBe(true);
-
+  expect(
+    screen.getByLabelText<HTMLInputElement>("Duration (hh:mm:ss) seconds")
+      .disabled,
+  ).toBe(true);
 });

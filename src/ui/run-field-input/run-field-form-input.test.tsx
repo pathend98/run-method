@@ -98,9 +98,9 @@ test("aggregates form errors for the run input", async () => {
 test("disables every run field", () => {
   render(<Harness disabled />);
 
-  expect(screen.getByLabelText<HTMLInputElement>("Distance (km)").disabled).toBe(
-    true,
-  );
+  expect(
+    screen.getByLabelText<HTMLInputElement>("Distance (km)").disabled,
+  ).toBe(true);
   expect(
     screen.getByLabelText<HTMLInputElement>("Duration (hh:mm:ss) hours")
       .disabled,

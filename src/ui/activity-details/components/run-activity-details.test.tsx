@@ -32,7 +32,9 @@ test("renders scheduled run targets without recorded actual values", () => {
 
   expect(within(plannedMetrics).queryByText("AM")).toBeNull();
   expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
-  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
+  expect(
+    screen.queryByRole("heading", { name: "Recorded metrics" }),
+  ).toBeNull();
   expect(screen.getByText("6.0 km")).toBeDefined();
   expect(screen.getByText("25m 30s")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
@@ -75,7 +77,10 @@ test("renders run targets as spacious responsive metric groups", () => {
 test("prioritizes completed run actuals and shows their targets as supporting text", () => {
   render(
     <RunActivityDetails
-      activity={runActivity({ status: "COMPLETED", actualDurationSeconds: 1500 })}
+      activity={runActivity({
+        status: "COMPLETED",
+        actualDurationSeconds: 1500,
+      })}
     />,
   );
 
@@ -84,16 +89,16 @@ test("prioritizes completed run actuals and shows their targets as supporting te
   expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
   expect(completedMetrics.classList.contains("gap-8")).toBe(true);
   expect(
-    [...completedMetrics.querySelectorAll("dt")].map((term) => term.textContent),
+    [...completedMetrics.querySelectorAll("dt")].map(
+      (term) => term.textContent,
+    ),
   ).toEqual(["Actual distance", "Actual pace", "Actual duration"]);
   expect(within(completedMetrics).getByText("5.9 km")).toBeDefined();
   expect(within(completedMetrics).getByText("4:14 / km")).toBeDefined();
   expect(within(completedMetrics).getByText("25m")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 6.0 km")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 4:15 / km")).toBeDefined();
-  expect(
-    within(completedMetrics).getByText("Target: 25m 30s"),
-  ).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 25m 30s")).toBeDefined();
 
   for (const label of ["Actual distance", "Actual pace", "Actual duration"]) {
     const card = within(completedMetrics).getByText(label).closest("div");
@@ -106,7 +111,9 @@ test("prioritizes completed run actuals and shows their targets as supporting te
     );
   }
 
-  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
+  expect(
+    screen.queryByRole("heading", { name: "Recorded metrics" }),
+  ).toBeNull();
 });
 
 test.each([

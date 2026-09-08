@@ -1,9 +1,4 @@
-import {
-  addDays,
-  format,
-  parseISO,
-  startOfWeek,
-} from "date-fns";
+import { addDays, format, parseISO, startOfWeek } from "date-fns";
 
 import { parseDateFromString } from "@/core/date/date-parsing";
 import type {

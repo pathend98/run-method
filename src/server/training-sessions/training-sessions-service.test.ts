@@ -39,9 +39,7 @@ function createService() {
 test("rejects invalid date strings", async () => {
   const { service } = createService();
 
-  await expect(
-    service.find({ from: "2026-02-30" }),
-  ).rejects.toThrow(
+  await expect(service.find({ from: "2026-02-30" })).rejects.toThrow(
     "from and to must be valid dates in YYYY-MM-DD format when provided",
   );
 });

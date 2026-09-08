@@ -45,7 +45,9 @@ test("renders a compact activity summary", () => {
 });
 
 test("merges an optional class name into the activity button", () => {
-  render(<TrainingActivityCard activity={runActivity()} className="!cursor-grab" />);
+  render(
+    <TrainingActivityCard activity={runActivity()} className="!cursor-grab" />,
+  );
 
   expect(
     screen.getByRole("button", { name: "View Tempo run details" }).className,
@@ -79,13 +81,11 @@ test.each([
 test("shows actual run metrics after completion", () => {
   render(
     <TrainingActivityCard
-      activity={
-        runActivity({
-          status: "COMPLETED",
-          actualDistanceMetres: 6250,
-          actualDurationSeconds: 1575,
-        })
-      }
+      activity={runActivity({
+        status: "COMPLETED",
+        actualDistanceMetres: 6250,
+        actualDurationSeconds: 1575,
+      })}
     />,
   );
 

@@ -49,9 +49,9 @@ test("does not validate hidden skipped metric fields", () => {
     createEditActivityFormSchema(strength()).safeParse(invalidValues).success,
   ).toBe(true);
   expect(
-    createEditActivityFormSchema(run({ status: "SKIPPED", skipReason: "Rest" })).safeParse(
-      invalidValues,
-    ).success,
+    createEditActivityFormSchema(
+      run({ status: "SKIPPED", skipReason: "Rest" }),
+    ).safeParse(invalidValues).success,
   ).toBe(true);
 });
 

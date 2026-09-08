@@ -181,10 +181,7 @@ test("renders editable actual metrics for completed runs", () => {
   expect(screen.queryByLabelText("Time of day")).toBeNull();
   expect(screen.queryByLabelText("Day")).toBeNull();
   expect(screen.getByRole("heading", { name: "Actual metrics" })).toBeDefined();
-  expect(screen.getByLabelText("Distance (km)")).toHaveProperty(
-    "value",
-    "5.9",
-  );
+  expect(screen.getByLabelText("Distance (km)")).toHaveProperty("value", "5.9");
   expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
     "value",
     "4:14",

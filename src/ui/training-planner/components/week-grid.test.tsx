@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 const dndMocks = vi.hoisted(() => ({
   configure: vi.fn(
@@ -88,7 +94,9 @@ vi.mock("@dnd-kit/react", () => ({
           onDragEnd({
             canceled: false,
             operation: {
-              source: { data: { activity: { ...activity, status: "COMPLETED" } } },
+              source: {
+                data: { activity: { ...activity, status: "COMPLETED" } },
+              },
               target: { data: { date: "2026-08-18", timeOfDay: "PM" } },
             },
           })

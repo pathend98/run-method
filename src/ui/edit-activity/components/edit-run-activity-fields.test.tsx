@@ -27,7 +27,9 @@ function Harness({ children }: { children: ReactNode }) {
         <output data-testid="dirty-fields">
           {JSON.stringify(form.formState.dirtyFields)}
         </output>
-        <output data-testid="submitted">{String(form.formState.isSubmitted)}</output>
+        <output data-testid="submitted">
+          {String(form.formState.isSubmitted)}
+        </output>
         <button type="submit">Submit</button>
       </form>
     </FormProvider>

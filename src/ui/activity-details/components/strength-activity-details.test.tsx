@@ -29,7 +29,9 @@ test("renders scheduled strength targets without recorded actual duration", () =
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("PM")).toBeNull();
   expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
-  expect(screen.queryByRole("heading", { name: "Recorded metrics" })).toBeNull();
+  expect(
+    screen.queryByRole("heading", { name: "Recorded metrics" }),
+  ).toBeNull();
   expect(screen.getByText("45m")).toBeDefined();
   expect(screen.queryByText("Actual duration")).toBeNull();
   expect(screen.queryByText("40m")).toBeNull();
@@ -55,9 +57,9 @@ test("prioritizes completed strength actual duration and keeps its target second
   expect(durationCard?.classList.contains("border")).toBe(false);
   expect(durationCard?.classList.contains("rounded-lg")).toBe(false);
   expect(durationCard?.classList.contains("p-3")).toBe(false);
-  expect(durationCard?.querySelector("dd")?.classList.contains("text-2xl")).toBe(
-    true,
-  );
+  expect(
+    durationCard?.querySelector("dd")?.classList.contains("text-2xl"),
+  ).toBe(true);
   expect(screen.queryByText("Actual duration")).toBeDefined();
 });
 

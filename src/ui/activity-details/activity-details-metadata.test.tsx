@@ -1,7 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
-import type { RunTrainingSession, StrengthTrainingSession } from "@/domain/training-sessions";
+import type {
+  RunTrainingSession,
+  StrengthTrainingSession,
+} from "@/domain/training-sessions";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
