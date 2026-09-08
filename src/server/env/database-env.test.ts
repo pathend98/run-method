@@ -18,7 +18,8 @@ test("maps explicit database environment variables", async () => {
   vi.stubEnv("DATABASE_IDLE_CONNECTION_TIMEOUT_MS", "45000");
   vi.stubEnv("DATABASE_CONNECTION_TIMEOUT_MS", "7000");
 
-  const { databaseEnv } = await importDatabaseEnv();
+  const { readDatabaseEnv } = await importDatabaseEnv();
+  const databaseEnv = readDatabaseEnv();
 
   expect(databaseEnv).toEqual({
     DATABASE_URL:
@@ -38,7 +39,8 @@ test("uses defaults for optional database environment variables", async () => {
   vi.stubEnv("DATABASE_IDLE_CONNECTION_TIMEOUT_MS", undefined);
   vi.stubEnv("DATABASE_CONNECTION_TIMEOUT_MS", undefined);
 
-  const { databaseEnv } = await importDatabaseEnv();
+  const { readDatabaseEnv } = await importDatabaseEnv();
+  const databaseEnv = readDatabaseEnv();
 
   expect(databaseEnv).toEqual({
     DATABASE_URL:

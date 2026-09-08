@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import {
+  getTrainingSessionsService,
   trainingSessionsRequestValidator,
-  trainingSessionsService,
 } from "@/server/server";
 import {
   TrainingSessionNotFoundError,
@@ -18,7 +18,7 @@ type RouteContext = {
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
-    await trainingSessionsService.delete(id);
+    await getTrainingSessionsService().delete(id);
     return new Response(null, { status: 204 });
   } catch (error) {
     if (error instanceof TrainingSessionNotFoundError) {
@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const editRequest = trainingSessionsRequestValidator.validateEdit(body);
-    const session = await trainingSessionsService.edit(id, editRequest);
+    const session = await getTrainingSessionsService().edit(id, editRequest);
     return NextResponse.json(session);
   } catch (error) {
     if (error instanceof TrainingSessionsRequestValidationError) {

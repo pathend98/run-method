@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import {
+  getTrainingSessionsService,
   trainingSessionsRequestValidator,
-  trainingSessionsService,
 } from "@/server/server";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { TrainingSessionsRequestValidationError } from "@/server/training-sessions/training-sessions-errors";
@@ -11,7 +11,7 @@ import { TrainingSessionsRequestValidationError } from "@/server/training-sessio
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const sessions = await trainingSessionsService.find({
+    const sessions = await getTrainingSessionsService().find({
       from: searchParams.get("from") ?? undefined,
       to: searchParams.get("to") ?? undefined,
       status: searchParams.get("status") ?? undefined,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const createRequest = trainingSessionsRequestValidator.validateCreate(body);
-    const session = await trainingSessionsService.create(createRequest);
+    const session = await getTrainingSessionsService().create(createRequest);
     return NextResponse.json(session, { status: 201 });
   } catch (error) {
     if (error instanceof TrainingSessionsRequestValidationError) {

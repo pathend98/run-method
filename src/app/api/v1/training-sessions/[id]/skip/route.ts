@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import {
+  getTrainingSessionsService,
   trainingSessionsRequestValidator,
-  trainingSessionsService,
 } from "@/server/server";
 import {
   TrainingSessionNotFoundError,
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     const skipRequest = trainingSessionsRequestValidator.validateSkip(body);
-    const session = await trainingSessionsService.skip(
+    const session = await getTrainingSessionsService().skip(
       id,
       skipRequest,
       request.headers.get("Time-Zone"),

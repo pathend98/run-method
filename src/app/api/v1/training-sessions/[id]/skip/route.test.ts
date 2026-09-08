@@ -1,10 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
-import {
-  trainingSessionsRequestValidator,
-  trainingSessionsService,
-} from "@/server/server";
+import { trainingSessionsRequestValidator } from "@/server/server";
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsRequestValidationError,
@@ -12,8 +9,10 @@ import {
 } from "@/server/training-sessions/training-sessions-errors";
 import { POST } from "./route";
 
+const service = vi.hoisted(() => ({ skip: vi.fn() }));
+
 vi.mock("@/server/server", () => ({
-  trainingSessionsService: { skip: vi.fn() },
+  getTrainingSessionsService: () => service,
   trainingSessionsRequestValidator: { validateSkip: vi.fn() },
 }));
 
@@ -37,7 +36,6 @@ const skippedSession = {
   actualDurationSeconds: null,
 };
 
-const service = vi.mocked(trainingSessionsService);
 const validator = vi.mocked(trainingSessionsRequestValidator);
 
 function request(
