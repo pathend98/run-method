@@ -28,7 +28,7 @@ export interface TrainingSessionsRepository {
   edit(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
-  ): Promise<TrainingSession>;
+  ): Promise<TrainingSession | null>;
 }
 
 export class DrizzleTrainingSessionsRepository implements TrainingSessionsRepository {
@@ -265,12 +265,15 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
   async edit(
     current: TrainingSession,
     request: EditTrainingSessionRequest,
-  ): Promise<TrainingSession> {
+  ): Promise<TrainingSession | null> {
     return this.db.transaction(async (tx) => {
+      const date = request.date ?? current.date;
+      const dateChanged = date !== current.date;
+      const movedBucket = dateChanged || request.timeOfDay !== current.timeOfDay;
       let sortOrder = current.sortOrder;
-      if (request.timeOfDay !== current.timeOfDay) {
+      if (movedBucket) {
         const bucket = [
-          eq(trainingSessions.date, current.date),
+          eq(trainingSessions.date, date),
           request.timeOfDay === null
             ? isNull(trainingSessions.timeOfDay)
             : eq(trainingSessions.timeOfDay, request.timeOfDay),
@@ -288,13 +291,23 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
         .update(trainingSessions)
         .set({
           title: request.title,
+          ...(dateChanged ? { date } : {}),
           timeOfDay: request.timeOfDay,
           description: request.description,
           sortOrder,
           updatedAt: new Date(),
         })
-        .where(eq(trainingSessions.id, current.id))
+        .where(
+          and(
+            eq(trainingSessions.id, current.id),
+            ...(dateChanged
+              ? [eq(trainingSessions.status, "SCHEDULED")]
+              : []),
+          ),
+        )
         .returning();
+
+      if (!session) return null;
 
       if (current.activityType === "RUN" && request.activityType === "RUN") {
         let runDetailsRow: typeof runDetails.$inferSelect;

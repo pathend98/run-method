@@ -144,6 +144,7 @@ export const createTrainingSessionRequestSchema = z.union([
 const editBaseSchema = z
   .object({
     title: z.string().trim().min(1),
+    date: z.iso.date().optional(),
     timeOfDay: timeOfDaySchema,
     description: z.string().trim().min(1).nullable(),
   })

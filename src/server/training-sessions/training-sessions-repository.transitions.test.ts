@@ -84,9 +84,12 @@ function createRepository(returnSession = true) {
       };
     }),
   }));
+  const selectWhere = vi.fn().mockResolvedValue([{ nextOrder: "1" }]);
+  const selectFrom = vi.fn().mockReturnValue({ where: selectWhere });
+  const select = vi.fn().mockReturnValue({ from: selectFrom });
   const transaction = vi
     .fn()
-    .mockImplementation((callback) => callback({ update }));
+    .mockImplementation((callback) => callback({ select, update }));
   const transformed = { id: session.id } as TrainingSession;
   const transformer: TrainingSessionsTransformer = {
     transform: vi.fn().mockReturnValue(transformed),
@@ -137,6 +140,23 @@ test("returns null when a guarded skip loses a concurrent transition", async () 
 
   await expect(
     repository.skip(run, { skipReason: "Recovery" }),
+  ).resolves.toBeNull();
+  expect(transformer.transform).not.toHaveBeenCalled();
+});
+
+test("returns null when a guarded date edit loses a concurrent transition", async () => {
+  const { repository, transformer } = createRepository(false);
+
+  await expect(
+    repository.edit(run, {
+      title: run.title,
+      date: "2026-08-18",
+      timeOfDay: run.timeOfDay,
+      description: run.description,
+      activityType: "RUN",
+      targetDistanceMetres: run.targetDistanceMetres,
+      targetDurationSeconds: run.targetDurationSeconds,
+    }),
   ).resolves.toBeNull();
   expect(transformer.transform).not.toHaveBeenCalled();
 });

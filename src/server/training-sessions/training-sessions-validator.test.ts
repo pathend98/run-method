@@ -57,6 +57,28 @@ test("allows scheduled run target changes", () => {
   ).not.toThrow();
 });
 
+test("allows scheduled date changes", () => {
+  expect(() =>
+    validator.validateEdit(runSession, { ...runEdit, date: "2026-08-27" }),
+  ).not.toThrow();
+});
+
+test.each(["COMPLETED", "SKIPPED"] as const)(
+  "rejects date changes for %s sessions",
+  (status) => {
+    expect(() =>
+      validator.validateEdit(
+        {
+          ...runSession,
+          status,
+          skipReason: status === "SKIPPED" ? "Recovery" : null,
+        },
+        { ...runEdit, date: "2026-08-27" },
+      ),
+    ).toThrow("date cannot be changed for completed or skipped sessions");
+  },
+);
+
 test("rejects time of day changes for terminal sessions", () => {
   expect(() =>
     validator.validateEdit(
