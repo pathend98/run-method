@@ -1,6 +1,6 @@
-import { addDays, format, parseISO, startOfWeek } from "date-fns";
 import { useState } from "react";
 
+import { getWeekDateOptions } from "@/core/date/week-date-options";
 import { editTrainingSessionRequestSchema } from "@/domain/training-sessions";
 import { FormField } from "@/ui/components/form-field";
 import { Modal } from "@/ui/components/modal";
@@ -27,11 +27,7 @@ export function MoveActivityModal() {
   const { activity } = activeModal;
   const selectedDate = date || activity.date;
   const selectedTimeOfDay = timeOfDay ?? activity.timeOfDay ?? "ANY";
-  const weekStart = startOfWeek(parseISO(activity.date), { weekStartsOn: 1 });
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const day = addDays(weekStart, index);
-    return { label: format(day, "EEEE d MMM"), value: format(day, "yyyy-MM-dd") };
-  });
+  const days = getWeekDateOptions(activity.date);
 
   async function moveActivity() {
     try {

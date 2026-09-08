@@ -17,6 +17,7 @@ export function toEditTrainingSessionRequest(
   const base = {
     title: parsed.title,
     description: parsed.description.trim() || null,
+    ...(activity.status === "SCHEDULED" ? { date: parsed.date } : {}),
     timeOfDay:
       activity.status === "SCHEDULED"
         ? parsed.timeOfDay === "ANY"

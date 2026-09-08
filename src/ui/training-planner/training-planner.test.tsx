@@ -347,20 +347,25 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   };
+  const updatedActivity = {
+    ...activity,
+    title: "Updated easy run",
+    updatedAt: "2026-08-31T10:00:00.000Z",
+  };
+  let hasBeenEdited = false;
   const fetchMock = vi.fn().mockImplementation((_url, options) => {
     if (options?.method === "PATCH") {
+      hasBeenEdited = true;
       return Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue({
-          ...activity,
-          title: "Updated easy run",
-          updatedAt: "2026-08-31T10:00:00.000Z",
-        }),
+        json: vi.fn().mockResolvedValue(updatedActivity),
       });
     }
     return Promise.resolve({
       ok: true,
-      json: vi.fn().mockResolvedValue([activity]),
+      json: vi
+        .fn()
+        .mockResolvedValue([hasBeenEdited ? updatedActivity : activity]),
     });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -395,8 +400,11 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     ).toHaveLength(4),
   );
   expect(
-    await screen.findByRole("dialog", { name: "Updated easy run" }),
+    await screen.findByRole("button", {
+      name: "View Updated easy run details",
+    }),
   ).toBeDefined();
+  expect(screen.queryByRole("dialog")).toBeNull();
 });
 
 test("TrainingPlanner deletes an activity and refreshes its week", async () => {

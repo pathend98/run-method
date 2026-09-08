@@ -97,7 +97,7 @@ test("returns completed and skipped review activities to the review modal", () =
   expect(store.getState().activeModal).toBeNull();
 });
 
-test("replaces an edited activity and ignores invalid detail transitions", () => {
+test("ignores invalid detail transitions", () => {
   const store = createTrainingPlannerStore();
   store.getState().openEditActivity();
   store.getState().openCompleteActivity();
@@ -106,13 +106,7 @@ test("replaces an edited activity and ignores invalid detail transitions", () =>
   store.getState().openMoveActivity();
   expect(store.getState().activeModal).toBeNull();
   store.getState().returnToActivityDetails();
-  store
-    .getState()
-    .replaceActivityAndShowDetails({ ...activity, title: "Updated tempo" });
-  expect(store.getState().activeModal).toMatchObject({
-    kind: "details",
-    activity: { title: "Updated tempo" },
-  });
+  expect(store.getState().activeModal).toBeNull();
 });
 
 test("does not open move activity for non-scheduled details", () => {

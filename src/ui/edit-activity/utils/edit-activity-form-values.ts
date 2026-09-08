@@ -9,6 +9,7 @@ export function getEditActivityFormValues(
   const isCompleted = activity.status === "COMPLETED";
   const values: EditActivityFormValues = {
     title: activity.title,
+    date: activity.date,
     timeOfDay: activity.timeOfDay ?? "ANY",
     description: activity.description ?? "",
     derivedMetric: null,

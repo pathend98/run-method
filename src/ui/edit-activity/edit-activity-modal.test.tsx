@@ -69,7 +69,7 @@ test("renders the selected activity and returns to details when dismissed", () =
   expect(store.getState().activeModal?.kind).toBe("details");
 });
 
-test("updates the selected activity and returns to its details", async () => {
+test("updates the selected activity and closes the edit flow", async () => {
   const onEdit = vi
     .fn()
     .mockResolvedValue({ ...activity, title: "Updated tempo" });
@@ -79,10 +79,8 @@ test("updates the selected activity and returns to its details", async () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
   await waitFor(() => expect(onEdit).toHaveBeenCalledOnce());
-  expect(store.getState().activeModal).toMatchObject({
-    kind: "details",
-    activity: { title: "Updated tempo", day: "Monday" },
-  });
+  expect(store.getState().activeModal).toBeNull();
+  expect(screen.queryByRole("dialog", { name: "Edit activity" })).toBeNull();
 });
 
 test("keeps the modal open after a failed edit", async () => {

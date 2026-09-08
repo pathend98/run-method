@@ -44,7 +44,6 @@ type TrainingPlannerStoreActions = {
   openMoveActivity: () => void;
   openSkipActivity: () => void;
   openSkipActivityFromReview: (activity: TrainingActivity) => void;
-  replaceActivityAndShowDetails: (activity: TrainingActivity) => void;
   returnToActivityDetails: () => void;
   returnFromActivityTransition: () => void;
   finishActivityTransition: () => void;
@@ -125,8 +124,6 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
       ),
     openSkipActivityFromReview: (activity) =>
       set({ activeModal: { kind: "skip", activity, returnTo: "review" } }),
-    replaceActivityAndShowDetails: (activity) =>
-      set({ activeModal: { kind: "details", activity } }),
     returnToActivityDetails: () =>
       set((state) =>
         state.activeModal?.kind === "edit" ||
