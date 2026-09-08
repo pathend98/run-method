@@ -19,12 +19,6 @@ type DayColumnProps = {
 
 const timeSections: { label: string; value: TimeOfDay }[] = [
   { label: "Morning", value: "AM" },
-  { label: "Anytime", value: null },
-  { label: "Evening", value: "PM" },
-];
-
-const dragTimeSections: { label: string; value: TimeOfDay }[] = [
-  { label: "Morning", value: "AM" },
   { label: "Evening", value: "PM" },
   { label: "Anytime", value: null },
 ];
@@ -37,14 +31,12 @@ export function DayColumn({
   onAddActivity,
   onSelectActivity,
 }: DayColumnProps) {
-  const sections = (isDragActive ? dragTimeSections : timeSections).map(
-    (section) => ({
-      ...section,
-      activities: day.activities.filter(
-        (activity) => activity.timeOfDay === section.value,
-      ),
-    }),
-  );
+  const sections = timeSections.map((section) => ({
+    ...section,
+    activities: day.activities.filter(
+      (activity) => activity.timeOfDay === section.value,
+    ),
+  }));
   const populatedTimeSections = sections.filter(
     (section) => section.activities.length > 0,
   );

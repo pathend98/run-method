@@ -77,7 +77,7 @@ test("renders populated time buckets in day order", () => {
     within(column)
       .getAllByRole("heading", { level: 3 })
       .map((heading) => heading.textContent),
-  ).toEqual(["Morning", "Anytime", "Evening"]);
+  ).toEqual(["Morning", "Evening", "Anytime"]);
   expect(within(column).getByText("Morning run")).toBeDefined();
   expect(within(column).getByText("Mobility")).toBeDefined();
   expect(within(column).getByText("Evening lift")).toBeDefined();
