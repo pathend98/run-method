@@ -37,7 +37,7 @@ export function ActivityDetailsModal() {
   const canTransition = canTransitionActivity(activity);
   const primaryHeaderActions: ModalAction[] = [
     {
-      label: "Edit activity",
+      label: "Edit",
       onClick: openEditActivity,
       variant: "secondary",
     },
@@ -47,7 +47,7 @@ export function ActivityDetailsModal() {
     ...(activity.status === "SCHEDULED"
       ? [
           {
-            label: "Move activity",
+            label: "Move",
             onClick: openMoveActivity,
             variant: "secondary" as const,
           },
@@ -56,14 +56,14 @@ export function ActivityDetailsModal() {
     ...(canTransition
       ? [
           {
-            label: "Skip activity",
+            label: "Skip",
             onClick: openSkipActivity,
             variant: "warning" as const,
           },
         ]
       : []),
     {
-      label: "Delete activity",
+      label: "Delete",
       onClick: openDeleteActivity,
       variant: "destructive",
     },
@@ -77,7 +77,7 @@ export function ActivityDetailsModal() {
         canTransition
           ? [
               {
-                label: "Complete activity",
+                label: "Complete",
                 onClick: openCompleteActivity,
                 variant: "primary",
               },

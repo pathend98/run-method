@@ -97,7 +97,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
   ).toBeDefined();
   fireEvent.click(screen.getByRole("button", { name: "View Easy run details" }));
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: "Move activity" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Move" }));
   expect(screen.getByRole("dialog", { name: "Move Easy run" })).toBeDefined();
 });
 
@@ -218,7 +218,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: "Skip activity" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Skip" }));
   fireEvent.change(
     screen.getByLabelText("Why are you skipping this activity?"),
     {
@@ -243,7 +243,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   fireEvent.click(
     screen.getByRole("button", { name: "View Easy run details" }),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Complete" }));
   fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "30" },
   });
@@ -374,7 +374,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
   fireEvent.click(
     screen.getByRole("button", { name: "View Easy run details" }),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Updated easy run" },
   });
@@ -441,7 +441,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: "Delete activity" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
   fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
 
   await waitFor(() =>

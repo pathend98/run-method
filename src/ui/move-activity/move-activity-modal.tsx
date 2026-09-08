@@ -4,10 +4,7 @@ import { useState } from "react";
 import { editTrainingSessionRequestSchema } from "@/domain/training-sessions";
 import { FormField } from "@/ui/components/form-field";
 import { Modal } from "@/ui/components/modal";
-import {
-  useTrainingPlannerStore,
-  type Weekday,
-} from "@/ui/training-planner/training-planner-store";
+import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 
 export function MoveActivityModal() {
@@ -17,9 +14,7 @@ export function MoveActivityModal() {
   >(undefined);
   const [error, setError] = useState<string | null>(null);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const replaceActivityAndShowDetails = useTrainingPlannerStore(
-    (state) => state.replaceActivityAndShowDetails,
-  );
+  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const returnToActivityDetails = useTrainingPlannerStore(
     (state) => state.returnToActivityDetails,
   );
@@ -53,14 +48,11 @@ export function MoveActivityModal() {
             }
           : { targetDurationSeconds: activity.targetDurationSeconds }),
       });
-      const movedActivity = await editMutation.mutateAsync({
+      await editMutation.mutateAsync({
         id: activity.id,
         request,
       });
-      replaceActivityAndShowDetails({
-        ...movedActivity,
-        day: format(parseISO(movedActivity.date), "EEEE") as Weekday,
-      });
+      closeModal();
     } catch {
       setError("Unable to move activity. Please try again.");
     }
@@ -80,6 +72,9 @@ export function MoveActivityModal() {
     >
       <div className="mt-6 space-y-4">
         {error ? <p className="rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
+        <p className="text-sm text-zinc-600">
+          When do you want to do this activity?
+        </p>
         <FormField label="Day">
           <select aria-label="Day" onChange={(event) => setDate(event.target.value)} value={selectedDate}>
             {days.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}
