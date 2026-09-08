@@ -1,4 +1,108 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+
+const dndMocks = vi.hoisted(() => ({
+  configure: vi.fn(
+    (sensorOptions: {
+      activationConstraints: unknown[];
+      preventActivation: (event: { pointerType: string }) => boolean;
+    }) => {
+      dndMocks.sensorOptions = sensorOptions;
+      return {};
+    },
+  ),
+  sensorOptions: undefined as
+    | {
+        activationConstraints: unknown[];
+        preventActivation: (event: { pointerType: string }) => boolean;
+      }
+    | undefined,
+}));
+
+vi.mock("@dnd-kit/react", () => ({
+  DragDropProvider: ({
+    children,
+    onDragEnd,
+    onDragStart,
+  }: {
+    children: React.ReactNode;
+    onDragEnd: (event: unknown) => void;
+    onDragStart: (event: { operation: { source: { id: string } } }) => void;
+  }) => (
+    <div>
+      <button
+        aria-label="Start drag"
+        onClick={() =>
+          onDragStart({ operation: { source: { id: "activity" } } })
+        }
+        type="button"
+      />
+      <button
+        aria-label="End drag"
+        onClick={() =>
+          onDragEnd({
+            canceled: true,
+            operation: { source: null, target: null },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop activity on Tuesday evening"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: {
+              source: { data: { activity } },
+              target: { data: { date: "2026-08-18", timeOfDay: "PM" } },
+            },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop activity outside a zone"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: { source: { data: { activity } }, target: null },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop activity in its current slot"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: {
+              source: { data: { activity } },
+              target: { data: { date: activity.date, timeOfDay: "AM" } },
+            },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop completed activity on Tuesday evening"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: {
+              source: { data: { activity: { ...activity, status: "COMPLETED" } } },
+              target: { data: { date: "2026-08-18", timeOfDay: "PM" } },
+            },
+          })
+        }
+        type="button"
+      />
+      {children}
+    </div>
+  ),
+  DragOverlay: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PointerSensor: { configure: dndMocks.configure },
+  useDraggable: () => ({ isDragSource: false, ref: vi.fn() }),
+  useDroppable: () => ({ isDropTarget: false, ref: vi.fn() }),
+}));
 import { WeekGrid } from "./week-grid";
 import type {
   TrainingActivity,
@@ -60,6 +164,111 @@ test("passes activity selection through from day columns", () => {
   );
 
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
+});
+
+test("moves a scheduled activity to a different drop zone", () => {
+  const onMoveActivity = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <WeekGrid
+      onMoveActivity={onMoveActivity}
+      onSelectActivity={vi.fn()}
+      week={week}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity on Tuesday evening" }),
+  );
+
+  expect(onMoveActivity).toHaveBeenCalledWith(activity, {
+    date: "2026-08-18",
+    timeOfDay: "PM",
+  });
+});
+
+test("does not move cancelled, outside, unchanged, or non-scheduled drops", () => {
+  const onMoveActivity = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <WeekGrid
+      onMoveActivity={onMoveActivity}
+      onSelectActivity={vi.fn()}
+      week={week}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "End drag" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity outside a zone" }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity in its current slot" }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Drop completed activity on Tuesday evening",
+    }),
+  );
+
+  expect(onMoveActivity).not.toHaveBeenCalled();
+});
+
+test("silently ignores a failed activity move", async () => {
+  const onMoveActivity = vi.fn().mockRejectedValue(new Error("nope"));
+
+  render(
+    <WeekGrid
+      onMoveActivity={onMoveActivity}
+      onSelectActivity={vi.fn()}
+      week={week}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity on Tuesday evening" }),
+  );
+
+  await waitFor(() => expect(onMoveActivity).toHaveBeenCalledOnce());
+});
+
+test("shows dashed morning, evening, and anytime zones during a mouse drag", () => {
+  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Start drag" }));
+
+  const planner = screen.getByRole("list", { name: "Weekly training planner" });
+  const monday = screen.getByRole("listitem", { name: "Monday" });
+  const tuesday = screen.getByRole("listitem", { name: "Tuesday" });
+  expect(
+    within(monday)
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent),
+  ).toEqual(["Morning", "Evening", "Anytime"]);
+  expect(
+    within(tuesday)
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent),
+  ).toEqual(["Morning", "Evening", "Anytime"]);
+  expect(screen.queryByText("Rest day")).toBeNull();
+  expect(screen.getAllByText("Tempo run")).toHaveLength(2);
+  expect(planner.firstElementChild?.className).toContain("divide-x-0");
+
+  fireEvent.click(screen.getByRole("button", { name: "End drag" }));
+
+  expect(screen.getByText("Rest day")).toBeDefined();
+  expect(planner.firstElementChild?.className).toContain("divide-x");
+});
+
+test("configures a mouse-only sensor with an eight-pixel activation distance", () => {
+  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+
+  const sensorOptions = dndMocks.sensorOptions;
+
+  if (!sensorOptions)
+    throw new Error("Expected the pointer sensor to configure");
+
+  expect(sensorOptions.preventActivation({ pointerType: "mouse" })).toBe(false);
+  expect(sensorOptions.preventActivation({ pointerType: "touch" })).toBe(true);
+  expect(sensorOptions.preventActivation({ pointerType: "pen" })).toBe(true);
 });
 
 test("tints only today's column when the displayed week includes it", () => {

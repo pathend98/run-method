@@ -44,6 +44,14 @@ test("renders a compact activity summary", () => {
   expect(screen.queryByText("Controlled effort")).toBeNull();
 });
 
+test("merges an optional class name into the activity button", () => {
+  render(<TrainingActivityCard activity={runActivity()} className="!cursor-grab" />);
+
+  expect(
+    screen.getByRole("button", { name: "View Tempo run details" }).className,
+  ).toContain("!cursor-grab");
+});
+
 test.each([
   ["SCHEDULED", "lucide-clock-3", "text-zinc-600"],
   ["COMPLETED", "lucide-circle-check", "text-green-700"],

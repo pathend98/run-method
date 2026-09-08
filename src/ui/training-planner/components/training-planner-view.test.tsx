@@ -58,6 +58,7 @@ function renderView(
           isCurrentWeek
           onAddActivity={onAddActivity}
           onCurrentWeek={vi.fn()}
+          onMoveActivity={vi.fn().mockResolvedValue(undefined)}
           onNextWeek={vi.fn()}
           onPreviousWeek={vi.fn()}
           onSelectActivity={onSelectActivity}

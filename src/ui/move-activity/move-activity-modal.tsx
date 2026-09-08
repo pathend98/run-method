@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { getWeekDateOptions } from "@/core/date/week-date-options";
-import { editTrainingSessionRequestSchema } from "@/domain/training-sessions";
+import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/create-move-training-session-request";
 import { FormField } from "@/ui/components/form-field";
 import { Modal } from "@/ui/components/modal";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
@@ -31,18 +31,9 @@ export function MoveActivityModal() {
 
   async function moveActivity() {
     try {
-      const request = editTrainingSessionRequestSchema.parse({
-        title: activity.title,
+      const request = createMoveTrainingSessionRequest(activity, {
         date: selectedDate,
         timeOfDay: selectedTimeOfDay === "ANY" ? null : selectedTimeOfDay,
-        description: activity.description,
-        activityType: activity.activityType,
-        ...(activity.activityType === "RUN"
-          ? {
-              targetDistanceMetres: activity.targetDistanceMetres,
-              targetDurationSeconds: activity.targetDurationSeconds,
-            }
-          : { targetDurationSeconds: activity.targetDurationSeconds }),
       });
       await editMutation.mutateAsync({
         id: activity.id,

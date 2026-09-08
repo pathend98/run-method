@@ -14,6 +14,7 @@ import { formatStatus } from "@/ui/training-sessions/training-session-label-form
 
 type TrainingActivityCardProps = {
   activity: TrainingActivity;
+  className?: string;
   onSelect?: () => void;
 };
 
@@ -34,6 +35,7 @@ const statusStyles = {
 
 export function TrainingActivityCard({
   activity,
+  className,
   onSelect,
 }: TrainingActivityCardProps) {
   const statusStyle = statusStyles[activity.status];
@@ -61,7 +63,7 @@ export function TrainingActivityCard({
   return (
     <button
       aria-label={`View ${activity.title} details`}
-      className="w-full rounded-md border border-zinc-200 bg-white px-3 py-3 text-left transition hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+      className={`w-full rounded-md border border-zinc-200 bg-white px-3 py-3 text-left transition hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600${className ? ` ${className}` : ""}`}
       onClick={onSelect}
       type="button"
     >

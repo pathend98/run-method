@@ -22,6 +22,10 @@ import {
   resolveWeekRange,
 } from "./services/training-planner-service";
 import { useTrainingPlannerStore } from "./training-planner-store";
+import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/create-move-training-session-request";
+import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
+import type { TrainingActivity } from "./types/training-planner-types";
 
 export function TrainingPlanner() {
   const openAddActivity = useTrainingPlannerStore(
@@ -33,6 +37,7 @@ export function TrainingPlanner() {
   const activeModalKind = useTrainingPlannerStore(
     (state) => state.activeModal?.kind,
   );
+  const editMutation = useEditTrainingSessionMutation();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,6 +61,16 @@ export function TrainingPlanner() {
     const queryString = nextSearchParams.toString();
     router.push(queryString ? `${pathname}?${queryString}` : pathname, {
       scroll: false,
+    });
+  }
+
+  async function moveActivity(
+    activity: TrainingActivity,
+    destination: TrainingSessionMoveDestination,
+  ) {
+    await editMutation.mutateAsync({
+      id: activity.id,
+      request: createMoveTrainingSessionRequest(activity, destination),
     });
   }
   if (query.isPending) {
@@ -82,6 +97,7 @@ export function TrainingPlanner() {
       <TrainingPlannerView
         isCurrentWeek={weekRange.from === currentWeekRange.from}
         onCurrentWeek={() => navigateToWeek(null)}
+        onMoveActivity={moveActivity}
         onNextWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, 1))}
         onPreviousWeek={() =>
           navigateToWeek(getAdjacentWeekStart(weekRange, -1))

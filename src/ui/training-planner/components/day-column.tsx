@@ -1,4 +1,5 @@
 import { TimeOfDaySection } from "./time-of-day-section";
+import { TimeOfDayDropZone } from "./time-of-day-drop-zone";
 import { Button } from "@/ui/components/button";
 import { formatDayDate } from "../services/training-planner-service";
 import type {
@@ -9,6 +10,9 @@ import type {
 
 type DayColumnProps = {
   day: TrainingDay;
+  hasLeadingDay?: boolean;
+  isDragAndDropEnabled?: boolean;
+  isDragActive?: boolean;
   isToday?: boolean;
   onAddActivity?: (day: TrainingDay) => void;
   onSelectActivity: (activity: TrainingActivity) => void;
@@ -16,24 +20,28 @@ type DayColumnProps = {
 
 const timeSections: { label: string; value: TimeOfDay }[] = [
   { label: "Morning", value: "AM" },
-  { label: "Anytime", value: null },
   { label: "Evening", value: "PM" },
+  { label: "Anytime", value: null },
 ];
 
 export function DayColumn({
   day,
+  hasLeadingDay = false,
+  isDragAndDropEnabled = false,
+  isDragActive = false,
   isToday = false,
   onAddActivity,
   onSelectActivity,
 }: DayColumnProps) {
-  const populatedTimeSections = timeSections
-    .map((section) => ({
-      ...section,
-      activities: day.activities.filter(
-        (activity) => activity.timeOfDay === section.value,
-      ),
-    }))
-    .filter((section) => section.activities.length > 0);
+  const sections = timeSections.map((section) => ({
+    ...section,
+    activities: day.activities.filter(
+      (activity) => activity.timeOfDay === section.value,
+    ),
+  }));
+  const populatedTimeSections = sections.filter(
+    (section) => section.activities.length > 0,
+  );
 
   return (
     <article
@@ -61,8 +69,27 @@ export function DayColumn({
         ) : null}
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 pt-5">
-        {populatedTimeSections.length > 0 ? (
+      <div
+        className={`flex flex-1 flex-col pt-5 ${
+          isDragActive ? "-mx-3 gap-0" : "gap-4"
+        }`}
+      >
+        {!isDragActive && populatedTimeSections.length === 0 ? (
+          <p className="text-sm text-zinc-500">Rest day</p>
+        ) : isDragAndDropEnabled ? (
+          sections.map((section) => (
+            <TimeOfDayDropZone
+              key={section.label}
+              activities={section.activities}
+              day={day}
+              hasLeadingDay={hasLeadingDay}
+              isDragActive={isDragActive}
+              label={section.label}
+              onSelectActivity={onSelectActivity}
+              timeOfDay={section.value}
+            />
+          ))
+        ) : (
           populatedTimeSections.map((section) => (
             <TimeOfDaySection
               key={section.label}
@@ -72,8 +99,6 @@ export function DayColumn({
               onSelectActivity={onSelectActivity}
             />
           ))
-        ) : (
-          <p className="text-sm text-zinc-500">Rest day</p>
         )}
       </div>
       <footer className="pt-4">
