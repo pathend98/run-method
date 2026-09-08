@@ -46,15 +46,14 @@ test("fades the source card while it is being dragged", () => {
   ).toContain("opacity-40");
 });
 
-test("keeps an inactive card fully opaque", () => {
+test("shows a grab cursor on an inactive scheduled activity button", () => {
   dndMocks.isDragSource = false;
 
   render(<DraggableActivityCard activity={activity} onSelect={vi.fn()} />);
 
   expect(
-    screen.getByRole("button", { name: "View Tempo run details" }).parentElement
-      ?.className,
-  ).toBe("");
+    screen.getByRole("button", { name: "View Tempo run details" }).className,
+  ).toContain("!cursor-grab");
 });
 
 test("enables dragging for scheduled activities", () => {
@@ -76,6 +75,10 @@ test.each(["COMPLETED", "SKIPPED"] as const)(
     );
 
     expect(dndMocks.input?.disabled).toBe(true);
+    expect(
+      screen.getByRole("button", { name: "View Tempo run details" })
+        .className,
+    ).not.toContain("cursor-grab");
 
     fireEvent.click(
       screen.getByRole("button", { name: "View Tempo run details" }),

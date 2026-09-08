@@ -32,7 +32,7 @@ export function TimeOfDayDropZone({
 }: TimeOfDayDropZoneProps) {
   const headingId = `${day.day.toLowerCase()}-${label.toLowerCase()}`;
   const { isDropTarget, ref } = useDroppable({
-    data: { day: day.day, timeOfDay },
+    data: { date: day.date, timeOfDay },
     disabled: !isDragActive,
     id: createDropZoneId(day, timeOfDay),
     accept: "training-activity",

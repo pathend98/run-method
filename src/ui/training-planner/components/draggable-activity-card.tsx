@@ -19,8 +19,15 @@ export function DraggableActivityCard({
   });
 
   return (
-    <div className={isDragSource ? "opacity-40" : undefined} ref={ref}>
-      <TrainingActivityCard activity={activity} onSelect={onSelect} />
+    <div
+      className={isDragSource ? "opacity-40" : undefined}
+      ref={ref}
+    >
+      <TrainingActivityCard
+        activity={activity}
+        className={activity.status === "SCHEDULED" ? "!cursor-grab" : undefined}
+        onSelect={onSelect}
+      />
     </div>
   );
 }

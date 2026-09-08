@@ -1,7 +1,7 @@
 "use client";
 
 import { DragDropProvider, DragOverlay, PointerSensor } from "@dnd-kit/react";
-import { PointerActivationConstraints } from "@dnd-kit/dom";
+import { PointerActivationConstraints, type DragEndEvent } from "@dnd-kit/dom";
 import { useState } from "react";
 import { DayColumn } from "./day-column";
 import { TrainingActivityCard } from "./training-activity-card";
@@ -10,15 +10,23 @@ import type {
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
+import type {
+  TrainingSessionMoveDestination,
+} from "@/ui/training-sessions/create-move-training-session-request";
 
 type WeekGridProps = {
   onAddActivity?: (day: TrainingDay) => void;
+  onMoveActivity?: (
+    activity: TrainingActivity,
+    destination: TrainingSessionMoveDestination,
+  ) => Promise<void>;
   onSelectActivity: (activity: TrainingActivity) => void;
   week: TrainingDay[];
 };
 
 export function WeekGrid({
   onAddActivity,
+  onMoveActivity,
   onSelectActivity,
   week,
 }: WeekGridProps) {
@@ -33,9 +41,34 @@ export function WeekGrid({
     setActiveActivityId(null);
   }
 
+  function handleDragEnd({ canceled, operation }: DragEndEvent) {
+    clearActiveActivity();
+
+    const activity = operation.source?.data.activity as
+      | TrainingActivity
+      | undefined;
+    const destination = operation.target?.data as
+      | TrainingSessionMoveDestination
+      | undefined;
+
+    if (
+      canceled ||
+      !activity ||
+      !destination ||
+      activity.status !== "SCHEDULED" ||
+      (activity.date === destination.date &&
+        activity.timeOfDay === destination.timeOfDay) ||
+      !onMoveActivity
+    ) {
+      return;
+    }
+
+    void onMoveActivity(activity, destination).catch(() => undefined);
+  }
+
   return (
     <DragDropProvider
-      onDragEnd={clearActiveActivity}
+      onDragEnd={handleDragEnd}
       onDragStart={({ operation }) => {
         setActiveActivityId(String(operation.source!.id));
       }}

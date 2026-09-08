@@ -11,11 +11,16 @@ import type {
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
 
 type TrainingPlannerViewProps = {
   isCurrentWeek: boolean;
   onAddActivity?: (day: TrainingDay) => void;
   onCurrentWeek: () => void;
+  onMoveActivity: (
+    activity: TrainingActivity,
+    destination: TrainingSessionMoveDestination,
+  ) => Promise<void>;
   onNextWeek: () => void;
   onPreviousWeek: () => void;
   onSelectActivity: (activity: TrainingActivity) => void;
@@ -28,6 +33,7 @@ export function TrainingPlannerView({
   isCurrentWeek,
   onAddActivity,
   onCurrentWeek,
+  onMoveActivity,
   onNextWeek,
   onPreviousWeek,
   onSelectActivity,
@@ -96,6 +102,7 @@ export function TrainingPlannerView({
         </div>
         <WeekGrid
           onAddActivity={onAddActivity}
+          onMoveActivity={onMoveActivity}
           onSelectActivity={onSelectActivity}
           week={week}
         />

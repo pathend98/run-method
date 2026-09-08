@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 const dndMocks = vi.hoisted(() => ({
   configure: vi.fn(
@@ -25,7 +25,7 @@ vi.mock("@dnd-kit/react", () => ({
     onDragStart,
   }: {
     children: React.ReactNode;
-    onDragEnd: () => void;
+    onDragEnd: (event: unknown) => void;
     onDragStart: (event: { operation: { source: { id: string } } }) => void;
   }) => (
     <div>
@@ -36,7 +36,65 @@ vi.mock("@dnd-kit/react", () => ({
         }
         type="button"
       />
-      <button aria-label="End drag" onClick={onDragEnd} type="button" />
+      <button
+        aria-label="End drag"
+        onClick={() =>
+          onDragEnd({
+            canceled: true,
+            operation: { source: null, target: null },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop activity on Tuesday evening"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: {
+              source: { data: { activity } },
+              target: { data: { date: "2026-08-18", timeOfDay: "PM" } },
+            },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop activity outside a zone"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: { source: { data: { activity } }, target: null },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop activity in its current slot"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: {
+              source: { data: { activity } },
+              target: { data: { date: activity.date, timeOfDay: "AM" } },
+            },
+          })
+        }
+        type="button"
+      />
+      <button
+        aria-label="Drop completed activity on Tuesday evening"
+        onClick={() =>
+          onDragEnd({
+            canceled: false,
+            operation: {
+              source: { data: { activity: { ...activity, status: "COMPLETED" } } },
+              target: { data: { date: "2026-08-18", timeOfDay: "PM" } },
+            },
+          })
+        }
+        type="button"
+      />
       {children}
     </div>
   ),
@@ -106,6 +164,70 @@ test("passes activity selection through from day columns", () => {
   );
 
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
+});
+
+test("moves a scheduled activity to a different drop zone", () => {
+  const onMoveActivity = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <WeekGrid
+      onMoveActivity={onMoveActivity}
+      onSelectActivity={vi.fn()}
+      week={week}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity on Tuesday evening" }),
+  );
+
+  expect(onMoveActivity).toHaveBeenCalledWith(activity, {
+    date: "2026-08-18",
+    timeOfDay: "PM",
+  });
+});
+
+test("does not move cancelled, outside, unchanged, or non-scheduled drops", () => {
+  const onMoveActivity = vi.fn().mockResolvedValue(undefined);
+
+  render(
+    <WeekGrid
+      onMoveActivity={onMoveActivity}
+      onSelectActivity={vi.fn()}
+      week={week}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "End drag" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity outside a zone" }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity in its current slot" }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Drop completed activity on Tuesday evening",
+    }),
+  );
+
+  expect(onMoveActivity).not.toHaveBeenCalled();
+});
+
+test("silently ignores a failed activity move", async () => {
+  const onMoveActivity = vi.fn().mockRejectedValue(new Error("nope"));
+
+  render(
+    <WeekGrid
+      onMoveActivity={onMoveActivity}
+      onSelectActivity={vi.fn()}
+      week={week}
+    />,
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Drop activity on Tuesday evening" }),
+  );
+
+  await waitFor(() => expect(onMoveActivity).toHaveBeenCalledOnce());
 });
 
 test("shows dashed morning, evening, and anytime zones during a mouse drag", () => {
