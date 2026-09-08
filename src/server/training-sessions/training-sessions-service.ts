@@ -69,7 +69,9 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     }
 
     const statusResult =
-      status === undefined ? null : trainingSessionStatusSchema.safeParse(status);
+      status === undefined
+        ? null
+        : trainingSessionStatusSchema.safeParse(status);
     if (status !== undefined && !statusResult?.success) {
       throw new TrainingSessionsValidationError(
         "status must be SCHEDULED, COMPLETED, or SKIPPED",

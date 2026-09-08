@@ -3,7 +3,10 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { RunFieldInput } from "./components/run-field-input";
 import type { RunFieldInputValue } from "./utils/run-field-calculations";
 
-export type { RunFieldInputValue, RunFieldMetric } from "./utils/run-field-calculations";
+export type {
+  RunFieldInputValue,
+  RunFieldMetric,
+} from "./utils/run-field-calculations";
 export { calculateDerivedMetric } from "./utils/run-field-calculations";
 
 type RunFieldFormInputProps = {
@@ -48,7 +51,9 @@ export function RunFieldFormInput({
     }
   }
 
-  function validateFields(fieldsToValidate: readonly (typeof fieldNames)[number][]) {
+  function validateFields(
+    fieldsToValidate: readonly (typeof fieldNames)[number][],
+  ) {
     void trigger(fieldsToValidate);
   }
 

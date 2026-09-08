@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import type {
@@ -64,9 +70,7 @@ function renderMoveActivityModal(
 test("shows the activity's week and current scheduling values", () => {
   renderMoveActivityModal();
 
-  expect(
-    screen.getByRole("dialog", { name: "Move Tempo run" }),
-  ).toBeDefined();
+  expect(screen.getByRole("dialog", { name: "Move Tempo run" })).toBeDefined();
   expect(screen.getByLabelText("Day")).toHaveProperty("value", "2026-09-10");
   expect(screen.getByLabelText("Time")).toHaveProperty("value", "PM");
   expect(
@@ -74,9 +78,7 @@ test("shows the activity's week and current scheduling values", () => {
   ).toBeDefined();
   expect(screen.getAllByRole("option")).toHaveLength(10);
   expect(screen.getByRole("option", { name: "Monday 7 Sep" })).toBeDefined();
-  expect(
-    screen.getByRole("option", { name: "Sunday 13 Sep" }),
-  ).toBeDefined();
+  expect(screen.getByRole("option", { name: "Sunday 13 Sep" })).toBeDefined();
 });
 
 test("returns to activity details when cancelled or dismissed", () => {

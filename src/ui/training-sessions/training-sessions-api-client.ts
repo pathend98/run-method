@@ -189,10 +189,7 @@ function browserTimeZone(): string {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   if (timeZone) return timeZone;
 
-  throw new TrainingSessionsApiError(
-    "Unable to determine browser timezone",
-    0,
-  );
+  throw new TrainingSessionsApiError("Unable to determine browser timezone", 0);
 }
 
 async function readJsonBody(response: Response): Promise<unknown> {

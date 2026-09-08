@@ -1,10 +1,7 @@
 import type { FocusEvent } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
-import {
-  DurationInput,
-  type DurationInputValue,
-} from "./duration-input";
+import { DurationInput, type DurationInputValue } from "./duration-input";
 
 type DurationFormValues = {
   durationHours: string;

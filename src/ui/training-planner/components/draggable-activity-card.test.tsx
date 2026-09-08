@@ -76,8 +76,7 @@ test.each(["COMPLETED", "SKIPPED"] as const)(
 
     expect(dndMocks.input?.disabled).toBe(true);
     expect(
-      screen.getByRole("button", { name: "View Tempo run details" })
-        .className,
+      screen.getByRole("button", { name: "View Tempo run details" }).className,
     ).not.toContain("cursor-grab");
 
     fireEvent.click(

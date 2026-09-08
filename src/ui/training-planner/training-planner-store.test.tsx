@@ -111,9 +111,7 @@ test("ignores invalid detail transitions", () => {
 
 test("does not open move activity for non-scheduled details", () => {
   const store = createTrainingPlannerStore();
-  store
-    .getState()
-    .openActivityDetails({ ...activity, status: "COMPLETED" });
+  store.getState().openActivityDetails({ ...activity, status: "COMPLETED" });
 
   store.getState().openMoveActivity();
 

@@ -63,9 +63,12 @@ test("validates, skips, and closes the modal flow", async () => {
   const store = renderModal();
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
   expect(await screen.findByText("Enter a skip reason")).toBeDefined();
-  fireEvent.change(screen.getByLabelText("Why are you skipping this activity?"), {
-    target: { value: "Recovery" },
-  });
+  fireEvent.change(
+    screen.getByLabelText("Why are you skipping this activity?"),
+    {
+      target: { value: "Recovery" },
+    },
+  );
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
   await waitFor(() =>
     expect(api.skipTrainingSession).toHaveBeenCalledWith(activity.id, {
@@ -80,9 +83,12 @@ test("reports errors and prevents dismissal while skipping", async () => {
     () => new Promise(() => undefined),
   );
   const store = renderModal();
-  fireEvent.change(screen.getByLabelText("Why are you skipping this activity?"), {
-    target: { value: "Recovery" },
-  });
+  fireEvent.change(
+    screen.getByLabelText("Why are you skipping this activity?"),
+    {
+      target: { value: "Recovery" },
+    },
+  );
   fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
   expect(
     await screen.findByRole("button", { name: "Skipping…" }),

@@ -6,9 +6,7 @@ export type DurationFields = {
   durationSeconds: string;
 };
 
-const nonNegativeInteger = z
-  .string()
-  .regex(/^\d+$/, "Enter a whole number");
+const nonNegativeInteger = z.string().regex(/^\d+$/, "Enter a whole number");
 const minuteOrSecond = nonNegativeInteger.refine(
   (value) => Number(value) <= 59,
   "Enter a value from 00 to 59",

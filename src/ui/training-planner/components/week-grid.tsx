@@ -10,9 +10,7 @@ import type {
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
-import type {
-  TrainingSessionMoveDestination,
-} from "@/ui/training-sessions/create-move-training-session-request";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
 
 type WeekGridProps = {
   onAddActivity?: (day: TrainingDay) => void;
@@ -45,11 +43,9 @@ export function WeekGrid({
     clearActiveActivity();
 
     const activity = operation.source?.data.activity as
-      | TrainingActivity
-      | undefined;
+      TrainingActivity | undefined;
     const destination = operation.target?.data as
-      | TrainingSessionMoveDestination
-      | undefined;
+      TrainingSessionMoveDestination | undefined;
 
     if (
       canceled ||

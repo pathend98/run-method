@@ -127,13 +127,11 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
   };
 }
 
-function selectMoreActivityAction(
-  name: "Move" | "Skip" | "Delete",
-) {
+function selectMoreActivityAction(name: "Move" | "Skip" | "Delete") {
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  expect(
-    screen.getByRole("menuitem", { name: "Move" }).classList,
-  ).toContain("border-zinc-200");
+  expect(screen.getByRole("menuitem", { name: "Move" }).classList).toContain(
+    "border-zinc-200",
+  );
   fireEvent.click(screen.getByRole("menuitem", { name }));
 }
 
@@ -252,33 +250,31 @@ test("puts complete in the footer and skip in more actions for eligible activiti
       onEdit={vi.fn()}
     />,
   );
-  expect(
-    screen.getByRole("button", { name: "Edit" }).classList,
-  ).toContain("border-zinc-200");
-  expect(
-    screen.getByRole("button", { name: "Edit" }).classList,
-  ).toContain("py-2");
+  expect(screen.getByRole("button", { name: "Edit" }).classList).toContain(
+    "border-zinc-200",
+  );
+  expect(screen.getByRole("button", { name: "Edit" }).classList).toContain(
+    "py-2",
+  );
   expect(
     screen.getByRole("button", { name: "More actions" }).classList,
   ).toContain("size-9");
   expect(
     screen.getByRole("button", { name: "Close activity details" }),
   ).toBeDefined();
-  expect(
-    screen.getByRole("button", { name: "Complete" }).classList,
-  ).toContain("py-2");
+  expect(screen.getByRole("button", { name: "Complete" }).classList).toContain(
+    "py-2",
+  );
   expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
   expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull();
-  expect(
-    screen.queryByRole("menuitem", { name: "Delete" }),
-  ).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Delete" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  expect(
-    screen.getByRole("menuitem", { name: "Skip" }).classList,
-  ).toContain("bg-orange-50");
-  expect(
-    screen.getByRole("menuitem", { name: "Delete" }).classList,
-  ).toContain("bg-red-50");
+  expect(screen.getByRole("menuitem", { name: "Skip" }).classList).toContain(
+    "bg-orange-50",
+  );
+  expect(screen.getByRole("menuitem", { name: "Delete" }).classList).toContain(
+    "bg-red-50",
+  );
 
   rerender(
     <ActivityDetailsModal
@@ -290,9 +286,7 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     />,
   );
   expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
-  expect(
-    screen.queryByRole("button", { name: "Complete" }),
-  ).toBeNull();
+  expect(screen.queryByRole("button", { name: "Complete" })).toBeNull();
 });
 
 test("hides skip and complete actions for future scheduled activities", () => {
@@ -311,12 +305,8 @@ test("hides skip and complete actions for future scheduled activities", () => {
 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
-  expect(
-    screen.getByRole("menuitem", { name: "Delete" }),
-  ).toBeDefined();
-  expect(
-    screen.queryByRole("button", { name: "Complete" }),
-  ).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "Delete" })).toBeDefined();
+  expect(screen.queryByRole("button", { name: "Complete" })).toBeNull();
 });
 
 test("dismisses more actions with Escape before dismissing the modal", () => {
@@ -357,9 +347,7 @@ test("dismisses more actions when interacting outside the menu", () => {
   );
 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  fireEvent.pointerDown(
-    screen.getByRole("menuitem", { name: "Skip" }),
-  );
+  fireEvent.pointerDown(screen.getByRole("menuitem", { name: "Skip" }));
   expect(screen.getByRole("menu")).toBeDefined();
   fireEvent.pointerDown(screen.getByText("Target pace"));
 

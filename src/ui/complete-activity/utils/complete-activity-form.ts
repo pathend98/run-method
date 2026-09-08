@@ -31,7 +31,9 @@ export const completeActivityFormSchema = z
     }
   });
 
-export type CompleteActivityFormValues = z.infer<typeof completeActivityFormSchema>;
+export type CompleteActivityFormValues = z.infer<
+  typeof completeActivityFormSchema
+>;
 
 export function calculatePaceSecondsPerKilometre(
   distanceMetres: number,

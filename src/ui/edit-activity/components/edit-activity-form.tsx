@@ -104,7 +104,8 @@ export function EditActivityForm({
         {(isScheduled || isCompleted) && activity.activityType === "RUN" ? (
           <EditRunActivityFields onPendingChange={onRunFieldsPendingChange} />
         ) : null}
-        {(isScheduled || isCompleted) && activity.activityType === "STRENGTH" ? (
+        {(isScheduled || isCompleted) &&
+        activity.activityType === "STRENGTH" ? (
           <DurationFormInput
             label={
               isCompleted

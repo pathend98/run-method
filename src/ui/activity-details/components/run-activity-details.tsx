@@ -25,48 +25,41 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
   const actualDuration = activity.actualDurationSeconds;
   const completedMetrics =
     isCompleted && actualDistance !== null && actualDuration !== null ? (
-    <dl
-      aria-label="Completed activity metrics"
-      className="mt-6 grid gap-8 sm:grid-cols-3"
-    >
-      <div>
-        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Actual distance
-        </dt>
-        <dd className="mt-1 text-2xl font-semibold text-zinc-950">
-          {formatDistance(actualDistance)}
-        </dd>
-        <p className="mt-2 text-sm text-zinc-600">
-          Target: {targetDistance}
-        </p>
-      </div>
-      <div>
-        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Actual pace
-        </dt>
-        <dd className="mt-1 text-2xl font-semibold text-zinc-950">
-          {formatPace(
-            calculatePaceSecondsPerKilometre(
-              actualDistance,
-              actualDuration,
-            ),
-          )}
-        </dd>
-        <p className="mt-2 text-sm text-zinc-600">Target: {targetPace}</p>
-      </div>
-      <div>
-        <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          Actual duration
-        </dt>
-        <dd className="mt-1 text-2xl font-semibold text-zinc-950">
-          {formatDuration(actualDuration)}
-        </dd>
-        <p className="mt-2 text-sm text-zinc-600">
-          Target: {targetDuration}
-        </p>
-      </div>
-    </dl>
-  ) : null;
+      <dl
+        aria-label="Completed activity metrics"
+        className="mt-6 grid gap-8 sm:grid-cols-3"
+      >
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Actual distance
+          </dt>
+          <dd className="mt-1 text-2xl font-semibold text-zinc-950">
+            {formatDistance(actualDistance)}
+          </dd>
+          <p className="mt-2 text-sm text-zinc-600">Target: {targetDistance}</p>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Actual pace
+          </dt>
+          <dd className="mt-1 text-2xl font-semibold text-zinc-950">
+            {formatPace(
+              calculatePaceSecondsPerKilometre(actualDistance, actualDuration),
+            )}
+          </dd>
+          <p className="mt-2 text-sm text-zinc-600">Target: {targetPace}</p>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Actual duration
+          </dt>
+          <dd className="mt-1 text-2xl font-semibold text-zinc-950">
+            {formatDuration(actualDuration)}
+          </dd>
+          <p className="mt-2 text-sm text-zinc-600">Target: {targetDuration}</p>
+        </div>
+      </dl>
+    ) : null;
 
   const plannedMetrics = (
     <dl

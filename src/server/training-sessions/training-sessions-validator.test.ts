@@ -116,7 +116,11 @@ test.each(["SCHEDULED", "SKIPPED"] as const)(
   (status) => {
     expect(() =>
       validator.validateEdit(
-        { ...runSession, status, skipReason: status === "SKIPPED" ? "Sick" : null },
+        {
+          ...runSession,
+          status,
+          skipReason: status === "SKIPPED" ? "Sick" : null,
+        },
         { ...runEdit, actualDistanceMetres: 5100 },
       ),
     ).toThrow("actual metrics can only be changed for completed sessions");
@@ -126,7 +130,12 @@ test.each(["SCHEDULED", "SKIPPED"] as const)(
 test("allows actual metric edits for completed sessions", () => {
   expect(() =>
     validator.validateEdit(
-      { ...runSession, status: "COMPLETED", actualDistanceMetres: 5000, actualDurationSeconds: 1500 },
+      {
+        ...runSession,
+        status: "COMPLETED",
+        actualDistanceMetres: 5000,
+        actualDurationSeconds: 1500,
+      },
       { ...runEdit, actualDistanceMetres: 5100, actualDurationSeconds: 1530 },
     ),
   ).not.toThrow();

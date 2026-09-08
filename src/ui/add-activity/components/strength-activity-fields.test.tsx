@@ -36,7 +36,9 @@ test("renders an optional duration for strength activities", () => {
     </StrengthActivityFieldsHarness>,
   );
 
-  expect(screen.getByLabelText("Duration (hh:mm:ss, optional) hours")).toBeDefined();
+  expect(
+    screen.getByLabelText("Duration (hh:mm:ss, optional) hours"),
+  ).toBeDefined();
 });
 
 test("renders a validation error for an invalid strength duration", async () => {
@@ -46,9 +48,12 @@ test("renders a validation error for an invalid strength duration", async () => 
     </StrengthActivityFieldsHarness>,
   );
 
-  fireEvent.change(screen.getByLabelText("Duration (hh:mm:ss, optional) seconds"), {
-    target: { value: "1.5" },
-  });
+  fireEvent.change(
+    screen.getByLabelText("Duration (hh:mm:ss, optional) seconds"),
+    {
+      target: { value: "1.5" },
+    },
+  );
   fireEvent.click(screen.getByRole("button", { name: "Submit" }));
 
   expect(await screen.findByText("Enter a whole number")).toBeDefined();

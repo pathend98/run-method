@@ -119,18 +119,21 @@ test.each([
     "/api/v1/training-sessions?to=2026-08-23&status=SCHEDULED",
   ],
   [{}, "/api/v1/training-sessions"],
-] as const)("fetchTrainingSessions serializes optional query filters", async (query, url) => {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue([]),
-    }),
-  );
+] as const)(
+  "fetchTrainingSessions serializes optional query filters",
+  async (query, url) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue([]),
+      }),
+    );
 
-  await expect(fetchTrainingSessions(query)).resolves.toEqual([]);
-  expect(fetch).toHaveBeenCalledWith(url);
-});
+    await expect(fetchTrainingSessions(query)).resolves.toEqual([]);
+    expect(fetch).toHaveBeenCalledWith(url);
+  },
+);
 
 test("fetchTrainingSessions throws stable API errors", async () => {
   vi.stubGlobal(
@@ -413,12 +416,10 @@ test("skipTrainingSession posts the reason and parses the skipped session", asyn
   };
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue(skippedSession),
-      }),
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(skippedSession),
+    }),
   );
 
   await expect(
@@ -445,12 +446,10 @@ test("completeTrainingSession posts actuals and parses the completed session", a
   };
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue(completedSession),
-      }),
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(completedSession),
+    }),
   );
 
   await expect(
@@ -475,12 +474,10 @@ test("skipTrainingSession preserves API field errors", async () => {
     vi.fn().mockResolvedValue({
       ok: false,
       status: 400,
-      json: vi
-        .fn()
-        .mockResolvedValue({
-          error: "Invalid request",
-          fieldErrors: { skipReason: ["Required"] },
-        }),
+      json: vi.fn().mockResolvedValue({
+        error: "Invalid request",
+        fieldErrors: { skipReason: ["Required"] },
+      }),
     }),
   );
 
