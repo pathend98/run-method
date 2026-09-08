@@ -14,6 +14,7 @@ import { CompleteActivityModal } from "@/ui/complete-activity/complete-activity-
 import { SkipActivityModal } from "@/ui/skip-activity/skip-activity-modal";
 import { DeleteActivityModal } from "@/ui/delete-activity/delete-activity-modal";
 import { ReviewActivitiesModal } from "@/ui/review-activities/review-activities-modal";
+import { MoveActivityModal } from "@/ui/move-activity/move-activity-modal";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
@@ -93,6 +94,7 @@ export function TrainingPlanner() {
       />
       {activeModalKind === "details" ? <ActivityDetailsModal /> : null}
       {activeModalKind === "edit" ? <EditActivityModal /> : null}
+      {activeModalKind === "move" ? <MoveActivityModal /> : null}
       {activeModalKind === "complete" ? <CompleteActivityModal /> : null}
       {activeModalKind === "skip" ? <SkipActivityModal /> : null}
       {activeModalKind === "delete" ? <DeleteActivityModal /> : null}

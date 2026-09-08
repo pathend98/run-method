@@ -9,7 +9,10 @@ import type {
   TrainingDay,
 } from "./types/training-planner-types";
 
-export type { TrainingActivity } from "./types/training-planner-types";
+export type {
+  TrainingActivity,
+  Weekday,
+} from "./types/training-planner-types";
 
 export type TrainingPlannerActiveModal =
   | { kind: "add"; day: TrainingDay }
@@ -21,6 +24,7 @@ export type TrainingPlannerActiveModal =
     }
   | { kind: "delete"; activity: TrainingActivity }
   | { kind: "edit"; activity: TrainingActivity }
+  | { kind: "move"; activity: TrainingActivity }
   | { kind: "review" }
   | { kind: "skip"; activity: TrainingActivity; returnTo: "details" | "review" }
   | null;
@@ -37,6 +41,7 @@ type TrainingPlannerStoreActions = {
   openCompleteActivityFromReview: (activity: TrainingActivity) => void;
   openDeleteActivity: () => void;
   openEditActivity: () => void;
+  openMoveActivity: () => void;
   openSkipActivity: () => void;
   openSkipActivityFromReview: (activity: TrainingActivity) => void;
   replaceActivityAndShowDetails: (activity: TrainingActivity) => void;
@@ -94,6 +99,18 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
+    openMoveActivity: () =>
+      set((state) =>
+        state.activeModal?.kind === "details" &&
+        state.activeModal.activity.status === "SCHEDULED"
+          ? {
+              activeModal: {
+                kind: "move",
+                activity: state.activeModal.activity,
+              },
+            }
+          : state,
+      ),
     openSkipActivity: () =>
       set((state) =>
         state.activeModal?.kind === "details"
@@ -113,6 +130,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
     returnToActivityDetails: () =>
       set((state) =>
         state.activeModal?.kind === "edit" ||
+        state.activeModal?.kind === "move" ||
         state.activeModal?.kind === "complete" ||
         state.activeModal?.kind === "delete" ||
         state.activeModal?.kind === "skip"
