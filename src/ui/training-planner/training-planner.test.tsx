@@ -97,7 +97,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
   ).toBeDefined();
   fireEvent.click(screen.getByRole("button", { name: "View Easy run details" }));
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: "Move activity" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Move" }));
   expect(screen.getByRole("dialog", { name: "Move Easy run" })).toBeDefined();
 });
 
@@ -218,7 +218,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: "Skip activity" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Skip" }));
   fireEvent.change(
     screen.getByLabelText("Why are you skipping this activity?"),
     {
@@ -243,7 +243,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   fireEvent.click(
     screen.getByRole("button", { name: "View Easy run details" }),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Complete" }));
   fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "30" },
   });
@@ -347,20 +347,25 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   };
+  const updatedActivity = {
+    ...activity,
+    title: "Updated easy run",
+    updatedAt: "2026-08-31T10:00:00.000Z",
+  };
+  let hasBeenEdited = false;
   const fetchMock = vi.fn().mockImplementation((_url, options) => {
     if (options?.method === "PATCH") {
+      hasBeenEdited = true;
       return Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue({
-          ...activity,
-          title: "Updated easy run",
-          updatedAt: "2026-08-31T10:00:00.000Z",
-        }),
+        json: vi.fn().mockResolvedValue(updatedActivity),
       });
     }
     return Promise.resolve({
       ok: true,
-      json: vi.fn().mockResolvedValue([activity]),
+      json: vi
+        .fn()
+        .mockResolvedValue([hasBeenEdited ? updatedActivity : activity]),
     });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -374,7 +379,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
   fireEvent.click(
     screen.getByRole("button", { name: "View Easy run details" }),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Updated easy run" },
   });
@@ -395,8 +400,11 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     ).toHaveLength(4),
   );
   expect(
-    await screen.findByRole("dialog", { name: "Updated easy run" }),
+    await screen.findByRole("button", {
+      name: "View Updated easy run details",
+    }),
   ).toBeDefined();
+  expect(screen.queryByRole("dialog")).toBeNull();
 });
 
 test("TrainingPlanner deletes an activity and refreshes its week", async () => {
@@ -441,7 +449,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  fireEvent.click(screen.getByRole("menuitem", { name: "Delete activity" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
   fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
 
   await waitFor(() =>

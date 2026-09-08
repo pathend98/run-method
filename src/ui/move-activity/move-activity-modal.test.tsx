@@ -69,6 +69,9 @@ test("shows the activity's week and current scheduling values", () => {
   ).toBeDefined();
   expect(screen.getByLabelText("Day")).toHaveProperty("value", "2026-09-10");
   expect(screen.getByLabelText("Time")).toHaveProperty("value", "PM");
+  expect(
+    screen.getByText("When do you want to do this activity?"),
+  ).toBeDefined();
   expect(screen.getAllByRole("option")).toHaveLength(10);
   expect(screen.getByRole("option", { name: "Monday 7 Sep" })).toBeDefined();
   expect(
@@ -88,7 +91,7 @@ test("returns to activity details when cancelled or dismissed", () => {
   expect(store.getState().activeModal?.kind).toBe("details");
 });
 
-test("moves the activity and shows its updated details", async () => {
+test("moves the activity and returns to the training planner", async () => {
   const onEdit = vi.fn().mockResolvedValue({
     ...activity,
     date: "2026-09-11",
@@ -113,10 +116,7 @@ test("moves the activity and shows its updated details", async () => {
     targetDistanceMetres: activity.targetDistanceMetres,
     targetDurationSeconds: activity.targetDurationSeconds,
   });
-  expect(store.getState().activeModal).toMatchObject({
-    kind: "details",
-    activity: { date: "2026-09-11", day: "Friday" },
-  });
+  expect(store.getState().activeModal).toBeNull();
 });
 
 test("moves a strength activity with its existing duration", async () => {

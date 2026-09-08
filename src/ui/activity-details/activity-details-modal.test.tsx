@@ -128,11 +128,11 @@ function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
 }
 
 function selectMoreActivityAction(
-  name: "Move activity" | "Skip activity" | "Delete activity",
+  name: "Move" | "Skip" | "Delete",
 ) {
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   expect(
-    screen.getByRole("menuitem", { name: "Move activity" }).classList,
+    screen.getByRole("menuitem", { name: "Move" }).classList,
   ).toContain("border-zinc-200");
   fireEvent.click(screen.getByRole("menuitem", { name }));
 }
@@ -222,7 +222,7 @@ test("calls the edit handler", () => {
       onEdit={onEdit}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Edit activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
   expect(onEdit).toHaveBeenCalledOnce();
 });
 
@@ -237,7 +237,7 @@ test("opens the separate delete modal flow", () => {
     </TrainingPlannerStoreProvider>,
   );
 
-  selectMoreActivityAction("Delete activity");
+  selectMoreActivityAction("Delete");
   expect(store.getState().activeModal).toMatchObject({ kind: "delete" });
   expect(screen.queryByText("Delete “Tempo run”? ")).toBeNull();
 });
@@ -253,10 +253,10 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     />,
   );
   expect(
-    screen.getByRole("button", { name: "Edit activity" }).classList,
+    screen.getByRole("button", { name: "Edit" }).classList,
   ).toContain("border-zinc-200");
   expect(
-    screen.getByRole("button", { name: "Edit activity" }).classList,
+    screen.getByRole("button", { name: "Edit" }).classList,
   ).toContain("py-2");
   expect(
     screen.getByRole("button", { name: "More actions" }).classList,
@@ -265,19 +265,19 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     screen.getByRole("button", { name: "Close activity details" }),
   ).toBeDefined();
   expect(
-    screen.getByRole("button", { name: "Complete activity" }).classList,
+    screen.getByRole("button", { name: "Complete" }).classList,
   ).toContain("py-2");
-  expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
-  expect(screen.queryByRole("menuitem", { name: "Move activity" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull();
   expect(
-    screen.queryByRole("menuitem", { name: "Delete activity" }),
+    screen.queryByRole("menuitem", { name: "Delete" }),
   ).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   expect(
-    screen.getByRole("menuitem", { name: "Skip activity" }).classList,
+    screen.getByRole("menuitem", { name: "Skip" }).classList,
   ).toContain("bg-orange-50");
   expect(
-    screen.getByRole("menuitem", { name: "Delete activity" }).classList,
+    screen.getByRole("menuitem", { name: "Delete" }).classList,
   ).toContain("bg-red-50");
 
   rerender(
@@ -289,9 +289,9 @@ test("puts complete in the footer and skip in more actions for eligible activiti
       onEdit={vi.fn()}
     />,
   );
-  expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
   expect(
-    screen.queryByRole("button", { name: "Complete activity" }),
+    screen.queryByRole("button", { name: "Complete" }),
   ).toBeNull();
 });
 
@@ -310,12 +310,12 @@ test("hides skip and complete actions for future scheduled activities", () => {
   );
 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  expect(screen.queryByRole("menuitem", { name: "Skip activity" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
   expect(
-    screen.getByRole("menuitem", { name: "Delete activity" }),
+    screen.getByRole("menuitem", { name: "Delete" }),
   ).toBeDefined();
   expect(
-    screen.queryByRole("button", { name: "Complete activity" }),
+    screen.queryByRole("button", { name: "Complete" }),
   ).toBeNull();
 });
 
@@ -358,7 +358,7 @@ test("dismisses more actions when interacting outside the menu", () => {
 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.pointerDown(
-    screen.getByRole("menuitem", { name: "Skip activity" }),
+    screen.getByRole("menuitem", { name: "Skip" }),
   );
   expect(screen.getByRole("menu")).toBeDefined();
   fireEvent.pointerDown(screen.getByText("Target pace"));
@@ -377,7 +377,7 @@ test("opens the separate skip modal flow", () => {
     </TrainingPlannerStoreProvider>,
   );
 
-  selectMoreActivityAction("Skip activity");
+  selectMoreActivityAction("Skip");
   expect(store.getState().activeModal).toMatchObject({ kind: "skip" });
   expect(screen.queryByLabelText("Skip reason")).toBeNull();
 });

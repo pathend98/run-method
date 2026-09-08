@@ -12,9 +12,7 @@ import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-
 export function EditActivityModal() {
   const [runFieldsPending, setRunFieldsPending] = useState(false);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const replaceActivityAndShowDetails = useTrainingPlannerStore(
-    (state) => state.replaceActivityAndShowDetails,
-  );
+  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const returnToActivityDetails = useTrainingPlannerStore(
     (state) => state.returnToActivityDetails,
   );
@@ -27,11 +25,11 @@ export function EditActivityModal() {
   const { activity } = activeModal;
 
   async function editActivity(request: EditTrainingSessionRequest) {
-    const editedActivity = await editMutation.mutateAsync({
+    await editMutation.mutateAsync({
       id: activity.id,
       request,
     });
-    replaceActivityAndShowDetails({ ...editedActivity, day: activity.day });
+    closeModal();
   }
 
   return (

@@ -43,6 +43,20 @@ test("renders pre-populated editable fields for a scheduled run", () => {
   );
 
   expect(screen.getByLabelText("Title")).toHaveProperty("value", "Tempo run");
+  expect(screen.getByLabelText("Day")).toHaveProperty("value", "2026-08-17");
+  expect(
+    Array.from(screen.getByLabelText("Day").querySelectorAll("option")).map(
+      (option) => [option.textContent, option.value],
+    ),
+  ).toEqual([
+    ["Monday 17 Aug", "2026-08-17"],
+    ["Tuesday 18 Aug", "2026-08-18"],
+    ["Wednesday 19 Aug", "2026-08-19"],
+    ["Thursday 20 Aug", "2026-08-20"],
+    ["Friday 21 Aug", "2026-08-21"],
+    ["Saturday 22 Aug", "2026-08-22"],
+    ["Sunday 23 Aug", "2026-08-23"],
+  ]);
   expect(screen.getByLabelText("Time of day")).toHaveProperty("value", "AM");
   expect(
     Array.from(
@@ -97,6 +111,9 @@ test("submits an edit and closes the form", async () => {
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Updated tempo" },
   });
+  fireEvent.change(screen.getByLabelText("Day"), {
+    target: { value: "2026-08-19" },
+  });
   fireEvent.change(screen.getByLabelText("Time of day"), {
     target: { value: "PM" },
   });
@@ -107,6 +124,7 @@ test("submits an edit and closes the form", async () => {
     expect.objectContaining({
       activityType: "RUN",
       title: "Updated tempo",
+      date: "2026-08-19",
       timeOfDay: "PM",
     }),
   );
@@ -161,6 +179,7 @@ test("renders editable actual metrics for completed runs", () => {
   );
 
   expect(screen.queryByLabelText("Time of day")).toBeNull();
+  expect(screen.queryByLabelText("Day")).toBeNull();
   expect(screen.getByRole("heading", { name: "Actual metrics" })).toBeDefined();
   expect(screen.getByLabelText("Distance (km)")).toHaveProperty(
     "value",
@@ -218,5 +237,6 @@ test("does not render metrics for skipped activities", () => {
   );
 
   expect(screen.queryByRole("heading", { name: "Actual metrics" })).toBeNull();
+  expect(screen.queryByLabelText("Day")).toBeNull();
   expect(screen.queryByLabelText("Distance (km)")).toBeNull();
 });

@@ -44,6 +44,7 @@ function strength(
 test("initializes common and run target values", () => {
   expect(getEditActivityFormValues(run())).toEqual({
     title: "Tempo run",
+    date: "2026-08-17",
     timeOfDay: "AM",
     description: "Controlled effort",
     derivedMetric: "pace",
@@ -65,6 +66,7 @@ test("maps nullable common values and derives pace", () => {
     ),
   ).toEqual({
     title: "Tempo run",
+    date: "2026-08-17",
     timeOfDay: "ANY",
     description: "",
     derivedMetric: "pace",

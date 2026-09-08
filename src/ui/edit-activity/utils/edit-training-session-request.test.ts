@@ -49,6 +49,7 @@ test("converts scheduled run edits to canonical targets", () => {
       ...getEditActivityFormValues(activity),
       title: " Updated run ",
       description: " ",
+      date: "2026-08-20",
       timeOfDay: "ANY",
       distanceKilometres: "10.125",
       durationMinutes: "50",
@@ -59,6 +60,7 @@ test("converts scheduled run edits to canonical targets", () => {
   expect(request).toEqual({
     title: "Updated run",
     description: null,
+    date: "2026-08-20",
     timeOfDay: null,
     activityType: "RUN",
     targetDistanceMetres: 10125,
@@ -77,6 +79,7 @@ test.each([
       {
         ...getEditActivityFormValues(activity),
         title: "Gym",
+        date: "2026-08-20",
         timeOfDay: "PM",
         ...duration,
       },
@@ -86,6 +89,7 @@ test.each([
     expect(request).toEqual({
       title: "Gym",
       description: "Controlled effort",
+      date: "2026-08-20",
       timeOfDay: "PM",
       activityType: "STRENGTH",
       targetDurationSeconds,
@@ -132,6 +136,7 @@ test.each([
   );
 
   expect(request.timeOfDay).toBe(activity.timeOfDay);
+  expect(request.date).toBeUndefined();
   if (request.activityType === "RUN") {
     expect(request.targetDistanceMetres).toBe(activity.targetDistanceMetres);
     expect(request.targetDurationSeconds).toBe(activity.targetDurationSeconds);

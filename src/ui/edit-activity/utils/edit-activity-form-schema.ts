@@ -21,6 +21,7 @@ const paceSchema = z
 
 const editActivityFormBaseSchema = z.object({
   title: z.string().trim().min(1, "Enter an activity title"),
+  date: z.iso.date(),
   timeOfDay: z.enum(["AM", "ANY", "PM"]),
   description: z.string(),
   derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),

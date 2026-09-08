@@ -7,6 +7,7 @@ import { EditRunActivityFields } from "./edit-run-activity-fields";
 
 const defaultValues: EditActivityFormValues = {
   title: "Run",
+  date: "2026-08-17",
   timeOfDay: "AM",
   description: "",
   derivedMetric: "pace",
