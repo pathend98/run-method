@@ -1,27 +1,25 @@
 import { NextRequest } from "next/server";
 
 import { GET, POST } from "./route";
-import {
-  trainingSessionsRequestValidator,
-  trainingSessionsService,
-} from "@/server/server";
+import { trainingSessionsRequestValidator } from "@/server/server";
 import {
   TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 
+const service = vi.hoisted(() => ({
+  find: vi.fn(),
+  create: vi.fn(),
+}));
+
 vi.mock("@/server/server", () => ({
-  trainingSessionsService: {
-    find: vi.fn(),
-    create: vi.fn(),
-  },
+  getTrainingSessionsService: () => service,
   trainingSessionsRequestValidator: {
     validateCreate: vi.fn(),
   },
 }));
 
-const service = vi.mocked(trainingSessionsService);
 const requestValidator = vi.mocked(trainingSessionsRequestValidator);
 
 class TestDatabaseError extends Error {
@@ -116,10 +114,19 @@ test("returns sessions as JSON", async () => {
 });
 
 test.each([
-  ["?from=2026-08-17", { from: "2026-08-17", to: undefined, status: undefined }],
+  [
+    "?from=2026-08-17",
+    { from: "2026-08-17", to: undefined, status: undefined },
+  ],
   ["?to=2026-08-23", { from: undefined, to: "2026-08-23", status: undefined }],
-  ["?status=SCHEDULED", { from: undefined, to: undefined, status: "SCHEDULED" }],
-  ["?to=2026-08-23&status=SCHEDULED", { from: undefined, to: "2026-08-23", status: "SCHEDULED" }],
+  [
+    "?status=SCHEDULED",
+    { from: undefined, to: undefined, status: "SCHEDULED" },
+  ],
+  [
+    "?to=2026-08-23&status=SCHEDULED",
+    { from: undefined, to: "2026-08-23", status: "SCHEDULED" },
+  ],
   ["", { from: undefined, to: undefined, status: undefined }],
 ])("passes optional query filters to the service", async (search, query) => {
   service.find.mockResolvedValue([]);

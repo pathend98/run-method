@@ -1,10 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
-import {
-  trainingSessionsRequestValidator,
-  trainingSessionsService,
-} from "@/server/server";
+import { trainingSessionsRequestValidator } from "@/server/server";
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsRequestValidationError,
@@ -12,11 +9,13 @@ import {
 } from "@/server/training-sessions/training-sessions-errors";
 import { DELETE, PATCH } from "./route";
 
+const service = vi.hoisted(() => ({
+  delete: vi.fn(),
+  edit: vi.fn(),
+}));
+
 vi.mock("@/server/server", () => ({
-  trainingSessionsService: {
-    delete: vi.fn(),
-    edit: vi.fn(),
-  },
+  getTrainingSessionsService: () => service,
   trainingSessionsRequestValidator: {
     validateEdit: vi.fn(),
   },
@@ -44,7 +43,6 @@ const editedSession = {
   actualDurationSeconds: null,
 };
 
-const service = vi.mocked(trainingSessionsService);
 const validator = vi.mocked(trainingSessionsRequestValidator);
 
 function patchRequest(body: string = JSON.stringify(editRequest)) {
@@ -66,7 +64,7 @@ function deleteRequest(sessionId = id) {
 }
 
 test("deletes a training session with 204 status", async () => {
-  service.delete.mockResolvedValue();
+  service.delete.mockResolvedValue(undefined);
 
   const response = await DELETE(deleteRequest(), context());
 

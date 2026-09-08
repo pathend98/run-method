@@ -6,8 +6,9 @@ import type * as databaseEnvModule from "./src/server/env/database-env";
 loadEnvConfig(process.cwd());
 
 const require = createRequire(import.meta.url);
-const { databaseEnv } =
+const { readDatabaseEnv } =
   require("./src/server/env/database-env") as typeof databaseEnvModule;
+const databaseEnv = readDatabaseEnv();
 
 export default defineConfig({
   schema: "db/schema.ts",
