@@ -206,6 +206,38 @@ test("validates an edit request and trims editable text", () => {
   });
 });
 
+test("validates an optional edit date", () => {
+  expect(
+    validator.validateEdit({
+      title: "Easy run",
+      date: "2026-08-27",
+      description: null,
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetDistanceMetres: 5000,
+      targetDurationSeconds: 1500,
+    }),
+  ).toMatchObject({ date: "2026-08-27" });
+});
+
+test("reports invalid edit dates at the date field", () => {
+  try {
+    validator.validateEdit({
+      title: "Easy run",
+      date: "invalid",
+      description: null,
+      timeOfDay: "AM",
+      activityType: "RUN",
+      targetDistanceMetres: 5000,
+      targetDurationSeconds: 1500,
+    });
+  } catch (error) {
+    expect(
+      (error as TrainingSessionsRequestValidationError).fieldErrors,
+    ).toEqual({ date: ["Invalid ISO date"] });
+  }
+});
+
 test("validates a nullable strength duration edit", () => {
   expect(
     validator.validateEdit({
@@ -307,7 +339,6 @@ test("edit validation rejects omitted and immutable fields", () => {
       targetDurationSeconds: [
         "Invalid input: expected number, received undefined",
       ],
-      date: ['Unrecognized key: "date"'],
     });
   }
 });

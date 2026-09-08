@@ -367,6 +367,44 @@ test("returns unchanged sessions without writing", async () => {
   expect(repository.edit).not.toHaveBeenCalled();
 });
 
+test("treats a supplied current date as unchanged", async () => {
+  const { repository, service } = createService();
+  vi.mocked(repository.findById).mockResolvedValue(runSession);
+  const request = {
+    title: runSession.title,
+    description: runSession.description,
+    date: runSession.date,
+    timeOfDay: runSession.timeOfDay,
+    activityType: "RUN" as const,
+    targetDistanceMetres: runSession.targetDistanceMetres,
+    targetDurationSeconds: runSession.targetDurationSeconds,
+  };
+
+  await expect(service.edit(runSession.id, request)).resolves.toBe(runSession);
+  expect(repository.edit).not.toHaveBeenCalled();
+});
+
+test("writes a scheduled date change", async () => {
+  const { repository, service } = createService();
+  const request = { ...runEdit, date: "2026-08-27" };
+  vi.mocked(repository.findById).mockResolvedValue(runSession);
+  vi.mocked(repository.edit).mockResolvedValue({ ...runSession, ...request });
+
+  await service.edit(runSession.id, request);
+
+  expect(repository.edit).toHaveBeenCalledWith(runSession, request);
+});
+
+test("reports a concurrent transition during a scheduled date change", async () => {
+  const { repository, service } = createService();
+  vi.mocked(repository.findById).mockResolvedValue(runSession);
+  vi.mocked(repository.edit).mockResolvedValue(null);
+
+  await expect(
+    service.edit(runSession.id, { ...runEdit, date: "2026-08-27" }),
+  ).rejects.toThrow("training session is no longer scheduled");
+});
+
 test("writes changed completed run actuals", async () => {
   const { repository, service } = createService();
   const completed = {

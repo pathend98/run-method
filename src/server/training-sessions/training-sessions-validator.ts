@@ -67,6 +67,12 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
       return;
     }
 
+    if (request.date !== undefined && request.date !== current.date) {
+      throw new TrainingSessionsValidationError(
+        "date cannot be changed for completed or skipped sessions",
+      );
+    }
+
     if (current.status === "SKIPPED" && this.hasActuals(request)) {
       throw new TrainingSessionsValidationError(
         "actual metrics can only be changed for completed sessions",

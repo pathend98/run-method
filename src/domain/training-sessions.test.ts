@@ -187,12 +187,14 @@ test.each([
       title: " Updated session ",
       description: " Updated description ",
       timeOfDay: null,
+      date: "2026-08-27",
       ...edit,
     }),
   ).toMatchObject({
     title: "Updated session",
     description: "Updated description",
     timeOfDay: null,
+    date: "2026-08-27",
     ...edit,
   });
 });
@@ -203,7 +205,7 @@ test.each([
   ["invalid time of day", { timeOfDay: "NOON" }],
   ["missing target", { targetDurationSeconds: undefined }],
   ["invalid target", { targetDistanceMetres: 0 }],
-  ["immutable date", { date: "2026-08-27" }],
+  ["invalid date", { date: "2026-02-30" }],
   ["invalid actual", { actualDurationSeconds: 0 }],
 ])("editTrainingSessionRequestSchema rejects %s", (_caseName, override) => {
   expect(() =>

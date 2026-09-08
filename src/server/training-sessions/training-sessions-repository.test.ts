@@ -323,9 +323,13 @@ function createRepositoryForEdit(
   const session = {
     ...rows[current.activityType === "RUN" ? 0 : 1].session,
     title: request.title,
+    date: request.date ?? current.date,
     timeOfDay: request.timeOfDay,
     description: request.description,
-    sortOrder: request.timeOfDay === current.timeOfDay ? current.sortOrder : 4,
+    sortOrder:
+      request.date === undefined && request.timeOfDay === current.timeOfDay
+        ? current.sortOrder
+        : 4,
     updatedAt: new Date("2026-08-31T10:00:00.000Z"),
   };
   const runRow = {
@@ -358,7 +362,7 @@ function createRepositoryForEdit(
                 : request.activityType === "RUN"
                   ? runRow
                   : strengthRow,
-            ]),
+            ].filter(Boolean)),
         }),
       };
     }),
@@ -390,11 +394,12 @@ function createRepositoryForEdit(
   };
 }
 
-test("edits a scheduled run and appends time-bucket moves", async () => {
+test("moves a scheduled run to its destination date and time bucket", async () => {
   const current = transformedRows[0];
   const request = {
     title: "Long easy run",
     description: "Keep it relaxed",
+    date: "2026-08-27",
     timeOfDay: "PM",
     activityType: "RUN",
     targetDistanceMetres: 10000,
@@ -402,28 +407,21 @@ test("edits a scheduled run and appends time-bucket moves", async () => {
   } satisfies EditTrainingSessionRequest;
   const { repository, selectWhere, transformed, transformer, updateValues } =
     createRepositoryForEdit(current, request);
-
   await expect(repository.edit(current, request)).resolves.toBe(transformed);
-
   expect(selectWhere).toHaveBeenCalledOnce();
   expect(updateValues).toHaveLength(2);
   expect(updateValues[0]).toEqual({
     title: request.title,
+    date: request.date,
     timeOfDay: request.timeOfDay,
     description: request.description,
     sortOrder: 4,
     updatedAt: expect.any(Date),
   });
-  expect(updateValues[1]).toEqual({
-    targetDistanceMetres: 10000,
-    targetDurationSeconds: 3600,
-  });
+  expect(updateValues[1]).toEqual({ targetDistanceMetres: 10000, targetDurationSeconds: 3600 });
   expect(transformer.transform).toHaveBeenCalledWith({
-    session: expect.objectContaining({ sortOrder: 4 }),
-    runDetails: expect.objectContaining({
-      targetDistanceMetres: 10000,
-      targetDurationSeconds: 3600,
-    }),
+    session: expect.objectContaining({ date: request.date, sortOrder: 4 }),
+    runDetails: expect.objectContaining({ targetDistanceMetres: 10000, targetDurationSeconds: 3600 }),
     strengthDetails: null,
   });
 });
@@ -441,9 +439,7 @@ test("edits strength common fields without changing strength details or order", 
     current,
     request,
   );
-
   await repository.edit(current, request);
-
   expect(updateValues).toHaveLength(1);
   expect(transformer.transform).toHaveBeenCalledWith({
     session: expect.any(Object),

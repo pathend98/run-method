@@ -149,7 +149,17 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     this.validator.validateEdit(current, request);
     if (this.isUnchanged(current, request)) return current;
 
-    return this.repository.edit(current, request);
+    if (request.date === undefined || request.date === current.date) {
+      return this.repository.edit(current, request) as Promise<TrainingSession>;
+    }
+
+    const edited = await this.repository.edit(current, request);
+    if (!edited) {
+      throw new TrainingSessionsValidationError(
+        "training session is no longer scheduled",
+      );
+    }
+    return edited;
   }
 
   private isUnchanged(
@@ -159,6 +169,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     if (
       current.title !== request.title ||
       current.description !== request.description ||
+      (request.date !== undefined && current.date !== request.date) ||
       current.timeOfDay !== request.timeOfDay
     ) {
       return false;
