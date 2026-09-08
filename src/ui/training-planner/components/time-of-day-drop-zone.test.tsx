@@ -48,6 +48,7 @@ test("renders a highlighted dashed drop zone while an activity is over it", () =
     <TimeOfDayDropZone
       activities={day.activities}
       day={day}
+      hasLeadingDay
       isDragActive
       label="Morning"
       onSelectActivity={vi.fn()}
@@ -57,7 +58,12 @@ test("renders a highlighted dashed drop zone while an activity is over it", () =
 
   const zone = screen.getByRole("region", { name: "Morning" });
   expect(zone.className).toContain("border-dashed");
-  expect(zone.className).toContain("border-teal-500");
+  expect(zone.className).toContain("border-l");
+  expect(zone.className).toContain("border-t");
+  expect(zone.className).not.toContain("border-r");
+  expect(zone.className).not.toContain("border-b");
+  expect(zone.className).toContain("ring-inset");
+  expect(zone.className).toContain("ring-teal-500");
   expect(screen.getByText("Tempo run")).toBeDefined();
 });
 
@@ -68,6 +74,7 @@ test("does not render an empty inactive drop zone", () => {
     <TimeOfDayDropZone
       activities={[]}
       day={{ ...day, activities: [], date: undefined }}
+      hasLeadingDay={false}
       isDragActive={false}
       label="Morning"
       onSelectActivity={vi.fn()}

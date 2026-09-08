@@ -13,6 +13,7 @@ export function DraggableActivityCard({
 }: DraggableActivityCardProps) {
   const { isDragSource, ref } = useDraggable({
     data: { activity },
+    disabled: activity.status !== "SCHEDULED",
     id: activity.id,
     type: "training-activity",
   });

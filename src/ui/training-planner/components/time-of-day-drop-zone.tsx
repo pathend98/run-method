@@ -9,6 +9,7 @@ import type {
 type TimeOfDayDropZoneProps = {
   activities: TrainingActivity[];
   day: TrainingDay;
+  hasLeadingDay: boolean;
   isDragActive: boolean;
   label: string;
   onSelectActivity: (activity: TrainingActivity) => void;
@@ -23,6 +24,7 @@ function createDropZoneId(day: TrainingDay, timeOfDay: TimeOfDay) {
 export function TimeOfDayDropZone({
   activities,
   day,
+  hasLeadingDay,
   isDragActive,
   label,
   onSelectActivity,
@@ -39,10 +41,12 @@ export function TimeOfDayDropZone({
   if (!isDragActive && activities.length === 0) return null;
 
   const zoneClassName = isDragActive
-    ? `flex min-h-28 flex-1 flex-col gap-2 border border-dashed p-3 ${
+    ? `flex min-h-28 flex-1 flex-col gap-2 border-t border-dashed border-zinc-300 p-3 ${
+        hasLeadingDay ? "border-l" : ""
+      } ${
         isDropTarget
-          ? "border-teal-500 bg-teal-50"
-          : "border-zinc-300 bg-white/50"
+          ? "bg-teal-50 ring-1 ring-inset ring-teal-500"
+          : "bg-white/50"
       }`
     : "flex flex-col gap-2";
 

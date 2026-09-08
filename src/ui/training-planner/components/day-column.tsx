@@ -10,6 +10,7 @@ import type {
 
 type DayColumnProps = {
   day: TrainingDay;
+  hasLeadingDay?: boolean;
   isDragAndDropEnabled?: boolean;
   isDragActive?: boolean;
   isToday?: boolean;
@@ -25,6 +26,7 @@ const timeSections: { label: string; value: TimeOfDay }[] = [
 
 export function DayColumn({
   day,
+  hasLeadingDay = false,
   isDragAndDropEnabled = false,
   isDragActive = false,
   isToday = false,
@@ -67,7 +69,11 @@ export function DayColumn({
         ) : null}
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 pt-5">
+      <div
+        className={`flex flex-1 flex-col pt-5 ${
+          isDragActive ? "-mx-3 gap-0" : "gap-4"
+        }`}
+      >
         {!isDragActive && populatedTimeSections.length === 0 ? (
           <p className="text-sm text-zinc-500">Rest day</p>
         ) : isDragAndDropEnabled ? (
@@ -76,6 +82,7 @@ export function DayColumn({
               key={section.label}
               activities={section.activities}
               day={day}
+              hasLeadingDay={hasLeadingDay}
               isDragActive={isDragActive}
               label={section.label}
               onSelectActivity={onSelectActivity}

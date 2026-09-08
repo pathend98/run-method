@@ -27,6 +27,7 @@ export function WeekGrid({
   const activeActivity = week
     .flatMap((day) => day.activities)
     .find((activity) => activity.id === activeActivityId);
+  const isDragActive = activeActivity !== undefined;
 
   function clearActiveActivity() {
     setActiveActivityId(null);
@@ -52,12 +53,17 @@ export function WeekGrid({
         className="overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50"
         role="list"
       >
-        <div className="grid min-w-[56rem] grid-cols-7 divide-x divide-zinc-200">
-          {week.map((day) => (
+        <div
+          className={`grid min-w-[56rem] grid-cols-7 ${
+            isDragActive ? "divide-x-0" : "divide-x divide-zinc-200"
+          }`}
+        >
+          {week.map((day, index) => (
             <DayColumn
               key={day.day}
               day={day}
-              isDragActive={activeActivity !== undefined}
+              hasLeadingDay={index > 0}
+              isDragActive={isDragActive}
               isDragAndDropEnabled
               isToday={day.date === today}
               onAddActivity={onAddActivity}

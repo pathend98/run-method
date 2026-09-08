@@ -99,6 +99,25 @@ test("renders an empty state for days without activities", () => {
   expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
 });
 
+test("makes drag drop zones continuous and full-width within a day column", () => {
+  render(
+    <DayColumn
+      day={{ day: "Monday", activities: [runActivity()] }}
+      isDragActive
+      isDragAndDropEnabled
+      onSelectActivity={vi.fn()}
+    />,
+  );
+
+  const column = screen.getByRole("listitem", { name: "Monday" });
+  const zones = column.querySelector("header + div");
+
+  expect(zones).not.toBeNull();
+  expect(zones?.className).toContain("gap-0");
+  expect(zones?.className).toContain("-mx-3");
+  expect(zones?.className).toContain("pt-5");
+});
+
 test("passes the selected activity to the select handler", () => {
   const onSelectActivity = vi.fn();
   const selectedActivity = runActivity({ title: "Morning run" });

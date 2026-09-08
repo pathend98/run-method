@@ -1,12 +1,16 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 const dndMocks = vi.hoisted(() => ({
+  input: undefined as { disabled: boolean } | undefined,
   isDragSource: false,
   ref: vi.fn(),
 }));
 
 vi.mock("@dnd-kit/react", () => ({
-  useDraggable: () => dndMocks,
+  useDraggable: (input: { disabled: boolean }) => {
+    dndMocks.input = input;
+    return dndMocks;
+  },
 }));
 
 import { DraggableActivityCard } from "./draggable-activity-card";
@@ -52,3 +56,30 @@ test("keeps an inactive card fully opaque", () => {
       ?.className,
   ).toBe("");
 });
+
+test("enables dragging for scheduled activities", () => {
+  render(<DraggableActivityCard activity={activity} onSelect={vi.fn()} />);
+
+  expect(dndMocks.input?.disabled).toBe(false);
+});
+
+test.each(["COMPLETED", "SKIPPED"] as const)(
+  "disables dragging for %s activities while retaining detail selection",
+  (status) => {
+    const onSelect = vi.fn();
+
+    render(
+      <DraggableActivityCard
+        activity={{ ...activity, status }}
+        onSelect={onSelect}
+      />,
+    );
+
+    expect(dndMocks.input?.disabled).toBe(true);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "View Tempo run details" }),
+    );
+    expect(onSelect).toHaveBeenCalledOnce();
+  },
+);

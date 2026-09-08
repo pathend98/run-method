@@ -113,6 +113,7 @@ test("shows dashed morning, evening, and anytime zones during a mouse drag", () 
 
   fireEvent.click(screen.getByRole("button", { name: "Start drag" }));
 
+  const planner = screen.getByRole("list", { name: "Weekly training planner" });
   const monday = screen.getByRole("listitem", { name: "Monday" });
   const tuesday = screen.getByRole("listitem", { name: "Tuesday" });
   expect(
@@ -127,10 +128,12 @@ test("shows dashed morning, evening, and anytime zones during a mouse drag", () 
   ).toEqual(["Morning", "Evening", "Anytime"]);
   expect(screen.queryByText("Rest day")).toBeNull();
   expect(screen.getAllByText("Tempo run")).toHaveLength(2);
+  expect(planner.firstElementChild?.className).toContain("divide-x-0");
 
   fireEvent.click(screen.getByRole("button", { name: "End drag" }));
 
   expect(screen.getByText("Rest day")).toBeDefined();
+  expect(planner.firstElementChild?.className).toContain("divide-x");
 });
 
 test("configures a mouse-only sensor with an eight-pixel activation distance", () => {
