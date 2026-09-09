@@ -121,6 +121,14 @@ docker run --rm -p 3000:3000 \
   training-brain
 ```
 
+Run the committed database migrations with the same image:
+
+```bash
+docker run --rm \
+  -e DATABASE_URL='postgres://training_brain:training_brain@host.docker.internal:5432/training_brain' \
+  training-brain node migrate.js
+```
+
 `DATABASE_URL` is a runtime-only server secret. Do not pass it to `docker build`
 or use a `NEXT_PUBLIC_` variable. Supply it through your deployment platform, an
 environment file, or `docker run -e`; the container validates it during startup.
