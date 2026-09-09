@@ -9,11 +9,18 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
+# Keep only runtime dependencies for the production image. This includes
+# drizzle-orm and pg, but excludes the development-only drizzle-kit CLI.
+FROM base AS production-deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+
 # Build the Next.js standalone output using the full source tree.
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm build
+RUN pnpm build \
+  && pnpm build:migration
 
 # Runtime image contains only the files needed by the standalone Next server.
 FROM node:24-slim AS runner
@@ -31,6 +38,9 @@ RUN useradd --system --uid 1001 --gid nodejs nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=production-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next/migration/migrate.js ./migrate.js
+COPY --from=builder --chown=nextjs:nodejs /app/db ./db
 
 USER nextjs
 

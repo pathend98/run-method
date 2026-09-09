@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:migration": "tsc db/migrate.ts --outDir .next/migration --target es2022 --module nodenext --moduleResolution nodenext --esModuleInterop --skipLibCheck",
     "start": "next start",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint",
