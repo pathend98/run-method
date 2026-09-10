@@ -132,3 +132,7 @@ docker run --rm \
 `DATABASE_URL` is a runtime-only server secret. Do not pass it to `docker build`
 or use a `NEXT_PUBLIC_` variable. Supply it through your deployment platform, an
 environment file, or `docker run -e`; the container validates it during startup.
+
+For TLS-enabled RDS, set `DATABASE_CA_PATH` to the path of the AWS RDS PEM CA
+bundle. Mount that file into the container so it is readable by the `nextjs`
+user; the app and `node migrate.js` verify the database certificate against it.

@@ -1,8 +1,9 @@
-import { cleanEnv, num } from "envalid";
+import { cleanEnv, num, str } from "envalid";
 import { postgresUrlValidator } from "./validators/postgres-url-validator";
 
 type DatabaseEnv = {
   DATABASE_URL: string;
+  DATABASE_CA_PATH: string | undefined;
   MAX_CONNECTIONS: number;
   DATABASE_IDLE_CONNECTION_TIMEOUT_MS: number;
   DATABASE_CONNECTION_TIMEOUT_MS: number;
@@ -13,6 +14,11 @@ export function readDatabaseEnv(): DatabaseEnv {
     DATABASE_URL: postgresUrlValidator({
       desc: "PostgreSQL connection string",
       example: "postgres://run_method:run_method@localhost:5432/run_method",
+    }),
+    DATABASE_CA_PATH: str({
+      desc: "Path to a PEM bundle used to verify the PostgreSQL TLS certificate",
+      example: "/run/secrets/rds-ca-bundle.pem",
+      default: undefined,
     }),
     MAX_DATABASE_CONNECTIONS: num({
       desc: "Maximum number of database connections which can be open at once",
@@ -33,6 +39,7 @@ export function readDatabaseEnv(): DatabaseEnv {
 
   return {
     DATABASE_URL: env.DATABASE_URL,
+    DATABASE_CA_PATH: env.DATABASE_CA_PATH,
     MAX_CONNECTIONS: env.MAX_DATABASE_CONNECTIONS,
     DATABASE_IDLE_CONNECTION_TIMEOUT_MS:
       env.DATABASE_IDLE_CONNECTION_TIMEOUT_MS,

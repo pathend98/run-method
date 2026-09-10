@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import { readDatabaseEnv } from "./env/database-env";
+import { readDatabaseTlsOptions } from "./env/database-tls";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
 import { DefaultTrainingSessionsRequestValidator } from "./training-sessions/training-sessions-request-validator";
 import { DefaultTrainingSessionsService } from "./training-sessions/training-sessions-service";
@@ -19,8 +20,12 @@ export function getTrainingSessionsService(): DefaultTrainingSessionsService {
   }
 
   const databaseEnv = readDatabaseEnv();
+  const databaseTlsOptions = readDatabaseTlsOptions(
+    databaseEnv.DATABASE_URL,
+    databaseEnv.DATABASE_CA_PATH,
+  );
   const pool = new Pool({
-    connectionString: databaseEnv.DATABASE_URL,
+    ...databaseTlsOptions,
     max: databaseEnv.MAX_CONNECTIONS,
     idleTimeoutMillis: databaseEnv.DATABASE_IDLE_CONNECTION_TIMEOUT_MS,
     connectionTimeoutMillis: databaseEnv.DATABASE_CONNECTION_TIMEOUT_MS,

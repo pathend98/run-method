@@ -14,6 +14,7 @@ test("maps explicit database environment variables", async () => {
     "DATABASE_URL",
     "postgres://run_method:run_method@localhost:5432/run_method",
   );
+  vi.stubEnv("DATABASE_CA_PATH", "/run/secrets/rds-ca-bundle.pem");
   vi.stubEnv("MAX_DATABASE_CONNECTIONS", "12");
   vi.stubEnv("DATABASE_IDLE_CONNECTION_TIMEOUT_MS", "45000");
   vi.stubEnv("DATABASE_CONNECTION_TIMEOUT_MS", "7000");
@@ -23,6 +24,7 @@ test("maps explicit database environment variables", async () => {
 
   expect(databaseEnv).toEqual({
     DATABASE_URL: "postgres://run_method:run_method@localhost:5432/run_method",
+    DATABASE_CA_PATH: "/run/secrets/rds-ca-bundle.pem",
     MAX_CONNECTIONS: 12,
     DATABASE_IDLE_CONNECTION_TIMEOUT_MS: 45000,
     DATABASE_CONNECTION_TIMEOUT_MS: 7000,
@@ -35,6 +37,7 @@ test("uses defaults for optional database environment variables", async () => {
     "postgresql://run_method:run_method@localhost:5432/run_method",
   );
   vi.stubEnv("MAX_DATABASE_CONNECTIONS", undefined);
+  vi.stubEnv("DATABASE_CA_PATH", undefined);
   vi.stubEnv("DATABASE_IDLE_CONNECTION_TIMEOUT_MS", undefined);
   vi.stubEnv("DATABASE_CONNECTION_TIMEOUT_MS", undefined);
 
@@ -44,6 +47,7 @@ test("uses defaults for optional database environment variables", async () => {
   expect(databaseEnv).toEqual({
     DATABASE_URL:
       "postgresql://run_method:run_method@localhost:5432/run_method",
+    DATABASE_CA_PATH: undefined,
     MAX_CONNECTIONS: 5,
     DATABASE_IDLE_CONNECTION_TIMEOUT_MS: 30000,
     DATABASE_CONNECTION_TIMEOUT_MS: 5000,
