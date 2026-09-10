@@ -27,4 +27,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/pathend98/training-brain:${{ github.ref_name }}
+          tags: ghcr.io/pathend98/run-method:${{ github.ref_name }}

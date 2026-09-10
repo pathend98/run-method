@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Training Brain",
+  title: "Run Method",
   description: "Run coaching and training planning.",
 };
 

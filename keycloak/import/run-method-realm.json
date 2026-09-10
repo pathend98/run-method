@@ -1,11 +1,11 @@
 {
-  "realm": "training-brain",
+  "realm": "run-method",
   "enabled": true,
-  "displayName": "Training Brain",
+  "displayName": "Run Method",
   "clients": [
     {
-      "clientId": "training-brain",
-      "name": "Training Brain",
+      "clientId": "run-method",
+      "name": "Run Method",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,

@@ -3,7 +3,7 @@ import RootLayout, { metadata } from "./layout";
 
 test("exports the application metadata", () => {
   expect(metadata).toEqual({
-    title: "Training Brain",
+    title: "Run Method",
     description: "Run coaching and training planning.",
   });
 });
