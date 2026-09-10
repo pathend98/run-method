@@ -13,7 +13,7 @@ test("validates database configuration when the Node.js server starts", async ()
   vi.stubEnv("NEXT_RUNTIME", "nodejs");
   vi.stubEnv(
     "DATABASE_URL",
-    "postgres://training_brain:training_brain@localhost:5432/training_brain",
+    "postgres://run_method:run_method@localhost:5432/run_method",
   );
 
   const { register } = await importInstrumentation();

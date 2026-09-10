@@ -117,7 +117,7 @@ Run the production image:
 
 ```bash
 docker run --rm -p 3000:3000 \
-  -e DATABASE_URL='postgres://training_brain:training_brain@host.docker.internal:5432/training_brain' \
+  -e DATABASE_URL='postgres://run_method:run_method@host.docker.internal:5432/run_method' \
   training-brain
 ```
 
@@ -125,7 +125,7 @@ Run the committed database migrations with the same image:
 
 ```bash
 docker run --rm \
-  -e DATABASE_URL='postgres://training_brain:training_brain@host.docker.internal:5432/training_brain' \
+  -e DATABASE_URL='postgres://run_method:run_method@host.docker.internal:5432/run_method' \
   training-brain node migrate.js
 ```
 

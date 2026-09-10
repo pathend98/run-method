@@ -12,8 +12,7 @@ export function readDatabaseEnv(): DatabaseEnv {
   const env = cleanEnv(process.env, {
     DATABASE_URL: postgresUrlValidator({
       desc: "PostgreSQL connection string",
-      example:
-        "postgres://training_brain:training_brain@localhost:5432/training_brain",
+      example: "postgres://run_method:run_method@localhost:5432/run_method",
     }),
     MAX_DATABASE_CONNECTIONS: num({
       desc: "Maximum number of database connections which can be open at once",

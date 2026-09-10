@@ -4,15 +4,15 @@ services:
     container_name: training-brain-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: training_brain
-      POSTGRES_USER: training_brain
-      POSTGRES_PASSWORD: training_brain
+      POSTGRES_DB: run_method
+      POSTGRES_USER: run_method
+      POSTGRES_PASSWORD: run_method
     ports:
       - "5432:5432"
     volumes:
       - ./.data/postgres:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U training_brain -d training_brain"]
+      test: ["CMD-SHELL", "pg_isready -U run_method -d run_method"]
       interval: 5s
       timeout: 5s
       retries: 10
