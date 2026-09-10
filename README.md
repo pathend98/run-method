@@ -1,12 +1,12 @@
-# Training Brain
+# Run Method
 
-Training Brain is a run-coaching app.
+Run Method is a run-coaching app.
 
 The project is currently bootstrapped as a single-package Next.js application using the App Router, TypeScript, pnpm, Node.js 24, and Docker-ready production builds.
 
 ## Project Structure
 
-Training Brain is organised around deep modules: each meaningful folder should expose a small, stable interface and keep implementation details private. This follows John Ousterhout's distinction between a module's interface and its implementation.
+Run Method is organised around deep modules: each meaningful folder should expose a small, stable interface and keep implementation details private. This follows John Ousterhout's distinction between a module's interface and its implementation.
 
 The top-level layout is:
 
@@ -95,8 +95,8 @@ Keycloak provides the local OIDC identity provider at
 [http://localhost:8080](http://localhost:8080). Sign in to its Admin Console with
 `KEYCLOAK_ADMIN_USERNAME` and `KEYCLOAK_ADMIN_PASSWORD` from `.env.local`.
 
-On its first container creation, Keycloak imports the `training-brain` realm and
-the public `training-brain` client. The client uses Authorization Code flow with
+On its first container creation, Keycloak imports the `run-method` realm and
+the public `run-method` client. The client uses Authorization Code flow with
 PKCE (S256), allows callbacks at `http://localhost:3000/*`, and has no client
 secret. Its seeded `test-user` account uses `KEYCLOAK_TEST_USER_PASSWORD` from
 `.env.local`.
@@ -110,23 +110,23 @@ the next `pnpm auth:up`.
 Build the production image:
 
 ```bash
-docker build -t training-brain .
+docker build -t run-method .
 ```
 
 Run the production image:
 
 ```bash
 docker run --rm -p 3000:3000 \
-  -e DATABASE_URL='postgres://training_brain:training_brain@host.docker.internal:5432/training_brain' \
-  training-brain
+  -e DATABASE_URL='postgres://run_method:run_method@host.docker.internal:5432/run_method' \
+  run-method
 ```
 
 Run the committed database migrations with the same image:
 
 ```bash
 docker run --rm \
-  -e DATABASE_URL='postgres://training_brain:training_brain@host.docker.internal:5432/training_brain' \
-  training-brain node migrate.js
+  -e DATABASE_URL='postgres://run_method:run_method@host.docker.internal:5432/run_method' \
+  run-method node migrate.js
 ```
 
 `DATABASE_URL` is a runtime-only server secret. Do not pass it to `docker build`

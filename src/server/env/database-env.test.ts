@@ -12,7 +12,7 @@ afterEach(() => {
 test("maps explicit database environment variables", async () => {
   vi.stubEnv(
     "DATABASE_URL",
-    "postgres://training_brain:training_brain@localhost:5432/training_brain",
+    "postgres://run_method:run_method@localhost:5432/run_method",
   );
   vi.stubEnv("MAX_DATABASE_CONNECTIONS", "12");
   vi.stubEnv("DATABASE_IDLE_CONNECTION_TIMEOUT_MS", "45000");
@@ -22,8 +22,7 @@ test("maps explicit database environment variables", async () => {
   const databaseEnv = readDatabaseEnv();
 
   expect(databaseEnv).toEqual({
-    DATABASE_URL:
-      "postgres://training_brain:training_brain@localhost:5432/training_brain",
+    DATABASE_URL: "postgres://run_method:run_method@localhost:5432/run_method",
     MAX_CONNECTIONS: 12,
     DATABASE_IDLE_CONNECTION_TIMEOUT_MS: 45000,
     DATABASE_CONNECTION_TIMEOUT_MS: 7000,
@@ -33,7 +32,7 @@ test("maps explicit database environment variables", async () => {
 test("uses defaults for optional database environment variables", async () => {
   vi.stubEnv(
     "DATABASE_URL",
-    "postgresql://training_brain:training_brain@localhost:5432/training_brain",
+    "postgresql://run_method:run_method@localhost:5432/run_method",
   );
   vi.stubEnv("MAX_DATABASE_CONNECTIONS", undefined);
   vi.stubEnv("DATABASE_IDLE_CONNECTION_TIMEOUT_MS", undefined);
@@ -44,7 +43,7 @@ test("uses defaults for optional database environment variables", async () => {
 
   expect(databaseEnv).toEqual({
     DATABASE_URL:
-      "postgresql://training_brain:training_brain@localhost:5432/training_brain",
+      "postgresql://run_method:run_method@localhost:5432/run_method",
     MAX_CONNECTIONS: 5,
     DATABASE_IDLE_CONNECTION_TIMEOUT_MS: 30000,
     DATABASE_CONNECTION_TIMEOUT_MS: 5000,

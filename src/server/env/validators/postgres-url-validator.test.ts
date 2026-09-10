@@ -11,15 +11,15 @@ function readDatabaseUrl(DATABASE_URL: string) {
 }
 
 test.each([
-  "postgres://training_brain:training_brain@localhost:5432/training_brain",
-  "postgresql://training_brain:training_brain@localhost:5432/training_brain",
+  "postgres://run_method:run_method@localhost:5432/run_method",
+  "postgresql://run_method:run_method@localhost:5432/run_method",
 ])("accepts %s connection strings", (DATABASE_URL) => {
   expect(readDatabaseUrl(DATABASE_URL)).toBe(DATABASE_URL);
 });
 
 test("rejects connection strings that do not use a PostgreSQL protocol", () => {
   expect(() =>
-    readDatabaseUrl("mysql://training_brain:training_brain@localhost/db"),
+    readDatabaseUrl("mysql://run_method:run_method@localhost/db"),
   ).toThrow(InvalidPostgresUrlError);
 });
 
