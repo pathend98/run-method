@@ -79,10 +79,10 @@ test("renders the weekly grid without modal UI", () => {
     level: 1,
     name: "Training Plan",
   });
-  expect(heading.classList).toContain("text-center");
+  expect(heading.classList).not.toContain("text-center");
   expect(heading.classList).toContain("text-2xl");
-  expect(heading.classList).toContain("sm:text-left");
   expect(heading.classList).toContain("sm:text-4xl");
+  expect(heading.parentElement?.tagName).toBe("SECTION");
   const navigation = screen.getByRole("navigation", {
     name: "Week navigation",
   });
@@ -95,7 +95,10 @@ test("renders the weekly grid without modal UI", () => {
   expect(within(navigation).getByText("17 Aug – 23 Aug")).toBeDefined();
   const summary = screen.getByRole("region", { name: "Weekly summary" });
   expect(summary).toBeDefined();
-  expect(summary.parentElement?.classList.contains("mb-8")).toBe(true);
+  expect(summary.classList).toContain("mb-8");
+  expect(summary.nextElementSibling).toBe(
+    screen.getByRole("region", { name: "Mobile weekly training planner" }),
+  );
   expect(
     navigation.compareDocumentPosition(summary) &
       Node.DOCUMENT_POSITION_FOLLOWING,
@@ -118,11 +121,18 @@ test("renders the weekly grid without modal UI", () => {
 
 test("forwards activity and add selections through its private grid", () => {
   const { onAddActivity, onSelectActivity } = renderView();
+  const mobilePlanner = screen.getByRole("region", {
+    name: "Mobile weekly training planner",
+  });
   fireEvent.click(
-    screen.getByRole("button", { name: "View Tempo run details" }),
+    within(mobilePlanner).getByRole("button", {
+      name: "View Tempo run details",
+    }),
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Add activity to Monday" }),
+    within(mobilePlanner).getByRole("button", {
+      name: "Add activity to Monday",
+    }),
   );
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
   expect(onAddActivity).toHaveBeenCalledWith(week[0]);

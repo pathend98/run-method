@@ -34,6 +34,7 @@ test("renders current-week completed and activity-status lines", () => {
   render(
     <WeeklySummary
       activities={[activity]}
+      className="mb-8"
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
@@ -54,6 +55,7 @@ test("renders current-week completed and activity-status lines", () => {
   const summary = screen.getByRole("region", { name: "Weekly summary" });
   expect(summary.classList).toContain("grid-cols-2");
   expect(summary.classList).toContain("sm:grid-cols-3");
+  expect(summary.classList).toContain("mb-8");
   const activities = screen.getByRole("heading", {
     level: 2,
     name: "Activities",

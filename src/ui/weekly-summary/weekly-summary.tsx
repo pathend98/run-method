@@ -17,10 +17,15 @@ import {
 
 type WeeklySummaryProps = {
   activities: TrainingSession[];
+  className?: string;
   weekRange: TrainingSessionDateRange;
 };
 
-export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
+export function WeeklySummary({
+  activities,
+  className,
+  weekRange,
+}: WeeklySummaryProps) {
   const summary = getWeeklySummary(
     activities,
     weekRange,
@@ -46,7 +51,7 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
   return (
     <section
       aria-label="Weekly summary"
-      className="grid grid-cols-2 gap-5 sm:grid-cols-3"
+      className={`grid grid-cols-2 gap-5 sm:grid-cols-3${className ? ` ${className}` : ""}`}
     >
       <SummaryMetric
         completed={formatDistance(summary.completedDistanceMetres)}

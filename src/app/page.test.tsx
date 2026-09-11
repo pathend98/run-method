@@ -32,9 +32,8 @@ test("Home", () => {
     level: 1,
     name: "Training Plan",
   });
-  expect(heading.classList).toContain("text-center");
+  expect(heading.classList).not.toContain("text-center");
   expect(heading.classList).toContain("text-2xl");
-  expect(heading.classList).toContain("sm:text-left");
   expect(heading.classList).toContain("sm:text-4xl");
   expect(screen.getByText("Loading training planner...")).toBeDefined();
 });

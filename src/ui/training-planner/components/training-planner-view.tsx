@@ -46,14 +46,12 @@ export function TrainingPlannerView({
       aria-labelledby="training-planner-heading"
       className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8"
     >
-      <div className="flex flex-col gap-2">
-        <h1
-          id="training-planner-heading"
-          className="text-center text-2xl font-semibold text-zinc-950 sm:text-left sm:text-4xl"
-        >
-          Training Plan
-        </h1>
-      </div>
+      <h1
+        id="training-planner-heading"
+        className="text-2xl font-semibold text-zinc-950 sm:text-4xl"
+      >
+        Training Plan
+      </h1>
 
       <div className="flex flex-col">
         <nav
@@ -96,12 +94,12 @@ export function TrainingPlannerView({
             Today
           </Button>
         </nav>
-        <div className="mb-8">
-          <WeeklySummary activities={sessions} weekRange={weekRange} />
-        </div>
-        <div className="mb-8">
-          <PastActivitiesAttentionPanel />
-        </div>
+        <WeeklySummary
+          activities={sessions}
+          className="mb-8"
+          weekRange={weekRange}
+        />
+        <PastActivitiesAttentionPanel className="mb-8" />
         <WeekGrid
           onAddActivity={onAddActivity}
           onMoveActivity={onMoveActivity}

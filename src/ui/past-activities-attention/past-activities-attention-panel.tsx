@@ -7,6 +7,10 @@ import { Button } from "@/ui/components/button";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 
+type PastActivitiesAttentionPanelProps = {
+  className?: string;
+};
+
 function getPastActivitiesQuery() {
   const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
   return {
@@ -16,7 +20,9 @@ function getPastActivitiesQuery() {
   };
 }
 
-export function PastActivitiesAttentionPanel() {
+export function PastActivitiesAttentionPanel({
+  className,
+}: PastActivitiesAttentionPanelProps) {
   const openReviewActivities = useTrainingPlannerStore(
     (state) => state.openReviewActivities,
   );
@@ -31,7 +37,7 @@ export function PastActivitiesAttentionPanel() {
   return (
     <section
       aria-label="Activities requiring attention"
-      className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      className={`flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between${className ? ` ${className}` : ""}`}
     >
       <div>
         <h2 className="text-sm font-semibold text-amber-950">

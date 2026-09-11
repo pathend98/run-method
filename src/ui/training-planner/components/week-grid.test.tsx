@@ -148,7 +148,13 @@ afterEach(() => {
 test("renders a labelled weekly planner list with day columns", () => {
   render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
 
+  const mobilePlanner = screen.getByRole("region", {
+    name: "Mobile weekly training planner",
+  });
+  expect(mobilePlanner.className).toContain("sm:hidden");
   const planner = screen.getByRole("list", { name: "Weekly training planner" });
+  expect(planner.className).toContain("hidden");
+  expect(planner.className).toContain("sm:block");
   expect(planner.className).toContain("overflow-x-auto");
   expect(planner.className).toContain("rounded-lg");
   expect(planner.className).toContain("border");
@@ -163,12 +169,48 @@ test("renders a labelled weekly planner list with day columns", () => {
   expect(within(planner).getByText("Rest day")).toBeDefined();
 });
 
+test("supports a mobile week fixture without dates", () => {
+  render(
+    <WeekGrid
+      onSelectActivity={vi.fn()}
+      week={[{ day: "Monday", activities: [] }]}
+    />,
+  );
+
+  expect(screen.getByRole("tab", { name: "Monday" })).toBeDefined();
+});
+
+test("resets the mobile selection when the displayed week changes", () => {
+  const { rerender } = render(
+    <WeekGrid onSelectActivity={vi.fn()} week={week} />,
+  );
+  fireEvent.click(screen.getByRole("tab", { name: "Tuesday 18 August" }));
+
+  rerender(
+    <WeekGrid
+      onSelectActivity={vi.fn()}
+      week={[
+        { day: "Monday", date: "2026-08-24", activities: [] },
+        { day: "Tuesday", date: "2026-08-25", activities: [] },
+      ]}
+    />,
+  );
+
+  expect(
+    screen
+      .getByRole("tab", { name: "Monday 24 August" })
+      .getAttribute("aria-selected"),
+  ).toBe("true");
+});
+
 test("passes activity selection through from day columns", () => {
   const onSelectActivity = vi.fn();
 
   render(<WeekGrid onSelectActivity={onSelectActivity} week={week} />);
   fireEvent.click(
-    screen.getByRole("button", { name: "View Tempo run details" }),
+    within(
+      screen.getByRole("list", { name: "Weekly training planner" }),
+    ).getByRole("button", { name: "View Tempo run details" }),
   );
 
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
@@ -257,7 +299,7 @@ test("shows dashed morning, evening, and anytime zones during a mouse drag", () 
       .map((heading) => heading.textContent),
   ).toEqual(["Morning", "Evening", "Anytime"]);
   expect(screen.queryByText("Rest day")).toBeNull();
-  expect(screen.getAllByText("Tempo run")).toHaveLength(2);
+  expect(screen.getAllByText("Tempo run")).toHaveLength(3);
   expect(planner.firstElementChild?.className).toContain("divide-x-0");
 
   fireEvent.click(screen.getByRole("button", { name: "End drag" }));
