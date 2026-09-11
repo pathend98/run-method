@@ -75,13 +75,23 @@ function renderView(
 
 test("renders the weekly grid without modal UI", () => {
   renderView();
-  expect(
-    screen.getByRole("heading", { level: 1, name: "Training Plan" }),
-  ).toBeDefined();
+  const heading = screen.getByRole("heading", {
+    level: 1,
+    name: "Training Plan",
+  });
+  expect(heading.classList).toContain("text-center");
+  expect(heading.classList).toContain("text-2xl");
+  expect(heading.classList).toContain("sm:text-left");
+  expect(heading.classList).toContain("sm:text-4xl");
   const navigation = screen.getByRole("navigation", {
     name: "Week navigation",
   });
   expect(navigation.classList.contains("mb-6")).toBe(true);
+  expect(navigation.classList).toContain("w-full");
+  expect(navigation.classList).toContain(
+    "grid-cols-[2.25rem_minmax(0,1fr)_2.25rem_auto]",
+  );
+  expect(navigation.classList).toContain("sm:flex");
   expect(within(navigation).getByText("17 Aug – 23 Aug")).toBeDefined();
   const summary = screen.getByRole("region", { name: "Weekly summary" });
   expect(summary).toBeDefined();
@@ -92,7 +102,9 @@ test("renders the weekly grid without modal UI", () => {
   ).not.toBe(0);
   expect(screen.getByText("Running distance")).toBeDefined();
   expect(screen.getByText(/5\.0 km (scheduled|planned)/)).toBeDefined();
-  expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
+  const today = screen.getByRole("button", { name: "Today" });
+  expect(today).toHaveProperty("disabled", true);
+  expect(today.classList).toContain("sm:hidden");
   expect(screen.queryByText("Weekly schedule")).toBeNull();
   expect(
     screen.queryByText(
@@ -130,7 +142,10 @@ test("shows Today for a non-current week", () => {
   const onCurrentWeek = vi.fn();
   renderView({ isCurrentWeek: false, onCurrentWeek });
 
-  fireEvent.click(screen.getByRole("button", { name: "Today" }));
+  const today = screen.getByRole("button", { name: "Today" });
+  expect(today).toHaveProperty("disabled", false);
+  expect(today.classList).not.toContain("sm:hidden");
+  fireEvent.click(today);
 
   expect(onCurrentWeek).toHaveBeenCalledOnce();
 });

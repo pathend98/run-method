@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 
 import { SummaryProgress } from "./summary-progress";
 
-test("renders an accessible 6px progress bar at 75 percent width", () => {
+test("renders an accessible responsive 6px progress bar", () => {
   render(
     <SummaryProgress
       completedValue={5}
@@ -16,7 +16,8 @@ test("renders an accessible 6px progress bar at 75 percent width", () => {
   });
   expect(progress.getAttribute("aria-valuenow")).toBe("50");
   expect(progress.classList.contains("h-1.5")).toBe(true);
-  expect(progress.classList.contains("w-[75%]")).toBe(true);
+  expect(progress.classList.contains("w-full")).toBe(true);
+  expect(progress.classList.contains("sm:w-[75%]")).toBe(true);
   expect(progress.firstElementChild?.classList.contains("bg-teal-600")).toBe(
     true,
   );

@@ -39,9 +39,15 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
           ? [`${summary.activities.upcoming} upcoming`]
           : []),
       ].join(" · ");
+  const primaryActivityStatus = summary.isFutureWeek
+    ? `${summary.activities.scheduled} scheduled`
+    : `${summary.activities.completed} completed`;
 
   return (
-    <section aria-label="Weekly summary" className="grid gap-5 sm:grid-cols-3">
+    <section
+      aria-label="Weekly summary"
+      className="grid grid-cols-2 gap-5 sm:grid-cols-3"
+    >
       <SummaryMetric
         completed={formatDistance(summary.completedDistanceMetres)}
         completedValue={summary.completedDistanceMetres}
@@ -80,18 +86,23 @@ export function WeeklySummary({ activities, weekRange }: WeeklySummaryProps) {
             : null
         }
       />
-      <div className="flex flex-col gap-1">
+      <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase">
           Activities
         </h2>
-        <p className="text-2xl font-semibold text-zinc-950">
-          {summary.isFutureWeek
-            ? `${summary.activities.scheduled} scheduled`
-            : `${summary.activities.completed} completed`}
-        </p>
-        {!summary.isFutureWeek && activityStatus ? (
-          <p className="text-sm text-zinc-600">{activityStatus}</p>
-        ) : null}
+        <div className="flex flex-wrap items-baseline gap-1 sm:block">
+          <p className="text-sm font-medium text-zinc-950 sm:text-2xl sm:font-semibold">
+            {primaryActivityStatus}
+          </p>
+          {!summary.isFutureWeek && activityStatus ? (
+            <p className="text-sm text-zinc-600">
+              <span aria-hidden="true" className="mr-1 sm:hidden">
+                ·
+              </span>
+              {activityStatus}
+            </p>
+          ) : null}
+        </div>
       </div>
     </section>
   );
