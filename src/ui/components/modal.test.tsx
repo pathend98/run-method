@@ -148,6 +148,42 @@ test("renders and wires primary, secondary, and footer actions", () => {
   );
 });
 
+test("keeps header controls on one row beside a long wrapping title", () => {
+  render(
+    <Modal
+      dismissLabel="Dismiss long title"
+      onClose={vi.fn()}
+      secondaryHeaderActions={[
+        { label: "Archive", onClick: vi.fn(), variant: "secondary" },
+      ]}
+      title="Averylongtrainingactivitytitlethatmustwrapwithoutmovingtheheadercontrols"
+    >
+      <p>Modal content</p>
+    </Modal>,
+  );
+
+  const title = screen.getByRole("heading", {
+    name: "Averylongtrainingactivitytitlethatmustwrapwithoutmovingtheheadercontrols",
+  });
+  const titleRegion = title.parentElement;
+  const header = titleRegion?.parentElement;
+  const controls = screen.getByRole("button", {
+    name: "Close modal",
+  }).parentElement;
+
+  expect(header?.classList).toContain("grid");
+  expect(header?.classList).toContain("grid-cols-[minmax(0,1fr)_auto]");
+  expect(titleRegion?.classList).toContain("min-w-0");
+  expect(title.classList).toContain("break-words");
+  expect(controls?.classList).toContain("shrink-0");
+  expect(controls?.classList).toContain("flex-nowrap");
+  expect(
+    within(controls as HTMLElement).getByRole("button", {
+      name: "More actions",
+    }),
+  ).toBeDefined();
+});
+
 test("disables every action and dismissal route while busy", () => {
   const onClose = vi.fn();
   const onAction = vi.fn();

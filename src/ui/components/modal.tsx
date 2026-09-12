@@ -142,21 +142,24 @@ export function Modal({
         } sm:rounded-xl sm:p-6 sm:shadow-xl`}
         role="dialog"
       >
-        <div className="sticky top-0 z-20 flex items-start justify-between gap-3 border-b border-zinc-200 bg-white p-4 sm:static sm:z-auto sm:border-b-0 sm:p-0">
-          <div>
+        <div className="sticky top-0 z-20 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-zinc-200 bg-white p-4 sm:static sm:z-auto sm:border-b-0 sm:p-0">
+          <div className="min-w-0">
             {eyebrow ? (
               <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
                 {eyebrow}
               </p>
             ) : null}
-            <h2 className="text-xl font-semibold text-zinc-950" id={titleId}>
+            <h2
+              className="break-words text-xl font-semibold text-zinc-950"
+              id={titleId}
+            >
               {title}
             </h2>
             {subtitle ? (
               <p className="mt-1 text-sm text-zinc-600">{subtitle}</p>
             ) : null}
           </div>
-          <div className="flex flex-wrap items-start gap-2">
+          <div className="flex shrink-0 flex-nowrap items-start gap-2">
             {primaryHeaderActions.map((action) => (
               <div className="hidden sm:block" key={`header-${action.label}`}>
                 {renderAction(action, "header")}
