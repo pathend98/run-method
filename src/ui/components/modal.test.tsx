@@ -16,8 +16,28 @@ test("renders an accessible medium dialog and handles dismissal", () => {
   );
 
   const dialog = screen.getByRole("dialog", { name: "Example modal" });
-  expect(dialog.classList.contains("max-w-xl")).toBe(true);
-  expect(within(dialog).getByText("Modal content")).toBeDefined();
+  const overlay = dialog.parentElement;
+  const content = within(dialog).getByText("Modal content").parentElement;
+  const header =
+    within(dialog).getByRole("heading").parentElement?.parentElement;
+  expect(overlay?.classList).toContain("p-0");
+  expect(overlay?.classList).toContain("sm:p-6");
+  expect(dialog.classList).toContain("fixed");
+  expect(dialog.classList).toContain("inset-0");
+  expect(dialog.classList).toContain("h-dvh");
+  expect(dialog.classList).toContain("w-full");
+  expect(dialog.classList).toContain("max-w-none");
+  expect(dialog.classList).toContain("rounded-none");
+  expect(dialog.classList).toContain("overflow-y-auto");
+  expect(dialog.classList).toContain("sm:relative");
+  expect(dialog.classList).toContain("sm:inset-auto");
+  expect(dialog.classList).toContain("sm:h-auto");
+  expect(dialog.classList).toContain("sm:max-w-xl");
+  expect(dialog.classList).toContain("sm:rounded-xl");
+  expect(header?.classList).toContain("sticky");
+  expect(header?.classList).toContain("top-0");
+  expect(header?.classList).toContain("sm:static");
+  expect(content?.classList).toContain("flex-1");
   expect(
     within(dialog).getByRole("button", { name: "Close modal" }),
   ).toBeDefined();
@@ -34,7 +54,8 @@ test("renders an accessible medium dialog and handles dismissal", () => {
 });
 
 test("renders and wires primary, secondary, and footer actions", () => {
-  const onOpen = vi.fn();
+  const onPrimaryAction = vi.fn();
+  const onSecondaryAction = vi.fn();
   const onClose = vi.fn();
   const onDelete = vi.fn();
   const onSubmit = vi.fn((event: FormEvent) => event.preventDefault());
@@ -63,11 +84,15 @@ test("renders and wires primary, secondary, and footer actions", () => {
         },
       ]}
       primaryHeaderActions={[
-        { label: "Open", onClick: onOpen, variant: "primary" },
-        { label: "Preview", onClick: onOpen, variant: "secondary" },
+        { label: "Open", onClick: onPrimaryAction, variant: "primary" },
+        { label: "Preview", onClick: onPrimaryAction, variant: "secondary" },
       ]}
       secondaryHeaderActions={[
-        { label: "Archive", onClick: onOpen, variant: "secondary" },
+        {
+          label: "Archive",
+          onClick: onSecondaryAction,
+          variant: "secondary",
+        },
       ]}
       onClose={onClose}
       size="large"
@@ -79,25 +104,33 @@ test("renders and wires primary, secondary, and footer actions", () => {
   );
 
   const dialog = screen.getByRole("dialog", { name: "Actions" });
-  expect(dialog.classList.contains("max-w-4xl")).toBe(true);
+  expect(dialog.classList.contains("sm:max-w-4xl")).toBe(true);
   expect(within(dialog).getByText("Activity · Today")).toBeDefined();
   const title = within(dialog).getByRole("heading", { name: "Actions" });
   const subtitle = within(dialog).getByText("Run · Scheduled · Morning");
   expect(title.compareDocumentPosition(subtitle)).toBe(
     Node.DOCUMENT_POSITION_FOLLOWING,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Open" }));
+  expect(
+    screen.getByRole("button", { name: "Open" }).parentElement?.classList,
+  ).toContain("sm:block");
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   const secondaryMenu = screen.getByRole("menu");
   expect(secondaryMenu.classList.contains("flex")).toBe(true);
   expect(secondaryMenu.classList.contains("flex-col")).toBe(true);
   expect(secondaryMenu.classList.contains("gap-2")).toBe(true);
+  const mobilePrimaryAction = screen.getByRole("menuitem", { name: "Open" });
+  expect(mobilePrimaryAction.parentElement?.classList).toContain("sm:hidden");
+  fireEvent.click(mobilePrimaryAction);
+  expect(screen.queryByRole("menu")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
   fireEvent.click(screen.getByRole("button", { name: "Close actions" }));
   fireEvent.click(screen.getByRole("button", { name: "Remove" }));
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  expect(onOpen).toHaveBeenCalledTimes(2);
+  expect(onPrimaryAction).toHaveBeenCalledOnce();
+  expect(onSecondaryAction).toHaveBeenCalledOnce();
   expect(onClose).toHaveBeenCalledOnce();
   expect(onDelete).toHaveBeenCalledOnce();
   expect(screen.getByRole("button", { name: "Delete" })).toHaveProperty(
@@ -105,6 +138,14 @@ test("renders and wires primary, secondary, and footer actions", () => {
     true,
   );
   expect(onSubmit).toHaveBeenCalledOnce();
+
+  const footer = screen.getByRole("button", { name: "Save" }).parentElement;
+  expect(footer?.classList).toContain("sticky");
+  expect(footer?.classList).toContain("bottom-0");
+  expect(footer?.classList).toContain("sm:static");
+  expect(title.compareDocumentPosition(footer as Node)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
 });
 
 test("disables every action and dismissal route while busy", () => {
