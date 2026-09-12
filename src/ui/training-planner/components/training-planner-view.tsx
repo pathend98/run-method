@@ -46,60 +46,60 @@ export function TrainingPlannerView({
       aria-labelledby="training-planner-heading"
       className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8"
     >
-      <div className="flex flex-col gap-2">
-        <h1
-          id="training-planner-heading"
-          className="text-3xl font-semibold text-zinc-950 sm:text-4xl"
-        >
-          Training Plan
-        </h1>
-      </div>
+      <h1
+        id="training-planner-heading"
+        className="text-2xl font-semibold text-zinc-950 sm:text-4xl"
+      >
+        Training Plan
+      </h1>
 
       <div className="flex flex-col">
         <nav
           aria-label="Week navigation"
-          className="mb-6 flex flex-wrap items-center gap-3"
+          className="mb-6 grid w-full grid-cols-[2.25rem_minmax(0,1fr)_2.25rem_auto] items-center gap-2 sm:flex sm:flex-wrap sm:gap-3"
         >
-          <div className="flex items-center">
-            <Button
-              aria-label="Previous week"
-              className="text-lg font-semibold"
-              onClick={onPreviousWeek}
-              size="icon"
-              type="button"
-              variant="tertiary"
-            >
-              ‹
-            </Button>
-            <p
-              aria-live="polite"
-              className="px-3 py-2 text-sm font-medium text-zinc-800"
-            >
-              {formatWeekRange(weekRange)}
-            </p>
-            <Button
-              aria-label="Next week"
-              className="text-lg font-semibold text-zinc-600"
-              onClick={onNextWeek}
-              size="icon"
-              type="button"
-              variant="tertiary"
-            >
-              ›
-            </Button>
-          </div>
-          {!isCurrentWeek ? (
-            <Button onClick={onCurrentWeek} type="button" variant="tertiary">
-              Today
-            </Button>
-          ) : null}
+          <Button
+            aria-label="Previous week"
+            className="text-lg font-semibold"
+            onClick={onPreviousWeek}
+            size="icon"
+            type="button"
+            variant="tertiary"
+          >
+            ‹
+          </Button>
+          <p
+            aria-live="polite"
+            className="px-1 py-2 text-center text-sm font-medium text-zinc-800 sm:px-3"
+          >
+            {formatWeekRange(weekRange)}
+          </p>
+          <Button
+            aria-label="Next week"
+            className="text-lg font-semibold text-zinc-600"
+            onClick={onNextWeek}
+            size="icon"
+            type="button"
+            variant="tertiary"
+          >
+            ›
+          </Button>
+          <Button
+            className={isCurrentWeek ? "sm:hidden" : undefined}
+            disabled={isCurrentWeek}
+            onClick={onCurrentWeek}
+            type="button"
+            variant="tertiary"
+          >
+            Today
+          </Button>
         </nav>
-        <div className="mb-8">
-          <WeeklySummary activities={sessions} weekRange={weekRange} />
-        </div>
-        <div className="mb-8">
-          <PastActivitiesAttentionPanel />
-        </div>
+        <WeeklySummary
+          activities={sessions}
+          className="mb-8"
+          weekRange={weekRange}
+        />
+        <PastActivitiesAttentionPanel className="mb-8" />
         <WeekGrid
           onAddActivity={onAddActivity}
           onMoveActivity={onMoveActivity}

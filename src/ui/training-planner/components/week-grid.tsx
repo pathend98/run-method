@@ -4,6 +4,7 @@ import { DragDropProvider, DragOverlay, PointerSensor } from "@dnd-kit/react";
 import { PointerActivationConstraints, type DragEndEvent } from "@dnd-kit/dom";
 import { useState } from "react";
 import { DayColumn } from "./day-column";
+import { MobileWeekView } from "./mobile-week-view";
 import { TrainingActivityCard } from "./training-activity-card";
 import { format } from "date-fns";
 import type {
@@ -63,51 +64,59 @@ export function WeekGrid({
   }
 
   return (
-    <DragDropProvider
-      onDragEnd={handleDragEnd}
-      onDragStart={({ operation }) => {
-        setActiveActivityId(String(operation.source!.id));
-      }}
-      sensors={[
-        PointerSensor.configure({
-          activationConstraints: [
-            new PointerActivationConstraints.Distance({ value: 8 }),
-          ],
-          preventActivation: (event) => event.pointerType !== "mouse",
-        }),
-      ]}
-    >
-      <div
-        aria-label="Weekly training planner"
-        className="overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50"
-        role="list"
+    <>
+      <MobileWeekView
+        key={week.map((day) => day.date ?? day.day).join("|")}
+        onAddActivity={onAddActivity}
+        onSelectActivity={onSelectActivity}
+        week={week}
+      />
+      <DragDropProvider
+        onDragEnd={handleDragEnd}
+        onDragStart={({ operation }) => {
+          setActiveActivityId(String(operation.source!.id));
+        }}
+        sensors={[
+          PointerSensor.configure({
+            activationConstraints: [
+              new PointerActivationConstraints.Distance({ value: 8 }),
+            ],
+            preventActivation: (event) => event.pointerType !== "mouse",
+          }),
+        ]}
       >
         <div
-          className={`grid min-w-[56rem] grid-cols-7 ${
-            isDragActive ? "divide-x-0" : "divide-x divide-zinc-200"
-          }`}
+          aria-label="Weekly training planner"
+          className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50 min-[1155px]:block"
+          role="list"
         >
-          {week.map((day, index) => (
-            <DayColumn
-              key={day.day}
-              day={day}
-              hasLeadingDay={index > 0}
-              isDragActive={isDragActive}
-              isDragAndDropEnabled
-              isToday={day.date === today}
-              onAddActivity={onAddActivity}
-              onSelectActivity={onSelectActivity}
-            />
-          ))}
-        </div>
-      </div>
-      <DragOverlay dropAnimation={null}>
-        {activeActivity ? (
-          <div aria-hidden="true" className="pointer-events-none w-64" inert>
-            <TrainingActivityCard activity={activeActivity} />
+          <div
+            className={`grid min-w-[56rem] grid-cols-7 ${
+              isDragActive ? "divide-x-0" : "divide-x divide-zinc-200"
+            }`}
+          >
+            {week.map((day, index) => (
+              <DayColumn
+                key={day.day}
+                day={day}
+                hasLeadingDay={index > 0}
+                isDragActive={isDragActive}
+                isDragAndDropEnabled
+                isToday={day.date === today}
+                onAddActivity={onAddActivity}
+                onSelectActivity={onSelectActivity}
+              />
+            ))}
           </div>
-        ) : null}
-      </DragOverlay>
-    </DragDropProvider>
+        </div>
+        <DragOverlay dropAnimation={null}>
+          {activeActivity ? (
+            <div aria-hidden="true" className="pointer-events-none w-64" inert>
+              <TrainingActivityCard activity={activeActivity} />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DragDropProvider>
+    </>
   );
 }

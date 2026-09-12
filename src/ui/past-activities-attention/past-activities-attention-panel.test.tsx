@@ -26,12 +26,12 @@ const session = {
   actualDurationSeconds: null,
 };
 
-function renderPanel() {
+function renderPanel(className?: string) {
   const store = createTrainingPlannerStore();
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <PastActivitiesAttentionPanel />
+        <PastActivitiesAttentionPanel className={className} />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
@@ -49,11 +49,13 @@ test("renders a compact attention panel and fetches past scheduled activities", 
       ]),
   });
   vi.stubGlobal("fetch", fetchMock);
-  const store = renderPanel();
+  const store = renderPanel("mb-8");
 
+  const heading = await screen.findByText("2 activities need your attention.");
+  expect(heading).toBeDefined();
   expect(
-    await screen.findByText("2 activities need your attention."),
-  ).toBeDefined();
+    screen.getByLabelText("Activities requiring attention").classList,
+  ).toContain("mb-8");
   expect(
     screen.getByText("Past activities are waiting to be completed."),
   ).toBeDefined();

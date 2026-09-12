@@ -34,6 +34,7 @@ test("renders current-week completed and activity-status lines", () => {
   render(
     <WeeklySummary
       activities={[activity]}
+      className="mb-8"
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
@@ -44,12 +45,24 @@ test("renders current-week completed and activity-status lines", () => {
   expect(screen.getByText("5.0 km scheduled")).toBeDefined();
   expect(screen.getByText("0m")).toBeDefined();
   const completedActivities = screen.getByText("0 completed");
-  expect(completedActivities.classList.contains("text-2xl")).toBe(true);
-  expect(completedActivities.classList.contains("font-semibold")).toBe(true);
+  expect(completedActivities.classList).toContain("text-sm");
+  expect(completedActivities.classList).toContain("sm:text-2xl");
+  expect(completedActivities.classList).toContain("sm:font-semibold");
   expect(screen.getByText("1 upcoming")).toBeDefined();
   expect(screen.queryByText(/due/)).toBeNull();
   expect(screen.queryByText(/skipped/)).toBeNull();
   expect(screen.getAllByRole("progressbar")).toHaveLength(2);
+  const summary = screen.getByRole("region", { name: "Weekly summary" });
+  expect(summary.classList).toContain("grid-cols-2");
+  expect(summary.classList).toContain("sm:grid-cols-3");
+  expect(summary.classList).toContain("mb-8");
+  const activities = screen.getByRole("heading", {
+    level: 2,
+    name: "Activities",
+  }).parentElement;
+  expect(activities?.classList).toContain("col-span-2");
+  expect(activities?.classList).toContain("sm:col-span-1");
+  expect(screen.getByText("·").classList).toContain("sm:hidden");
 });
 
 test("calculates distance and duration progress from completed actuals", () => {
@@ -151,8 +164,9 @@ test("renders only scheduled values for a future week", () => {
 
   expect(screen.queryByText("0.0 km")).toBeNull();
   const scheduledActivities = screen.getByText("1 scheduled");
-  expect(scheduledActivities.classList.contains("text-2xl")).toBe(true);
-  expect(scheduledActivities.classList.contains("font-semibold")).toBe(true);
+  expect(scheduledActivities.classList).toContain("text-sm");
+  expect(scheduledActivities.classList).toContain("sm:text-2xl");
+  expect(scheduledActivities.classList).toContain("sm:font-semibold");
   expect(
     screen
       .getByRole("progressbar", { name: "Running distance progress" })

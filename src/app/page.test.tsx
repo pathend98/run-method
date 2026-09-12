@@ -28,9 +28,13 @@ test("Home", () => {
   render(<Home />);
 
   expect(screen.getByRole("main")).toBeDefined();
-  expect(
-    screen.getByRole("heading", { level: 1, name: "Training Plan" }),
-  ).toBeDefined();
+  const heading = screen.getByRole("heading", {
+    level: 1,
+    name: "Training Plan",
+  });
+  expect(heading.classList).not.toContain("text-center");
+  expect(heading.classList).toContain("text-2xl");
+  expect(heading.classList).toContain("sm:text-4xl");
   expect(screen.getByText("Loading training planner...")).toBeDefined();
 });
 
