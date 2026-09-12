@@ -50,7 +50,10 @@ export function MobileWeekView({
     .filter((section) => section.activities.length > 0);
 
   return (
-    <section aria-label="Mobile weekly training planner" className="sm:hidden">
+    <section
+      aria-label="Mobile weekly training planner"
+      className="min-[1155px]:hidden"
+    >
       <div
         aria-label="Choose training day"
         className="grid grid-cols-7 border-b border-zinc-200"

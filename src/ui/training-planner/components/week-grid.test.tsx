@@ -151,10 +151,10 @@ test("renders a labelled weekly planner list with day columns", () => {
   const mobilePlanner = screen.getByRole("region", {
     name: "Mobile weekly training planner",
   });
-  expect(mobilePlanner.className).toContain("sm:hidden");
+  expect(mobilePlanner.className).toContain("min-[1155px]:hidden");
   const planner = screen.getByRole("list", { name: "Weekly training planner" });
   expect(planner.className).toContain("hidden");
-  expect(planner.className).toContain("sm:block");
+  expect(planner.className).toContain("min-[1155px]:block");
   expect(planner.className).toContain("overflow-x-auto");
   expect(planner.className).toContain("rounded-lg");
   expect(planner.className).toContain("border");

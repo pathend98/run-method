@@ -87,7 +87,7 @@ export function WeekGrid({
       >
         <div
           aria-label="Weekly training planner"
-          className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50 sm:block"
+          className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50 min-[1155px]:block"
           role="list"
         >
           <div
