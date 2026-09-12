@@ -173,7 +173,7 @@ test("uses the large modal layout", () => {
 
   expect(
     screen.getByRole("dialog", { name: "Add activity" }).classList,
-  ).toContain("max-w-4xl");
+  ).toContain("sm:max-w-4xl");
 });
 
 test("shows its submitting state", async () => {

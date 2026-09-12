@@ -120,7 +120,7 @@ test("shows its submitting state", async () => {
 test("disables saving while an automatic metric edit needs a choice", () => {
   renderEditActivityModal();
   const dialog = screen.getByRole("dialog", { name: "Edit activity" });
-  expect(dialog.classList).toContain("max-w-4xl");
+  expect(dialog.classList).toContain("sm:max-w-4xl");
 
   const pace = screen.getByLabelText("Pace (mm:ss / km) · Auto");
   fireEvent.focus(pace);

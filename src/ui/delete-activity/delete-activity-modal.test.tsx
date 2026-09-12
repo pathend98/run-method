@@ -66,13 +66,16 @@ test("renders nothing when deletion is not active", () => {
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
-test("shows body confirmation actions and returns to details when cancelled", () => {
+test("shows sticky footer confirmation actions and returns to details when cancelled", () => {
   const store = renderModal();
   expect(screen.getByRole("dialog", { name: "Easy run" })).toBeDefined();
   expect(screen.getByText("Delete this activity?")).toBeDefined();
   expect(screen.queryByText(/Delete “Easy run”\?/)).toBeNull();
   expect(screen.getByText("This action cannot be undone.")).toBeDefined();
-  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  const cancel = screen.getByRole("button", { name: "Cancel" });
+  expect(cancel.parentElement?.classList).toContain("sticky");
+  expect(cancel.parentElement?.classList).toContain("bottom-0");
+  fireEvent.click(cancel);
   expect(store.getState().activeModal).toMatchObject({ kind: "details" });
 });
 

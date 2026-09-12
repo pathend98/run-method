@@ -180,15 +180,19 @@ test("ignores non-Escape keys", () => {
   expect(onClose).not.toHaveBeenCalled();
 });
 
-test("renders as an accessible large centered modal", () => {
+test("renders as an accessible full-screen mobile and centered desktop modal", () => {
   renderActivityDetails();
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
   const overlay = modal.parentElement;
   expect(overlay?.classList.contains("items-center")).toBe(true);
   expect(overlay?.classList.contains("justify-center")).toBe(true);
-  expect(modal.classList.contains("max-w-4xl")).toBe(true);
-  expect(modal.classList.contains("max-h-[calc(100dvh-2rem)]")).toBe(true);
-  expect(modal.classList.contains("rounded-xl")).toBe(true);
+  expect(modal.classList.contains("fixed")).toBe(true);
+  expect(modal.classList.contains("inset-0")).toBe(true);
+  expect(modal.classList.contains("h-dvh")).toBe(true);
+  expect(modal.classList.contains("rounded-none")).toBe(true);
+  expect(modal.classList.contains("sm:max-w-4xl")).toBe(true);
+  expect(modal.classList.contains("sm:relative")).toBe(true);
+  expect(modal.classList.contains("sm:rounded-xl")).toBe(true);
   expect(modal.classList.contains("overflow-y-auto")).toBe(true);
   expect(
     within(modal).getByRole("heading", { level: 2, name: "Tempo run" }),
@@ -269,6 +273,7 @@ test("puts complete in the footer and skip in more actions for eligible activiti
   expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull();
   expect(screen.queryByRole("menuitem", { name: "Delete" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+  expect(screen.getByRole("menuitem", { name: "Edit" })).toBeDefined();
   expect(screen.getByRole("menuitem", { name: "Skip" }).classList).toContain(
     "bg-orange-50",
   );

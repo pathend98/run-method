@@ -1,5 +1,4 @@
 import { Modal } from "@/ui/components/modal";
-import { Button } from "@/ui/components/button";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useDeleteTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 
@@ -27,6 +26,18 @@ export function DeleteActivityModal() {
     <Modal
       dismissLabel="Dismiss delete activity"
       closeLabel="Close delete activity"
+      footerActions={[
+        {
+          label: "Cancel",
+          onClick: returnToActivityDetails,
+          variant: "tertiary",
+        },
+        {
+          label: deleteMutation.isPending ? "Deleting…" : "Delete permanently",
+          onClick: () => void deleteActivity(),
+          variant: "destructive",
+        },
+      ]}
       isBusy={deleteMutation.isPending}
       onClose={returnToActivityDetails}
       title={activity.title}
@@ -39,24 +50,6 @@ export function DeleteActivityModal() {
             Unable to delete activity. Please try again.
           </p>
         ) : null}
-        <div className="mt-6 flex justify-end gap-3">
-          <Button
-            disabled={deleteMutation.isPending}
-            onClick={returnToActivityDetails}
-            type="button"
-            variant="tertiary"
-          >
-            Cancel
-          </Button>
-          <Button
-            disabled={deleteMutation.isPending}
-            onClick={() => void deleteActivity()}
-            type="button"
-            variant="destructive"
-          >
-            {deleteMutation.isPending ? "Deleting…" : "Delete permanently"}
-          </Button>
-        </div>
       </div>
     </Modal>
   );
