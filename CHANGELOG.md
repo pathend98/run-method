@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.4](https://github.com/pathend98/run-method/compare/v0.1.3...v0.1.4) (2026-09-13)
+
+### Bug Fixes
+
+- ensure all activity distances are output to 2 dp ([d8c0f34](https://github.com/pathend98/run-method/commit/d8c0f34576f73f0909316faad5849381c3cab282))
+
 ## [0.1.3](https://github.com/pathend98/run-method/compare/v0.1.2...v0.1.3) (2026-09-12)
 
 ### Features
