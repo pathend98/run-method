@@ -34,7 +34,7 @@ const strength = {
 } satisfies StrengthTrainingSession;
 
 test("formats the available locked run targets", () => {
-  expect(formatLockedTargets(run)).toBe("6.0 km · 30m");
+  expect(formatLockedTargets(run)).toBe("6.00 km · 30m");
 });
 
 test("formats strength duration with a missing-target fallback", () => {

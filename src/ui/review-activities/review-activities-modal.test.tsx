@@ -73,9 +73,9 @@ test("lists attention activities by date and opens their action flows", async ()
   ).toBeDefined();
   expect(screen.getByText("2 activities remaining.")).toBeDefined();
   expect(screen.getByText("Mon 31 Aug")).toBeDefined();
-  expect(screen.getByText("12.0 km · 56m")).toBeDefined();
+  expect(screen.getByText("12.00 km · 56m")).toBeDefined();
   expect(screen.getByText("Easy run 2")).toBeDefined();
-  expect(screen.getByText("8.0 km · 41m")).toBeDefined();
+  expect(screen.getByText("8.00 km · 41m")).toBeDefined();
   expect(screen.getAllByText("Mon 31 Aug")).toHaveLength(1);
   const dateGroup = screen.getByText("Mon 31 Aug").closest("section");
   expect(dateGroup?.classList.contains("grid")).toBe(true);

@@ -37,7 +37,7 @@ test("renders a compact activity summary", () => {
 
   expect(card).toBeDefined();
   expect(screen.getByText("Tempo run").className).toContain("line-clamp-2");
-  expect(screen.getByText("6.0 km · 25m 30s")).toBeDefined();
+  expect(screen.getByText("6.00 km · 25m 30s")).toBeDefined();
   expect(screen.getByText("Scheduled")).toBeDefined();
   expect(screen.getByText("Run", { selector: ".sr-only" })).toBeDefined();
   expect(document.querySelector("svg.lucide-sport-shoe")).not.toBeNull();
@@ -89,8 +89,8 @@ test("shows actual run metrics after completion", () => {
     />,
   );
 
-  expect(screen.getByText("6.3 km · 26m 15s")).toBeDefined();
-  expect(screen.queryByText("6.0 km · 25m 30s")).toBeNull();
+  expect(screen.getByText("6.25 km · 26m 15s")).toBeDefined();
+  expect(screen.queryByText("6.00 km · 25m 30s")).toBeNull();
 });
 
 test("shows duration only for strength activities", () => {
@@ -117,8 +117,8 @@ test("omits seconds from durations over one hour", () => {
     />,
   );
 
-  expect(screen.getByText("6.0 km · 1h 4m")).toBeDefined();
-  expect(screen.queryByText("6.0 km · 1h 4m 9s")).toBeNull();
+  expect(screen.getByText("6.00 km · 1h 4m")).toBeDefined();
+  expect(screen.queryByText("6.00 km · 1h 4m 9s")).toBeNull();
 });
 
 test("uses the standard border for an activity card", () => {

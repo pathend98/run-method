@@ -22,7 +22,7 @@ const activity = {
 
 test("shows planned run metrics with a human-readable duration", () => {
   render(<SkippedActivitySummary activity={activity} />);
-  expect(screen.getByText("8.0 km · 40m · 5:00 / km")).toBeDefined();
+  expect(screen.getByText("8.00 km · 40m · 5:00 / km")).toBeDefined();
 });
 
 test("shows strength duration without run metrics", () => {

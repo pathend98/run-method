@@ -35,7 +35,7 @@ test("renders scheduled run targets without recorded actual values", () => {
   expect(
     screen.queryByRole("heading", { name: "Recorded metrics" }),
   ).toBeNull();
-  expect(screen.getByText("6.0 km")).toBeDefined();
+  expect(screen.getByText("6.00 km")).toBeDefined();
   expect(screen.getByText("25m 30s")).toBeDefined();
   expect(screen.getByText("4:15 / km")).toBeDefined();
   expect(screen.queryByText("Target type")).toBeNull();
@@ -93,10 +93,10 @@ test("prioritizes completed run actuals and shows their targets as supporting te
       (term) => term.textContent,
     ),
   ).toEqual(["Actual distance", "Actual pace", "Actual duration"]);
-  expect(within(completedMetrics).getByText("5.9 km")).toBeDefined();
+  expect(within(completedMetrics).getByText("5.90 km")).toBeDefined();
   expect(within(completedMetrics).getByText("4:14 / km")).toBeDefined();
   expect(within(completedMetrics).getByText("25m")).toBeDefined();
-  expect(within(completedMetrics).getByText("Target: 6.0 km")).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 6.00 km")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 4:15 / km")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 25m 30s")).toBeDefined();
 
@@ -159,7 +159,7 @@ test("renders derived pace and no actual metrics", () => {
   );
   const plannedMetrics = screen.getByLabelText("Planned activity metrics");
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
-  expect(screen.getByText("5.0 km")).toBeDefined();
+  expect(screen.getByText("5.00 km")).toBeDefined();
   expect(screen.getByText("30m")).toBeDefined();
   expect(screen.getByText("6:00 / km")).toBeDefined();
   expect(screen.queryByText("Actual distance")).toBeNull();
