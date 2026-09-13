@@ -39,10 +39,10 @@ test("renders current-week completed and activity-status lines", () => {
     />,
   );
 
-  const completedDistance = screen.getByText("0.0 km");
+  const completedDistance = screen.getByText("0.00 km");
   expect(completedDistance.classList.contains("text-2xl")).toBe(true);
   expect(completedDistance.classList.contains("font-semibold")).toBe(true);
-  expect(screen.getByText("5.0 km scheduled")).toBeDefined();
+  expect(screen.getByText("5.00 km scheduled")).toBeDefined();
   expect(screen.getByText("0m")).toBeDefined();
   const completedActivities = screen.getByText("0 completed");
   expect(completedActivities.classList).toContain("text-sm");
@@ -130,8 +130,8 @@ test("shows planned totals and variance for a past week", () => {
     />,
   );
 
-  expect(screen.getByText("86.7 km")).toBeDefined();
-  expect(screen.getByText("85.6 km planned · +1.1 km")).toBeDefined();
+  expect(screen.getByText("86.70 km")).toBeDefined();
+  expect(screen.getByText("85.60 km planned · +1.1 km")).toBeDefined();
   expect(screen.getByText("6h 37m")).toBeDefined();
   expect(screen.getByText("6h 51m planned · −14 min")).toBeDefined();
   expect(

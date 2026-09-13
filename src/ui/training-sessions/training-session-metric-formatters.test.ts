@@ -5,9 +5,9 @@ import {
   formatPace,
 } from "./training-session-metric-formatters";
 
-test("formats distances in kilometres with one decimal place", () => {
-  expect(formatDistance(5900)).toBe("5.9 km");
-  expect(formatDistance(6000)).toBe("6.0 km");
+test("formats distances in kilometres with two decimal places", () => {
+  expect(formatDistance(5900)).toBe("5.90 km");
+  expect(formatDistance(6000)).toBe("6.00 km");
 });
 
 test("formats full durations with relevant human-readable units", () => {

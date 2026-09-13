@@ -1,5 +1,5 @@
 export function formatDistance(metres: number | null) {
-  return metres === null ? null : `${(metres / 1000).toFixed(1)} km`;
+  return metres === null ? null : `${(metres / 1000).toFixed(2)} km`;
 }
 
 export function formatDuration(seconds: number | null) {
