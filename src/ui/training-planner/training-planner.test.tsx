@@ -3,6 +3,7 @@ import {
   render as testingRender,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { format, subDays } from "date-fns";
 
@@ -91,12 +92,12 @@ test("TrainingPlanner renders loaded planner data", async () => {
     </QueryProvider>,
   );
 
-  await waitFor(() => expect(screen.getByText("Easy run")).toBeDefined());
-  expect(
-    screen.getByRole("list", { name: "Weekly training planner" }),
-  ).toBeDefined();
+  const planner = await screen.findByRole("list", {
+    name: "Weekly training planner",
+  });
+  expect(within(planner).getByText("Easy run")).toBeDefined();
   fireEvent.click(
-    screen.getByRole("button", { name: "View Easy run details" }),
+    within(planner).getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Move" }));
@@ -215,9 +216,13 @@ test("TrainingPlanner skips and completes activities through the API", async () 
       <TrainingPlanner />
     </QueryProvider>,
   );
-  await screen.findByRole("button", { name: "View Easy run details" });
+  const firstPlanner = await screen.findByRole("list", {
+    name: "Weekly training planner",
+  });
   fireEvent.click(
-    screen.getByRole("button", { name: "View Easy run details" }),
+    within(firstPlanner).getByRole("button", {
+      name: "View Easy run details",
+    }),
   );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Skip" }));
@@ -241,9 +246,13 @@ test("TrainingPlanner skips and completes activities through the API", async () 
       <TrainingPlanner />
     </QueryProvider>,
   );
-  await screen.findByRole("button", { name: "View Easy run details" });
+  const secondPlanner = await screen.findByRole("list", {
+    name: "Weekly training planner",
+  });
   fireEvent.click(
-    screen.getByRole("button", { name: "View Easy run details" }),
+    within(secondPlanner).getByRole("button", {
+      name: "View Easy run details",
+    }),
   );
   fireEvent.click(screen.getByRole("button", { name: "Complete" }));
   fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
@@ -299,9 +308,11 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
     </QueryProvider>,
   );
 
-  await screen.findByRole("list", { name: "Weekly training planner" });
+  const planner = await screen.findByRole("list", {
+    name: "Weekly training planner",
+  });
   fireEvent.click(
-    screen.getByRole("button", { name: "Add activity to Monday" }),
+    within(planner).getByRole("button", { name: "Add activity to Monday" }),
   );
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Easy run" },
@@ -377,9 +388,12 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
       <TrainingPlanner />
     </QueryProvider>,
   );
-  await screen.findByText("Easy run");
+  const planner = await screen.findByRole("list", {
+    name: "Weekly training planner",
+  });
+  await within(planner).findByText("Easy run");
   fireEvent.click(
-    screen.getByRole("button", { name: "View Easy run details" }),
+    within(planner).getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "Edit" }));
   fireEvent.change(screen.getByLabelText("Title"), {
@@ -402,7 +416,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     ).toHaveLength(4),
   );
   expect(
-    await screen.findByRole("button", {
+    await within(planner).findByRole("button", {
       name: "View Updated easy run details",
     }),
   ).toBeDefined();
@@ -446,9 +460,12 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
       <TrainingPlanner />
     </QueryProvider>,
   );
-  await screen.findByText("Easy run");
+  const planner = await screen.findByRole("list", {
+    name: "Weekly training planner",
+  });
+  await within(planner).findByText("Easy run");
   fireEvent.click(
-    screen.getByRole("button", { name: "View Easy run details" }),
+    within(planner).getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));

@@ -3,9 +3,6 @@ name: Release
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 concurrency:
   group: release-main
   cancel-in-progress: false
@@ -15,6 +12,10 @@ jobs:
     name: Release
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.release-tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -35,3 +36,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - run: pnpm release
+      - name: Capture release tag
+        id: release-tag
+        run: echo "tag=$(git describe --tags --exact-match HEAD)" >> "$GITHUB_OUTPUT"
+
+  publish-container:
+    name: Publish container
+    needs: release
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-container.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
