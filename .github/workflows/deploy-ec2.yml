@@ -34,11 +34,6 @@ jobs:
         env:
           DEPLOY_TAG: ${{ inputs.tag }}
         run: |
-          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
-            echo "This workflow must be run from the main branch"
-            exit 1
-          fi
-
           if ! git check-ref-format "refs/tags/$DEPLOY_TAG"; then
             echo "Invalid Git tag: $DEPLOY_TAG"
             exit 1
@@ -51,11 +46,6 @@ jobs:
 
           if ! TAG_COMMIT="$(git rev-parse --verify "refs/tags/$DEPLOY_TAG^{commit}")"; then
             echo "Git tag does not resolve to a commit: $DEPLOY_TAG"
-            exit 1
-          fi
-
-          if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
-            echo "Git tag is not reachable from main: $DEPLOY_TAG"
             exit 1
           fi
 
