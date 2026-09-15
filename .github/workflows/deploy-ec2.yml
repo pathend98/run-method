@@ -62,8 +62,8 @@ jobs:
             aws ec2 describe-instances \
               --region "$AWS_REGION" \
               --filters \
-                "Name=tag:Application,Values=run-method" \
-                "Name=tag:Environment,Values=production" \
+                "Name=tag:application,Values=run-method" \
+                "Name=tag:environment,Values=production" \
                 "Name=instance-state-name,Values=running" \
               --query 'Reservations[].Instances[].InstanceId' \
               --output json
