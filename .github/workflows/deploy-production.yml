@@ -1,0 +1,174 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Git tag from main to deploy
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-2
+
+jobs:
+  deploy:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate deployment tag
+        shell: bash
+        env:
+          DEPLOY_TAG: ${{ inputs.tag }}
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "This workflow must be run from the main branch"
+            exit 1
+          fi
+
+          if ! git check-ref-format "refs/tags/$DEPLOY_TAG"; then
+            echo "Invalid Git tag: $DEPLOY_TAG"
+            exit 1
+          fi
+
+          if ! git show-ref --verify --quiet "refs/tags/$DEPLOY_TAG"; then
+            echo "Git tag does not exist: $DEPLOY_TAG"
+            exit 1
+          fi
+
+          if ! TAG_COMMIT="$(git rev-parse --verify "refs/tags/$DEPLOY_TAG^{commit}")"; then
+            echo "Git tag does not resolve to a commit: $DEPLOY_TAG"
+            exit 1
+          fi
+
+          if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+            echo "Git tag is not reachable from main: $DEPLOY_TAG"
+            exit 1
+          fi
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::824892928715:role/run-method-github-ecr-publisher
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Find production EC2 instance
+        id: ec2
+        shell: bash
+        run: |
+          INSTANCE_IDS="$(
+            aws ec2 describe-instances \
+              --region "$AWS_REGION" \
+              --filters \
+                "Name=tag:Application,Values=run-method" \
+                "Name=tag:Environment,Values=production" \
+                "Name=instance-state-name,Values=running" \
+              --query 'Reservations[].Instances[].InstanceId' \
+              --output json
+          )"
+
+          INSTANCE_COUNT="$(jq 'length' <<< "$INSTANCE_IDS")"
+          if [[ "$INSTANCE_COUNT" -ne 1 ]]; then
+            echo "Expected exactly one running production EC2 instance, found $INSTANCE_COUNT"
+            exit 1
+          fi
+
+          echo "instance_id=$(jq -r '.[0]' <<< "$INSTANCE_IDS")" >> "$GITHUB_OUTPUT"
+
+      - name: Start production deployment
+        id: deploy
+        shell: bash
+        env:
+          DEPLOY_TAG: ${{ inputs.tag }}
+          INSTANCE_ID: ${{ steps.ec2.outputs.instance_id }}
+        run: |
+          printf -v QUOTED_TAG '%q' "$DEPLOY_TAG"
+          PARAMETERS="$(
+            jq -cn \
+              --arg command "/opt/run-method/deploy.sh $QUOTED_TAG" \
+              '{commands: [$command]}'
+          )"
+
+          COMMAND_ID="$(
+            aws ssm send-command \
+              --region "$AWS_REGION" \
+              --instance-ids "$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --comment "Deploy $DEPLOY_TAG" \
+              --parameters "$PARAMETERS" \
+              --query 'Command.CommandId' \
+              --output text
+          )"
+
+          if [[ -z "$COMMAND_ID" || "$COMMAND_ID" == "None" ]]; then
+            echo "AWS Systems Manager did not return a command ID"
+            exit 1
+          fi
+
+          echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for production deployment
+        shell: bash
+        env:
+          COMMAND_ID: ${{ steps.deploy.outputs.command_id }}
+          INSTANCE_ID: ${{ steps.ec2.outputs.instance_id }}
+        run: |
+          while true; do
+            set +e
+            INVOCATION="$(
+              aws ssm get-command-invocation \
+                --region "$AWS_REGION" \
+                --command-id "$COMMAND_ID" \
+                --instance-id "$INSTANCE_ID" \
+                --output json 2>&1
+            )"
+            GET_INVOCATION_EXIT_CODE=$?
+            set -e
+
+            if [[ "$GET_INVOCATION_EXIT_CODE" -ne 0 ]]; then
+              if grep -q "InvocationDoesNotExist" <<< "$INVOCATION"; then
+                sleep 5
+                continue
+              fi
+
+              echo "$INVOCATION" >&2
+              exit "$GET_INVOCATION_EXIT_CODE"
+            fi
+
+            STATUS="$(jq -r '.Status' <<< "$INVOCATION")"
+            case "$STATUS" in
+              Pending|InProgress|Delayed|Cancelling)
+                echo "Deployment status: $STATUS"
+                sleep 5
+                ;;
+              *)
+                break
+                ;;
+            esac
+          done
+
+          echo "Deployment status: $STATUS"
+          echo "Standard output:"
+          jq -r '.StandardOutputContent // ""' <<< "$INVOCATION"
+
+          STANDARD_ERROR="$(jq -r '.StandardErrorContent // ""' <<< "$INVOCATION")"
+          if [[ -n "$STANDARD_ERROR" ]]; then
+            echo "Standard error:" >&2
+            echo "$STANDARD_ERROR" >&2
+          fi
+
+          if [[ "$STATUS" != "Success" ]]; then
+            exit 1
+          fi
