@@ -14,3 +14,7 @@ data "aws_instance" "run_method" {
     values = ["running"]
   }
 }
+
+data "aws_subnet" "run_method" {
+  id = data.aws_instance.run_method.subnet_id
+}

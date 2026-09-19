@@ -37,3 +37,23 @@ import {
   to = aws_iam_role_policy.parameter_store
   id = "run-method-ec2-role:run-method-parameter-store"
 }
+
+import {
+  to = aws_security_group.run_method_web
+  id = "sg-0715aa4d24bbbafe9"
+}
+
+import {
+  to = aws_vpc_security_group_ingress_rule.http
+  id = "sgr-04d2ea3fd7acb6212"
+}
+
+import {
+  to = aws_vpc_security_group_ingress_rule.https
+  id = "sgr-0a22f6564216de23b"
+}
+
+import {
+  to = aws_vpc_security_group_egress_rule.all_ipv4
+  id = "sgr-088ef648ae948f05a"
+}
