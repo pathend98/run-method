@@ -16,6 +16,6 @@ resource "aws_cloudwatch_metric_alarm" "ec2_cpu_high" {
   treat_missing_data = "missing"
 
   dimensions = {
-    InstanceId = data.aws_instance.run_method.id
+    InstanceId = aws_instance.run_method.id
   }
 }

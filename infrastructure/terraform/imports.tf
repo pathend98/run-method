@@ -57,3 +57,28 @@ import {
   to = aws_vpc_security_group_egress_rule.all_ipv4
   id = "sgr-088ef648ae948f05a"
 }
+
+import {
+  to = aws_instance.run_method
+  id = "i-024e478d1d60e6f59"
+}
+
+import {
+  to = aws_security_group.ec2_rds_1
+  id = "sg-02b8bbb2e052afa7b"
+}
+
+import {
+  to = aws_vpc_security_group_egress_rule.outbound_postgres
+  id = "sgr-0bc12afc39e5eafe9"
+}
+
+import {
+  to = aws_security_group.rds_ec2_1
+  id = "sg-0922d67de591b905c"
+}
+
+import {
+  to = aws_vpc_security_group_ingress_rule.inbound_postgres
+  id = "sgr-0e0f299f8b04151c1"
+}
