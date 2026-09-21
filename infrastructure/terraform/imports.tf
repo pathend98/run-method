@@ -117,3 +117,23 @@ import {
   to = aws_db_subnet_group.run_method
   id = "default-vpc-003d44dc9f8bea6d7"
 }
+
+import {
+  to = aws_iam_openid_connect_provider.github
+  id = "arn:aws:iam::824892928715:oidc-provider/token.actions.githubusercontent.com"
+}
+
+import {
+  to = aws_iam_role.github_deploy
+  id = "run-method-github-ecr-publisher"
+}
+
+import {
+  to = aws_iam_role_policy.github_ecr_publish
+  id = "run-method-github-ecr-publisher:Policy"
+}
+
+import {
+  to = aws_iam_role_policy.github_deploy
+  id = "run-method-github-ecr-publisher:run-method-github-deploy"
+}
