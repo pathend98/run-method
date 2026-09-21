@@ -112,18 +112,3 @@ import {
   to = aws_db_instance.run_method
   id = "run-method"
 }
-
-import {
-  to = aws_security_group.run_method_dbs
-  id = "sg-049ed9099ca6bc85b"
-}
-
-import {
-  to = aws_vpc_security_group_ingress_rule.run_method_dbs_inbound
-  id = "sgr-0cae3cd99d6fc4662"
-}
-
-import {
-  to = aws_vpc_security_group_egress_rule.run_method_dbs_outbound
-  id = "sgr-07712349d6cb9fb43"
-}

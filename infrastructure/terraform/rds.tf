@@ -33,29 +33,6 @@ resource "aws_vpc_security_group_egress_rule" "outbound_postgres" {
   referenced_security_group_id = aws_security_group.rds_ec2_1.id
 }
 
-resource "aws_security_group" "run_method_dbs" {
-  name        = "run-method-dbs"
-  description = "Created by RDS management console"
-
-  vpc_id = data.aws_subnet.run_method.vpc_id
-}
-
-resource "aws_vpc_security_group_ingress_rule" "run_method_dbs_inbound" {
-  security_group_id = aws_security_group.run_method_dbs.id
-
-  ip_protocol = "tcp"
-  from_port   = 5432
-  to_port     = 5432
-  cidr_ipv4   = "172.26.15.231/32"
-}
-
-resource "aws_vpc_security_group_egress_rule" "run_method_dbs_outbound" {
-  security_group_id = aws_security_group.run_method_dbs.id
-
-  cidr_ipv4   = "0.0.0.0/0"
-  ip_protocol = "-1"
-}
-
 resource "aws_db_instance" "run_method" {
   identifier = "run-method"
 
@@ -76,7 +53,6 @@ resource "aws_db_instance" "run_method" {
 
   vpc_security_group_ids = [
     aws_security_group.rds_ec2_1.id,
-    aws_security_group.run_method_dbs.id
   ]
 
   apply_immediately = false
