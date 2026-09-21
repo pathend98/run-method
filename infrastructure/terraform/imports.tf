@@ -92,3 +92,18 @@ import {
   to = aws_eip_association.run_method
   id = "eipassoc-0a1f07dae179e31c0"
 }
+
+import {
+  to = aws_route53_zone.run_method
+  id = "Z04068601LAGCE1S82L60"
+}
+
+import {
+  to = aws_route53_record.run_method
+  id = "Z04068601LAGCE1S82L60_runmethodtraining.com_A"
+}
+
+import {
+  to = aws_route53_record.run_method_www
+  id = "Z04068601LAGCE1S82L60_www.runmethodtraining.com_CNAME"
+}
