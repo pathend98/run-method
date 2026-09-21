@@ -82,3 +82,13 @@ import {
   to = aws_vpc_security_group_ingress_rule.inbound_postgres
   id = "sgr-0e0f299f8b04151c1"
 }
+
+import {
+  to = aws_eip.run_method
+  id = "eipalloc-04a038a74108d7922"
+}
+
+import {
+  to = aws_eip_association.run_method
+  id = "eipassoc-0a1f07dae179e31c0"
+}
