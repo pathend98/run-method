@@ -2,7 +2,7 @@ resource "aws_security_group" "rds_ec2_1" {
   name        = "rds-ec2-1"
   description = "Security group attached to run-method to allow EC2 instances with specific security groups attached to connect to the database. Modification could lead to connection loss."
 
-  vpc_id = data.aws_subnet.run_method.vpc_id
+  vpc_id = data.aws_subnet.default_vpc_2a.vpc_id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "inbound_postgres" {
@@ -19,7 +19,7 @@ resource "aws_security_group" "ec2_rds_1" {
   name        = "ec2-rds-1"
   description = "Security group attached to instances to securely connect to run-method. Modification could lead to connection loss."
 
-  vpc_id = data.aws_subnet.run_method.vpc_id
+  vpc_id = data.aws_subnet.default_vpc_2a.vpc_id
 }
 
 resource "aws_vpc_security_group_egress_rule" "outbound_postgres" {
@@ -31,6 +31,18 @@ resource "aws_vpc_security_group_egress_rule" "outbound_postgres" {
   to_port     = 5432
 
   referenced_security_group_id = aws_security_group.rds_ec2_1.id
+}
+
+resource "aws_db_subnet_group" "run_method" {
+  name        = "default-vpc-003d44dc9f8bea6d7"
+  description = "Subnet group for run-method RDS"
+
+  subnet_ids = [
+    data.aws_subnet.default_vpc_2a.id,
+    data.aws_subnet.default_vpc_2b.id,
+    data.aws_subnet.default_vpc_2c.id,
+    data.aws_subnet.default_vpc_2d.id
+  ]
 }
 
 resource "aws_db_instance" "run_method" {
@@ -49,7 +61,7 @@ resource "aws_db_instance" "run_method" {
   username = "postgres"
   port     = 5432
 
-  db_subnet_group_name = "default-vpc-003d44dc9f8bea6d7"
+  db_subnet_group_name = aws_db_subnet_group.run_method.name
 
   vpc_security_group_ids = [
     aws_security_group.rds_ec2_1.id,

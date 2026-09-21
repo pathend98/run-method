@@ -112,3 +112,8 @@ import {
   to = aws_db_instance.run_method
   id = "run-method"
 }
+
+import {
+  to = aws_db_subnet_group.run_method
+  id = "default-vpc-003d44dc9f8bea6d7"
+}

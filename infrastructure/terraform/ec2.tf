@@ -2,7 +2,7 @@ resource "aws_instance" "run_method" {
   ami           = "ami-0224ce6f9504665ee"
   instance_type = "t3.small"
 
-  subnet_id = data.aws_subnet.run_method.id
+  subnet_id = data.aws_subnet.default_vpc_2a.id
 
   vpc_security_group_ids = [
     aws_security_group.run_method_web.id,

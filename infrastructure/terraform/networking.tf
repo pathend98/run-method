@@ -2,7 +2,7 @@ resource "aws_security_group" "run_method_web" {
   name        = "run-method-web"
   description = "Run method security group."
 
-  vpc_id = data.aws_subnet.run_method.vpc_id
+  vpc_id = data.aws_subnet.default_vpc_2a.vpc_id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "http" {
