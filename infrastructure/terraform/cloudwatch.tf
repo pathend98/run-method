@@ -85,8 +85,8 @@ resource "aws_cloudwatch_metric_alarm" "rds_freeable_memory_low" {
   period              = 60
   evaluation_periods  = 5
   datapoints_to_alarm = 5
-  # 180 MiB
-  threshold = 180 * 1024 * 1024
+  # 100 MiB
+  threshold = 100 * 1024 * 1024
 
   treat_missing_data = "missing"
 
@@ -275,4 +275,24 @@ resource "aws_cloudwatch_metric_alarm" "ec2_root_disk_high" {
   alarm_actions = [
     aws_sns_topic.run_method_alerts.arn
   ]
+}
+
+resource "aws_cloudwatch_log_group" "app" {
+  name              = "/run-method/prod/app"
+  retention_in_days = 3
+
+  tags = {
+    application = "run-method"
+    environment = "production"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "nginx_error" {
+  name              = "/run-method/prod/nginx-error"
+  retention_in_days = 3
+
+  tags = {
+    application = "run-method"
+    environment = "production"
+  }
 }

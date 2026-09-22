@@ -32,6 +32,20 @@ resource "aws_ssm_parameter" "cloudwatch_agent_config" {
         }
       }
     }
+
+    logs = {
+      logs_collected = {
+        files = {
+          collect_list = [
+            {
+              file_path       = "/var/log/nginx/error.log"
+              log_group_name  = aws_cloudwatch_log_group.nginx_error.name
+              log_stream_name = "{instance_id}"
+            }
+          ]
+        }
+      }
+    }
   })
 
   tags = {
