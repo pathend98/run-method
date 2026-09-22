@@ -67,6 +67,10 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage_low" {
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.run_method.identifier
   }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_freeable_memory_low" {
@@ -89,4 +93,62 @@ resource "aws_cloudwatch_metric_alarm" "rds_freeable_memory_low" {
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.run_method.identifier
   }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
+  alarm_name        = "run-method-rds-cpu-high"
+  alarm_description = "Run Method RDS CPU utilisation is high"
+
+  namespace   = "AWS/RDS"
+  metric_name = "CPUUtilization"
+
+  statistic           = "Average"
+  comparison_operator = "GreaterThanThreshold"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 5
+  threshold           = 90
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.run_method.identifier
+  }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
+}
+
+locals {
+  rds_max_connections = 87
+}
+
+resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
+  alarm_name        = "run-method-rds-connections-high"
+  alarm_description = "Run Method RDS database connections are approaching the configured maximum"
+
+  namespace   = "AWS/RDS"
+  metric_name = "DatabaseConnections"
+
+  statistic           = "Average"
+  comparison_operator = "GreaterThanThreshold"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 5
+  threshold           = floor(local.rds_max_connections * 0.8)
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.run_method.identifier
+  }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
 }
