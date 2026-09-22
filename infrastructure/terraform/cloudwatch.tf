@@ -68,3 +68,25 @@ resource "aws_cloudwatch_metric_alarm" "rds_free_storage_low" {
     DBInstanceIdentifier = aws_db_instance.run_method.identifier
   }
 }
+
+resource "aws_cloudwatch_metric_alarm" "rds_freeable_memory_low" {
+  alarm_name        = "run-method-rds-freeable-memory-low"
+  alarm_description = "Run Method RDS freeable memory is low"
+
+  namespace   = "AWS/RDS"
+  metric_name = "FreeableMemory"
+
+  statistic           = "Minimum"
+  comparison_operator = "LessThanThreshold"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 5
+  # 180 MiB
+  threshold = 180 * 1024 * 1024
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.run_method.identifier
+  }
+}
