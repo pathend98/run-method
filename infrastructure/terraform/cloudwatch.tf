@@ -223,3 +223,56 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_surplus_credits_charged" {
     aws_sns_topic.run_method_alerts.arn
   ]
 }
+
+resource "aws_cloudwatch_metric_alarm" "ec2_memory_high" {
+  alarm_name        = "run-method-ec2-memory-high"
+  alarm_description = "Run Method EC2 memory utilisation is high"
+
+  namespace   = "CWAgent"
+  metric_name = "mem_used_percent"
+
+  statistic           = "Average"
+  comparison_operator = "GreaterThanThreshold"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 5
+  threshold           = 80
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    InstanceId = aws_instance.run_method.id
+  }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "ec2_root_disk_high" {
+  alarm_name        = "run-method-ec2-root-disk-high"
+  alarm_description = "Run Method EC2 root filesystem utilisation is high"
+
+  namespace   = "CWAgent"
+  metric_name = "disk_used_percent"
+
+  statistic           = "Average"
+  comparison_operator = "GreaterThanThreshold"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 5
+  threshold           = 80
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    InstanceId = aws_instance.run_method.id
+    path       = "/"
+    device     = "nvme0n1p1"
+    fstype     = "ext4"
+  }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
+}
