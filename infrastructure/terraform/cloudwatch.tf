@@ -198,3 +198,28 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_in_surplus_credit_balance" {
     aws_sns_topic.run_method_alerts.arn
   ]
 }
+
+resource "aws_cloudwatch_metric_alarm" "rds_cpu_surplus_credits_charged" {
+  alarm_name        = "run-method-rds-cpu-surplus-credit-charged"
+  alarm_description = "Run Method RDS has exhausted its earned CPU credits and surplus CPU is being charged."
+
+  namespace   = "AWS/RDS"
+  metric_name = "CPUSurplusCreditsCharged"
+
+  statistic           = "Sum"
+  comparison_operator = "GreaterThanThreshold"
+  period              = 300
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  threshold           = 0
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.run_method.identifier
+  }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
+}
