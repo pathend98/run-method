@@ -4,7 +4,7 @@ export async function register() {
   }
 
   const { readDatabaseEnv } = await import("./server/env/database-env");
-  const { OidcEnvironmentReader } = await import("./server/env/oidc-env");
+  const { readOidcEnv } = await import("./server/env/oidc-env");
   readDatabaseEnv();
-  new OidcEnvironmentReader().read();
+  readOidcEnv();
 }

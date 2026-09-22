@@ -2,18 +2,18 @@ import { createHash, randomBytes } from "node:crypto";
 
 import type { OidcEnvironment } from "../env/oidc-env";
 
-interface OidcTransaction {
+type OidcTransaction = {
   codeVerifier: string;
   state: string;
   nonce: string;
-}
+};
 
-export interface OidcLogin {
+export type OidcLogin = {
   authorizationUrl: URL;
   transaction: string;
   callbackPath: string;
   secureCookie: boolean;
-}
+};
 
 export interface OidcLoginService {
   createLogin(): OidcLogin;

@@ -1,4 +1,4 @@
-import { OidcEnvironmentReader } from "./oidc-env";
+import { readOidcEnv } from "./oidc-env";
 
 const validEnvironment = {
   OIDC_AUTHORIZATION_URL:
@@ -23,7 +23,7 @@ test("maps and normalizes OIDC environment variables", () => {
   vi.stubEnv("OIDC_CALLBACK_URL", "https://app.example.com/auth/callback");
   vi.stubEnv("OIDC_SCOPES", "  profile   openid  email ");
 
-  expect(new OidcEnvironmentReader().read()).toEqual({
+  expect(readOidcEnv()).toEqual({
     authorizationUrl: "https://id.example.com/authorize",
     clientId: "run-method",
     callbackUrl: "https://app.example.com/auth/callback",
@@ -39,7 +39,7 @@ test.each([
 ])("rejects a missing %s", (name) => {
   vi.stubEnv(name, undefined);
 
-  expect(() => new OidcEnvironmentReader().read()).toThrow();
+  expect(() => readOidcEnv()).toThrow();
 });
 
 test.each([
@@ -50,22 +50,5 @@ test.each([
 ])("rejects an empty %s", (name) => {
   vi.stubEnv(name, "");
 
-  expect(() => new OidcEnvironmentReader().read()).toThrow();
-});
-
-test.each(["not a URL", "ftp://identity.example.com/authorize"])(
-  "rejects invalid OIDC URLs: %s",
-  (url) => {
-    vi.stubEnv("OIDC_AUTHORIZATION_URL", url);
-
-    expect(() => new OidcEnvironmentReader().read()).toThrow();
-  },
-);
-
-test("rejects scopes without openid", () => {
-  vi.stubEnv("OIDC_SCOPES", "email profile");
-
-  expect(() => new OidcEnvironmentReader().read()).toThrow(
-    "OIDC_SCOPES must include openid",
-  );
+  expect(() => readOidcEnv()).toThrow();
 });

@@ -3,7 +3,7 @@ import { Pool } from "pg";
 
 import { readDatabaseEnv } from "./env/database-env";
 import { readDatabaseTlsOptions } from "./env/database-tls";
-import { OidcEnvironmentReader } from "./env/oidc-env";
+import { readOidcEnv } from "./env/oidc-env";
 import {
   DefaultOidcLoginService,
   type OidcLoginService,
@@ -25,7 +25,7 @@ export function getOidcLoginService(): OidcLoginService {
     return oidcLoginService;
   }
 
-  const environment = new OidcEnvironmentReader().read();
+  const environment = readOidcEnv();
   oidcLoginService = new DefaultOidcLoginService(environment);
 
   return oidcLoginService;
