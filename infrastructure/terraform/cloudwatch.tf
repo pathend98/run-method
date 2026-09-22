@@ -124,10 +124,6 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
   ]
 }
 
-locals {
-  rds_max_connections = 87
-}
-
 resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
   alarm_name        = "run-method-rds-connections-high"
   alarm_description = "Run Method RDS database connections are approaching the configured maximum"
@@ -141,6 +137,56 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
   evaluation_periods  = 5
   datapoints_to_alarm = 5
   threshold           = floor(local.rds_max_connections * 0.8)
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.run_method.identifier
+  }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "rds_cpu_credit_balance_low" {
+  alarm_name        = "run-method-rds-cpu-credit-balance-low"
+  alarm_description = "Run Method RDS CPU credit balance is low"
+
+  namespace   = "AWS/RDS"
+  metric_name = "CPUCreditBalance"
+
+  statistic           = "Average"
+  comparison_operator = "LessThanThreshold"
+  period              = 300
+  evaluation_periods  = 3
+  datapoints_to_alarm = 3
+  threshold           = 24
+
+  treat_missing_data = "missing"
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.run_method.identifier
+  }
+
+  alarm_actions = [
+    aws_sns_topic.run_method_alerts.arn
+  ]
+}
+
+resource "aws_cloudwatch_metric_alarm" "rds_cpu_in_surplus_credit_balance" {
+  alarm_name        = "run-method-rds-cpu-in-surplus-credit-balance"
+  alarm_description = "Run Method RDS has exhausted its earned CPU credits and is operating with surplus CPU capacity"
+
+  namespace   = "AWS/RDS"
+  metric_name = "CPUSurplusCreditBalance"
+
+  statistic           = "Maximum"
+  comparison_operator = "GreaterThanThreshold"
+  period              = 300
+  evaluation_periods  = 3
+  datapoints_to_alarm = 3
+  threshold           = 0
 
   treat_missing_data = "missing"
 
