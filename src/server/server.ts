@@ -3,6 +3,11 @@ import { Pool } from "pg";
 
 import { readDatabaseEnv } from "./env/database-env";
 import { readDatabaseTlsOptions } from "./env/database-tls";
+import { OidcEnvironmentReader } from "./env/oidc-env";
+import {
+  DefaultOidcLoginService,
+  type OidcLoginService,
+} from "./authentication/oidc-login-service";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
 import { DefaultTrainingSessionsRequestValidator } from "./training-sessions/training-sessions-request-validator";
 import { DefaultTrainingSessionsService } from "./training-sessions/training-sessions-service";
@@ -13,6 +18,18 @@ export const trainingSessionsRequestValidator =
   new DefaultTrainingSessionsRequestValidator();
 
 let trainingSessionsService: DefaultTrainingSessionsService | undefined;
+let oidcLoginService: OidcLoginService | undefined;
+
+export function getOidcLoginService(): OidcLoginService {
+  if (oidcLoginService) {
+    return oidcLoginService;
+  }
+
+  const environment = new OidcEnvironmentReader().read();
+  oidcLoginService = new DefaultOidcLoginService(environment);
+
+  return oidcLoginService;
+}
 
 export function getTrainingSessionsService(): DefaultTrainingSessionsService {
   if (trainingSessionsService) {

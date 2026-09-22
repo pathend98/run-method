@@ -105,6 +105,13 @@ The Keycloak development store lives only in the container. Remove the container
 with `docker compose rm -sf keycloak` to reset it and re-import the seed realm on
 the next `pnpm auth:up`.
 
+The application reads `OIDC_AUTHORIZATION_URL`, `OIDC_CLIENT_ID`,
+`OIDC_CALLBACK_URL`, and `OIDC_SCOPES` when the server starts. The development
+values in `.env.example` target the imported Keycloak realm. Visiting `/login`
+starts an Authorization Code flow with S256 PKCE and redirects to Keycloak. The
+callback URL is configuration only for now; callback handling is not yet
+implemented.
+
 ## Docker
 
 Build the production image:
@@ -118,6 +125,10 @@ Run the production image:
 ```bash
 docker run --rm -p 3000:3000 \
   -e DATABASE_URL='postgres://run_method:run_method@host.docker.internal:5432/run_method' \
+  -e OIDC_AUTHORIZATION_URL='https://identity.example.com/authorize' \
+  -e OIDC_CLIENT_ID='run-method' \
+  -e OIDC_CALLBACK_URL='https://app.example.com/auth/callback' \
+  -e OIDC_SCOPES='openid email profile' \
   run-method
 ```
 
@@ -129,9 +140,10 @@ docker run --rm \
   run-method node migrate.js
 ```
 
-`DATABASE_URL` is a runtime-only server secret. Do not pass it to `docker build`
-or use a `NEXT_PUBLIC_` variable. Supply it through your deployment platform, an
-environment file, or `docker run -e`; the container validates it during startup.
+`DATABASE_URL` and the `OIDC_*` settings are runtime-only server configuration.
+Do not pass them to `docker build` or use `NEXT_PUBLIC_` variables. Supply them
+through your deployment platform, an environment file, or `docker run -e`; the
+container validates them during startup.
 
 For TLS-enabled RDS, set `DATABASE_CA_PATH` to the path of the AWS RDS PEM CA
 bundle. Mount that file into the container so it is readable by the `nextjs`
