@@ -137,3 +137,8 @@ import {
   to = aws_iam_role_policy.github_deploy
   id = "run-method-github-ecr-publisher:run-method-github-deploy"
 }
+
+import {
+  to = aws_cloudwatch_metric_alarm.ec2_status_check_failed
+  id = "run-method-ec2-status-check-failed-alarm"
+}
