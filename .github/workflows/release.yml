@@ -45,7 +45,7 @@ jobs:
     needs: release
     permissions:
       contents: read
-      packages: write
+      id-token: write
     uses: ./.github/workflows/publish-container.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
