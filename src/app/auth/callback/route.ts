@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
         transactionCookieValue,
       });
 
-    response = NextResponse.redirect(new URL("/", request.url));
+    response = new NextResponse(null, {
+      status: 307,
+      headers: { location: "/" },
+    });
     response.cookies.set(
       OIDC_TOKEN_COOKIE_NAME,
       tokenCookieValue,
