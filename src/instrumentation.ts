@@ -3,6 +3,10 @@ export async function register() {
     return;
   }
 
-  const { readDatabaseEnv } = await import("./server/env/database-env");
+  const [{ readAuthenticationEnv }, { readDatabaseEnv }] = await Promise.all([
+    import("./server/env/authentication-env"),
+    import("./server/env/database-env"),
+  ]);
+  readAuthenticationEnv();
   readDatabaseEnv();
 }

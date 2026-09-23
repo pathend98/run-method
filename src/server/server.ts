@@ -1,6 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
+import { DefaultAuthenticationService } from "./authentication/authentication-service";
+import { readAuthenticationEnv } from "./env/authentication-env";
 import { readDatabaseEnv } from "./env/database-env";
 import { readDatabaseTlsOptions } from "./env/database-tls";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
@@ -13,6 +15,22 @@ export const trainingSessionsRequestValidator =
   new DefaultTrainingSessionsRequestValidator();
 
 let trainingSessionsService: DefaultTrainingSessionsService | undefined;
+let authenticationService: DefaultAuthenticationService | undefined;
+
+export function getAuthenticationService(): DefaultAuthenticationService {
+  if (authenticationService) {
+    return authenticationService;
+  }
+
+  const authenticationEnv = readAuthenticationEnv();
+  authenticationService = new DefaultAuthenticationService({
+    authorizationEndpoint: authenticationEnv.OIDC_AUTHORIZATION_ENDPOINT,
+    callbackUrl: authenticationEnv.OIDC_CALLBACK_URL,
+    clientId: authenticationEnv.OIDC_CLIENT_ID,
+  });
+
+  return authenticationService;
+}
 
 export function getTrainingSessionsService(): DefaultTrainingSessionsService {
   if (trainingSessionsService) {
