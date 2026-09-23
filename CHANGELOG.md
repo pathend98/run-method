@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.0](https://github.com/pathend98/run-method/compare/v0.1.4...v0.2.0) (2026-09-23)
+
+### Features
+
+- introduce /auth endpoint to the app which an be used to initiate a token-fetching flow ([019b144](https://github.com/pathend98/run-method/commit/019b144ee0431a1e97c08363b42a488080c1e877))
+
 ## [0.1.4](https://github.com/pathend98/run-method/compare/v0.1.3...v0.1.4) (2026-09-13)
 
 ### Bug Fixes
