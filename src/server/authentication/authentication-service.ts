@@ -1,11 +1,18 @@
 import { createHash, randomBytes } from "node:crypto";
 
+import {
+  AuthenticationCallbackError,
+  AuthenticationTokenExchangeError,
+} from "./authentication-errors";
+
 export const OIDC_TRANSACTION_COOKIE_NAME = "__Host-oidc-transaction";
+export const OIDC_TOKEN_COOKIE_NAME = "__Host-oidc-tokens";
 
 type AuthenticationConfiguration = {
   authorizationEndpoint: string;
   callbackUrl: string;
   clientId: string;
+  tokenEndpoint: string;
 };
 
 type AuthorizationRedirect = {
@@ -19,8 +26,23 @@ type OidcTransaction = {
   nonce: string;
 };
 
+type AuthorizationCodeExchange = {
+  code: string;
+  state: string;
+  transactionCookieValue: string;
+};
+
+type OidcTokens = {
+  accessToken: string;
+  idToken: string;
+  refreshToken: string;
+};
+
 export interface AuthenticationService {
   createAuthorizationRedirect(): AuthorizationRedirect;
+  exchangeAuthorizationCode(
+    exchange: AuthorizationCodeExchange,
+  ): Promise<string>;
 }
 
 export class DefaultAuthenticationService implements AuthenticationService {
@@ -55,6 +77,113 @@ export class DefaultAuthenticationService implements AuthenticationService {
         "base64url",
       ),
     };
+  }
+
+  async exchangeAuthorizationCode(
+    exchange: AuthorizationCodeExchange,
+  ): Promise<string> {
+    const transaction = this.decodeTransaction(exchange.transactionCookieValue);
+
+    if (
+      !exchange.code ||
+      !exchange.state ||
+      exchange.state !== transaction.state
+    ) {
+      throw new AuthenticationCallbackError("Invalid authorization callback");
+    }
+
+    const body = new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: this.configuration.clientId,
+      redirect_uri: this.configuration.callbackUrl,
+      code: exchange.code,
+      code_verifier: transaction.codeVerifier,
+    });
+
+    let response: Response;
+    try {
+      response = await fetch(this.configuration.tokenEndpoint, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body,
+        cache: "no-store",
+      });
+    } catch {
+      throw new AuthenticationTokenExchangeError();
+    }
+
+    if (!response.ok) {
+      throw new AuthenticationTokenExchangeError();
+    }
+
+    let tokenResponse: unknown;
+    try {
+      tokenResponse = await response.json();
+    } catch {
+      throw new AuthenticationTokenExchangeError();
+    }
+
+    const tokens = this.readTokens(tokenResponse);
+
+    return Buffer.from(JSON.stringify(tokens)).toString("base64url");
+  }
+
+  private decodeTransaction(value: string): OidcTransaction {
+    let transaction: unknown;
+    try {
+      transaction = JSON.parse(
+        Buffer.from(value, "base64url").toString("utf8"),
+      );
+    } catch {
+      throw new AuthenticationCallbackError(
+        "Invalid authorization transaction",
+      );
+    }
+
+    if (
+      !this.isRecord(transaction) ||
+      !this.isNonEmptyString(transaction.codeVerifier) ||
+      !this.isNonEmptyString(transaction.state) ||
+      !this.isNonEmptyString(transaction.nonce)
+    ) {
+      throw new AuthenticationCallbackError(
+        "Invalid authorization transaction",
+      );
+    }
+
+    return {
+      codeVerifier: transaction.codeVerifier,
+      state: transaction.state,
+      nonce: transaction.nonce,
+    };
+  }
+
+  private readTokens(value: unknown): OidcTokens {
+    if (
+      !this.isRecord(value) ||
+      !this.isNonEmptyString(value.access_token) ||
+      !this.isNonEmptyString(value.id_token) ||
+      !this.isNonEmptyString(value.refresh_token)
+    ) {
+      throw new AuthenticationTokenExchangeError();
+    }
+
+    return {
+      accessToken: value.access_token,
+      idToken: value.id_token,
+      refreshToken: value.refresh_token,
+    };
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+  }
+
+  private isNonEmptyString(value: unknown): value is string {
+    return typeof value === "string" && value.length > 0;
   }
 
   private randomValue(): string {

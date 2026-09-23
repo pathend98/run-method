@@ -21,6 +21,10 @@ test("validates server configuration when the Node.js server starts", async () =
   );
   vi.stubEnv("OIDC_CALLBACK_URL", "https://app.example.com/auth/callback");
   vi.stubEnv("OIDC_CLIENT_ID", "run-method-web");
+  vi.stubEnv(
+    "OIDC_TOKEN_ENDPOINT",
+    "https://identity.example.com/oauth2/token",
+  );
 
   const { register } = await importInstrumentation();
 
@@ -33,6 +37,7 @@ test("does not load Node.js configuration for non-Node runtimes", async () => {
   vi.stubEnv("OIDC_AUTHORIZATION_ENDPOINT", undefined);
   vi.stubEnv("OIDC_CALLBACK_URL", undefined);
   vi.stubEnv("OIDC_CLIENT_ID", undefined);
+  vi.stubEnv("OIDC_TOKEN_ENDPOINT", undefined);
 
   const { register } = await importInstrumentation();
 

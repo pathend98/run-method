@@ -27,6 +27,7 @@ export function getAuthenticationService(): DefaultAuthenticationService {
     authorizationEndpoint: authenticationEnv.OIDC_AUTHORIZATION_ENDPOINT,
     callbackUrl: authenticationEnv.OIDC_CALLBACK_URL,
     clientId: authenticationEnv.OIDC_CLIENT_ID,
+    tokenEndpoint: authenticationEnv.OIDC_TOKEN_ENDPOINT,
   });
 
   return authenticationService;

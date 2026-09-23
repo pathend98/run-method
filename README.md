@@ -101,10 +101,11 @@ PKCE (S256), allows callbacks at `http://localhost:3000/*`, and has no client
 secret. Its seeded `test-user` account uses `KEYCLOAK_TEST_USER_PASSWORD` from
 `.env.local`.
 
-The app reads `OIDC_AUTHORIZATION_ENDPOINT`, `OIDC_CALLBACK_URL`, and
-`OIDC_CLIENT_ID` at startup. The example environment file configures these for
-the local Keycloak realm. Visiting `/auth` starts the authorization redirect;
-the callback and token exchange are not implemented yet.
+The app reads `OIDC_AUTHORIZATION_ENDPOINT`, `OIDC_CALLBACK_URL`,
+`OIDC_CLIENT_ID`, and `OIDC_TOKEN_ENDPOINT` at startup. The example environment
+file configures these for the local Keycloak realm. Visiting `/auth` starts the
+authorization redirect; after sign-in, `/auth/callback` exchanges the code and
+stores the returned tokens in a secure, HTTP-only session cookie.
 
 The Keycloak development store lives only in the container. Remove the container
 with `docker compose rm -sf keycloak` to reset it and re-import the seed realm on
