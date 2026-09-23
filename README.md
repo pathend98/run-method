@@ -101,6 +101,12 @@ PKCE (S256), allows callbacks at `http://localhost:3000/*`, and has no client
 secret. Its seeded `test-user` account uses `KEYCLOAK_TEST_USER_PASSWORD` from
 `.env.local`.
 
+The app reads `OIDC_AUTHORIZATION_ENDPOINT`, `OIDC_CALLBACK_URL`,
+`OIDC_CLIENT_ID`, and `OIDC_TOKEN_ENDPOINT` at startup. The example environment
+file configures these for the local Keycloak realm. Visiting `/auth` starts the
+authorization redirect; after sign-in, `/auth/callback` exchanges the code and
+stores the returned tokens in a secure, HTTP-only session cookie.
+
 The Keycloak development store lives only in the container. Remove the container
 with `docker compose rm -sf keycloak` to reset it and re-import the seed realm on
 the next `pnpm auth:up`.
@@ -129,9 +135,10 @@ docker run --rm \
   run-method node migrate.js
 ```
 
-`DATABASE_URL` is a runtime-only server secret. Do not pass it to `docker build`
-or use a `NEXT_PUBLIC_` variable. Supply it through your deployment platform, an
-environment file, or `docker run -e`; the container validates it during startup.
+`DATABASE_URL` and the OIDC settings are runtime-only server configuration. Do
+not pass them to `docker build` or use `NEXT_PUBLIC_` variables. Supply them
+through your deployment platform, an environment file, or `docker run -e`; the
+container validates them during startup.
 
 For TLS-enabled RDS, set `DATABASE_CA_PATH` to the path of the AWS RDS PEM CA
 bundle. Mount that file into the container so it is readable by the `nextjs`
