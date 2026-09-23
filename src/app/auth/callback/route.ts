@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import {
+  COOKIE_OPTIONS,
   OIDC_TOKEN_COOKIE_NAME,
   OIDC_TRANSACTION_COOKIE_NAME,
 } from "@/server/authentication/authentication-constants";
@@ -10,13 +11,6 @@ import {
   AuthenticationTokenExchangeError,
 } from "@/server/authentication/authentication-errors";
 import { getAuthenticationService } from "@/server/server";
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: true,
-  sameSite: "lax" as const,
-  path: "/",
-};
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code") ?? "";
@@ -37,7 +31,10 @@ export async function GET(request: NextRequest) {
         transactionCookieValue,
       });
 
-    response = NextResponse.redirect(new URL("/", request.url));
+    response = new NextResponse(null, {
+      status: 307,
+      headers: { location: "/" },
+    });
     response.cookies.set(
       OIDC_TOKEN_COOKIE_NAME,
       tokenCookieValue,

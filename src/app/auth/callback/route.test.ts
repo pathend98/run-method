@@ -36,7 +36,7 @@ test("stores tokens, clears the transaction, and redirects to the app root", asy
   const response = await GET(callbackRequest());
 
   expect(response.status).toBe(307);
-  expect(response.headers.get("location")).toBe("https://app.example.com/");
+  expect(response.headers.get("location")).toBe("/");
   expect(exchangeAuthorizationCode).toHaveBeenCalledWith({
     code: "authorization-code",
     state: "expected-state",
