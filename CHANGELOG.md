@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.1](https://github.com/pathend98/run-method/compare/v0.2.0...v0.2.1) (2026-09-23)
+
+### Bug Fixes
+
+- ensure the auth callback redirect to / doesn't use the request url ([856b0f4](https://github.com/pathend98/run-method/commit/856b0f4d177028e5f2c83c0158cd59010b8ecf38))
+
 ## [0.2.0](https://github.com/pathend98/run-method/compare/v0.1.4...v0.2.0) (2026-09-23)
 
 ### Features
