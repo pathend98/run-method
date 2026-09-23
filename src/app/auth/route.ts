@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { OIDC_TRANSACTION_COOKIE_NAME } from "@/server/authentication/authentication-constants";
+import {
+  COOKIE_OPTIONS,
+  OIDC_TRANSACTION_COOKIE_NAME,
+  OIDC_TRANSACTION_MAX_AGE_SECONDS,
+} from "@/server/authentication/authentication-constants";
 import { getAuthenticationService } from "@/server/server";
-
-const OIDC_TRANSACTION_MAX_AGE_SECONDS = 10 * 60;
 
 export function GET() {
   const { authorizationUrl, transactionCookieValue } =
@@ -12,10 +14,7 @@ export function GET() {
   const response = NextResponse.redirect(authorizationUrl);
 
   response.cookies.set(OIDC_TRANSACTION_COOKIE_NAME, transactionCookieValue, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
+    ...COOKIE_OPTIONS,
     maxAge: OIDC_TRANSACTION_MAX_AGE_SECONDS,
   });
 
