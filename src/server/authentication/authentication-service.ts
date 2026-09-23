@@ -5,9 +5,6 @@ import {
   AuthenticationTokenExchangeError,
 } from "./authentication-errors";
 
-export const OIDC_TRANSACTION_COOKIE_NAME = "__Host-oidc-transaction";
-export const OIDC_TOKEN_COOKIE_NAME = "__Host-oidc-tokens";
-
 type AuthenticationConfiguration = {
   authorizationEndpoint: string;
   callbackUrl: string;
@@ -92,12 +89,25 @@ export class DefaultAuthenticationService implements AuthenticationService {
       throw new AuthenticationCallbackError("Invalid authorization callback");
     }
 
+    const tokenResponse = await this.fetchTokens(
+      exchange.code,
+      transaction.codeVerifier,
+    );
+    const tokens = this.readTokens(tokenResponse);
+
+    return Buffer.from(JSON.stringify(tokens)).toString("base64url");
+  }
+
+  private async fetchTokens(
+    code: string,
+    codeVerifier: string,
+  ): Promise<unknown> {
     const body = new URLSearchParams({
       grant_type: "authorization_code",
       client_id: this.configuration.clientId,
       redirect_uri: this.configuration.callbackUrl,
-      code: exchange.code,
-      code_verifier: transaction.codeVerifier,
+      code,
+      code_verifier: codeVerifier,
     });
 
     let response: Response;
@@ -119,16 +129,11 @@ export class DefaultAuthenticationService implements AuthenticationService {
       throw new AuthenticationTokenExchangeError();
     }
 
-    let tokenResponse: unknown;
     try {
-      tokenResponse = await response.json();
+      return await response.json();
     } catch {
       throw new AuthenticationTokenExchangeError();
     }
-
-    const tokens = this.readTokens(tokenResponse);
-
-    return Buffer.from(JSON.stringify(tokens)).toString("base64url");
   }
 
   private decodeTransaction(value: string): OidcTransaction {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { OIDC_TRANSACTION_COOKIE_NAME } from "@/server/authentication/authentication-service";
+import { OIDC_TRANSACTION_COOKIE_NAME } from "@/server/authentication/authentication-constants";
 import { getAuthenticationService } from "@/server/server";
 
 const OIDC_TRANSACTION_MAX_AGE_SECONDS = 10 * 60;

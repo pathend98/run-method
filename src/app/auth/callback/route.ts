@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import {
   OIDC_TOKEN_COOKIE_NAME,
   OIDC_TRANSACTION_COOKIE_NAME,
-} from "@/server/authentication/authentication-service";
+} from "@/server/authentication/authentication-constants";
 import {
   AuthenticationCallbackError,
   AuthenticationTokenExchangeError,
