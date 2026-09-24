@@ -1,4 +1,4 @@
-import { userIdentities, users } from "@db/schema";
+import { userIdentities, userSessions, users } from "@db/schema";
 import { DrizzleUserRepository } from "./user-repository";
 
 const input = {
@@ -142,4 +142,22 @@ test("concurrent creation returns the same user for a shared identity", async ()
     Promise.all([repository.create(input), repository.create(input)]),
   ).resolves.toEqual([winner, winner]);
   expect(transaction).toHaveBeenCalledTimes(2);
+});
+
+test("inserts a session linked to an identity by issuer and subject", async () => {
+  const values = vi.fn().mockResolvedValue(undefined);
+  const insert = vi.fn().mockReturnValue({ values });
+  const repository = new DrizzleUserRepository({ insert } as never);
+  const session = {
+    sessionKeyHash: "hash",
+    issuer: input.issuer,
+    subject: input.subject,
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    expiresAt: new Date("2026-10-24T12:00:00.000Z"),
+  };
+
+  await expect(repository.createSession(session)).resolves.toBeUndefined();
+  expect(insert).toHaveBeenCalledWith(userSessions);
+  expect(values).toHaveBeenCalledWith(session);
 });
