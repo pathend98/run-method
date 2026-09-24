@@ -13,3 +13,10 @@ export class AuthenticationTokenExchangeError extends Error {
     this.name = "AuthenticationTokenExchangeError";
   }
 }
+
+export class AuthenticationIdTokenVerificationError extends Error {
+  constructor() {
+    super("Unable to verify ID token");
+    this.name = "AuthenticationIdTokenVerificationError";
+  }
+}

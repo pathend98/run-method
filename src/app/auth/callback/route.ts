@@ -8,6 +8,7 @@ import {
 } from "@/server/authentication/authentication-constants";
 import {
   AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "@/server/authentication/authentication-errors";
 import { getAuthenticationService } from "@/server/server";
@@ -46,7 +47,10 @@ export async function GET(request: NextRequest) {
         { error: "Invalid authorization callback" },
         { status: 400 },
       );
-    } else if (error instanceof AuthenticationTokenExchangeError) {
+    } else if (
+      error instanceof AuthenticationTokenExchangeError ||
+      error instanceof AuthenticationIdTokenVerificationError
+    ) {
       response = NextResponse.json(
         { error: "Unable to complete authentication" },
         { status: 502 },

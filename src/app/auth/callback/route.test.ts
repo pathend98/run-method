@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 
 import {
   AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "@/server/authentication/authentication-errors";
 
@@ -94,6 +95,21 @@ test("returns 502 when the identity provider exchange fails", async () => {
   await expect(response.json()).resolves.toEqual({
     error: "Unable to complete authentication",
   });
+});
+
+test("returns 502 without a token cookie when ID token verification fails", async () => {
+  exchangeAuthorizationCode.mockRejectedValue(
+    new AuthenticationIdTokenVerificationError(),
+  );
+
+  const response = await GET(callbackRequest());
+
+  expect(response.status).toBe(502);
+  await expect(response.json()).resolves.toEqual({
+    error: "Unable to complete authentication",
+  });
+  expect(response.cookies.get("__Host-oidc-tokens")).toBeUndefined();
+  expect(response.cookies.get("__Host-oidc-transaction")?.value).toBe("");
 });
 
 test("returns 500 for an unexpected failure", async () => {

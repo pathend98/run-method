@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import {
   AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "./authentication-errors";
 import { DefaultAuthenticationService } from "./authentication-service";
@@ -13,6 +14,13 @@ const configuration = {
   clientId: "run-method-web",
   tokenEndpoint: "https://identity.example.com/oauth2/token",
 };
+
+const jwtService = { verifyIdToken: vi.fn() };
+
+beforeEach(() => {
+  jwtService.verifyIdToken.mockReset();
+  jwtService.verifyIdToken.mockResolvedValue({});
+});
 
 type Transaction = {
   codeVerifier: string;
@@ -37,7 +45,7 @@ afterEach(() => {
 });
 
 test("creates an OIDC authorization redirect with PKCE", () => {
-  const service = new DefaultAuthenticationService(configuration);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
 
   const result = service.createAuthorizationRedirect();
   const transaction = decodeTransaction(result.transactionCookieValue);
@@ -61,7 +69,7 @@ test("creates an OIDC authorization redirect with PKCE", () => {
 });
 
 test("generates independent 256-bit base64url transaction values", () => {
-  const service = new DefaultAuthenticationService(configuration);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
 
   const first = decodeTransaction(
     service.createAuthorizationRedirect().transactionCookieValue,
@@ -97,7 +105,7 @@ test("exchanges an authorization code and encodes the returned tokens", async ()
     ),
   );
   vi.stubGlobal("fetch", fetchMock);
-  const service = new DefaultAuthenticationService(configuration);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
   const transactionCookieValue = encodeTransaction({
     codeVerifier: "code-verifier",
     state: "expected-state",
@@ -115,6 +123,10 @@ test("exchanges an authorization code and encodes the returned tokens", async ()
     idToken: "id-token",
     refreshToken: "refresh-token",
   });
+  expect(jwtService.verifyIdToken).toHaveBeenCalledExactlyOnceWith(
+    "id-token",
+    "nonce",
+  );
   expect(fetchMock).toHaveBeenCalledOnce();
   const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
   expect(url).toBe("https://identity.example.com/oauth2/token");
@@ -132,6 +144,53 @@ test("exchanges an authorization code and encodes the returned tokens", async ()
   expect((init.body as URLSearchParams).has("state")).toBe(false);
 });
 
+test("waits for ID token verification before returning tokens", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      Response.json({
+        access_token: "access-token",
+        id_token: "id-token",
+        refresh_token: "refresh-token",
+      }),
+    ),
+  );
+  const verification = Promise.withResolvers<object>();
+  jwtService.verifyIdToken.mockReturnValue(verification.promise);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
+  let completed = false;
+
+  const exchange = validExchange(service).then((value) => {
+    completed = true;
+    return value;
+  });
+
+  await vi.waitFor(() => expect(jwtService.verifyIdToken).toHaveBeenCalled());
+  expect(completed).toBe(false);
+
+  verification.resolve({});
+  await expect(exchange).resolves.toBeTypeOf("string");
+});
+
+test("rejects an ID token that cannot be verified", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      Response.json({
+        access_token: "access-token",
+        id_token: "id-token",
+        refresh_token: "refresh-token",
+      }),
+    ),
+  );
+  jwtService.verifyIdToken.mockRejectedValue(new Error("Invalid signature"));
+  const service = new DefaultAuthenticationService(configuration, jwtService);
+
+  await expect(validExchange(service)).rejects.toBeInstanceOf(
+    AuthenticationIdTokenVerificationError,
+  );
+});
+
 test.each([
   ["missing code", "", "expected-state"],
   ["missing state", "authorization-code", ""],
@@ -141,7 +200,7 @@ test.each([
   async (_name, code, state) => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const service = new DefaultAuthenticationService(configuration);
+    const service = new DefaultAuthenticationService(configuration, jwtService);
 
     await expect(
       service.exchangeAuthorizationCode({
@@ -173,7 +232,7 @@ test.each([
 ])(
   "rejects an %s transaction cookie",
   async (_name, transactionCookieValue) => {
-    const service = new DefaultAuthenticationService(configuration);
+    const service = new DefaultAuthenticationService(configuration, jwtService);
 
     await expect(
       service.exchangeAuthorizationCode({
@@ -187,7 +246,7 @@ test.each([
 
 test("wraps token endpoint network failures", async () => {
   vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
-  const service = new DefaultAuthenticationService(configuration);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
 
   await expect(validExchange(service)).rejects.toBeInstanceOf(
     AuthenticationTokenExchangeError,
@@ -199,7 +258,7 @@ test("rejects an unsuccessful token endpoint response", async () => {
     "fetch",
     vi.fn().mockResolvedValue(new Response(null, { status: 400 })),
   );
-  const service = new DefaultAuthenticationService(configuration);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
 
   await expect(validExchange(service)).rejects.toBeInstanceOf(
     AuthenticationTokenExchangeError,
@@ -211,7 +270,7 @@ test("rejects a non-JSON token endpoint response", async () => {
     "fetch",
     vi.fn().mockResolvedValue(new Response("not-json", { status: 200 })),
   );
-  const service = new DefaultAuthenticationService(configuration);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
 
   await expect(validExchange(service)).rejects.toBeInstanceOf(
     AuthenticationTokenExchangeError,
@@ -234,7 +293,7 @@ test.each([
       .fn()
       .mockResolvedValue(new Response(JSON.stringify(body), { status: 200 })),
   );
-  const service = new DefaultAuthenticationService(configuration);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
 
   await expect(validExchange(service)).rejects.toBeInstanceOf(
     AuthenticationTokenExchangeError,

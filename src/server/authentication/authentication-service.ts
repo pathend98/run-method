@@ -1,7 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 
+import type { JwtService } from "../jwt/jwt-service";
 import {
   AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "./authentication-errors";
 
@@ -43,7 +45,10 @@ export interface AuthenticationService {
 }
 
 export class DefaultAuthenticationService implements AuthenticationService {
-  constructor(private readonly configuration: AuthenticationConfiguration) {}
+  constructor(
+    private readonly configuration: AuthenticationConfiguration,
+    private readonly jwtService: JwtService,
+  ) {}
 
   createAuthorizationRedirect(): AuthorizationRedirect {
     const transaction: OidcTransaction = {
@@ -94,6 +99,12 @@ export class DefaultAuthenticationService implements AuthenticationService {
       transaction.codeVerifier,
     );
     const tokens = this.readTokens(tokenResponse);
+
+    try {
+      await this.jwtService.verifyIdToken(tokens.idToken, transaction.nonce);
+    } catch {
+      throw new AuthenticationIdTokenVerificationError();
+    }
 
     return Buffer.from(JSON.stringify(tokens)).toString("base64url");
   }

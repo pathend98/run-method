@@ -6,6 +6,7 @@ import { DefaultAuthenticationService } from "./authentication/authentication-se
 import { readAuthenticationEnv } from "./env/authentication-env";
 import { readDatabaseEnv } from "./env/database-env";
 import { readDatabaseTlsOptions } from "./env/database-tls";
+import { DefaultJwtService } from "./jwt/jwt-service";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
 import { DefaultTrainingSessionsRequestValidator } from "./training-sessions/training-sessions-request-validator";
 import { DefaultTrainingSessionsService } from "./training-sessions/training-sessions-service";
@@ -28,12 +29,19 @@ export function getAuthenticationService(): DefaultAuthenticationService {
   }
 
   const authenticationEnv = readAuthenticationEnv();
-  authenticationService = new DefaultAuthenticationService({
-    authorizationEndpoint: authenticationEnv.OIDC_AUTHORIZATION_ENDPOINT,
-    callbackUrl: authenticationEnv.OIDC_CALLBACK_URL,
-    clientId: authenticationEnv.OIDC_CLIENT_ID,
-    tokenEndpoint: authenticationEnv.OIDC_TOKEN_ENDPOINT,
-  });
+  authenticationService = new DefaultAuthenticationService(
+    {
+      authorizationEndpoint: authenticationEnv.OIDC_AUTHORIZATION_ENDPOINT,
+      callbackUrl: authenticationEnv.OIDC_CALLBACK_URL,
+      clientId: authenticationEnv.OIDC_CLIENT_ID,
+      tokenEndpoint: authenticationEnv.OIDC_TOKEN_ENDPOINT,
+    },
+    new DefaultJwtService({
+      jwksUrl: authenticationEnv.OIDC_JWKS_URL,
+      issuer: authenticationEnv.OIDC_ISSUER,
+      audience: authenticationEnv.OIDC_AUDIENCE,
+    }),
+  );
 
   return authenticationService;
 }

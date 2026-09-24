@@ -102,9 +102,10 @@ secret. Its seeded `test-user` account uses `KEYCLOAK_TEST_USER_PASSWORD` from
 `.env.local`.
 
 The app reads `OIDC_AUTHORIZATION_ENDPOINT`, `OIDC_CALLBACK_URL`,
-`OIDC_CLIENT_ID`, and `OIDC_TOKEN_ENDPOINT` at startup. The example environment
-file configures these for the local Keycloak realm. Visiting `/auth` starts the
-authorization redirect; after sign-in, `/auth/callback` exchanges the code and
+`OIDC_CLIENT_ID`, `OIDC_TOKEN_ENDPOINT`, `OIDC_JWKS_URL`, `OIDC_ISSUER`, and
+`OIDC_AUDIENCE` at startup. The example environment file configures these for
+the local Keycloak realm. Visiting `/auth` starts the authorization redirect;
+after sign-in, `/auth/callback` exchanges the code, verifies the ID token, and
 stores the returned tokens in a secure, HTTP-only session cookie.
 
 The Keycloak development store lives only in the container. Remove the container

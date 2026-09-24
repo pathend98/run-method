@@ -2,6 +2,7 @@ import { BadRequestError } from "@/server/errors/bad-request-error";
 
 import {
   AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "./authentication-errors";
 
@@ -19,4 +20,12 @@ test("AuthenticationTokenExchangeError has a stable public message", () => {
   expect(error).toBeInstanceOf(Error);
   expect(error.name).toBe("AuthenticationTokenExchangeError");
   expect(error.message).toBe("Unable to exchange authorization code");
+});
+
+test("AuthenticationIdTokenVerificationError has a stable public message", () => {
+  const error = new AuthenticationIdTokenVerificationError();
+
+  expect(error).toBeInstanceOf(Error);
+  expect(error.name).toBe("AuthenticationIdTokenVerificationError");
+  expect(error.message).toBe("Unable to verify ID token");
 });
