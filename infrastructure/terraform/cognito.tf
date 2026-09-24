@@ -6,10 +6,6 @@ variable "oidc_callback_url" {
   type = string
 }
 
-variable "cognito_domain_prefix" {
-  type = string
-}
-
 resource "aws_cognito_user_pool" "run_method" {
   name = "run-method"
 
@@ -97,8 +93,9 @@ resource "aws_cognito_user_pool_client" "run_method_web" {
 }
 
 resource "aws_cognito_user_pool_domain" "run_method" {
-  domain                = var.cognito_domain_prefix
+  domain                = local.auth_domain
   user_pool_id          = aws_cognito_user_pool.run_method.id
+  certificate_arn       = aws_acm_certificate_validation.cognito.certificate_arn
   managed_login_version = 2
 }
 
@@ -126,5 +123,5 @@ output "cognito_issuer" {
 }
 
 output "cognito_domain" {
-  value = "https://${aws_cognito_user_pool_domain.run_method.domain}.auth.eu-west-2.amazoncognito.com"
+  value = "https://${aws_cognito_user_pool_domain.run_method.domain}"
 }
