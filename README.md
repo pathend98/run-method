@@ -105,8 +105,12 @@ The app reads `OIDC_AUTHORIZATION_ENDPOINT`, `OIDC_CALLBACK_URL`,
 `OIDC_CLIENT_ID`, `OIDC_TOKEN_ENDPOINT`, `OIDC_JWKS_URL`, `OIDC_ISSUER`, and
 `OIDC_AUDIENCE` at startup. The example environment file configures these for
 the local Keycloak realm. Visiting `/auth` starts the authorization redirect;
-after sign-in, `/auth/callback` exchanges the code, verifies the ID token, and
-stores the returned tokens in a secure, HTTP-only session cookie.
+after sign-in, `/auth/callback` exchanges the code, verifies the ID token,
+creates a user if needed, and stores the access and refresh tokens in a database
+session. The browser receives only a secure, HTTP-only session key cookie that
+expires after 30 days. The ID token must contain an email address. Existing
+Keycloak containers must be recreated or have an email added to `test-user` to
+use the updated seed.
 
 The Keycloak development store lives only in the container. Remove the container
 with `docker compose rm -sf keycloak` to reset it and re-import the seed realm on

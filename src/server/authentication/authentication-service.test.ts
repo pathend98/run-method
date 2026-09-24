@@ -16,10 +16,15 @@ const configuration = {
 };
 
 const jwtService = { verifyIdToken: vi.fn() };
+const verifiedClaims = {
+  iss: "https://identity.example.com",
+  sub: "runner-123",
+  email: "runner@example.com",
+};
 
 beforeEach(() => {
   jwtService.verifyIdToken.mockReset();
-  jwtService.verifyIdToken.mockResolvedValue({});
+  jwtService.verifyIdToken.mockResolvedValue(verifiedClaims);
 });
 
 type Transaction = {
@@ -34,10 +39,6 @@ function decodeTransaction(value: string): Transaction {
 
 function encodeTransaction(transaction: Partial<Transaction>): string {
   return Buffer.from(JSON.stringify(transaction)).toString("base64url");
-}
-
-function decodeTokens(value: string) {
-  return JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
 }
 
 afterEach(() => {
@@ -92,7 +93,7 @@ test("generates independent 256-bit base64url transaction values", () => {
   }
 });
 
-test("exchanges an authorization code and encodes the returned tokens", async () => {
+test("exchanges an authorization code and returns verified identity and session tokens", async () => {
   const fetchMock = vi.fn().mockResolvedValue(
     new Response(
       JSON.stringify({
@@ -118,9 +119,11 @@ test("exchanges an authorization code and encodes the returned tokens", async ()
     transactionCookieValue,
   });
 
-  expect(decodeTokens(result)).toEqual({
+  expect(result).toEqual({
+    issuer: verifiedClaims.iss,
+    subject: verifiedClaims.sub,
+    email: verifiedClaims.email,
     accessToken: "access-token",
-    idToken: "id-token",
     refreshToken: "refresh-token",
   });
   expect(jwtService.verifyIdToken).toHaveBeenCalledExactlyOnceWith(
@@ -168,8 +171,35 @@ test("waits for ID token verification before returning tokens", async () => {
   await vi.waitFor(() => expect(jwtService.verifyIdToken).toHaveBeenCalled());
   expect(completed).toBe(false);
 
-  verification.resolve({});
-  await expect(exchange).resolves.toBeTypeOf("string");
+  verification.resolve(verifiedClaims);
+  await expect(exchange).resolves.toMatchObject({
+    issuer: verifiedClaims.iss,
+    subject: verifiedClaims.sub,
+  });
+});
+
+test.each([
+  ["missing email", { ...verifiedClaims, email: undefined }],
+  ["blank email", { ...verifiedClaims, email: "  " }],
+  ["missing issuer", { ...verifiedClaims, iss: undefined }],
+  ["missing subject", { ...verifiedClaims, sub: undefined }],
+])("rejects verified claims with %s", async (_name, claims) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      Response.json({
+        access_token: "access-token",
+        id_token: "id-token",
+        refresh_token: "refresh-token",
+      }),
+    ),
+  );
+  jwtService.verifyIdToken.mockResolvedValue(claims);
+  const service = new DefaultAuthenticationService(configuration, jwtService);
+
+  await expect(validExchange(service)).rejects.toBeInstanceOf(
+    AuthenticationIdTokenVerificationError,
+  );
 });
 
 test("rejects an ID token that cannot be verified", async () => {

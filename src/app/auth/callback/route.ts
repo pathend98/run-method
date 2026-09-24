@@ -3,15 +3,16 @@ import type { NextRequest } from "next/server";
 
 import {
   COOKIE_OPTIONS,
-  OIDC_TOKEN_COOKIE_NAME,
   OIDC_TRANSACTION_COOKIE_NAME,
+  USER_SESSION_COOKIE_NAME,
 } from "@/server/authentication/authentication-constants";
 import {
   AuthenticationCallbackError,
   AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "@/server/authentication/authentication-errors";
-import { getAuthenticationService } from "@/server/server";
+import { getAuthenticationService, getUserService } from "@/server/server";
+import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-service";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code") ?? "";
@@ -25,22 +26,31 @@ export async function GET(request: NextRequest) {
       throw new AuthenticationCallbackError("Invalid authorization callback");
     }
 
-    const tokenCookieValue =
-      await getAuthenticationService().exchangeAuthorizationCode({
+    const identity = await getAuthenticationService().exchangeAuthorizationCode(
+      {
         code,
         state,
         transactionCookieValue,
-      });
+      },
+    );
+    const userService = getUserService();
+    const { issuer, subject, email, accessToken, refreshToken } = identity;
+    await userService.create({ issuer, subject, email });
+    const sessionKey = await userService.createSession({
+      issuer,
+      subject,
+      accessToken,
+      refreshToken,
+    });
 
     response = new NextResponse(null, {
       status: 307,
       headers: { location: "/" },
     });
-    response.cookies.set(
-      OIDC_TOKEN_COOKIE_NAME,
-      tokenCookieValue,
-      COOKIE_OPTIONS,
-    );
+    response.cookies.set(USER_SESSION_COOKIE_NAME, sessionKey, {
+      ...COOKIE_OPTIONS,
+      maxAge: SESSION_MAX_AGE_SECONDS,
+    });
   } catch (error) {
     if (error instanceof AuthenticationCallbackError) {
       response = NextResponse.json(

@@ -5,7 +5,7 @@ import { UserIdentityNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import type { CreateUser, CreateUserSession, UserIdentity } from "./user-types";
 
-const SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
+export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 export interface UserService {
   findByIdentity(identity: UserIdentity): Promise<User | null>;
@@ -41,7 +41,7 @@ export class DefaultUserService implements UserService {
       subject: input.subject,
       accessToken: input.accessToken,
       refreshToken: input.refreshToken,
-      expiresAt: new Date(Date.now() + SESSION_LIFETIME_MS),
+      expiresAt: new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000),
     });
 
     return sessionKey;

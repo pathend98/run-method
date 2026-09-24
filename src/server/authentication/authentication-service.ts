@@ -37,11 +37,19 @@ type OidcTokens = {
   refreshToken: string;
 };
 
+export type AuthenticatedIdentity = {
+  issuer: string;
+  subject: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+};
+
 export interface AuthenticationService {
   createAuthorizationRedirect(): AuthorizationRedirect;
   exchangeAuthorizationCode(
     exchange: AuthorizationCodeExchange,
-  ): Promise<string>;
+  ): Promise<AuthenticatedIdentity>;
 }
 
 export class DefaultAuthenticationService implements AuthenticationService {
@@ -83,7 +91,7 @@ export class DefaultAuthenticationService implements AuthenticationService {
 
   async exchangeAuthorizationCode(
     exchange: AuthorizationCodeExchange,
-  ): Promise<string> {
+  ): Promise<AuthenticatedIdentity> {
     const transaction = this.decodeTransaction(exchange.transactionCookieValue);
 
     if (
@@ -101,12 +109,29 @@ export class DefaultAuthenticationService implements AuthenticationService {
     const tokens = this.readTokens(tokenResponse);
 
     try {
-      await this.jwtService.verifyIdToken(tokens.idToken, transaction.nonce);
+      const claims = await this.jwtService.verifyIdToken(
+        tokens.idToken,
+        transaction.nonce,
+      );
+      if (
+        !this.isNonEmptyString(claims.iss) ||
+        !this.isNonEmptyString(claims.sub) ||
+        !this.isNonEmptyString(claims.email) ||
+        !claims.email.trim()
+      ) {
+        throw new AuthenticationIdTokenVerificationError();
+      }
+
+      return {
+        issuer: claims.iss,
+        subject: claims.sub,
+        email: claims.email.trim(),
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
     } catch {
       throw new AuthenticationIdTokenVerificationError();
     }
-
-    return Buffer.from(JSON.stringify(tokens)).toString("base64url");
   }
 
   private async fetchTokens(
