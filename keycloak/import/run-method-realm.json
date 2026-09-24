@@ -23,6 +23,7 @@
   "users": [
     {
       "username": "test-user",
+      "email": "test-user@example.com",
       "enabled": true,
       "emailVerified": true,
       "firstName": "Test",

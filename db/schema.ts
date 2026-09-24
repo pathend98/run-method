@@ -2,14 +2,57 @@ import { sql } from "drizzle-orm";
 import {
   check,
   date,
+  foreignKey,
   index,
   integer,
   primaryKey,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+export const users = pgTable("user", {
+  id: uuid("id").primaryKey().defaultRandom(),
+});
+
+export const userIdentities = pgTable(
+  "user_identity",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    issuer: text("issuer").notNull(),
+    subject: text("subject").notNull(),
+    email: text("email").notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_identity_issuer_subject_idx").on(
+      table.issuer,
+      table.subject,
+    ),
+  ],
+);
+
+export const userSessions = pgTable(
+  "user_session",
+  {
+    sessionKeyHash: text("session_key_hash").primaryKey(),
+    issuer: text("issuer").notNull(),
+    subject: text("subject").notNull(),
+    accessToken: text("access_token").notNull(),
+    refreshToken: text("refresh_token").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.issuer, table.subject],
+      foreignColumns: [userIdentities.issuer, userIdentities.subject],
+      name: "user_session_identity_fk",
+    }).onDelete("cascade"),
+  ],
+);
 
 export const trainingSessions = pgTable(
   "training_sessions",

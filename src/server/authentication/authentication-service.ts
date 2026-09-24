@@ -1,7 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 
+import type { JwtService } from "../jwt/jwt-service";
 import {
   AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "./authentication-errors";
 
@@ -35,15 +37,26 @@ type OidcTokens = {
   refreshToken: string;
 };
 
+export type AuthenticatedIdentity = {
+  issuer: string;
+  subject: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+};
+
 export interface AuthenticationService {
   createAuthorizationRedirect(): AuthorizationRedirect;
   exchangeAuthorizationCode(
     exchange: AuthorizationCodeExchange,
-  ): Promise<string>;
+  ): Promise<AuthenticatedIdentity>;
 }
 
 export class DefaultAuthenticationService implements AuthenticationService {
-  constructor(private readonly configuration: AuthenticationConfiguration) {}
+  constructor(
+    private readonly configuration: AuthenticationConfiguration,
+    private readonly jwtService: JwtService,
+  ) {}
 
   createAuthorizationRedirect(): AuthorizationRedirect {
     const transaction: OidcTransaction = {
@@ -78,7 +91,7 @@ export class DefaultAuthenticationService implements AuthenticationService {
 
   async exchangeAuthorizationCode(
     exchange: AuthorizationCodeExchange,
-  ): Promise<string> {
+  ): Promise<AuthenticatedIdentity> {
     const transaction = this.decodeTransaction(exchange.transactionCookieValue);
 
     if (
@@ -95,7 +108,30 @@ export class DefaultAuthenticationService implements AuthenticationService {
     );
     const tokens = this.readTokens(tokenResponse);
 
-    return Buffer.from(JSON.stringify(tokens)).toString("base64url");
+    try {
+      const claims = await this.jwtService.verifyIdToken(
+        tokens.idToken,
+        transaction.nonce,
+      );
+      if (
+        !this.isNonEmptyString(claims.iss) ||
+        !this.isNonEmptyString(claims.sub) ||
+        !this.isNonEmptyString(claims.email) ||
+        !claims.email.trim()
+      ) {
+        throw new AuthenticationIdTokenVerificationError();
+      }
+
+      return {
+        issuer: claims.iss,
+        subject: claims.sub,
+        email: claims.email.trim(),
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      };
+    } catch {
+      throw new AuthenticationIdTokenVerificationError();
+    }
   }
 
   private async fetchTokens(

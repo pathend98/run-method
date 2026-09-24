@@ -9,17 +9,24 @@ afterEach(() => {
   vi.resetModules();
 });
 
-test("maps OIDC environment variables", async () => {
+function stubValidOidcEnv() {
   vi.stubEnv(
     "OIDC_AUTHORIZATION_ENDPOINT",
     "https://identity.example.com/oauth2/authorize",
   );
   vi.stubEnv("OIDC_CALLBACK_URL", "https://app.example.com/auth/callback");
   vi.stubEnv("OIDC_CLIENT_ID", "run-method-web");
+  vi.stubEnv("OIDC_JWKS_URL", "https://identity.example.com/oauth2/certs");
+  vi.stubEnv("OIDC_ISSUER", "https://identity.example.com");
+  vi.stubEnv("OIDC_AUDIENCE", "run-method-web");
   vi.stubEnv(
     "OIDC_TOKEN_ENDPOINT",
     "https://identity.example.com/oauth2/token",
   );
+}
+
+test("maps OIDC environment variables", async () => {
+  stubValidOidcEnv();
 
   const { readAuthenticationEnv } = await importAuthenticationEnv();
 
@@ -28,6 +35,9 @@ test("maps OIDC environment variables", async () => {
       "https://identity.example.com/oauth2/authorize",
     OIDC_CALLBACK_URL: "https://app.example.com/auth/callback",
     OIDC_CLIENT_ID: "run-method-web",
+    OIDC_JWKS_URL: "https://identity.example.com/oauth2/certs",
+    OIDC_ISSUER: "https://identity.example.com",
+    OIDC_AUDIENCE: "run-method-web",
     OIDC_TOKEN_ENDPOINT: "https://identity.example.com/oauth2/token",
   });
 });
@@ -35,21 +45,28 @@ test("maps OIDC environment variables", async () => {
 test.each([
   ["OIDC_AUTHORIZATION_ENDPOINT", "not a URL"],
   ["OIDC_CALLBACK_URL", "not a URL"],
+  ["OIDC_JWKS_URL", "not a URL"],
+  ["OIDC_ISSUER", "not a URL"],
   ["OIDC_TOKEN_ENDPOINT", "not a URL"],
+  ["OIDC_AUDIENCE", ""],
+  ["OIDC_AUDIENCE", "   "],
 ])("rejects an invalid %s", async (name, value) => {
-  vi.stubEnv(
-    "OIDC_AUTHORIZATION_ENDPOINT",
-    "https://identity.example.com/oauth2/authorize",
-  );
-  vi.stubEnv("OIDC_CALLBACK_URL", "https://app.example.com/auth/callback");
-  vi.stubEnv("OIDC_CLIENT_ID", "run-method-web");
-  vi.stubEnv(
-    "OIDC_TOKEN_ENDPOINT",
-    "https://identity.example.com/oauth2/token",
-  );
+  stubValidOidcEnv();
   vi.stubEnv(name, value);
 
   const { readAuthenticationEnv } = await importAuthenticationEnv();
 
   expect(() => readAuthenticationEnv()).toThrow();
 });
+
+test.each(["OIDC_JWKS_URL", "OIDC_ISSUER", "OIDC_AUDIENCE"])(
+  "rejects a missing %s",
+  async (name) => {
+    stubValidOidcEnv();
+    vi.stubEnv(name, undefined);
+
+    const { readAuthenticationEnv } = await importAuthenticationEnv();
+
+    expect(() => readAuthenticationEnv()).toThrow();
+  },
+);
