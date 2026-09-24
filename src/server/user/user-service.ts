@@ -1,23 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 
-import type { User } from "@/domain/user";
+import type { User } from "@/domain/user-types";
+import { UserIdentityNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
-
-export type UserIdentity = {
-  issuer: string;
-  subject: string;
-};
-
-export type CreateUser = UserIdentity & {
-  email: string;
-};
-
-export type CreateUserSession = UserIdentity & {
-  accessToken: string;
-  refreshToken: string;
-};
-
-export class UserIdentityNotFoundError extends Error {}
+import type { CreateUser, CreateUserSession, UserIdentity } from "./user-types";
 
 const SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 

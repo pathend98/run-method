@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 
-import type { User } from "@/domain/user";
+import type { User } from "@/domain/user-types";
+import { UserIdentityNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
-import { DefaultUserService, UserIdentityNotFoundError } from "./user-service";
+import { DefaultUserService } from "./user-service";
 
 test("finds a user by issuer and subject", async () => {
   const user: User = { id: "11111111-1111-4111-8111-111111111111" };

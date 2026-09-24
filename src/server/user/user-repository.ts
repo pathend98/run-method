@@ -2,25 +2,19 @@ import { and, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { userIdentities, userSessions, users } from "@db/schema";
-import type { User } from "@/domain/user";
-import type { CreateUser, UserIdentity } from "./user-service";
+import type { User } from "@/domain/user-types";
+import { IdentityAlreadyExistsError } from "./user-errors";
+import type {
+  CreateUser,
+  CreateUserSessionRecord,
+  UserIdentity,
+} from "./user-types";
 
 export interface UserRepository {
   findByIdentity(identity: UserIdentity): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
   createSession(input: CreateUserSessionRecord): Promise<void>;
 }
-
-export type CreateUserSessionRecord = {
-  sessionKeyHash: string;
-  issuer: string;
-  subject: string;
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: Date;
-};
-
-class IdentityAlreadyExistsError extends Error {}
 
 export class DrizzleUserRepository implements UserRepository {
   constructor(private readonly db: NodePgDatabase) {}
