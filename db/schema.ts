@@ -8,8 +8,31 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+export const users = pgTable("user", {
+  id: uuid("id").primaryKey().defaultRandom(),
+});
+
+export const userIdentities = pgTable(
+  "user_identity",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    issuer: text("issuer").notNull(),
+    subject: text("subject").notNull(),
+    email: text("email").notNull(),
+  },
+  (table) => [
+    uniqueIndex("user_identity_issuer_subject_idx").on(
+      table.issuer,
+      table.subject,
+    ),
+  ],
+);
 
 export const trainingSessions = pgTable(
   "training_sessions",
