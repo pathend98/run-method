@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/pathend98/run-method/compare/v0.2.1...v0.3.0) (2026-09-24)
+
+### Features
+
+- ensure ID tokens are verified before considering authentication as complete ([387d8da](https://github.com/pathend98/run-method/commit/387d8daedf96ee358c87a205c31fd5bc5fbb0744))
+- establish new user session when a user authenticates ([eca76be](https://github.com/pathend98/run-method/commit/eca76bed57946777d967db8dbfbb2fa22a177337))
+- introduce user model to link IdP users to app users ([bdedf57](https://github.com/pathend98/run-method/commit/bdedf579e70c67f7fd7d7c6574d2349c99582be6))
+
 ## [0.2.1](https://github.com/pathend98/run-method/compare/v0.2.0...v0.2.1) (2026-09-23)
 
 ### Bug Fixes
