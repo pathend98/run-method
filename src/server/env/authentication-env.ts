@@ -1,11 +1,4 @@
-import { cleanEnv, EnvError, makeValidator, str, url } from "envalid";
-
-const nonEmptyString = makeValidator((value: string) => {
-  if (!value.trim()) {
-    throw new EnvError("Expected a nonempty string");
-  }
-  return value;
-});
+import { cleanEnv, str, url } from "envalid";
 
 export type AuthenticationEnv = {
   OIDC_AUTHORIZATION_ENDPOINT: string;
@@ -13,7 +6,6 @@ export type AuthenticationEnv = {
   OIDC_CLIENT_ID: string;
   OIDC_JWKS_URL: string;
   OIDC_ISSUER: string;
-  OIDC_AUDIENCE: string;
   OIDC_TOKEN_ENDPOINT: string;
 };
 
@@ -41,10 +33,6 @@ export function readAuthenticationEnv(): AuthenticationEnv {
       desc: "Expected OIDC token issuer",
       example: "http://localhost:8080/realms/run-method",
     }),
-    OIDC_AUDIENCE: nonEmptyString({
-      desc: "Expected OIDC token audience",
-      example: "run-method",
-    }),
     OIDC_TOKEN_ENDPOINT: url({
       desc: "OIDC token endpoint",
       example:
@@ -58,7 +46,6 @@ export function readAuthenticationEnv(): AuthenticationEnv {
     OIDC_CLIENT_ID: env.OIDC_CLIENT_ID,
     OIDC_JWKS_URL: env.OIDC_JWKS_URL,
     OIDC_ISSUER: env.OIDC_ISSUER,
-    OIDC_AUDIENCE: env.OIDC_AUDIENCE,
     OIDC_TOKEN_ENDPOINT: env.OIDC_TOKEN_ENDPOINT,
   };
 }

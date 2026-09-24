@@ -39,7 +39,7 @@ export function getAuthenticationService(): DefaultAuthenticationService {
     new DefaultJwtService({
       jwksUrl: authenticationEnv.OIDC_JWKS_URL,
       issuer: authenticationEnv.OIDC_ISSUER,
-      audience: authenticationEnv.OIDC_AUDIENCE,
+      audience: authenticationEnv.OIDC_CLIENT_ID,
     }),
   );
 
