@@ -1,4 +1,5 @@
 import { userIdentities, userSessions, users } from "@db/schema";
+import { PgDialect } from "drizzle-orm/pg-core";
 import { DrizzleUserRepository } from "./user-repository";
 
 const input = {
@@ -35,6 +36,40 @@ test("returns null when the identity has no user", async () => {
   const { repository } = lookupRepository([]);
 
   await expect(repository.findByIdentity(input)).resolves.toBeNull();
+});
+
+test("finds a user joined to an unexpired session", async () => {
+  const { repository, from, innerJoin, limit } = lookupRepository([user]);
+  const now = new Date("2026-09-25T12:00:00.000Z");
+  const where = vi.fn().mockReturnValue({ limit });
+  innerJoin.mockReturnValue({ innerJoin, where });
+
+  await expect(
+    repository.findBySessionKeyHash("hashed-key", now),
+  ).resolves.toEqual(user);
+  expect(from).toHaveBeenCalledWith(userSessions);
+  expect(innerJoin).toHaveBeenNthCalledWith(
+    1,
+    userIdentities,
+    expect.anything(),
+  );
+  expect(innerJoin).toHaveBeenNthCalledWith(2, users, expect.anything());
+  const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+  expect(query.sql).toContain('"user_session"."session_key_hash" = $1');
+  expect(query.sql).toContain('"user_session"."expires_at" > $2');
+  expect(query.params).toEqual(["hashed-key", now.toISOString()]);
+  expect(limit).toHaveBeenCalledWith(1);
+});
+
+test("returns null for an unknown or expired session", async () => {
+  const { repository, from, innerJoin, limit } = lookupRepository([]);
+  const where = vi.fn().mockReturnValue({ limit });
+  innerJoin.mockReturnValue({ innerJoin, where });
+
+  await expect(
+    repository.findBySessionKeyHash("missing-or-expired", new Date()),
+  ).resolves.toBeNull();
+  expect(from).toHaveBeenCalledWith(userSessions);
 });
 
 function creationRepository(identityRows: { userId: string }[]) {

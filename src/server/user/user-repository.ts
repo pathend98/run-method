@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { userIdentities, userSessions, users } from "@db/schema";
@@ -12,6 +12,7 @@ import type {
 
 export interface UserRepository {
   findByIdentity(identity: UserIdentity): Promise<User | null>;
+  findBySessionKeyHash(sessionKeyHash: string, now: Date): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
   createSession(input: CreateUserSessionRecord): Promise<void>;
 }
@@ -28,6 +29,32 @@ export class DrizzleUserRepository implements UserRepository {
         and(
           eq(userIdentities.issuer, identity.issuer),
           eq(userIdentities.subject, identity.subject),
+        ),
+      )
+      .limit(1);
+
+    return user ?? null;
+  }
+
+  async findBySessionKeyHash(
+    sessionKeyHash: string,
+    now: Date,
+  ): Promise<User | null> {
+    const [user] = await this.db
+      .select({ id: users.id })
+      .from(userSessions)
+      .innerJoin(
+        userIdentities,
+        and(
+          eq(userSessions.issuer, userIdentities.issuer),
+          eq(userSessions.subject, userIdentities.subject),
+        ),
+      )
+      .innerJoin(users, eq(userIdentities.userId, users.id))
+      .where(
+        and(
+          eq(userSessions.sessionKeyHash, sessionKeyHash),
+          gt(userSessions.expiresAt, now),
         ),
       )
       .limit(1);
