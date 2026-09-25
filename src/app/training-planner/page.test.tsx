@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
-import Home from "./page";
+import TrainingPlannerPage from "./page";
 
 const navigation = vi.hoisted(() => ({ suspend: false }));
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => "/training-planner",
   useRouter: () => ({ push: vi.fn() }),
   useSearchParams: () => {
     if (navigation.suspend) {
@@ -19,13 +19,13 @@ beforeEach(() => {
   navigation.suspend = false;
 });
 
-test("Home", () => {
+test("TrainingPlannerPage", () => {
   vi.stubGlobal(
     "fetch",
     vi.fn(() => new Promise(() => undefined)),
   );
 
-  render(<Home />);
+  render(<TrainingPlannerPage />);
 
   expect(screen.getByRole("main")).toBeDefined();
   const heading = screen.getByRole("heading", {
@@ -38,10 +38,10 @@ test("Home", () => {
   expect(screen.getByText("Loading training planner...")).toBeDefined();
 });
 
-test("Home renders its planner fallback while URL parameters resolve", () => {
+test("TrainingPlannerPage renders its planner fallback while URL parameters resolve", () => {
   navigation.suspend = true;
 
-  render(<Home />);
+  render(<TrainingPlannerPage />);
 
   expect(
     screen.getByRole("heading", { level: 1, name: "Training Plan" }),

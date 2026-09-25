@@ -9,6 +9,7 @@ test("finds a user by issuer and subject", async () => {
   const user: User = { id: "11111111-1111-4111-8111-111111111111" };
   const repository: UserRepository = {
     findByIdentity: vi.fn().mockResolvedValue(user),
+    findBySessionKeyHash: vi.fn(),
     create: vi.fn(),
     createSession: vi.fn(),
   };
@@ -23,6 +24,7 @@ test("creates a user from an identity and email", async () => {
   const user: User = { id: "11111111-1111-4111-8111-111111111111" };
   const repository: UserRepository = {
     findByIdentity: vi.fn(),
+    findBySessionKeyHash: vi.fn(),
     create: vi.fn().mockResolvedValue(user),
     createSession: vi.fn(),
   };
@@ -49,11 +51,45 @@ function sessionService(
 ) {
   const repository: UserRepository = {
     findByIdentity: vi.fn().mockResolvedValue(identity),
+    findBySessionKeyHash: vi.fn(),
     create: vi.fn(),
     createSession: vi.fn().mockResolvedValue(undefined),
   };
   return { service: new DefaultUserService(repository), repository };
 }
+
+test("finds a user for a valid session key using its hash", async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-09-25T12:00:00.000Z"));
+  try {
+    const { service, repository } = sessionService();
+    const user = { id: "11111111-1111-4111-8111-111111111111" };
+    vi.mocked(repository.findBySessionKeyHash).mockResolvedValue(user);
+
+    await expect(service.findBySessionKey("session-key")).resolves.toBe(user);
+    expect(repository.findBySessionKeyHash).toHaveBeenCalledExactlyOnceWith(
+      createHash("sha256").update("session-key").digest("hex"),
+      new Date("2026-09-25T12:00:00.000Z"),
+    );
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("does not look up a missing session key", async () => {
+  const { service, repository } = sessionService();
+
+  await expect(service.findBySessionKey("")).resolves.toBeNull();
+  expect(repository.findBySessionKeyHash).not.toHaveBeenCalled();
+});
+
+test("returns no user for an unknown or expired session", async () => {
+  const { service, repository } = sessionService();
+  vi.mocked(repository.findBySessionKeyHash).mockResolvedValue(null);
+
+  await expect(service.findBySessionKey("unknown-session")).resolves.toBeNull();
+  await expect(service.findBySessionKey("expired-session")).resolves.toBeNull();
+});
 
 test("creates distinct session keys and stores only their hashes for 30 days", async () => {
   vi.useFakeTimers();

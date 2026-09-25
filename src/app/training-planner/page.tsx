@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 
-import { QueryProvider } from "./query-provider";
+import { QueryProvider } from "../query-provider";
 import { TrainingPlanner } from "@/ui/training-planner/training-planner";
 import { TrainingPlannerStoreProvider } from "@/ui/training-planner/training-planner-store";
 
-export default function Home() {
+export default function TrainingPlannerPage() {
   return (
     <main>
       <QueryProvider>

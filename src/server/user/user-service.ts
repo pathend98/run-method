@@ -9,6 +9,7 @@ export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 export interface UserService {
   findByIdentity(identity: UserIdentity): Promise<User | null>;
+  findBySessionKey(sessionKey: string): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
   createSession(input: CreateUserSession): Promise<string>;
 }
@@ -18,6 +19,15 @@ export class DefaultUserService implements UserService {
 
   findByIdentity(identity: UserIdentity): Promise<User | null> {
     return this.repository.findByIdentity(identity);
+  }
+
+  findBySessionKey(sessionKey: string): Promise<User | null> {
+    if (!sessionKey) return Promise.resolve(null);
+
+    const sessionKeyHash = createHash("sha256")
+      .update(sessionKey)
+      .digest("hex");
+    return this.repository.findBySessionKeyHash(sessionKeyHash, new Date());
   }
 
   create(input: CreateUser): Promise<User> {
