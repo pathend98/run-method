@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.0](https://github.com/pathend98/run-method/compare/v0.3.0...v0.4.0) (2026-09-25)
+
+### Features
+
+- introduce /athletes API allowing for training sessions to belong to athletes ([8b91f67](https://github.com/pathend98/run-method/commit/8b91f677dbb484e1c376653b44606026acd41f1e))
+
 ## [0.3.0](https://github.com/pathend98/run-method/compare/v0.2.1...v0.3.0) (2026-09-24)
 
 ### Features
