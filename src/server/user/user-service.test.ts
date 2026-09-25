@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { User } from "@/domain/user-types";
-import { UserIdentityNotFoundError } from "./user-errors";
+import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import { DefaultUserService } from "./user-service";
 
@@ -61,20 +61,32 @@ function sessionService(
   return { service: new DefaultUserService(repository), repository };
 }
 
-test.each([[{ id: "11111111-1111-4111-8111-111111111111" }], [null]])(
-  "findById returns the repository result %#",
-  async (user) => {
-    const { service, repository } = sessionService();
-    vi.mocked(repository.findById).mockResolvedValue(user);
+test("findById returns a matching user", async () => {
+  const { service, repository } = sessionService();
+  const user = { id: "11111111-1111-4111-8111-111111111111" };
+  vi.mocked(repository.findById).mockResolvedValue(user);
 
-    await expect(
-      service.findById("11111111-1111-4111-8111-111111111111"),
-    ).resolves.toEqual(user);
-    expect(repository.findById).toHaveBeenCalledWith(
-      "11111111-1111-4111-8111-111111111111",
-    );
-  },
-);
+  await expect(service.findById(user.id)).resolves.toEqual(user);
+  expect(repository.findById).toHaveBeenCalledWith(user.id);
+});
+
+test("findById rejects when the user is missing", async () => {
+  const { service, repository } = sessionService();
+  vi.mocked(repository.findById).mockResolvedValue(null);
+
+  await expect(service.findById("missing-user")).rejects.toThrow(
+    UserNotFoundError,
+  );
+});
+
+test("findByIdentity rejects when the user is missing", async () => {
+  const { service, repository } = sessionService(null);
+
+  await expect(service.findByIdentity(sessionInput)).rejects.toThrow(
+    UserNotFoundError,
+  );
+  expect(repository.findByIdentity).toHaveBeenCalledWith(sessionInput);
+});
 
 test("finds a user for a valid session key using its hash", async () => {
   vi.useFakeTimers();
@@ -97,16 +109,20 @@ test("finds a user for a valid session key using its hash", async () => {
 test("does not look up a missing session key", async () => {
   const { service, repository } = sessionService();
 
-  await expect(service.findBySessionKey("")).resolves.toBeNull();
+  await expect(service.findBySessionKey("")).rejects.toThrow(UserNotFoundError);
   expect(repository.findBySessionKeyHash).not.toHaveBeenCalled();
 });
 
-test("returns no user for an unknown or expired session", async () => {
+test("rejects an unknown or expired session", async () => {
   const { service, repository } = sessionService();
   vi.mocked(repository.findBySessionKeyHash).mockResolvedValue(null);
 
-  await expect(service.findBySessionKey("unknown-session")).resolves.toBeNull();
-  await expect(service.findBySessionKey("expired-session")).resolves.toBeNull();
+  await expect(service.findBySessionKey("unknown-session")).rejects.toThrow(
+    UserNotFoundError,
+  );
+  await expect(service.findBySessionKey("expired-session")).rejects.toThrow(
+    UserNotFoundError,
+  );
 });
 
 test("creates distinct session keys and stores only their hashes for 30 days", async () => {
@@ -142,7 +158,7 @@ test("rejects session creation for an unknown identity", async () => {
   const { service, repository } = sessionService(null);
 
   await expect(service.createSession(sessionInput)).rejects.toBeInstanceOf(
-    UserIdentityNotFoundError,
+    UserNotFoundError,
   );
   expect(repository.createSession).not.toHaveBeenCalled();
 });

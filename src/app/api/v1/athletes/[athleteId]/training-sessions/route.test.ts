@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 
 import {
-  AthleteNotFoundError,
   TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
+import { UserNotFoundError } from "@/server/user/user-errors";
 import { trainingSessionsRequestValidator } from "@/server/server";
 import { GET, POST } from "./route";
 
@@ -173,13 +173,13 @@ test("returns 400 for an invalid athlete ID", async () => {
 
 test("returns 404 when the athlete does not exist", async () => {
   requestValidator.validateCreate.mockReturnValue({} as never);
-  service.create.mockRejectedValue(new AthleteNotFoundError());
+  service.create.mockRejectedValue(new UserNotFoundError());
 
   const response = await POST(postRequest("{}"), context());
 
   expect(response.status).toBe(404);
   await expect(response.json()).resolves.toEqual({
-    error: "Athlete not found",
+    error: "User not found",
   });
 });
 

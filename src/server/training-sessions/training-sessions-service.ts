@@ -12,7 +12,6 @@ import {
   trainingSessionStatusSchema,
 } from "@/domain/training-sessions";
 import {
-  AthleteNotFoundError,
   TrainingSessionNotFoundError,
   TrainingSessionsValidationError,
 } from "./training-sessions-errors";
@@ -115,8 +114,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
       );
     }
     if (request.userId !== undefined) {
-      const user = await this.userService.findById(request.userId);
-      if (!user) throw new AthleteNotFoundError();
+      await this.userService.findById(request.userId);
     }
     return this.repository.create(request);
   }

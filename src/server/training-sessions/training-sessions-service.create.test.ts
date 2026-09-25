@@ -1,6 +1,6 @@
 import type { CreateTrainingSessionInput } from "./training-sessions-service";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
-import { AthleteNotFoundError } from "./training-sessions-errors";
+import { UserNotFoundError } from "../user/user-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
@@ -55,8 +55,8 @@ test("checks the athlete before creating a session", async () => {
 
 test("does not create a session when the athlete is missing", async () => {
   const { repository, service, userService } = createService();
-  vi.mocked(userService.findById).mockResolvedValue(null);
+  vi.mocked(userService.findById).mockRejectedValue(new UserNotFoundError());
 
-  await expect(service.create(request)).rejects.toThrow(AthleteNotFoundError);
+  await expect(service.create(request)).rejects.toThrow(UserNotFoundError);
   expect(repository.create).not.toHaveBeenCalled();
 });

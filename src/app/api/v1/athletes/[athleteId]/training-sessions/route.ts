@@ -2,14 +2,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
+import { UserNotFoundError } from "@/server/user/user-errors";
 import {
   getTrainingSessionsService,
   trainingSessionsRequestValidator,
 } from "@/server/server";
-import {
-  AthleteNotFoundError,
-  TrainingSessionsRequestValidationError,
-} from "@/server/training-sessions/training-sessions-errors";
+import { TrainingSessionsRequestValidationError } from "@/server/training-sessions/training-sessions-errors";
 
 type RouteContext = {
   params: Promise<{ athleteId: string }>;
@@ -71,7 +69,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (error instanceof BadRequestError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    if (error instanceof AthleteNotFoundError) {
+    if (error instanceof UserNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
     return NextResponse.json(

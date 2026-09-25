@@ -1,13 +1,10 @@
-import {
-  IdentityAlreadyExistsError,
-  UserIdentityNotFoundError,
-} from "./user-errors";
+import { NotFoundError } from "@/server/errors/not-found-error";
+import { IdentityAlreadyExistsError, UserNotFoundError } from "./user-errors";
 
 test("user errors preserve their messages", () => {
-  expect(
-    new UserIdentityNotFoundError("User identity not found"),
-  ).toMatchObject({
-    message: "User identity not found",
-  });
+  const error = new UserNotFoundError();
+  expect(error).toBeInstanceOf(NotFoundError);
+  expect(error.message).toBe("User not found");
+  expect(error.name).toBe("UserNotFoundError");
   expect(new IdentityAlreadyExistsError()).toBeInstanceOf(Error);
 });
