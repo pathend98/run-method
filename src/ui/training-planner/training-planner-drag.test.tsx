@@ -67,6 +67,14 @@ const activity = {
 
 test("persists a drag move through the existing edit mutation", async () => {
   const fetchMock = vi.fn().mockImplementation((_url, options) => {
+    if (_url === "/api/v1/me") {
+      return Promise.resolve({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          id: "33333333-3333-4333-8333-333333333333",
+        }),
+      });
+    }
     if (options?.method === "PATCH") {
       return Promise.resolve({
         ok: true,

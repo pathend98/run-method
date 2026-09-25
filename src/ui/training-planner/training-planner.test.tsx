@@ -18,6 +18,21 @@ const navigation = vi.hoisted(() => ({
   search: "",
 }));
 
+const athleteId = "33333333-3333-4333-8333-333333333333";
+
+function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
+  vi.stubGlobal("fetch", (url: string, options?: RequestInit) =>
+    url === "/api/v1/me"
+      ? Promise.resolve({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: athleteId }),
+        })
+      : options === undefined
+        ? fetchMock(url)
+        : fetchMock(url, options),
+  );
+}
+
 function render(ui: React.ReactElement) {
   const rendered = testingRender(
     <TrainingPlannerStoreProvider>{ui}</TrainingPlannerStoreProvider>,
@@ -45,10 +60,7 @@ beforeEach(() => {
 });
 
 test("TrainingPlanner renders loading state", () => {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(() => new Promise(() => undefined)),
-  );
+  stubFetch(vi.fn(() => new Promise(() => undefined)));
 
   render(
     <QueryProvider>
@@ -60,8 +72,7 @@ test("TrainingPlanner renders loading state", () => {
 });
 
 test("TrainingPlanner renders loaded planner data", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([
@@ -122,8 +133,7 @@ test("TrainingPlanner opens the activity review modal from the attention panel",
     actualDistanceMetres: null,
     actualDurationSeconds: null,
   };
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([pastSession]),
@@ -145,8 +155,7 @@ test("TrainingPlanner opens the activity review modal from the attention panel",
 });
 
 test("TrainingPlanner renders error state", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
@@ -209,7 +218,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
       json: vi.fn().mockResolvedValue([session]),
     });
   });
-  vi.stubGlobal("fetch", fetchMock);
+  stubFetch(fetchMock);
 
   const first = render(
     <QueryProvider>
@@ -300,7 +309,7 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
       json: vi.fn().mockResolvedValue([]),
     });
   });
-  vi.stubGlobal("fetch", fetchMock);
+  stubFetch(fetchMock);
 
   render(
     <QueryProvider>
@@ -381,7 +390,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
         .mockResolvedValue([hasBeenEdited ? updatedActivity : activity]),
     });
   });
-  vi.stubGlobal("fetch", fetchMock);
+  stubFetch(fetchMock);
 
   render(
     <QueryProvider>
@@ -453,7 +462,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
       json: vi.fn().mockResolvedValue(deleted ? [] : [activity]),
     });
   });
-  vi.stubGlobal("fetch", fetchMock);
+  stubFetch(fetchMock);
 
   render(
     <QueryProvider>
@@ -497,7 +506,7 @@ test("TrainingPlanner fetches the week containing the URL date", async () => {
     ok: true,
     json: vi.fn().mockResolvedValue([]),
   });
-  vi.stubGlobal("fetch", fetchMock);
+  stubFetch(fetchMock);
 
   render(
     <QueryProvider>
@@ -507,14 +516,13 @@ test("TrainingPlanner fetches the week containing the URL date", async () => {
 
   await screen.findByRole("list", { name: "Weekly training planner" });
   expect(fetchMock).toHaveBeenCalledWith(
-    "/api/v1/training-sessions?from=2026-08-17&to=2026-08-23",
+    `/api/v1/athletes/${athleteId}/training-sessions?from=2026-08-17&to=2026-08-23`,
   );
 });
 
 test("TrainingPlanner navigates to adjacent Mondays and preserves query parameters", async () => {
   navigation.search = "week=2000-01-05&view=compact";
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([]),
@@ -545,8 +553,7 @@ test("TrainingPlanner navigates to adjacent Mondays and preserves query paramete
 
 test("TrainingPlanner removes only the week parameter for the current-week navigation", async () => {
   navigation.search = "week=2000-01-05&view=compact";
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([]),

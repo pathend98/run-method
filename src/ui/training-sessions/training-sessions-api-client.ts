@@ -10,19 +10,17 @@ import {
 } from "@/domain/training-sessions";
 import { TrainingSessionsApiError } from "./errors/training-sessions-errors";
 
-export async function fetchTrainingSessions({
-  from,
-  to,
-  status,
-}: TrainingSessionsQuery): Promise<TrainingSession[]> {
+export async function fetchTrainingSessions(
+  athleteId: string,
+  { from, to, status }: TrainingSessionsQuery,
+): Promise<TrainingSession[]> {
   const params = new URLSearchParams();
   if (from !== undefined) params.set("from", from);
   if (to !== undefined) params.set("to", to);
   if (status !== undefined) params.set("status", status);
   const query = params.toString();
-  const response = await fetch(
-    query ? `/api/v1/training-sessions?${query}` : "/api/v1/training-sessions",
-  );
+  const endpoint = `/api/v1/athletes/${encodeURIComponent(athleteId)}/training-sessions`;
+  const response = await fetch(query ? `${endpoint}?${query}` : endpoint);
 
   if (!response.ok) {
     const body = await readJsonBody(response);
