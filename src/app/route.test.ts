@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 function rootRequest(sessionKey?: string) {
-  return new NextRequest("https://app.example.com/", {
+  return new NextRequest("http://0.0.0.0:3000/", {
     headers: sessionKey
       ? { cookie: `__Host-user-session=${sessionKey}` }
       : undefined,
@@ -27,9 +27,7 @@ test("redirects an identified user to the training planner", async () => {
   const response = await GET(rootRequest("session-key"));
 
   expect(response.status).toBe(307);
-  expect(response.headers.get("location")).toBe(
-    "https://app.example.com/training-planner",
-  );
+  expect(response.headers.get("location")).toBe("/training-planner");
   expect(findBySessionKey).toHaveBeenCalledExactlyOnceWith("session-key");
 });
 
@@ -37,7 +35,7 @@ test("redirects to auth when the session cookie is missing", async () => {
   const response = await GET(rootRequest());
 
   expect(response.status).toBe(307);
-  expect(response.headers.get("location")).toBe("https://app.example.com/auth");
+  expect(response.headers.get("location")).toBe("/auth");
   expect(findBySessionKey).not.toHaveBeenCalled();
 });
 
@@ -47,7 +45,7 @@ test("redirects to auth when the session has no user", async () => {
   const response = await GET(rootRequest("invalid-session"));
 
   expect(response.status).toBe(307);
-  expect(response.headers.get("location")).toBe("https://app.example.com/auth");
+  expect(response.headers.get("location")).toBe("/auth");
 });
 
 test("returns a server error if session lookup fails", async () => {
