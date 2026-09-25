@@ -1,9 +1,5 @@
-import { z } from "zod";
-
-import type { User } from "@/domain/user-types";
+import { userSchema, type User } from "@/domain/user-types";
 import { UserApiError } from "./errors/user-api-error";
-
-const userSchema = z.object({ id: z.string().min(1) });
 
 export async function fetchCurrentUser(): Promise<User> {
   const response = await fetch("/api/v1/me", { cache: "no-store" });
