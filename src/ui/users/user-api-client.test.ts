@@ -1,4 +1,5 @@
-import { fetchCurrentUser, UserApiError } from "./user-api-client";
+import { UserApiError } from "./errors/user-api-error";
+import { fetchCurrentUser } from "./user-api-client";
 
 test("fetchCurrentUser returns the validated user ID", async () => {
   vi.stubGlobal(

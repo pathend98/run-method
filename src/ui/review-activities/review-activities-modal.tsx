@@ -12,7 +12,7 @@ import {
   formatDistance,
 } from "@/ui/training-sessions/training-session-metric-formatters";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
-import { useCurrentUserQuery } from "@/ui/user/current-user-query";
+import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import {
   useTrainingPlannerStore,
   type TrainingActivity,

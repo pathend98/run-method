@@ -4,7 +4,7 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
-import { useCurrentUserQuery } from "@/ui/user/current-user-query";
+import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { Button } from "@/ui/components/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";

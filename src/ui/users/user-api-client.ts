@@ -1,18 +1,9 @@
 import { z } from "zod";
 
 import type { User } from "@/domain/user-types";
+import { UserApiError } from "./errors/user-api-error";
 
 const userSchema = z.object({ id: z.string().min(1) });
-
-export class UserApiError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-  ) {
-    super(message);
-    this.name = "UserApiError";
-  }
-}
 
 export async function fetchCurrentUser(): Promise<User> {
   const response = await fetch("/api/v1/me", { cache: "no-store" });

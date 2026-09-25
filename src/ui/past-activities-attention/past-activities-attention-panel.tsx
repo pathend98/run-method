@@ -6,7 +6,7 @@ import { format, subDays } from "date-fns";
 import { Button } from "@/ui/components/button";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import { useCurrentUserQuery } from "@/ui/user/current-user-query";
+import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 
 type PastActivitiesAttentionPanelProps = {
   className?: string;
