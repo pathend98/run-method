@@ -78,6 +78,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
       json: vi.fn().mockResolvedValue([
         {
           id: "11111111-1111-4111-8111-111111111111",
+          athleteId: "33333333-3333-4333-8333-333333333333",
           title: "Easy run",
           activityType: "RUN",
           status: "SCHEDULED",
@@ -118,6 +119,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
 test("TrainingPlanner opens the activity review modal from the attention panel", async () => {
   const pastSession = {
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run",
     activityType: "RUN",
     status: "SCHEDULED",
@@ -178,6 +180,7 @@ test("TrainingPlanner renders error state", async () => {
 test("TrainingPlanner skips and completes activities through the API", async () => {
   const session = {
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run",
     activityType: "RUN",
     status: "SCHEDULED",
@@ -287,6 +290,7 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
         ok: true,
         json: vi.fn().mockResolvedValue({
           id: "11111111-1111-4111-8111-111111111111",
+          athleteId: "33333333-3333-4333-8333-333333333333",
           title: "Easy run",
           activityType: "RUN",
           status: "SCHEDULED",
@@ -354,6 +358,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
   const range = getCurrentWeekRange();
   const activity = {
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run",
     activityType: "RUN",
     status: "SCHEDULED",
@@ -436,6 +441,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
   const range = getCurrentWeekRange();
   const activity = {
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run",
     activityType: "RUN",
     status: "SCHEDULED",

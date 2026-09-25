@@ -199,7 +199,11 @@ test.each([
     targetDurationSeconds: null,
   },
 ])("creates an athlete $activityType session", async (body) => {
-  const session = { id: "11111111-1111-4111-8111-111111111111", ...body };
+  const session = {
+    id: "11111111-1111-4111-8111-111111111111",
+    athleteId,
+    ...body,
+  };
   requestValidator.validateCreate.mockReturnValue(body as never);
   service.create.mockResolvedValue(session);
 
@@ -210,7 +214,7 @@ test.each([
   await expect(response.json()).resolves.toEqual(session);
   expect(findBySessionKey).toHaveBeenCalledExactlyOnceWith(sessionKey);
   expect(requestValidator.validateCreate).toHaveBeenCalledWith(body);
-  expect(service.create).toHaveBeenCalledWith({ ...body, userId: athleteId });
+  expect(service.create).toHaveBeenCalledWith({ ...body, athleteId });
 });
 
 test("returns 400 for malformed JSON", async () => {

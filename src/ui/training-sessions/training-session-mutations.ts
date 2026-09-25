@@ -24,6 +24,11 @@ type EditTrainingSessionVariables = {
   request: EditTrainingSessionRequest;
 };
 
+type CreateTrainingSessionVariables = {
+  athleteId: string;
+  request: CreateTrainingSessionRequest;
+};
+
 type TransitionTrainingSessionVariables<TRequest> = {
   id: string;
   request: TRequest;
@@ -32,8 +37,8 @@ type TransitionTrainingSessionVariables<TRequest> = {
 export function useCreateTrainingSessionMutation() {
   return useTrainingSessionMutation<
     TrainingSession,
-    CreateTrainingSessionRequest
-  >((request) => createTrainingSession(request));
+    CreateTrainingSessionVariables
+  >(({ athleteId, request }) => createTrainingSession(athleteId, request));
 }
 
 export function useEditTrainingSessionMutation() {

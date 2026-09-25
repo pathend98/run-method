@@ -41,13 +41,17 @@ export async function fetchTrainingSessions(
 }
 
 export async function createTrainingSession(
+  athleteId: string,
   request: CreateTrainingSessionRequest,
 ): Promise<TrainingSession> {
-  const response = await fetch("/api/v1/training-sessions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
-  });
+  const response = await fetch(
+    `/api/v1/athletes/${encodeURIComponent(athleteId)}/training-sessions`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    },
+  );
 
   if (!response.ok) {
     const body = await readJsonBody(response);

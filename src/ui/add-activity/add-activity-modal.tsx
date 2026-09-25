@@ -16,7 +16,7 @@ import {
   type AddActivityFormValues,
 } from "./utils/add-activity-form";
 
-export function AddActivityModal() {
+export function AddActivityModal({ athleteId }: { athleteId: string }) {
   const [runFieldsPending, setRunFieldsPending] = useState(false);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
@@ -46,9 +46,10 @@ export function AddActivityModal() {
 
   async function submit(values: AddActivityFormValues) {
     try {
-      await createMutation.mutateAsync(
-        toCreateTrainingSessionRequest(values, date),
-      );
+      await createMutation.mutateAsync({
+        athleteId,
+        request: toCreateTrainingSessionRequest(values, date),
+      });
       closeModal();
     } catch {
       setError("root", {

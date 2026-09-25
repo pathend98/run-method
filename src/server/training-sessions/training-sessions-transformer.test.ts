@@ -9,6 +9,7 @@ const updatedAt = new Date("2026-08-01T10:30:00.000Z");
 
 const runSession = {
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Easy run",
   activityType: "RUN",
   status: "SCHEDULED",
@@ -23,6 +24,7 @@ const runSession = {
 
 const strengthSession = {
   id: "22222222-2222-4222-8222-222222222222",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Strength",
   activityType: "STRENGTH",
   status: "COMPLETED",
@@ -60,6 +62,7 @@ test("transforms run rows into training sessions", () => {
     } as unknown as TrainingSessionRow),
   ).toEqual({
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run",
     activityType: "RUN",
     status: "SCHEDULED",
@@ -86,6 +89,7 @@ test("transforms strength rows into training sessions", () => {
     } as TrainingSessionRow),
   ).toEqual({
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "COMPLETED",
@@ -141,6 +145,7 @@ test("rejects unsupported activity types", () => {
       session: {
         ...runSession,
         id: "33333333-3333-4333-8333-333333333333",
+        athleteId: "33333333-3333-4333-8333-333333333333",
         title: "Ride",
         activityType: "BIKE",
         timeOfDay: null,
@@ -154,6 +159,7 @@ test("rejects unsupported activity types", () => {
       session: {
         ...runSession,
         id: "33333333-3333-4333-8333-333333333333",
+        athleteId: "33333333-3333-4333-8333-333333333333",
         title: "Ride",
         activityType: "BIKE",
         timeOfDay: null,

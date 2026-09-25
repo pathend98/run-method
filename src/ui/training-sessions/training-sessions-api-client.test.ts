@@ -19,6 +19,7 @@ const createRequest = {
 const createdSession = {
   ...createRequest,
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   status: "SCHEDULED" as const,
   sortOrder: 0,
   skipReason: null,
@@ -37,6 +38,7 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
       json: vi.fn().mockResolvedValue([
         {
           id: "11111111-1111-4111-8111-111111111111",
+          athleteId: "33333333-3333-4333-8333-333333333333",
           title: "Easy run",
           activityType: "RUN",
           status: "SCHEDULED",
@@ -54,6 +56,7 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
         },
         {
           id: "22222222-2222-4222-8222-222222222222",
+          athleteId: "33333333-3333-4333-8333-333333333333",
           title: "Strength",
           activityType: "STRENGTH",
           status: "COMPLETED",
@@ -76,6 +79,7 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
   ).resolves.toEqual([
     {
       id: "11111111-1111-4111-8111-111111111111",
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Easy run",
       activityType: "RUN",
       status: "SCHEDULED",
@@ -93,6 +97,7 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
     },
     {
       id: "22222222-2222-4222-8222-222222222222",
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Strength",
       activityType: "STRENGTH",
       status: "COMPLETED",
@@ -206,14 +211,17 @@ test("createTrainingSession posts and parses the created session", async () => {
     }),
   );
 
-  await expect(createTrainingSession(createRequest)).resolves.toEqual(
-    createdSession,
+  await expect(
+    createTrainingSession(athleteId, createRequest),
+  ).resolves.toEqual(createdSession);
+  expect(fetch).toHaveBeenCalledWith(
+    `/api/v1/athletes/${athleteId}/training-sessions`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(createRequest),
+    },
   );
-  expect(fetch).toHaveBeenCalledWith("/api/v1/training-sessions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(createRequest),
-  });
 });
 
 test("createTrainingSession returns API messages and field errors", async () => {
@@ -229,7 +237,9 @@ test("createTrainingSession returns API messages and field errors", async () => 
     }),
   );
 
-  await expect(createTrainingSession(createRequest)).rejects.toMatchObject({
+  await expect(
+    createTrainingSession(athleteId, createRequest),
+  ).rejects.toMatchObject({
     message: "Invalid request body",
     status: 400,
     fieldErrors: { title: ["Required"] },
@@ -248,7 +258,9 @@ test.each([undefined, null, "invalid", { title: "invalid" }, { title: [1] }])(
       }),
     );
 
-    await expect(createTrainingSession(createRequest)).rejects.toMatchObject({
+    await expect(
+      createTrainingSession(athleteId, createRequest),
+    ).rejects.toMatchObject({
       message: "Unable to create training session",
       status: 500,
       fieldErrors: undefined,
@@ -266,7 +278,9 @@ test("createTrainingSession falls back for a non-JSON error body", async () => {
     }),
   );
 
-  await expect(createTrainingSession(createRequest)).rejects.toMatchObject({
+  await expect(
+    createTrainingSession(athleteId, createRequest),
+  ).rejects.toMatchObject({
     message: "Unable to create training session",
     status: 502,
     fieldErrors: undefined,

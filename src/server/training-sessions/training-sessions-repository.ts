@@ -119,9 +119,7 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
       const [session] = await tx
         .insert(trainingSessions)
         .values({
-          ...(request.userId !== undefined
-            ? { athleteId: request.userId }
-            : {}),
+          athleteId: request.athleteId,
           title: request.title,
           activityType: request.activityType,
           date: request.date,

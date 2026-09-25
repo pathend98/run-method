@@ -131,7 +131,9 @@ export function TrainingPlanner() {
       {activeModalKind === "complete" ? <CompleteActivityModal /> : null}
       {activeModalKind === "skip" ? <SkipActivityModal /> : null}
       {activeModalKind === "delete" ? <DeleteActivityModal /> : null}
-      {activeModalKind === "add" ? <AddActivityModal /> : null}
+      {activeModalKind === "add" ? (
+        <AddActivityModal athleteId={currentUser.data.id} />
+      ) : null}
       {activeModalKind === "review" ? <ReviewActivitiesModal /> : null}
     </>
   );

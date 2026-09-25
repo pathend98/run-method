@@ -5,7 +5,7 @@ import type { TrainingSessionsRepository } from "./training-sessions-repository"
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
 
-const userId = "33333333-3333-4333-8333-333333333333";
+const athleteId = "33333333-3333-4333-8333-333333333333";
 const request: CreateTrainingSessionInput = {
   title: "Strength",
   activityType: "STRENGTH",
@@ -13,7 +13,7 @@ const request: CreateTrainingSessionInput = {
   timeOfDay: null,
   description: null,
   targetDurationSeconds: null,
-  userId,
+  athleteId,
 };
 
 function createService() {
@@ -29,24 +29,27 @@ function createService() {
   return { repository, userService, service };
 }
 
-test("validates athlete ids before looking up users", async () => {
-  const { repository, service, userService } = createService();
+test.each([undefined, null, "invalid"])(
+  "validates athlete id %s before looking up users",
+  async (athleteId) => {
+    const { repository, service, userService } = createService();
 
-  await expect(
-    service.create({ ...request, userId: "invalid" }),
-  ).rejects.toThrow("athlete id must be a valid UUID");
-  expect(userService.findById).not.toHaveBeenCalled();
-  expect(repository.create).not.toHaveBeenCalled();
-});
+    await expect(
+      service.create({ ...request, athleteId } as CreateTrainingSessionInput),
+    ).rejects.toThrow("athlete id must be a valid UUID");
+    expect(userService.findById).not.toHaveBeenCalled();
+    expect(repository.create).not.toHaveBeenCalled();
+  },
+);
 
 test("checks the athlete before creating a session", async () => {
   const { repository, service, userService } = createService();
-  vi.mocked(userService.findById).mockResolvedValue({ id: userId });
+  vi.mocked(userService.findById).mockResolvedValue({ id: athleteId });
   vi.mocked(repository.create).mockResolvedValue({ id: "created" } as never);
 
   await service.create(request);
 
-  expect(userService.findById).toHaveBeenCalledExactlyOnceWith(userId);
+  expect(userService.findById).toHaveBeenCalledExactlyOnceWith(athleteId);
   expect(repository.create).toHaveBeenCalledExactlyOnceWith(request);
   expect(
     vi.mocked(userService.findById).mock.invocationCallOrder[0],

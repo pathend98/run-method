@@ -8,6 +8,7 @@ import { EditActivitySummary } from "./edit-activity-summary";
 
 const runActivity = {
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Tempo run",
   status: "SCHEDULED",
   date: "2026-08-17",
@@ -27,6 +28,7 @@ const runActivity = {
 const strengthActivity = {
   ...runActivity,
   id: "22222222-2222-4222-8222-222222222222",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Strength",
   activityType: "STRENGTH",
   targetDurationSeconds: 2700,

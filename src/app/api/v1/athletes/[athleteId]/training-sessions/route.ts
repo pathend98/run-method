@@ -104,7 +104,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const createRequest = trainingSessionsRequestValidator.validateCreate(body);
     const session = await getTrainingSessionsService().create({
       ...createRequest,
-      userId: athleteId,
+      athleteId,
     });
     return NextResponse.json(session, {
       status: 201,

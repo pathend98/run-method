@@ -38,6 +38,7 @@ export class DefaultTrainingSessionsTransformer implements TrainingSessionsTrans
 
     const base = {
       id: row.session.id,
+      athleteId: row.session.athleteId,
       title: row.session.title,
       status: statusResult.data,
       date: row.session.date,

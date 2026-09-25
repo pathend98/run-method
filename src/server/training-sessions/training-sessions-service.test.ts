@@ -112,6 +112,7 @@ test("validates athlete ids and forwards valid athlete filters", async () => {
 test("delegates creation to the repository", async () => {
   const { repository, service, userService } = createService();
   const request = {
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH" as const,
     date: "2026-08-26",
@@ -122,6 +123,7 @@ test("delegates creation to the repository", async () => {
   const created = {
     ...request,
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     status: "SCHEDULED" as const,
     sortOrder: 0,
     skipReason: null,
@@ -132,7 +134,7 @@ test("delegates creation to the repository", async () => {
   vi.mocked(repository.create).mockResolvedValue(created);
 
   await expect(service.create(request)).resolves.toEqual(created);
-  expect(userService.findById).not.toHaveBeenCalled();
+  expect(userService.findById).toHaveBeenCalledWith(request.athleteId);
   expect(repository.create).toHaveBeenCalledWith(request);
 });
 
@@ -276,6 +278,7 @@ test.each(["skip", "complete"] as const)(
 
 const runSession: TrainingSession = {
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Easy run",
   activityType: "RUN",
   status: "SCHEDULED",
@@ -486,6 +489,7 @@ test("does not write an unchanged completed strength actual duration", async () 
   const { repository, service } = createService();
   const completed: StrengthTrainingSession = {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "COMPLETED",
@@ -517,6 +521,7 @@ test("edits scheduled strength sessions", async () => {
   const { repository, service } = createService();
   const strength: TrainingSession = {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "SCHEDULED",
@@ -549,6 +554,7 @@ test("returns unchanged strength sessions without writing", async () => {
   const { repository, service } = createService();
   const strength: TrainingSession = {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "SCHEDULED",
@@ -581,6 +587,7 @@ test.each([2400, null])(
     const { repository, service } = createService();
     const strength: TrainingSession = {
       id: "22222222-2222-4222-8222-222222222222",
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Strength",
       activityType: "STRENGTH",
       status: "SCHEDULED",

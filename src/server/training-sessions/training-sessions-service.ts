@@ -43,7 +43,7 @@ export interface TrainingSessionsService {
 }
 
 export type CreateTrainingSessionInput = CreateTrainingSessionRequest & {
-  userId?: string;
+  athleteId: string;
 };
 
 export type TrainingSessionsQueryInput = {
@@ -105,17 +105,12 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   }
 
   async create(request: CreateTrainingSessionInput): Promise<TrainingSession> {
-    if (
-      request.userId !== undefined &&
-      !trainingSessionIdSchema.safeParse(request.userId).success
-    ) {
+    if (!trainingSessionIdSchema.safeParse(request.athleteId).success) {
       throw new TrainingSessionsValidationError(
         "athlete id must be a valid UUID",
       );
     }
-    if (request.userId !== undefined) {
-      await this.userService.findById(request.userId);
-    }
+    await this.userService.findById(request.athleteId);
     return this.repository.create(request);
   }
 
