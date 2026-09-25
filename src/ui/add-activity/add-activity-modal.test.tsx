@@ -35,7 +35,7 @@ function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
     ...render(
       <TrainingPlannerStoreProvider store={store}>
         <QueryProvider>
-          <AddActivityModal />
+          <AddActivityModal athleteId="33333333-3333-4333-8333-333333333333" />
         </QueryProvider>
       </TrainingPlannerStoreProvider>,
     ),
@@ -80,6 +80,7 @@ test("submits a converted activity for its selected day and closes", async () =>
 
   await waitFor(() =>
     expect(onCreate).toHaveBeenCalledWith(
+      "33333333-3333-4333-8333-333333333333",
       expect.objectContaining({
         date: day.date,
         targetDistanceMetres: 8000,
@@ -160,7 +161,7 @@ test("renders nothing when add activity is not active", () => {
   render(
     <TrainingPlannerStoreProvider>
       <QueryProvider>
-        <AddActivityModal />
+        <AddActivityModal athleteId="33333333-3333-4333-8333-333333333333" />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );

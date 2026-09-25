@@ -1,15 +1,16 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import type { User } from "@/domain/user-types";
-import { UserIdentityNotFoundError } from "./user-errors";
+import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import type { CreateUser, CreateUserSession, UserIdentity } from "./user-types";
 
 export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 export interface UserService {
-  findByIdentity(identity: UserIdentity): Promise<User | null>;
-  findBySessionKey(sessionKey: string): Promise<User | null>;
+  findById(id: string): Promise<User>;
+  findByIdentity(identity: UserIdentity): Promise<User>;
+  findBySessionKey(sessionKey: string): Promise<User>;
   create(input: CreateUser): Promise<User>;
   createSession(input: CreateUserSession): Promise<string>;
 }
@@ -17,17 +18,30 @@ export interface UserService {
 export class DefaultUserService implements UserService {
   constructor(private readonly repository: UserRepository) {}
 
-  findByIdentity(identity: UserIdentity): Promise<User | null> {
-    return this.repository.findByIdentity(identity);
+  async findById(id: string): Promise<User> {
+    const user = await this.repository.findById(id);
+    if (!user) throw new UserNotFoundError();
+    return user;
   }
 
-  findBySessionKey(sessionKey: string): Promise<User | null> {
-    if (!sessionKey) return Promise.resolve(null);
+  async findByIdentity(identity: UserIdentity): Promise<User> {
+    const user = await this.repository.findByIdentity(identity);
+    if (!user) throw new UserNotFoundError();
+    return user;
+  }
+
+  async findBySessionKey(sessionKey: string): Promise<User> {
+    if (!sessionKey) throw new UserNotFoundError();
 
     const sessionKeyHash = createHash("sha256")
       .update(sessionKey)
       .digest("hex");
-    return this.repository.findBySessionKeyHash(sessionKeyHash, new Date());
+    const user = await this.repository.findBySessionKeyHash(
+      sessionKeyHash,
+      new Date(),
+    );
+    if (!user) throw new UserNotFoundError();
+    return user;
   }
 
   create(input: CreateUser): Promise<User> {
@@ -37,7 +51,7 @@ export class DefaultUserService implements UserService {
   async createSession(input: CreateUserSession): Promise<string> {
     const identity = await this.repository.findByIdentity(input);
     if (!identity) {
-      throw new UserIdentityNotFoundError("User identity not found");
+      throw new UserNotFoundError();
     }
 
     const sessionKey = randomBytes(32).toString("base64url");

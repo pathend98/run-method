@@ -50,10 +50,18 @@ test("create mutation calls the client and invalidates training sessions", async
     const { result } = renderHook(() => useCreateTrainingSessionMutation(), {
       wrapper: createWrapper(queryClient),
     });
-    await act(() => result.current.mutateAsync(request as never));
+    await act(() =>
+      result.current.mutateAsync({
+        athleteId: "33333333-3333-4333-8333-333333333333",
+        request: request as never,
+      }),
+    );
   });
 
-  expect(api.createTrainingSession).toHaveBeenCalledWith(request);
+  expect(api.createTrainingSession).toHaveBeenCalledWith(
+    "33333333-3333-4333-8333-333333333333",
+    request,
+  );
 });
 
 test("edit mutation calls the client with its id and request", async () => {

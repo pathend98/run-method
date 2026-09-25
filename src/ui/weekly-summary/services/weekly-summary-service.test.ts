@@ -8,6 +8,7 @@ const baseActivity = {
   date: "2026-08-17",
   description: null,
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   skipReason: null,
   sortOrder: 0,
   timeOfDay: null,
@@ -29,6 +30,7 @@ const activities: TrainingSession[] = [
   {
     ...baseActivity,
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     activityType: "STRENGTH",
     actualDurationSeconds: 1800,
     status: "COMPLETED",
@@ -37,6 +39,7 @@ const activities: TrainingSession[] = [
   {
     ...baseActivity,
     id: "33333333-3333-4333-8333-333333333333",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     date: "2026-08-20",
     activityType: "RUN",
     actualDistanceMetres: null,
@@ -48,6 +51,7 @@ const activities: TrainingSession[] = [
   {
     ...baseActivity,
     id: "44444444-4444-4444-8444-444444444444",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     activityType: "STRENGTH",
     actualDurationSeconds: null,
     skipReason: "Tired",
@@ -57,6 +61,7 @@ const activities: TrainingSession[] = [
   {
     ...baseActivity,
     id: "55555555-5555-4555-8555-555555555555",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     date: "2026-08-22",
     activityType: "STRENGTH",
     actualDurationSeconds: null,

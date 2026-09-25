@@ -58,9 +58,9 @@ export const trainingSessions = pgTable(
   "training_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    athleteId: uuid("athlete_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
+    athleteId: uuid("athlete_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     activityType: text("activity_type").notNull(),
     status: text("status").notNull().default("SCHEDULED"),

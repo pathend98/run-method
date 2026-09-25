@@ -4,18 +4,18 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { runDetails, strengthDetails, trainingSessions } from "@db/schema";
 import type {
   CompleteTrainingSessionRequest,
-  CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
   SkipTrainingSessionRequest,
   TrainingSession,
   TrainingSessionsQuery,
 } from "@/domain/training-sessions";
+import type { CreateTrainingSessionInput } from "./training-sessions-service";
 import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
 
 export interface TrainingSessionsRepository {
   find(query: TrainingSessionsFindQuery): Promise<TrainingSession[]>;
   findById(id: string): Promise<TrainingSession | null>;
-  create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
+  create(request: CreateTrainingSessionInput): Promise<TrainingSession>;
   deleteById(id: string): Promise<boolean>;
   skip(
     current: TrainingSession,
@@ -102,9 +102,7 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
     return row ? this.transformer.transform(row) : null;
   }
 
-  async create(
-    request: CreateTrainingSessionRequest,
-  ): Promise<TrainingSession> {
+  async create(request: CreateTrainingSessionInput): Promise<TrainingSession> {
     return this.db.transaction(async (tx) => {
       const bucket = [
         eq(trainingSessions.date, request.date),
@@ -121,6 +119,7 @@ export class DrizzleTrainingSessionsRepository implements TrainingSessionsReposi
       const [session] = await tx
         .insert(trainingSessions)
         .values({
+          athleteId: request.athleteId,
           title: request.title,
           activityType: request.activityType,
           date: request.date,

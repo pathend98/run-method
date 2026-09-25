@@ -4,6 +4,7 @@ import type { TrainingActivity } from "../types/training-planner-types";
 
 const baseActivity = {
   id: "activity",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Tempo run",
   activityType: "RUN",
   status: "SCHEDULED",

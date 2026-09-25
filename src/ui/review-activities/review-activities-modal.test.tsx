@@ -11,6 +11,7 @@ import { ReviewActivitiesModal } from "./review-activities-modal";
 const sessions = [
   {
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run",
     activityType: "RUN",
     status: "SCHEDULED",
@@ -28,6 +29,7 @@ const sessions = [
   },
   {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run 2",
     activityType: "RUN",
     status: "SCHEDULED",
@@ -114,6 +116,7 @@ test("shows duration-only planned metrics for strength activities", async () => 
   renderModal([
     {
       id: "33333333-3333-4333-8333-333333333333",
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Strength session",
       activityType: "STRENGTH",
       status: "SCHEDULED",

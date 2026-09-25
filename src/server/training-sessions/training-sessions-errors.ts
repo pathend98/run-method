@@ -1,4 +1,5 @@
 import { BadRequestError } from "@/server/errors/bad-request-error";
+import { NotFoundError } from "@/server/errors/not-found-error";
 
 export class TrainingSessionsValidationError extends BadRequestError {
   constructor(message: string) {
@@ -21,7 +22,7 @@ export class TrainingSessionsDataIntegrityError extends Error {
   }
 }
 
-export class TrainingSessionNotFoundError extends Error {
+export class TrainingSessionNotFoundError extends NotFoundError {
   constructor() {
     super("Training session not found");
     this.name = "TrainingSessionNotFoundError";

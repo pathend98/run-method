@@ -1,7 +1,5 @@
-import type {
-  CreateTrainingSessionRequest,
-  TrainingSession,
-} from "@/domain/training-sessions";
+import type { TrainingSession } from "@/domain/training-sessions";
+import type { CreateTrainingSessionInput } from "./training-sessions-service";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions-repository";
 import type {
   TrainingSessionRow,
@@ -15,7 +13,7 @@ const rows: TrainingSessionRow[] = [
   {
     session: {
       id: "11111111-1111-4111-8111-111111111111",
-      athleteId: null,
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Easy run",
       activityType: "RUN",
       status: "SCHEDULED",
@@ -39,7 +37,7 @@ const rows: TrainingSessionRow[] = [
   {
     session: {
       id: "22222222-2222-4222-8222-222222222222",
-      athleteId: null,
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Strength",
       activityType: "STRENGTH",
       status: "COMPLETED",
@@ -63,6 +61,7 @@ const rows: TrainingSessionRow[] = [
 const transformedRows: TrainingSession[] = [
   {
     id: "11111111-1111-4111-8111-111111111111",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run",
     activityType: "RUN",
     status: "SCHEDULED",
@@ -80,6 +79,7 @@ const transformedRows: TrainingSession[] = [
   },
   {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "COMPLETED",
@@ -209,9 +209,10 @@ test("findById returns null when no aggregate exists", async () => {
   expect(transformer.transform).not.toHaveBeenCalled();
 });
 
-function createRepositoryForCreation(request: CreateTrainingSessionRequest) {
+function createRepositoryForCreation(request: CreateTrainingSessionInput) {
   const session = {
     id: "33333333-3333-4333-8333-333333333333",
+    athleteId: request.athleteId,
     title: request.title,
     activityType: request.activityType,
     status: "SCHEDULED" as const,
@@ -259,6 +260,7 @@ function createRepositoryForCreation(request: CreateTrainingSessionRequest) {
   const transaction = vi.fn().mockImplementation((callback) => callback(tx));
   const transformed = {
     id: session.id,
+    athleteId: session.athleteId,
     title: session.title,
   } as TrainingSession;
   const transformer: TrainingSessionsTransformer = {
@@ -278,8 +280,9 @@ function createRepositoryForCreation(request: CreateTrainingSessionRequest) {
   };
 }
 
-const createRequests: CreateTrainingSessionRequest[] = [
+const createRequests: CreateTrainingSessionInput[] = [
   {
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Distance duration",
     activityType: "RUN",
     targetDistanceMetres: 5000,
@@ -289,6 +292,7 @@ const createRequests: CreateTrainingSessionRequest[] = [
     description: null,
   },
   {
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     targetDurationSeconds: 2400,
@@ -313,6 +317,7 @@ test.each(createRequests)(
 
     expect(selectWhere).toHaveBeenCalledOnce();
     expect(insertedValues[0]).toEqual({
+      athleteId: request.athleteId,
       title: request.title,
       activityType: request.activityType,
       date: request.date,
@@ -341,5 +346,19 @@ test.each(createRequests)(
         targetDurationSeconds: request.targetDurationSeconds,
       });
     }
+  },
+);
+
+test.each(createRequests)(
+  "creates athlete $activityType session with the athlete ID attached",
+  async (request) => {
+    const athleteId = "44444444-4444-4444-8444-444444444444";
+    const { insertedValues, repository, selectWhere } =
+      createRepositoryForCreation({ ...request, athleteId });
+
+    await repository.create({ ...request, athleteId });
+
+    expect(selectWhere).toHaveBeenCalledOnce();
+    expect(insertedValues[0]).toMatchObject({ athleteId });
   },
 );

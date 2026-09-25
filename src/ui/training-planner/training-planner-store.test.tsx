@@ -11,6 +11,7 @@ import {
 
 const activity = {
   id: "activity",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Tempo run",
   status: "SCHEDULED",
   date: "2026-08-17",

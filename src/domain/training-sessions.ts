@@ -26,6 +26,7 @@ const runActualsSchema = z.object({
 
 export const baseTrainingSessionSchema = z.object({
   id: trainingSessionIdSchema,
+  athleteId: trainingSessionIdSchema,
   title: z.string().min(1),
   status: trainingSessionStatusSchema,
   date: z.iso.date(),

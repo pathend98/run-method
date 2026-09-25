@@ -29,6 +29,7 @@ vi.mock(
 
 const activity = {
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Tempo run",
   status: "SCHEDULED",
   date: "2026-09-10",
@@ -125,6 +126,7 @@ test("moves a strength activity with its existing duration", async () => {
   const strengthActivity = {
     ...activity,
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     activityType: "STRENGTH",
     timeOfDay: null,
     targetDurationSeconds: null,

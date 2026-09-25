@@ -8,6 +8,7 @@ import {
 
 const baseSession = {
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Easy run",
   status: "SCHEDULED",
   date: "2026-08-17",
@@ -39,11 +40,29 @@ test("trainingSessionSchema validates run read models", () => {
   });
 });
 
+test.each([undefined, null, "invalid"])(
+  "trainingSessionSchema rejects invalid athlete id %s",
+  (athleteId) => {
+    expect(
+      trainingSessionSchema.safeParse({
+        ...baseSession,
+        athleteId,
+        activityType: "RUN",
+        targetDistanceMetres: 8000,
+        targetDurationSeconds: 2700,
+        actualDistanceMetres: null,
+        actualDurationSeconds: null,
+      }).success,
+    ).toBe(false);
+  },
+);
+
 test("trainingSessionSchema validates strength read models", () => {
   expect(
     trainingSessionSchema.parse({
       ...baseSession,
       id: "22222222-2222-4222-8222-222222222222",
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Strength",
       status: "COMPLETED",
       activityType: "STRENGTH",
@@ -53,6 +72,7 @@ test("trainingSessionSchema validates strength read models", () => {
   ).toEqual({
     ...baseSession,
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     status: "COMPLETED",
     activityType: "STRENGTH",

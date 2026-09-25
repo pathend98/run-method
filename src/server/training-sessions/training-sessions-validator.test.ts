@@ -10,6 +10,7 @@ const timeZone = "UTC";
 
 const runSession: TrainingSession = {
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Easy run",
   activityType: "RUN",
   status: "SCHEDULED",
@@ -238,6 +239,7 @@ test("rejects future strength session transitions", () => {
   const validator = new DefaultTrainingSessionsValidator(() => today);
   const strength: TrainingSession = {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "SCHEDULED",
@@ -290,6 +292,7 @@ test("allows run completion actuals", () => {
 test("rejects distance when completing strength sessions", () => {
   const strength: TrainingSession = {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "SCHEDULED",
@@ -319,6 +322,7 @@ test("rejects distance when completing strength sessions", () => {
 test("allows title and description edits on terminal strength sessions", () => {
   const current: TrainingSession = {
     id: "22222222-2222-4222-8222-222222222222",
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH",
     status: "SKIPPED",
@@ -352,6 +356,7 @@ test.each([
   (_name, status, targetDurationSeconds) => {
     const current: TrainingSession = {
       id: "22222222-2222-4222-8222-222222222222",
+      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Strength",
       activityType: "STRENGTH",
       status,

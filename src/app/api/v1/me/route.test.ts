@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { UserNotFoundError } from "@/server/user/user-errors";
 
 import { GET } from "./route";
 
@@ -41,7 +42,7 @@ test("returns 401 when the session cookie is missing", async () => {
 });
 
 test("returns 401 when the session has no user", async () => {
-  findBySessionKey.mockResolvedValue(null);
+  findBySessionKey.mockRejectedValue(new UserNotFoundError());
 
   const response = await GET(meRequest("invalid-session"));
 

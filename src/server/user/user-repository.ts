@@ -11,6 +11,7 @@ import type {
 } from "./user-types";
 
 export interface UserRepository {
+  findById(id: string): Promise<User | null>;
   findByIdentity(identity: UserIdentity): Promise<User | null>;
   findBySessionKeyHash(sessionKeyHash: string, now: Date): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
@@ -19,6 +20,16 @@ export interface UserRepository {
 
 export class DrizzleUserRepository implements UserRepository {
   constructor(private readonly db: NodePgDatabase) {}
+
+  async findById(id: string): Promise<User | null> {
+    const [user] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+
+    return user ?? null;
+  }
 
   async findByIdentity(identity: UserIdentity): Promise<User | null> {
     const [user] = await this.db

@@ -8,6 +8,7 @@ import type { TrainingSessionsTransformer } from "./training-sessions-transforme
 
 const run: RunTrainingSession = {
   id: "11111111-1111-4111-8111-111111111111",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Easy run",
   activityType: "RUN",
   status: "SCHEDULED",
@@ -26,6 +27,7 @@ const run: RunTrainingSession = {
 
 const strength: Extract<TrainingSession, { activityType: "STRENGTH" }> = {
   id: "22222222-2222-4222-8222-222222222222",
+  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Strength",
   activityType: "STRENGTH",
   status: "COMPLETED",
@@ -46,6 +48,7 @@ function createRepository(
 ) {
   const session = {
     id: current.id,
+    athleteId: "33333333-3333-4333-8333-333333333333",
     title: request.title,
     activityType: current.activityType,
     status: current.status,
