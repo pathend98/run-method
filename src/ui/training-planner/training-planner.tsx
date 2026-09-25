@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { Button } from "@/ui/components/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
@@ -43,10 +44,19 @@ export function TrainingPlanner() {
   const searchParams = useSearchParams();
   const currentWeekRange = getCurrentWeekRange();
   const weekRange = resolveWeekRange(searchParams.get("week"));
-  const queryKey = ["training-sessions", weekRange.from, weekRange.to];
+  const currentUser = useCurrentUserQuery();
+  const athleteId = currentUser.data?.id;
+  const queryKey = [
+    "training-sessions",
+    athleteId,
+    weekRange.from,
+    weekRange.to,
+  ];
   const query = useQuery({
     queryKey,
-    queryFn: () => fetchTrainingSessions(weekRange),
+    queryFn: athleteId
+      ? () => fetchTrainingSessions(athleteId, weekRange)
+      : skipToken,
   });
 
   function navigateToWeek(weekStart: string | null) {
@@ -73,21 +83,28 @@ export function TrainingPlanner() {
       request: createMoveTrainingSessionRequest(activity, destination),
     });
   }
-  if (query.isPending) {
-    return <PlannerStatus message="Loading training planner..." />;
-  }
-
-  if (query.isError) {
+  if (currentUser.isError || query.isError) {
     return (
       <PlannerStatus
         action={
-          <Button onClick={() => void query.refetch()} variant="primary">
+          <Button
+            onClick={() =>
+              void (currentUser.isError
+                ? currentUser.refetch()
+                : query.refetch())
+            }
+            variant="primary"
+          >
             Retry
           </Button>
         }
         message="Unable to load training planner."
       />
     );
+  }
+
+  if (currentUser.isPending || query.isPending) {
+    return <PlannerStatus message="Loading training planner..." />;
   }
 
   const week = groupSessionsByWeekday(query.data, weekRange);

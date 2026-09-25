@@ -45,15 +45,23 @@ const sessions = [
   },
 ] satisfies TrainingSession[];
 
+const athleteId = "33333333-3333-4333-8333-333333333333";
+
 function renderModal(response: TrainingSession[] = sessions) {
   const store = createTrainingPlannerStore();
   store.getState().openReviewActivities();
   vi.stubGlobal(
     "fetch",
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue(response),
-    }),
+    vi.fn((url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: vi
+          .fn()
+          .mockResolvedValue(
+            url === "/api/v1/me" ? { id: athleteId } : response,
+          ),
+      }),
+    ),
   );
   render(
     <TrainingPlannerStoreProvider store={store}>
@@ -71,6 +79,11 @@ test("lists attention activities by date and opens their action flows", async ()
   expect(
     await screen.findByRole("dialog", { name: "Activities needing attention" }),
   ).toBeDefined();
+  expect(fetch).toHaveBeenCalledWith(
+    expect.stringContaining(
+      `/api/v1/athletes/${athleteId}/training-sessions?to=`,
+    ),
+  );
   expect(screen.getByText("2 activities remaining.")).toBeDefined();
   expect(screen.getByText("Mon 31 Aug")).toBeDefined();
   expect(screen.getByText("12.00 km · 56m")).toBeDefined();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { format, parseISO, subDays } from "date-fns";
 import { useEffect } from "react";
 
@@ -12,19 +12,11 @@ import {
   formatDistance,
 } from "@/ui/training-sessions/training-session-metric-formatters";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import {
   useTrainingPlannerStore,
   type TrainingActivity,
 } from "@/ui/training-planner/training-planner-store";
-
-function getPastActivitiesQuery() {
-  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
-  return {
-    queryKey: ["training-sessions", "past-scheduled", yesterday],
-    queryFn: () =>
-      fetchTrainingSessions({ status: "SCHEDULED", to: yesterday }),
-  };
-}
 
 export function ReviewActivitiesModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
@@ -35,8 +27,18 @@ export function ReviewActivitiesModal() {
   const openSkipActivity = useTrainingPlannerStore(
     (state) => state.openSkipActivityFromReview,
   );
+  const currentUser = useCurrentUserQuery();
+  const athleteId = currentUser.data?.id;
+  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
   const query = useQuery({
-    ...getPastActivitiesQuery(),
+    queryKey: ["training-sessions", athleteId, "past-scheduled", yesterday],
+    queryFn: athleteId
+      ? () =>
+          fetchTrainingSessions(athleteId, {
+            status: "SCHEDULED",
+            to: yesterday,
+          })
+      : skipToken,
     enabled: activeModal?.kind === "review",
   });
 

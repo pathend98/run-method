@@ -26,6 +26,21 @@ const session = {
   actualDurationSeconds: null,
 };
 
+const athleteId = "33333333-3333-4333-8333-333333333333";
+
+function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
+  vi.stubGlobal("fetch", (url: string, options?: RequestInit) =>
+    url === "/api/v1/me"
+      ? Promise.resolve({
+          ok: true,
+          json: vi.fn().mockResolvedValue({ id: athleteId }),
+        })
+      : options === undefined
+        ? fetchMock(url)
+        : fetchMock(url, options),
+  );
+}
+
 function renderPanel(className?: string) {
   const store = createTrainingPlannerStore();
   render(
@@ -48,7 +63,7 @@ test("renders a compact attention panel and fetches past scheduled activities", 
         { ...session, id: "22222222-2222-4222-8222-222222222222" },
       ]),
   });
-  vi.stubGlobal("fetch", fetchMock);
+  stubFetch(fetchMock);
   const store = renderPanel("mb-8");
 
   const heading = await screen.findByText("2 activities need your attention.");
@@ -60,15 +75,14 @@ test("renders a compact attention panel and fetches past scheduled activities", 
     screen.getByText("Past activities are waiting to be completed."),
   ).toBeDefined();
   expect(fetchMock).toHaveBeenCalledWith(
-    `/api/v1/training-sessions?to=${format(subDays(new Date(), 1), "yyyy-MM-dd")}&status=SCHEDULED`,
+    `/api/v1/athletes/${athleteId}/training-sessions?to=${format(subDays(new Date(), 1), "yyyy-MM-dd")}&status=SCHEDULED`,
   );
   fireEvent.click(screen.getByRole("button", { name: "Review activities" }));
   expect(store.getState().activeModal).toEqual({ kind: "review" });
 });
 
 test("does not render when no activity needs attention", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi
       .fn()
       .mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue([]) }),
@@ -83,8 +97,7 @@ test("does not render when no activity needs attention", async () => {
 });
 
 test("uses singular grammar for one activity", async () => {
-  vi.stubGlobal(
-    "fetch",
+  stubFetch(
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([session]),

@@ -27,6 +27,8 @@ const createdSession = {
   actualDurationSeconds: null,
 };
 
+const athleteId = "33333333-3333-4333-8333-333333333333";
+
 test("fetchTrainingSessions calls the API and parses sessions", async () => {
   vi.stubGlobal(
     "fetch",
@@ -70,7 +72,7 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
   );
 
   await expect(
-    fetchTrainingSessions({ from: "2026-08-17", to: "2026-08-23" }),
+    fetchTrainingSessions(athleteId, { from: "2026-08-17", to: "2026-08-23" }),
   ).resolves.toEqual([
     {
       id: "11111111-1111-4111-8111-111111111111",
@@ -106,19 +108,28 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
     },
   ]);
   expect(fetch).toHaveBeenCalledWith(
-    "/api/v1/training-sessions?from=2026-08-17&to=2026-08-23",
+    `/api/v1/athletes/${athleteId}/training-sessions?from=2026-08-17&to=2026-08-23`,
   );
 });
 
 test.each([
-  [{ from: "2026-08-17" }, "/api/v1/training-sessions?from=2026-08-17"],
-  [{ to: "2026-08-23" }, "/api/v1/training-sessions?to=2026-08-23"],
-  [{ status: "SCHEDULED" }, "/api/v1/training-sessions?status=SCHEDULED"],
+  [
+    { from: "2026-08-17" },
+    `/api/v1/athletes/${athleteId}/training-sessions?from=2026-08-17`,
+  ],
+  [
+    { to: "2026-08-23" },
+    `/api/v1/athletes/${athleteId}/training-sessions?to=2026-08-23`,
+  ],
+  [
+    { status: "SCHEDULED" },
+    `/api/v1/athletes/${athleteId}/training-sessions?status=SCHEDULED`,
+  ],
   [
     { to: "2026-08-23", status: "SCHEDULED" },
-    "/api/v1/training-sessions?to=2026-08-23&status=SCHEDULED",
+    `/api/v1/athletes/${athleteId}/training-sessions?to=2026-08-23&status=SCHEDULED`,
   ],
-  [{}, "/api/v1/training-sessions"],
+  [{}, `/api/v1/athletes/${athleteId}/training-sessions`],
 ] as const)(
   "fetchTrainingSessions serializes optional query filters",
   async (query, url) => {
@@ -130,7 +141,7 @@ test.each([
       }),
     );
 
-    await expect(fetchTrainingSessions(query)).resolves.toEqual([]);
+    await expect(fetchTrainingSessions(athleteId, query)).resolves.toEqual([]);
     expect(fetch).toHaveBeenCalledWith(url);
   },
 );
@@ -146,7 +157,7 @@ test("fetchTrainingSessions throws stable API errors", async () => {
   );
 
   await expect(
-    fetchTrainingSessions({ from: "bad", to: "2026-08-23" }),
+    fetchTrainingSessions(athleteId, { from: "bad", to: "2026-08-23" }),
   ).rejects.toMatchObject({
     message: "Invalid range",
     status: 400,
@@ -164,7 +175,7 @@ test("fetchTrainingSessions falls back when error JSON has no message", async ()
   );
 
   await expect(
-    fetchTrainingSessions({ from: "2026-08-17", to: "2026-08-23" }),
+    fetchTrainingSessions(athleteId, { from: "2026-08-17", to: "2026-08-23" }),
   ).rejects.toThrow("Unable to fetch training sessions");
 });
 
@@ -179,7 +190,7 @@ test("fetchTrainingSessions falls back when error body is not JSON", async () =>
   );
 
   await expect(
-    fetchTrainingSessions({ from: "2026-08-17", to: "2026-08-23" }),
+    fetchTrainingSessions(athleteId, { from: "2026-08-17", to: "2026-08-23" }),
   ).rejects.toMatchObject({
     message: "Unable to fetch training sessions",
     status: 502,

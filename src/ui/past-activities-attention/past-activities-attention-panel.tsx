@@ -1,24 +1,16 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 
 import { Button } from "@/ui/components/button";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 
 type PastActivitiesAttentionPanelProps = {
   className?: string;
 };
-
-function getPastActivitiesQuery() {
-  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
-  return {
-    queryKey: ["training-sessions", "past-scheduled", yesterday],
-    queryFn: () =>
-      fetchTrainingSessions({ status: "SCHEDULED", to: yesterday }),
-  };
-}
 
 export function PastActivitiesAttentionPanel({
   className,
@@ -26,7 +18,19 @@ export function PastActivitiesAttentionPanel({
   const openReviewActivities = useTrainingPlannerStore(
     (state) => state.openReviewActivities,
   );
-  const query = useQuery(getPastActivitiesQuery());
+  const currentUser = useCurrentUserQuery();
+  const athleteId = currentUser.data?.id;
+  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
+  const query = useQuery({
+    queryKey: ["training-sessions", athleteId, "past-scheduled", yesterday],
+    queryFn: athleteId
+      ? () =>
+          fetchTrainingSessions(athleteId, {
+            status: "SCHEDULED",
+            to: yesterday,
+          })
+      : skipToken,
+  });
 
   if (query.isPending || query.isError || !query.data?.length) return null;
 
