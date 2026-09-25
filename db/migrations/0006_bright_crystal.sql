@@ -1,0 +1,3 @@
+ALTER TABLE "training_sessions" ADD COLUMN "athlete_id" uuid;--> statement-breakpoint
+ALTER TABLE "training_sessions" ADD CONSTRAINT "training_sessions_athlete_id_user_id_fk" FOREIGN KEY ("athlete_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "training_sessions_athlete_date_time_sort_idx" ON "training_sessions" USING btree ("athlete_id","date","time_of_day","sort_order");

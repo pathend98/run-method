@@ -81,6 +81,21 @@ test("rejects invalid statuses", async () => {
   );
 });
 
+test("validates athlete ids and forwards valid athlete filters", async () => {
+  const { repository, service } = createService();
+  await expect(service.find({ athleteId: "invalid" })).rejects.toThrow(
+    "athlete id must be a valid UUID",
+  );
+  expect(repository.find).not.toHaveBeenCalled();
+
+  const athleteId = "33333333-3333-4333-8333-333333333333";
+  await service.find({ status: "SCHEDULED", athleteId });
+  expect(repository.find).toHaveBeenCalledWith({
+    status: "SCHEDULED",
+    athleteId,
+  });
+});
+
 test("delegates creation to the repository", async () => {
   const { repository, service } = createService();
   const request = {

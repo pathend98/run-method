@@ -58,6 +58,9 @@ export const trainingSessions = pgTable(
   "training_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    athleteId: uuid("athlete_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     title: text("title").notNull(),
     activityType: text("activity_type").notNull(),
     status: text("status").notNull().default("SCHEDULED"),
@@ -99,6 +102,12 @@ export const trainingSessions = pgTable(
       sql`(${table.status} = 'SKIPPED' and ${table.skipReason} is not null and length(trim(${table.skipReason})) > 0) or (${table.status} <> 'SKIPPED' and ${table.skipReason} is null)`,
     ),
     index("training_sessions_date_time_sort_idx").on(
+      table.date,
+      table.timeOfDay,
+      table.sortOrder,
+    ),
+    index("training_sessions_athlete_date_time_sort_idx").on(
+      table.athleteId,
       table.date,
       table.timeOfDay,
       table.sortOrder,

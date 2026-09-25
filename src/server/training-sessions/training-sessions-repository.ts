@@ -13,7 +13,7 @@ import type {
 import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
 
 export interface TrainingSessionsRepository {
-  find(query: TrainingSessionsQuery): Promise<TrainingSession[]>;
+  find(query: TrainingSessionsFindQuery): Promise<TrainingSession[]>;
   findById(id: string): Promise<TrainingSession | null>;
   create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
   deleteById(id: string): Promise<boolean>;
@@ -31,14 +31,21 @@ export interface TrainingSessionsRepository {
   ): Promise<TrainingSession | null>;
 }
 
+export type TrainingSessionsFindQuery = TrainingSessionsQuery & {
+  athleteId?: string;
+};
+
 export class DrizzleTrainingSessionsRepository implements TrainingSessionsRepository {
   constructor(
     private readonly db: NodePgDatabase,
     private readonly transformer: TrainingSessionsTransformer,
   ) {}
 
-  async find(query: TrainingSessionsQuery): Promise<TrainingSession[]> {
+  async find(query: TrainingSessionsFindQuery): Promise<TrainingSession[]> {
     const predicates = [
+      ...(query.athleteId !== undefined
+        ? [eq(trainingSessions.athleteId, query.athleteId)]
+        : []),
       ...(query.from !== undefined
         ? [gte(trainingSessions.date, query.from)]
         : []),

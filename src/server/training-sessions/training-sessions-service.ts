@@ -6,7 +6,6 @@ import type {
   RunTrainingSession,
   SkipTrainingSessionRequest,
   TrainingSession,
-  TrainingSessionsQuery,
 } from "@/domain/training-sessions";
 import {
   trainingSessionIdSchema,
@@ -16,7 +15,10 @@ import {
   TrainingSessionNotFoundError,
   TrainingSessionsValidationError,
 } from "./training-sessions-errors";
-import type { TrainingSessionsRepository } from "./training-sessions-repository";
+import type {
+  TrainingSessionsFindQuery,
+  TrainingSessionsRepository,
+} from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 
 export interface TrainingSessionsService {
@@ -40,6 +42,7 @@ export interface TrainingSessionsService {
 }
 
 export type TrainingSessionsQueryInput = {
+  athleteId?: string;
   from?: string;
   to?: string;
   status?: string;
@@ -52,7 +55,15 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   ) {}
 
   async find(query: TrainingSessionsQueryInput): Promise<TrainingSession[]> {
-    const { from, to, status } = query;
+    const { athleteId, from, to, status } = query;
+    if (
+      athleteId !== undefined &&
+      !trainingSessionIdSchema.safeParse(athleteId).success
+    ) {
+      throw new TrainingSessionsValidationError(
+        "athlete id must be a valid UUID",
+      );
+    }
     const fromDate = from === undefined ? null : parseDateFromString(from);
     const toDate = to === undefined ? null : parseDateFromString(to);
 
@@ -78,7 +89,8 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
       );
     }
 
-    const validQuery: TrainingSessionsQuery = {
+    const validQuery: TrainingSessionsFindQuery = {
+      ...(athleteId !== undefined ? { athleteId } : {}),
       ...(from !== undefined ? { from } : {}),
       ...(to !== undefined ? { to } : {}),
       ...(statusResult?.success ? { status: statusResult.data } : {}),

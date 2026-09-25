@@ -15,6 +15,7 @@ const rows: TrainingSessionRow[] = [
   {
     session: {
       id: "11111111-1111-4111-8111-111111111111",
+      athleteId: null,
       title: "Easy run",
       activityType: "RUN",
       status: "SCHEDULED",
@@ -38,6 +39,7 @@ const rows: TrainingSessionRow[] = [
   {
     session: {
       id: "22222222-2222-4222-8222-222222222222",
+      athleteId: null,
       title: "Strength",
       activityType: "STRENGTH",
       status: "COMPLETED",
@@ -140,6 +142,34 @@ test("find applies supplied filters, orders rows, and delegates transformation i
 
   await repository.find({});
   expect(where).toHaveBeenLastCalledWith(undefined);
+});
+
+test("find combines athlete and existing filters", async () => {
+  const { repository, where } = createRepository(
+    new FakeTrainingSessionsTransformer(),
+  );
+  const athleteId = "33333333-3333-4333-8333-333333333333";
+
+  await repository.find({
+    from: "2026-08-17",
+    to: "2026-08-23",
+    status: "SCHEDULED",
+    athleteId,
+  });
+
+  const predicate = where.mock.lastCall?.[0];
+  expect(predicate).toBeDefined();
+  const sql = await import("drizzle-orm");
+  const pg = await import("drizzle-orm/pg-core");
+  const { trainingSessions } = await import("@db/schema");
+  const dialect = new pg.PgDialect();
+  const expected = sql.and(
+    sql.eq(trainingSessions.athleteId, athleteId),
+    sql.gte(trainingSessions.date, "2026-08-17"),
+    sql.lte(trainingSessions.date, "2026-08-23"),
+    sql.eq(trainingSessions.status, "SCHEDULED"),
+  );
+  expect(dialect.sqlToQuery(predicate)).toEqual(dialect.sqlToQuery(expected!));
 });
 
 function createRepositoryForFindById(result: TrainingSessionRow[]) {
