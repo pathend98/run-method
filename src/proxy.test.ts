@@ -7,13 +7,18 @@ const findBySessionKey = vi.hoisted(() => vi.fn());
 vi.mock("@/server/server", () => ({
   getUserService: () => ({ findBySessionKey }),
 }));
+vi.mock("@/server/env/authentication-env", () => ({
+  readAuthenticationEnv: () => ({
+    OIDC_CALLBACK_URL: "https://app.example.com/auth/callback",
+  }),
+}));
 
 afterEach(() => {
   findBySessionKey.mockReset();
 });
 
 function plannerRequest(sessionKey?: string) {
-  return new NextRequest("https://app.example.com/training-planner", {
+  return new NextRequest("http://0.0.0.0:3000/training-planner", {
     headers: sessionKey
       ? { cookie: `__Host-user-session=${sessionKey}` }
       : undefined,
