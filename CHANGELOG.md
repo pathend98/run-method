@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/pathend98/run-method/compare/v0.4.0...v0.5.0) (2026-09-25)
+
+### Features
+
+- add /api/v1/me endpoint to get currently logged in user ([2b054df](https://github.com/pathend98/run-method/commit/2b054df55f172c2b36a87faacf496a9c2e49ee68))
+- introduce endpoint to allow activities to be created for a user ([835fab7](https://github.com/pathend98/run-method/commit/835fab7185b1bff1ebc88367a35ce471d4487f2e))
+- move training planner behind an authn guard and make / route perform auth check ([ad8013a](https://github.com/pathend98/run-method/commit/ad8013ac9a32ca12a504168f1442016257377592))
+
 ## [0.4.0](https://github.com/pathend98/run-method/compare/v0.3.0...v0.4.0) (2026-09-25)
 
 ### Features
