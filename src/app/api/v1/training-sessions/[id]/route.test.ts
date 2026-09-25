@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
+import { UserNotFoundError } from "@/server/user/user-errors";
 import { trainingSessionsRequestValidator } from "@/server/server";
 import {
   TrainingSessionNotFoundError,
@@ -10,18 +11,29 @@ import {
 import { DELETE, PATCH } from "./route";
 
 const service = vi.hoisted(() => ({
+  findById: vi.fn(),
   delete: vi.fn(),
   edit: vi.fn(),
 }));
 
+const findBySessionKey = vi.hoisted(() => vi.fn());
+
 vi.mock("@/server/server", () => ({
   getTrainingSessionsService: () => service,
+  getUserService: () => ({ findBySessionKey }),
   trainingSessionsRequestValidator: {
     validateEdit: vi.fn(),
   },
 }));
 
 const id = "11111111-1111-4111-8111-111111111111";
+const athleteId = "33333333-3333-4333-8333-333333333333";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  findBySessionKey.mockResolvedValue({ id: athleteId });
+  service.findById.mockResolvedValue({ id, athleteId });
+});
 const editRequest = {
   title: "Long easy run",
   date: "2026-08-27",
@@ -50,6 +62,7 @@ function patchRequest(body: string = JSON.stringify(editRequest)) {
   return new NextRequest(`http://localhost/api/v1/training-sessions/${id}`, {
     method: "PATCH",
     body,
+    headers: { cookie: "__Host-user-session=session-key" },
   });
 }
 
@@ -60,7 +73,10 @@ function context(sessionId = id) {
 function deleteRequest(sessionId = id) {
   return new NextRequest(
     `http://localhost/api/v1/training-sessions/${sessionId}`,
-    { method: "DELETE" },
+    {
+      method: "DELETE",
+      headers: { cookie: "__Host-user-session=session-key" },
+    },
   );
 }
 
@@ -203,4 +219,95 @@ test("returns stable edit errors with 500 status", async () => {
   await expect(response.json()).resolves.toEqual({
     error: "Unable to edit training session",
   });
+});
+
+test.each([
+  ["missing cookie", 401, "missing"],
+  ["invalid cookie", 401, "invalid"],
+  ["other athlete", 403, "foreign"],
+  ["missing session", 404, "absent"],
+])("DELETE denies %s before mutation", async (_label, status, kind) => {
+  const request = deleteRequest();
+  if (kind === "missing") request.cookies.delete("__Host-user-session");
+  if (kind === "invalid")
+    findBySessionKey.mockRejectedValue(new UserNotFoundError());
+  if (kind === "foreign")
+    service.findById.mockResolvedValue({ id, athleteId: "other-id" });
+  if (kind === "absent")
+    service.findById.mockRejectedValue(new TrainingSessionNotFoundError());
+
+  const response = await DELETE(request, context());
+  expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(service.delete).not.toHaveBeenCalled();
+});
+
+test.each([
+  ["missing cookie", 401, "missing"],
+  ["invalid cookie", 401, "invalid"],
+  ["other athlete", 403, "foreign"],
+  ["missing session", 404, "absent"],
+])(
+  "PATCH denies %s before body validation or mutation",
+  async (_label, status, kind) => {
+    const request = patchRequest("{");
+    if (kind === "missing") request.cookies.delete("__Host-user-session");
+    if (kind === "invalid")
+      findBySessionKey.mockRejectedValue(new UserNotFoundError());
+    if (kind === "foreign")
+      service.findById.mockResolvedValue({ id, athleteId: "other-id" });
+    if (kind === "absent")
+      service.findById.mockRejectedValue(new TrainingSessionNotFoundError());
+
+    const response = await PATCH(request, context());
+    expect(response.status).toBe(status);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(validator.validateEdit).not.toHaveBeenCalled();
+    expect(service.edit).not.toHaveBeenCalled();
+  },
+);
+
+test.each([
+  ["actor lookup failure", 500, "actor"],
+  ["invalid id", 400, "invalid"],
+  ["session lookup failure", 500, "lookup"],
+])("DELETE maps %s before mutation", async (_label, status, kind) => {
+  if (kind === "actor")
+    findBySessionKey.mockRejectedValue(new Error("database down"));
+  if (kind === "invalid")
+    service.findById.mockRejectedValue(
+      new TrainingSessionsValidationError(
+        "training session id must be a valid UUID",
+      ),
+    );
+  if (kind === "lookup")
+    service.findById.mockRejectedValue(new Error("database down"));
+
+  const response = await DELETE(deleteRequest(), context());
+  expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(service.delete).not.toHaveBeenCalled();
+});
+
+test.each([
+  ["actor lookup failure", 500, "actor"],
+  ["invalid id", 400, "invalid"],
+  ["session lookup failure", 500, "lookup"],
+])("PATCH maps %s before mutation", async (_label, status, kind) => {
+  if (kind === "actor")
+    findBySessionKey.mockRejectedValue(new Error("database down"));
+  if (kind === "invalid")
+    service.findById.mockRejectedValue(
+      new TrainingSessionsValidationError(
+        "training session id must be a valid UUID",
+      ),
+    );
+  if (kind === "lookup")
+    service.findById.mockRejectedValue(new Error("database down"));
+
+  const response = await PATCH(patchRequest("{"), context());
+  expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(validator.validateEdit).not.toHaveBeenCalled();
+  expect(service.edit).not.toHaveBeenCalled();
 });

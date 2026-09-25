@@ -24,6 +24,7 @@ import type { UserService } from "../user/user-service";
 
 export interface TrainingSessionsService {
   find(query: TrainingSessionsQueryInput): Promise<TrainingSession[]>;
+  findById(id: string): Promise<TrainingSession>;
   create(request: CreateTrainingSessionInput): Promise<TrainingSession>;
   delete(id: string): Promise<void>;
   skip(
@@ -114,6 +115,18 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     return this.repository.create(request);
   }
 
+  async findById(id: string): Promise<TrainingSession> {
+    if (!trainingSessionIdSchema.safeParse(id).success) {
+      throw new TrainingSessionsValidationError(
+        "training session id must be a valid UUID",
+      );
+    }
+
+    const session = await this.repository.findById(id);
+    if (!session) throw new TrainingSessionNotFoundError();
+    return session;
+  }
+
   async delete(id: string): Promise<void> {
     if (!trainingSessionIdSchema.safeParse(id).success) {
       throw new TrainingSessionsValidationError(
@@ -163,14 +176,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     id: string,
     request: EditTrainingSessionRequest,
   ): Promise<TrainingSession> {
-    if (!trainingSessionIdSchema.safeParse(id).success) {
-      throw new TrainingSessionsValidationError(
-        "training session id must be a valid UUID",
-      );
-    }
-
-    const current = await this.repository.findById(id);
-    if (!current) throw new TrainingSessionNotFoundError();
+    const current = await this.findById(id);
 
     this.validator.validateEdit(current, request);
     if (this.isUnchanged(current, request)) return current;
@@ -219,15 +225,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   }
 
   private async findForTransition(id: string): Promise<TrainingSession> {
-    if (!trainingSessionIdSchema.safeParse(id).success) {
-      throw new TrainingSessionsValidationError(
-        "training session id must be a valid UUID",
-      );
-    }
-
-    const current = await this.repository.findById(id);
-    if (!current) throw new TrainingSessionNotFoundError();
-    return current;
+    return this.findById(id);
   }
 
   private runTargetsEqual(

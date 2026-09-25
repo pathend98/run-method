@@ -1,4 +1,5 @@
 import { BadRequestError } from "@/server/errors/bad-request-error";
+import { NotFoundError } from "@/server/errors/not-found-error";
 import {
   TrainingSessionsDataIntegrityError,
   TrainingSessionsRequestValidationError,
@@ -36,6 +37,7 @@ test("TrainingSessionsRequestValidationError exposes field errors", () => {
 test("TrainingSessionNotFoundError exposes a stable message", () => {
   const error = new TrainingSessionNotFoundError();
 
+  expect(error).toBeInstanceOf(NotFoundError);
   expect(error).toBeInstanceOf(Error);
   expect(error.name).toBe("TrainingSessionNotFoundError");
   expect(error.message).toBe("Training session not found");

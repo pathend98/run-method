@@ -1,36 +1,28 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { BadRequestError } from "@/server/errors/bad-request-error";
+import {
+  authenticateActor,
+  privateResponseHeaders as responseHeaders,
+} from "@/app/api/v1/athlete-authorization";
+import { readRequestBody } from "@/app/api/v1/training-sessions/read-request-body";
+import { withApiHandler } from "@/server/http/with-api-handler";
 import {
   getTrainingSessionsService,
   trainingSessionsRequestValidator,
 } from "@/server/server";
-import {
-  TrainingSessionNotFoundError,
-  TrainingSessionsRequestValidationError,
-} from "@/server/training-sessions/training-sessions-errors";
+import { authorizeTrainingSession } from "../authorize-training-session";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(request: NextRequest, context: RouteContext) {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      {
-        error: "Invalid request body",
-        fieldErrors: { body: ["Request body must be valid JSON"] },
-      },
-      { status: 400 },
-    );
-  }
-
-  try {
+export const POST = withApiHandler(
+  async (request: NextRequest, context: RouteContext) => {
     const { id } = await context.params;
+    const actorId = await authenticateActor(request);
+    await authorizeTrainingSession(actorId, id);
+    const body = await readRequestBody(request);
     const completeRequest =
       trainingSessionsRequestValidator.validateComplete(body);
     const session = await getTrainingSessionsService().complete(
@@ -38,23 +30,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       completeRequest,
       request.headers.get("Time-Zone"),
     );
-    return NextResponse.json(session);
-  } catch (error) {
-    if (error instanceof TrainingSessionsRequestValidationError) {
-      return NextResponse.json(
-        { error: error.message, fieldErrors: error.fieldErrors },
-        { status: 400 },
-      );
-    }
-    if (error instanceof TrainingSessionNotFoundError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
-    }
-    if (error instanceof BadRequestError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: "Unable to complete training session" },
-      { status: 500 },
-    );
-  }
-}
+    return NextResponse.json(session, { headers: responseHeaders });
+  },
+  "Unable to complete training session",
+);
