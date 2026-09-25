@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.1](https://github.com/pathend98/run-method/compare/v0.5.0...v0.5.1) (2026-09-25)
+
+### Bug Fixes
+
+- ensure server initiated redirects are performed via http 307 responses ([6689427](https://github.com/pathend98/run-method/commit/6689427103e64d24058d74a2304e3eb1684f4c9c))
+
 ## [0.5.0](https://github.com/pathend98/run-method/compare/v0.4.0...v0.5.0) (2026-09-25)
 
 ### Features
