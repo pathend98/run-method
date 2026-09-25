@@ -8,6 +8,7 @@ import { DefaultUserService } from "./user-service";
 test("finds a user by issuer and subject", async () => {
   const user: User = { id: "11111111-1111-4111-8111-111111111111" };
   const repository: UserRepository = {
+    findById: vi.fn(),
     findByIdentity: vi.fn().mockResolvedValue(user),
     findBySessionKeyHash: vi.fn(),
     create: vi.fn(),
@@ -23,6 +24,7 @@ test("finds a user by issuer and subject", async () => {
 test("creates a user from an identity and email", async () => {
   const user: User = { id: "11111111-1111-4111-8111-111111111111" };
   const repository: UserRepository = {
+    findById: vi.fn(),
     findByIdentity: vi.fn(),
     findBySessionKeyHash: vi.fn(),
     create: vi.fn().mockResolvedValue(user),
@@ -50,6 +52,7 @@ function sessionService(
   identity: User | null = { id: "11111111-1111-4111-8111-111111111111" },
 ) {
   const repository: UserRepository = {
+    findById: vi.fn(),
     findByIdentity: vi.fn().mockResolvedValue(identity),
     findBySessionKeyHash: vi.fn(),
     create: vi.fn(),
@@ -57,6 +60,21 @@ function sessionService(
   };
   return { service: new DefaultUserService(repository), repository };
 }
+
+test.each([[{ id: "11111111-1111-4111-8111-111111111111" }], [null]])(
+  "findById returns the repository result %#",
+  async (user) => {
+    const { service, repository } = sessionService();
+    vi.mocked(repository.findById).mockResolvedValue(user);
+
+    await expect(
+      service.findById("11111111-1111-4111-8111-111111111111"),
+    ).resolves.toEqual(user);
+    expect(repository.findById).toHaveBeenCalledWith(
+      "11111111-1111-4111-8111-111111111111",
+    );
+  },
+);
 
 test("finds a user for a valid session key using its hash", async () => {
   vi.useFakeTimers();

@@ -61,6 +61,7 @@ export function getTrainingSessionsService(): DefaultTrainingSessionsService {
   trainingSessionsService = new DefaultTrainingSessionsService(
     trainingSessionsRepository,
     trainingSessionsValidator,
+    getUserService(),
   );
 
   return trainingSessionsService;

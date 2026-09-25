@@ -12,6 +12,7 @@ import {
   trainingSessionStatusSchema,
 } from "@/domain/training-sessions";
 import {
+  AthleteNotFoundError,
   TrainingSessionNotFoundError,
   TrainingSessionsValidationError,
 } from "./training-sessions-errors";
@@ -20,10 +21,11 @@ import type {
   TrainingSessionsRepository,
 } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
+import type { UserService } from "../user/user-service";
 
 export interface TrainingSessionsService {
   find(query: TrainingSessionsQueryInput): Promise<TrainingSession[]>;
-  create(request: CreateTrainingSessionRequest): Promise<TrainingSession>;
+  create(request: CreateTrainingSessionInput): Promise<TrainingSession>;
   delete(id: string): Promise<void>;
   skip(
     id: string,
@@ -41,6 +43,10 @@ export interface TrainingSessionsService {
   ): Promise<TrainingSession>;
 }
 
+export type CreateTrainingSessionInput = CreateTrainingSessionRequest & {
+  userId?: string;
+};
+
 export type TrainingSessionsQueryInput = {
   athleteId?: string;
   from?: string;
@@ -52,6 +58,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   constructor(
     private readonly repository: TrainingSessionsRepository,
     private readonly validator: TrainingSessionsValidator,
+    private readonly userService: UserService,
   ) {}
 
   async find(query: TrainingSessionsQueryInput): Promise<TrainingSession[]> {
@@ -98,7 +105,19 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     return this.repository.find(validQuery);
   }
 
-  create(request: CreateTrainingSessionRequest): Promise<TrainingSession> {
+  async create(request: CreateTrainingSessionInput): Promise<TrainingSession> {
+    if (
+      request.userId !== undefined &&
+      !trainingSessionIdSchema.safeParse(request.userId).success
+    ) {
+      throw new TrainingSessionsValidationError(
+        "athlete id must be a valid UUID",
+      );
+    }
+    if (request.userId !== undefined) {
+      const user = await this.userService.findById(request.userId);
+      if (!user) throw new AthleteNotFoundError();
+    }
     return this.repository.create(request);
   }
 

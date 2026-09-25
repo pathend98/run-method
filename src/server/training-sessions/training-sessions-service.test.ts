@@ -10,6 +10,7 @@ import {
 } from "./training-sessions-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
+import type { UserService } from "../user/user-service";
 
 const timeZone = "UTC";
 
@@ -28,11 +29,23 @@ function createService() {
     validateSkip: vi.fn(),
     validateComplete: vi.fn(),
   };
+  const userService: UserService = {
+    findById: vi.fn(),
+    findByIdentity: vi.fn(),
+    findBySessionKey: vi.fn(),
+    create: vi.fn(),
+    createSession: vi.fn(),
+  };
 
   return {
     repository,
     validator,
-    service: new DefaultTrainingSessionsService(repository, validator),
+    userService,
+    service: new DefaultTrainingSessionsService(
+      repository,
+      validator,
+      userService,
+    ),
   };
 }
 
@@ -97,7 +110,7 @@ test("validates athlete ids and forwards valid athlete filters", async () => {
 });
 
 test("delegates creation to the repository", async () => {
-  const { repository, service } = createService();
+  const { repository, service, userService } = createService();
   const request = {
     title: "Strength",
     activityType: "STRENGTH" as const,
@@ -119,6 +132,7 @@ test("delegates creation to the repository", async () => {
   vi.mocked(repository.create).mockResolvedValue(created);
 
   await expect(service.create(request)).resolves.toEqual(created);
+  expect(userService.findById).not.toHaveBeenCalled();
   expect(repository.create).toHaveBeenCalledWith(request);
 });
 

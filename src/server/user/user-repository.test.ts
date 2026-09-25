@@ -20,8 +20,29 @@ function lookupRepository(rows: { id: string }[]) {
     from,
     innerJoin,
     limit,
+    where,
   };
 }
+
+test.each([{ rows: [user] }, { rows: [] }])(
+  "findById returns the matching user or null %#",
+  async ({ rows }) => {
+    const limit = vi.fn().mockResolvedValue(rows);
+    const where = vi.fn().mockReturnValue({ limit });
+    const from = vi.fn().mockReturnValue({ where });
+    const select = vi.fn().mockReturnValue({ from });
+    const repository = new DrizzleUserRepository({ select } as never);
+
+    await expect(repository.findById(user.id)).resolves.toEqual(
+      rows[0] ?? null,
+    );
+    expect(from).toHaveBeenCalledWith(users);
+    expect(new PgDialect().sqlToQuery(where.mock.calls[0][0]).params).toEqual([
+      user.id,
+    ]);
+    expect(limit).toHaveBeenCalledWith(1);
+  },
+);
 
 test("finds the user joined to an identity", async () => {
   const { repository, from, innerJoin, limit } = lookupRepository([user]);

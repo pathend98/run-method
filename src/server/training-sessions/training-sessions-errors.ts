@@ -27,3 +27,10 @@ export class TrainingSessionNotFoundError extends Error {
     this.name = "TrainingSessionNotFoundError";
   }
 }
+
+export class AthleteNotFoundError extends Error {
+  constructor() {
+    super("Athlete not found");
+    this.name = "AthleteNotFoundError";
+  }
+}

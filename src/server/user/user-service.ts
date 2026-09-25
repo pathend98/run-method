@@ -8,6 +8,7 @@ import type { CreateUser, CreateUserSession, UserIdentity } from "./user-types";
 export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 export interface UserService {
+  findById(id: string): Promise<User | null>;
   findByIdentity(identity: UserIdentity): Promise<User | null>;
   findBySessionKey(sessionKey: string): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
@@ -16,6 +17,10 @@ export interface UserService {
 
 export class DefaultUserService implements UserService {
   constructor(private readonly repository: UserRepository) {}
+
+  findById(id: string): Promise<User | null> {
+    return this.repository.findById(id);
+  }
 
   findByIdentity(identity: UserIdentity): Promise<User | null> {
     return this.repository.findByIdentity(identity);

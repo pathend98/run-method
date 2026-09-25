@@ -1,7 +1,5 @@
-import type {
-  CreateTrainingSessionRequest,
-  TrainingSession,
-} from "@/domain/training-sessions";
+import type { TrainingSession } from "@/domain/training-sessions";
+import type { CreateTrainingSessionInput } from "./training-sessions-service";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions-repository";
 import type {
   TrainingSessionRow,
@@ -209,7 +207,7 @@ test("findById returns null when no aggregate exists", async () => {
   expect(transformer.transform).not.toHaveBeenCalled();
 });
 
-function createRepositoryForCreation(request: CreateTrainingSessionRequest) {
+function createRepositoryForCreation(request: CreateTrainingSessionInput) {
   const session = {
     id: "33333333-3333-4333-8333-333333333333",
     title: request.title,
@@ -278,7 +276,7 @@ function createRepositoryForCreation(request: CreateTrainingSessionRequest) {
   };
 }
 
-const createRequests: CreateTrainingSessionRequest[] = [
+const createRequests: CreateTrainingSessionInput[] = [
   {
     title: "Distance duration",
     activityType: "RUN",
@@ -341,5 +339,19 @@ test.each(createRequests)(
         targetDurationSeconds: request.targetDurationSeconds,
       });
     }
+  },
+);
+
+test.each(createRequests)(
+  "creates athlete $activityType session with the user ID attached",
+  async (request) => {
+    const userId = "44444444-4444-4444-8444-444444444444";
+    const { insertedValues, repository, selectWhere } =
+      createRepositoryForCreation({ ...request, userId });
+
+    await repository.create({ ...request, userId });
+
+    expect(selectWhere).toHaveBeenCalledOnce();
+    expect(insertedValues[0]).toMatchObject({ athleteId: userId });
   },
 );
