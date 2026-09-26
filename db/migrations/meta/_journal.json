@@ -57,6 +57,13 @@
       "when": 1790347424912,
       "tag": "0007_abandoned_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790419033545,
+      "tag": "0008_wandering_shatterstar",
+      "breakpoints": true
     }
   ]
 }

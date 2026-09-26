@@ -240,6 +240,7 @@ test("inserts a session linked to an identity by issuer and subject", async () =
     issuer: input.issuer,
     subject: input.subject,
     accessToken: "access-token",
+    idToken: "id-token",
     refreshToken: "refresh-token",
     expiresAt: new Date("2026-10-24T12:00:00.000Z"),
   };

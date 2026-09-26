@@ -66,6 +66,7 @@ const sessionInput = {
   issuer: "https://issuer.example",
   subject: "subject-1",
   accessToken: "access-token",
+  idToken: "id-token",
   refreshToken: "refresh-token",
 };
 

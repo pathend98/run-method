@@ -124,6 +124,7 @@ test("exchanges an authorization code and returns verified identity and session 
     subject: verifiedClaims.sub,
     email: verifiedClaims.email,
     accessToken: "access-token",
+    idToken: "id-token",
     refreshToken: "refresh-token",
   });
   expect(jwtService.verifyIdToken).toHaveBeenCalledExactlyOnceWith(

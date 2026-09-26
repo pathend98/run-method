@@ -72,6 +72,7 @@ export class DefaultUserService implements UserService {
       issuer: input.issuer,
       subject: input.subject,
       accessToken: input.accessToken,
+      idToken: input.idToken,
       refreshToken: input.refreshToken,
       expiresAt: new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000),
     });
