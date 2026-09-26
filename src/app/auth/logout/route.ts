@@ -17,14 +17,11 @@ export async function GET(request: NextRequest) {
     // Clear the browser session even when database deletion fails.
   }
 
-  const response = new NextResponse(null, {
-    status: 307,
-    headers: {
-      location: getLogoutUrlStrategy().createLogoutUrl(idToken ?? undefined)
-        .href,
-      "Cache-Control": "no-store",
-    },
-  });
+  const logoutUrl = getLogoutUrlStrategy().createLogoutUrl(
+    idToken ?? undefined,
+  );
+  const response = NextResponse.redirect(logoutUrl);
+  response.headers.set("Cache-Control", "no-store");
   response.cookies.set(USER_SESSION_COOKIE_NAME, "", {
     ...COOKIE_OPTIONS,
     maxAge: 0,
