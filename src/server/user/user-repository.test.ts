@@ -2,6 +2,37 @@ import { userIdentities, userSessions, users } from "@db/schema";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { DrizzleUserRepository } from "./user-repository";
 
+test.each([0, 1])(
+  "deletes only the matching session regardless of expiry (%i rows)",
+  async (rowCount) => {
+    const where = vi.fn().mockResolvedValue({ rowCount });
+    const deleteRows = vi.fn().mockReturnValue({ where });
+    const repository = new DrizzleUserRepository({
+      delete: deleteRows,
+    } as never);
+
+    await expect(
+      repository.deleteSessionBySessionKeyHash("hash"),
+    ).resolves.toBeUndefined();
+    expect(deleteRows).toHaveBeenCalledExactlyOnceWith(userSessions);
+    const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+    expect(query.sql).toBe('"user_session"."session_key_hash" = $1');
+    expect(query.params).toEqual(["hash"]);
+  },
+);
+
+test("propagates database errors during session deletion", async () => {
+  const error = new Error("database unavailable");
+  const where = vi.fn().mockRejectedValue(error);
+  const repository = new DrizzleUserRepository({
+    delete: vi.fn().mockReturnValue({ where }),
+  } as never);
+
+  await expect(repository.deleteSessionBySessionKeyHash("hash")).rejects.toBe(
+    error,
+  );
+});
+
 const input = {
   issuer: "https://issuer.example",
   subject: "subject-1",

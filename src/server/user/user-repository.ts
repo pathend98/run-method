@@ -16,10 +16,17 @@ export interface UserRepository {
   findBySessionKeyHash(sessionKeyHash: string, now: Date): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
   createSession(input: CreateUserSessionRecord): Promise<void>;
+  deleteSessionBySessionKeyHash(sessionKeyHash: string): Promise<void>;
 }
 
 export class DrizzleUserRepository implements UserRepository {
   constructor(private readonly db: NodePgDatabase) {}
+
+  async deleteSessionBySessionKeyHash(sessionKeyHash: string): Promise<void> {
+    await this.db
+      .delete(userSessions)
+      .where(eq(userSessions.sessionKeyHash, sessionKeyHash));
+  }
 
   async findById(id: string): Promise<User | null> {
     const [user] = await this.db

@@ -35,6 +35,7 @@ function createService() {
     findBySessionKey: vi.fn(),
     create: vi.fn(),
     createSession: vi.fn(),
+    deleteSession: vi.fn(),
   };
 
   return {

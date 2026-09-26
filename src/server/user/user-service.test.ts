@@ -5,12 +5,32 @@ import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import { DefaultUserService } from "./user-service";
 
+test("deletes a session using the SHA-256 hash of its key", async () => {
+  const { service, repository } = sessionService();
+
+  await expect(service.deleteSession("session-key")).resolves.toBeUndefined();
+  expect(
+    repository.deleteSessionBySessionKeyHash,
+  ).toHaveBeenCalledExactlyOnceWith(
+    createHash("sha256").update("session-key").digest("hex"),
+  );
+});
+
+test("propagates session deletion failures", async () => {
+  const { service, repository } = sessionService();
+  const error = new Error("database unavailable");
+  vi.mocked(repository.deleteSessionBySessionKeyHash).mockRejectedValue(error);
+
+  await expect(service.deleteSession("session-key")).rejects.toBe(error);
+});
+
 test("finds a user by issuer and subject", async () => {
   const user: User = { id: "11111111-1111-4111-8111-111111111111" };
   const repository: UserRepository = {
     findById: vi.fn(),
     findByIdentity: vi.fn().mockResolvedValue(user),
     findBySessionKeyHash: vi.fn(),
+    deleteSessionBySessionKeyHash: vi.fn(),
     create: vi.fn(),
     createSession: vi.fn(),
   };
@@ -27,6 +47,7 @@ test("creates a user from an identity and email", async () => {
     findById: vi.fn(),
     findByIdentity: vi.fn(),
     findBySessionKeyHash: vi.fn(),
+    deleteSessionBySessionKeyHash: vi.fn(),
     create: vi.fn().mockResolvedValue(user),
     createSession: vi.fn(),
   };
@@ -55,6 +76,7 @@ function sessionService(
     findById: vi.fn(),
     findByIdentity: vi.fn().mockResolvedValue(identity),
     findBySessionKeyHash: vi.fn(),
+    deleteSessionBySessionKeyHash: vi.fn(),
     create: vi.fn(),
     createSession: vi.fn().mockResolvedValue(undefined),
   };
