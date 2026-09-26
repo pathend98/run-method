@@ -1,15 +1,32 @@
+import {
+  KeycloakLogoutProvider,
+  CognitoLogoutProvider,
+} from "@/server/authentication/logout-provider";
 import { NextRequest } from "next/server";
 
 import { GET } from "./route";
 
-const { deleteSession, getUserService } = vi.hoisted(() => ({
-  deleteSession: vi.fn(),
-  getUserService: vi.fn(),
-}));
+const { deleteSession, getUserService, getLogoutUrlStrategy } = vi.hoisted(
+  () => ({
+    deleteSession: vi.fn(),
+    getLogoutUrlStrategy: vi.fn(),
+    getUserService: vi.fn(),
+  }),
+);
 
-vi.mock("@/server/server", () => ({ getUserService }));
+vi.mock("@/server/server", () => ({ getUserService, getLogoutUrlStrategy }));
+
+const configuration = {
+  endpoint: "https://identity.example.com/logout",
+  callbackUrl: "https://app.example.com/",
+  clientId: "run-method",
+};
 
 beforeEach(() => {
+  deleteSession.mockResolvedValue(null);
+  getLogoutUrlStrategy.mockReturnValue(
+    new KeycloakLogoutProvider(configuration),
+  );
   getUserService.mockReturnValue({ deleteSession });
 });
 
@@ -25,12 +42,14 @@ function logoutRequest(sessionKey?: string) {
   if (sessionKey !== undefined) {
     headers.set("cookie", `__Host-user-session=${sessionKey}`);
   }
-  return new NextRequest("http://0.0.0.0:3000/logout", { headers });
+  return new NextRequest("http://0.0.0.0:3000/auth/logout", { headers });
 }
 
 function expectLoggedOut(response: Awaited<ReturnType<typeof GET>>) {
   expect(response.status).toBe(307);
-  expect(response.headers.get("location")).toBe("/");
+  expect(response.headers.get("location")).toBe(
+    new KeycloakLogoutProvider(configuration).createLogoutUrl().href,
+  );
   expect(response.headers.get("cache-control")).toBe("no-store");
   expect(response.cookies.get("__Host-user-session")).toMatchObject({
     value: "",
@@ -80,4 +99,17 @@ test("clears the cookie and redirects when service initialization fails", async 
     throw new Error("database configuration unavailable");
   });
   expectLoggedOut(await GET(logoutRequest("session-key")));
+});
+
+test.each([
+  ["keycloak", new KeycloakLogoutProvider(configuration)],
+  ["cognito", new CognitoLogoutProvider(configuration)],
+])("redirects a deleted session through %s", async (_, strategy) => {
+  deleteSession.mockResolvedValue("session-id-token");
+  getLogoutUrlStrategy.mockReturnValue(strategy);
+  const response = await GET(logoutRequest("session-key"));
+  expect(response.headers.get("location")).toBe(
+    strategy.createLogoutUrl("session-id-token").href,
+  );
+  expect(response.cookies.get("__Host-user-session")?.maxAge).toBe(0);
 });

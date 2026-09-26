@@ -1,6 +1,9 @@
 import { cleanEnv, str, url } from "envalid";
 
 export type AuthenticationEnv = {
+  OIDC_PROVIDER: "keycloak" | "cognito";
+  OIDC_LOGOUT_ENDPOINT: string;
+  OIDC_LOGOUT_CALLBACK_URL: string;
   OIDC_AUTHORIZATION_ENDPOINT: string;
   OIDC_CALLBACK_URL: string;
   OIDC_CLIENT_ID: string;
@@ -11,6 +14,14 @@ export type AuthenticationEnv = {
 
 export function readAuthenticationEnv(): AuthenticationEnv {
   const env = cleanEnv(process.env, {
+    OIDC_PROVIDER: str({
+      choices: ["keycloak", "cognito"],
+      desc: "Logout provider",
+    }),
+    OIDC_LOGOUT_ENDPOINT: url({ desc: "IdP logout endpoint" }),
+    OIDC_LOGOUT_CALLBACK_URL: url({
+      desc: "Application root URL registered for logout",
+    }),
     OIDC_AUTHORIZATION_ENDPOINT: url({
       desc: "OIDC authorization endpoint",
       example:
@@ -41,6 +52,9 @@ export function readAuthenticationEnv(): AuthenticationEnv {
   });
 
   return {
+    OIDC_PROVIDER: env.OIDC_PROVIDER,
+    OIDC_LOGOUT_ENDPOINT: env.OIDC_LOGOUT_ENDPOINT,
+    OIDC_LOGOUT_CALLBACK_URL: env.OIDC_LOGOUT_CALLBACK_URL,
     OIDC_AUTHORIZATION_ENDPOINT: env.OIDC_AUTHORIZATION_ENDPOINT,
     OIDC_CALLBACK_URL: env.OIDC_CALLBACK_URL,
     OIDC_CLIENT_ID: env.OIDC_CLIENT_ID,

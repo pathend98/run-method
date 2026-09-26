@@ -5,7 +5,10 @@ import { DrizzleUserRepository } from "./user-repository";
 test.each([0, 1])(
   "deletes only the matching session regardless of expiry (%i rows)",
   async (rowCount) => {
-    const where = vi.fn().mockResolvedValue({ rowCount });
+    const returning = vi
+      .fn()
+      .mockResolvedValue(rowCount ? [{ idToken: "id-token" }] : []);
+    const where = vi.fn().mockReturnValue({ returning });
     const deleteRows = vi.fn().mockReturnValue({ where });
     const repository = new DrizzleUserRepository({
       delete: deleteRows,
@@ -13,7 +16,10 @@ test.each([0, 1])(
 
     await expect(
       repository.deleteSessionBySessionKeyHash("hash"),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(rowCount ? "id-token" : null);
+    expect(returning).toHaveBeenCalledExactlyOnceWith({
+      idToken: userSessions.idToken,
+    });
     expect(deleteRows).toHaveBeenCalledExactlyOnceWith(userSessions);
     const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
     expect(query.sql).toBe('"user_session"."session_key_hash" = $1');
@@ -23,7 +29,9 @@ test.each([0, 1])(
 
 test("propagates database errors during session deletion", async () => {
   const error = new Error("database unavailable");
-  const where = vi.fn().mockRejectedValue(error);
+  const where = vi
+    .fn()
+    .mockReturnValue({ returning: vi.fn().mockRejectedValue(error) });
   const repository = new DrizzleUserRepository({
     delete: vi.fn().mockReturnValue({ where }),
   } as never);

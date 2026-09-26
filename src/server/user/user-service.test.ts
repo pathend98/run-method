@@ -5,16 +5,22 @@ import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import { DefaultUserService } from "./user-service";
 
-test("deletes a session using the SHA-256 hash of its key", async () => {
-  const { service, repository } = sessionService();
+test.each(["id-token", null])(
+  "deletes a session using its hash and returns %s",
+  async (token) => {
+    const { service, repository } = sessionService();
 
-  await expect(service.deleteSession("session-key")).resolves.toBeUndefined();
-  expect(
-    repository.deleteSessionBySessionKeyHash,
-  ).toHaveBeenCalledExactlyOnceWith(
-    createHash("sha256").update("session-key").digest("hex"),
-  );
-});
+    vi.mocked(repository.deleteSessionBySessionKeyHash).mockResolvedValue(
+      token,
+    );
+    await expect(service.deleteSession("session-key")).resolves.toBe(token);
+    expect(
+      repository.deleteSessionBySessionKeyHash,
+    ).toHaveBeenCalledExactlyOnceWith(
+      createHash("sha256").update("session-key").digest("hex"),
+    );
+  },
+);
 
 test("propagates session deletion failures", async () => {
   const { service, repository } = sessionService();

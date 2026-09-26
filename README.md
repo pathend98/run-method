@@ -102,8 +102,9 @@ secret. Its seeded `test-user` account uses `KEYCLOAK_TEST_USER_PASSWORD` from
 `.env.local`.
 
 The app reads `OIDC_AUTHORIZATION_ENDPOINT`, `OIDC_CALLBACK_URL`,
-`OIDC_CLIENT_ID`, `OIDC_TOKEN_ENDPOINT`, `OIDC_JWKS_URL`, `OIDC_ISSUER`, and
-`OIDC_AUDIENCE` at startup. The example environment file configures these for
+`OIDC_CLIENT_ID`, `OIDC_TOKEN_ENDPOINT`, `OIDC_JWKS_URL`, `OIDC_ISSUER`,
+`OIDC_PROVIDER`, `OIDC_LOGOUT_ENDPOINT`, and `OIDC_LOGOUT_CALLBACK_URL`
+at startup. The example environment file configures these for
 the local Keycloak realm. Visiting `/auth` starts the authorization redirect;
 after sign-in, `/auth/callback` exchanges the code, verifies the ID token,
 creates a user if needed, and stores the access and refresh tokens in a database
@@ -111,6 +112,39 @@ session. The browser receives only a secure, HTTP-only session key cookie that
 expires after 30 days. The ID token must contain an email address. Existing
 Keycloak containers must be recreated or have an email added to `test-user` to
 use the updated seed.
+
+Visiting `/logout` deletes the local session, clears its cookie, and redirects
+through the IdP before returning to `/`. The local settings are:
+
+```dotenv
+OIDC_PROVIDER=keycloak
+OIDC_LOGOUT_ENDPOINT=http://localhost:8080/realms/run-method/protocol/openid-connect/logout
+OIDC_LOGOUT_CALLBACK_URL=http://localhost:3000/
+```
+
+For an existing Keycloak realm, open the Admin Console, select `run-method`,
+then Clients → `run-method` → Settings. Set **Valid post logout redirect URIs**
+to `http://localhost:3000/` and save. This preserves existing realm data;
+restarting the container does not update an already imported realm.
+
+For Cognito, use your configured Cognito domain and application root:
+
+```dotenv
+OIDC_PROVIDER=cognito
+OIDC_LOGOUT_ENDPOINT=https://your-domain.auth.eu-west-2.amazoncognito.com/logout
+OIDC_LOGOUT_CALLBACK_URL=https://your-app.example.com/
+```
+
+Keep `OIDC_CLIENT_ID` set to the Cognito app client ID. The logout callback must
+exactly match an allowed sign-out URL, including any trailing slash. Terraform
+already registers `app_url` for this purpose. Supply all three logout variables
+in production before deploying this version; startup validation requires them.
+The callback is configured explicitly and never inferred from request headers.
+
+If the local session is missing or deletion fails, the browser still clears its
+cookie and visits the IdP. Keycloak uses `client_id` when no ID token is available
+and may ask for confirmation. A database failure can leave the local session row
+undeleted; logout remains best-effort in this case.
 
 The Keycloak development store lives only in the container. Remove the container
 with `docker compose rm -sf keycloak` to reset it and re-import the seed realm on
