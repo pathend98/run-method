@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/pathend98/run-method/compare/v0.5.1...v0.6.0) (2026-09-27)
+
+### Features
+
+- add navbar to allow for training planner and logout to be used ([3278ff2](https://github.com/pathend98/run-method/commit/3278ff233529b26b29f4662a33da4d2dbc678eac))
+- introduce /logout to allow user session to be terminated ([f039e53](https://github.com/pathend98/run-method/commit/f039e53f348c8598f37c4a53446cd8e36928f289))
+
 ## [0.5.1](https://github.com/pathend98/run-method/compare/v0.5.0...v0.5.1) (2026-09-25)
 
 ### Bug Fixes
