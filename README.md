@@ -150,6 +150,25 @@ The Keycloak development store lives only in the container. Remove the container
 with `docker compose rm -sf keycloak` to reset it and re-import the seed realm on
 the next `pnpm auth:up`.
 
+The seeded `test-user` has the fixed ID
+`b8657d29-8f36-4dce-a9b2-615f084ac730`, which becomes the `sub` claim in issued
+tokens. Fresh realm imports reuse this ID, so recreating the container keeps the
+same application identity as long as the issuer URL stays unchanged.
+
+Restarting an existing container preserves its realm, and startup import skips
+realms that already exist. To adopt the fixed ID in an existing setup, reset only
+the local Keycloak container (this removes its current realm data and sessions):
+
+```bash
+docker compose rm -sf keycloak
+pnpm auth:up
+```
+
+Sign in again after the reset. The first login with the new fixed ID creates one
+new application user; subsequent recreations reuse that identity. Existing
+application users and their training data remain untouched and are not merged
+into the new user.
+
 ## Docker
 
 Build the production image:
