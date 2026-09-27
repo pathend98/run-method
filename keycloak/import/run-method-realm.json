@@ -23,6 +23,7 @@
   ],
   "users": [
     {
+      "id": "b8657d29-8f36-4dce-a9b2-615f084ac730",
       "username": "test-user",
       "email": "test-user@example.com",
       "enabled": true,

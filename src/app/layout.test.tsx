@@ -1,5 +1,6 @@
 import { isValidElement } from "react";
 import RootLayout, { metadata } from "./layout";
+import { Navbar } from "@/ui/navbar/navbar";
 
 test("exports the application metadata", () => {
   expect(metadata).toEqual({
@@ -23,5 +24,6 @@ test("renders the root html and body structure", () => {
   expect(isValidElement(body)).toBe(true);
   expect(body.type).toBe("body");
   expect(body.props.suppressHydrationWarning).toBe(true);
-  expect(body.props.children).toBe(child);
+  expect(body.props.children[0].type).toBe(Navbar);
+  expect(body.props.children[1]).toBe(child);
 });
