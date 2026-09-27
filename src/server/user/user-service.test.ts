@@ -170,7 +170,10 @@ test("creates distinct session keys and stores only their hashes for 30 days", a
     expect(repository.createSession).toHaveBeenCalledTimes(2);
     for (const [index, key] of [firstKey, secondKey].entries()) {
       expect(repository.createSession).toHaveBeenNthCalledWith(index + 1, {
-        ...sessionInput,
+        userId: "11111111-1111-4111-8111-111111111111",
+        accessToken: sessionInput.accessToken,
+        idToken: sessionInput.idToken,
+        refreshToken: sessionInput.refreshToken,
         sessionKeyHash: createHash("sha256").update(key).digest("hex"),
         expiresAt: new Date("2026-10-24T12:00:00.000Z"),
       });

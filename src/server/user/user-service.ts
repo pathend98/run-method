@@ -69,8 +69,7 @@ export class DefaultUserService implements UserService {
 
     await this.repository.createSession({
       sessionKeyHash,
-      issuer: input.issuer,
-      subject: input.subject,
+      userId: identity.id,
       accessToken: input.accessToken,
       idToken: input.idToken,
       refreshToken: input.refreshToken,

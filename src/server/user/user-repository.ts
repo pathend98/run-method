@@ -65,14 +65,7 @@ export class DrizzleUserRepository implements UserRepository {
     const [user] = await this.db
       .select({ id: users.id })
       .from(userSessions)
-      .innerJoin(
-        userIdentities,
-        and(
-          eq(userSessions.issuer, userIdentities.issuer),
-          eq(userSessions.subject, userIdentities.subject),
-        ),
-      )
-      .innerJoin(users, eq(userIdentities.userId, users.id))
+      .innerJoin(users, eq(userSessions.userId, users.id))
       .where(
         and(
           eq(userSessions.sessionKeyHash, sessionKeyHash),

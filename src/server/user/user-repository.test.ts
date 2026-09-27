@@ -2,12 +2,12 @@ import { userIdentities, userSessions, users } from "@db/schema";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { DrizzleUserRepository } from "./user-repository";
 
-test.each([0, 1])(
-  "deletes only the matching session regardless of expiry (%i rows)",
-  async (rowCount) => {
+test.each([undefined, "id-token", null])(
+  "deletes only the matching session regardless of expiry (%s)",
+  async (idToken) => {
     const returning = vi
       .fn()
-      .mockResolvedValue(rowCount ? [{ idToken: "id-token" }] : []);
+      .mockResolvedValue(idToken === undefined ? [] : [{ idToken }]);
     const where = vi.fn().mockReturnValue({ returning });
     const deleteRows = vi.fn().mockReturnValue({ where });
     const repository = new DrizzleUserRepository({
@@ -16,7 +16,7 @@ test.each([0, 1])(
 
     await expect(
       repository.deleteSessionBySessionKeyHash("hash"),
-    ).resolves.toBe(rowCount ? "id-token" : null);
+    ).resolves.toBe(idToken ?? null);
     expect(returning).toHaveBeenCalledExactlyOnceWith({
       idToken: userSessions.idToken,
     });
@@ -108,12 +108,10 @@ test("finds a user joined to an unexpired session", async () => {
     repository.findBySessionKeyHash("hashed-key", now),
   ).resolves.toEqual(user);
   expect(from).toHaveBeenCalledWith(userSessions);
-  expect(innerJoin).toHaveBeenNthCalledWith(
-    1,
-    userIdentities,
-    expect.anything(),
+  expect(innerJoin).toHaveBeenCalledExactlyOnceWith(users, expect.anything());
+  expect(new PgDialect().sqlToQuery(innerJoin.mock.calls[0][1]).sql).toBe(
+    '"user_session"."user_id" = "user"."id"',
   );
-  expect(innerJoin).toHaveBeenNthCalledWith(2, users, expect.anything());
   const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
   expect(query.sql).toContain('"user_session"."session_key_hash" = $1');
   expect(query.sql).toContain('"user_session"."expires_at" > $2');
@@ -239,21 +237,23 @@ test("concurrent creation returns the same user for a shared identity", async ()
   expect(transaction).toHaveBeenCalledTimes(2);
 });
 
-test("inserts a session linked to an identity by issuer and subject", async () => {
-  const values = vi.fn().mockResolvedValue(undefined);
-  const insert = vi.fn().mockReturnValue({ values });
-  const repository = new DrizzleUserRepository({ insert } as never);
-  const session = {
-    sessionKeyHash: "hash",
-    issuer: input.issuer,
-    subject: input.subject,
-    accessToken: "access-token",
-    idToken: "id-token",
-    refreshToken: "refresh-token",
-    expiresAt: new Date("2026-10-24T12:00:00.000Z"),
-  };
+test.each(["token", null])(
+  "inserts a session linked directly to a user with tokens %s",
+  async (token) => {
+    const values = vi.fn().mockResolvedValue(undefined);
+    const insert = vi.fn().mockReturnValue({ values });
+    const repository = new DrizzleUserRepository({ insert } as never);
+    const session = {
+      sessionKeyHash: "hash",
+      userId: user.id,
+      accessToken: token,
+      idToken: token,
+      refreshToken: token,
+      expiresAt: new Date("2026-10-24T12:00:00.000Z"),
+    };
 
-  await expect(repository.createSession(session)).resolves.toBeUndefined();
-  expect(insert).toHaveBeenCalledWith(userSessions);
-  expect(values).toHaveBeenCalledWith(session);
-});
+    await expect(repository.createSession(session)).resolves.toBeUndefined();
+    expect(insert).toHaveBeenCalledWith(userSessions);
+    expect(values).toHaveBeenCalledWith(session);
+  },
+);
