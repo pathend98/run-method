@@ -11,6 +11,14 @@ import { GET } from "./route";
 const exchangeAuthorizationCode = vi.hoisted(() => vi.fn());
 const create = vi.hoisted(() => vi.fn());
 const createSession = vi.hoisted(() => vi.fn());
+const authEnv = vi.hoisted(() => ({
+  OIDC_CALLBACK_URL: "https://callback.example.com/auth/callback",
+  OIDC_LOGOUT_CALLBACK_URL: "https://app.example.com/",
+}));
+
+vi.mock("@/server/env/authentication-env", () => ({
+  readAuthenticationEnv: () => authEnv,
+}));
 
 vi.mock("@/server/server", () => ({
   getAuthenticationService: () => ({ exchangeAuthorizationCode }),
@@ -21,6 +29,7 @@ afterEach(() => {
   exchangeAuthorizationCode.mockReset();
   create.mockReset();
   createSession.mockReset();
+  authEnv.OIDC_LOGOUT_CALLBACK_URL = "https://app.example.com/";
 });
 
 function callbackRequest(
@@ -31,7 +40,7 @@ function callbackRequest(
     ? { cookie: `__Host-oidc-transaction=${transactionCookie}` }
     : undefined;
 
-  return new NextRequest(`https://app.example.com/auth/callback?${query}`, {
+  return new NextRequest(`https://request.example.com/auth/callback?${query}`, {
     headers,
   });
 }
@@ -53,7 +62,7 @@ test("creates a user session, clears old cookies, and redirects to the app root"
   const response = await GET(callbackRequest());
 
   expect(response.status).toBe(307);
-  expect(response.headers.get("location")).toBe("/");
+  expect(response.headers.get("location")).toBe("https://app.example.com/");
   expect(exchangeAuthorizationCode).toHaveBeenCalledWith({
     code: "authorization-code",
     state: "expected-state",
@@ -174,5 +183,20 @@ test.each(["create", "createSession"])(
       expect(createSession).not.toHaveBeenCalled();
     }
     expect(response.cookies.get("__Host-oidc-transaction")?.value).toBe("");
+  },
+);
+
+test.each(["https://app.example.com", "https://app.example.com/"])(
+  "redirects successful authentication to app base URL %s",
+  async (baseUrl) => {
+    authEnv.OIDC_LOGOUT_CALLBACK_URL = baseUrl;
+    exchangeAuthorizationCode.mockResolvedValue(identity);
+    create.mockResolvedValue({ id: "user-id" });
+    createSession.mockResolvedValue("session-key");
+
+    const response = await GET(callbackRequest());
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://app.example.com/");
   },
 );

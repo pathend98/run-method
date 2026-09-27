@@ -11,6 +11,7 @@ import {
   AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "@/server/authentication/authentication-errors";
+import { readAuthenticationEnv } from "@/server/env/authentication-env";
 import { getAuthenticationService, getUserService } from "@/server/server";
 import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-service";
 
@@ -45,10 +46,9 @@ export async function GET(request: NextRequest) {
       refreshToken,
     });
 
-    response = new NextResponse(null, {
-      status: 307,
-      headers: { location: "/" },
-    });
+    // Use the logout callback until a dedicated app base URL is configured.
+    const baseUrl = readAuthenticationEnv().OIDC_LOGOUT_CALLBACK_URL;
+    response = NextResponse.redirect(new URL("/", baseUrl));
     response.cookies.set(USER_SESSION_COOKIE_NAME, sessionKey, {
       ...COOKIE_OPTIONS,
       maxAge: SESSION_MAX_AGE_SECONDS,
