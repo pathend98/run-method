@@ -1,3 +1,8 @@
+import {
+  CognitoLogoutProvider,
+  KeycloakLogoutProvider,
+  type LogoutProvider,
+} from "./authentication/logout-provider";
 import { drizzle } from "drizzle-orm/node-postgres";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -92,4 +97,16 @@ function getDatabase(): NodePgDatabase {
   });
   database = drizzle(pool);
   return database;
+}
+
+export function getLogoutUrlStrategy(): LogoutProvider {
+  const env = readAuthenticationEnv();
+  const configuration = {
+    endpoint: env.OIDC_LOGOUT_ENDPOINT,
+    callbackUrl: env.OIDC_LOGOUT_CALLBACK_URL,
+    clientId: env.OIDC_CLIENT_ID,
+  };
+  return env.OIDC_PROVIDER === "keycloak"
+    ? new KeycloakLogoutProvider(configuration)
+    : new CognitoLogoutProvider(configuration);
 }

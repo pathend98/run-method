@@ -41,6 +41,7 @@ const identity = {
   subject: "runner-123",
   email: "runner@example.com",
   accessToken: "access-token",
+  idToken: "id-token",
   refreshToken: "refresh-token",
 };
 
@@ -67,6 +68,7 @@ test("creates a user session, clears old cookies, and redirects to the app root"
     issuer: identity.issuer,
     subject: identity.subject,
     accessToken: identity.accessToken,
+    idToken: identity.idToken,
     refreshToken: identity.refreshToken,
   });
   expect(response.cookies.get("__Host-user-session")?.value).toBe(

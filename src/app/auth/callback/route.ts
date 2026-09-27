@@ -34,12 +34,14 @@ export async function GET(request: NextRequest) {
       },
     );
     const userService = getUserService();
-    const { issuer, subject, email, accessToken, refreshToken } = identity;
+    const { issuer, subject, email, accessToken, idToken, refreshToken } =
+      identity;
     await userService.create({ issuer, subject, email });
     const sessionKey = await userService.createSession({
       issuer,
       subject,
       accessToken,
+      idToken,
       refreshToken,
     });
 

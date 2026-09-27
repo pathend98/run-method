@@ -41,6 +41,7 @@ export type AuthenticatedIdentity = {
   issuer: string;
   subject: string;
   email: string;
+  idToken: string;
   accessToken: string;
   refreshToken: string;
 };
@@ -127,6 +128,7 @@ export class DefaultAuthenticationService implements AuthenticationService {
         subject: claims.sub,
         email: claims.email.trim(),
         accessToken: tokens.accessToken,
+        idToken: tokens.idToken,
         refreshToken: tokens.refreshToken,
       };
     } catch {

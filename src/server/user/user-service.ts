@@ -13,10 +13,18 @@ export interface UserService {
   findBySessionKey(sessionKey: string): Promise<User>;
   create(input: CreateUser): Promise<User>;
   createSession(input: CreateUserSession): Promise<string>;
+  deleteSession(sessionKey: string): Promise<string | null>;
 }
 
 export class DefaultUserService implements UserService {
   constructor(private readonly repository: UserRepository) {}
+
+  async deleteSession(sessionKey: string): Promise<string | null> {
+    const sessionKeyHash = createHash("sha256")
+      .update(sessionKey)
+      .digest("hex");
+    return this.repository.deleteSessionBySessionKeyHash(sessionKeyHash);
+  }
 
   async findById(id: string): Promise<User> {
     const user = await this.repository.findById(id);
@@ -64,6 +72,7 @@ export class DefaultUserService implements UserService {
       issuer: input.issuer,
       subject: input.subject,
       accessToken: input.accessToken,
+      idToken: input.idToken,
       refreshToken: input.refreshToken,
       expiresAt: new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000),
     });

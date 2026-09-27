@@ -9,6 +9,7 @@ export type CreateUser = UserIdentity & {
 
 export type CreateUserSession = UserIdentity & {
   accessToken: string;
+  idToken: string;
   refreshToken: string;
 };
 

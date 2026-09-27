@@ -2,6 +2,45 @@ import { userIdentities, userSessions, users } from "@db/schema";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { DrizzleUserRepository } from "./user-repository";
 
+test.each([0, 1])(
+  "deletes only the matching session regardless of expiry (%i rows)",
+  async (rowCount) => {
+    const returning = vi
+      .fn()
+      .mockResolvedValue(rowCount ? [{ idToken: "id-token" }] : []);
+    const where = vi.fn().mockReturnValue({ returning });
+    const deleteRows = vi.fn().mockReturnValue({ where });
+    const repository = new DrizzleUserRepository({
+      delete: deleteRows,
+    } as never);
+
+    await expect(
+      repository.deleteSessionBySessionKeyHash("hash"),
+    ).resolves.toBe(rowCount ? "id-token" : null);
+    expect(returning).toHaveBeenCalledExactlyOnceWith({
+      idToken: userSessions.idToken,
+    });
+    expect(deleteRows).toHaveBeenCalledExactlyOnceWith(userSessions);
+    const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+    expect(query.sql).toBe('"user_session"."session_key_hash" = $1');
+    expect(query.params).toEqual(["hash"]);
+  },
+);
+
+test("propagates database errors during session deletion", async () => {
+  const error = new Error("database unavailable");
+  const where = vi
+    .fn()
+    .mockReturnValue({ returning: vi.fn().mockRejectedValue(error) });
+  const repository = new DrizzleUserRepository({
+    delete: vi.fn().mockReturnValue({ where }),
+  } as never);
+
+  await expect(repository.deleteSessionBySessionKeyHash("hash")).rejects.toBe(
+    error,
+  );
+});
+
 const input = {
   issuer: "https://issuer.example",
   subject: "subject-1",
@@ -209,6 +248,7 @@ test("inserts a session linked to an identity by issuer and subject", async () =
     issuer: input.issuer,
     subject: input.subject,
     accessToken: "access-token",
+    idToken: "id-token",
     refreshToken: "refresh-token",
     expiresAt: new Date("2026-10-24T12:00:00.000Z"),
   };

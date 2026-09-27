@@ -42,6 +42,7 @@ export const userSessions = pgTable(
     issuer: text("issuer").notNull(),
     subject: text("subject").notNull(),
     accessToken: text("access_token").notNull(),
+    idToken: text("id_token").notNull(),
     refreshToken: text("refresh_token").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   },
