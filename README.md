@@ -103,7 +103,7 @@ secret. Its seeded `test-user` account uses `KEYCLOAK_TEST_USER_PASSWORD` from
 
 The app reads `OIDC_AUTHORIZATION_ENDPOINT`, `OIDC_CALLBACK_URL`,
 `OIDC_CLIENT_ID`, `OIDC_TOKEN_ENDPOINT`, `OIDC_JWKS_URL`, `OIDC_ISSUER`,
-`OIDC_PROVIDER`, `OIDC_LOGOUT_ENDPOINT`, and `OIDC_LOGOUT_CALLBACK_URL`
+`OIDC_PROVIDER`, `OIDC_LOGOUT_ENDPOINT`, and `APP_BASE_URL`
 at startup. The example environment file configures these for
 the local Keycloak realm. Visiting `/auth` starts the authorization redirect;
 after sign-in, `/auth/callback` exchanges the code, verifies the ID token,
@@ -119,7 +119,7 @@ through the IdP before returning to `/`. The local settings are:
 ```dotenv
 OIDC_PROVIDER=keycloak
 OIDC_LOGOUT_ENDPOINT=http://localhost:8080/realms/run-method/protocol/openid-connect/logout
-OIDC_LOGOUT_CALLBACK_URL=http://localhost:3000/
+APP_BASE_URL=http://localhost:3000/
 ```
 
 For an existing Keycloak realm, open the Admin Console, select `run-method`,
@@ -132,7 +132,7 @@ For Cognito, use your configured Cognito domain and application root:
 ```dotenv
 OIDC_PROVIDER=cognito
 OIDC_LOGOUT_ENDPOINT=https://your-domain.auth.eu-west-2.amazoncognito.com/logout
-OIDC_LOGOUT_CALLBACK_URL=https://your-app.example.com/
+APP_BASE_URL=https://your-app.example.com/
 ```
 
 Keep `OIDC_CLIENT_ID` set to the Cognito app client ID. The logout callback must
@@ -193,7 +193,7 @@ docker run --rm \
   run-method node migrate.js
 ```
 
-`DATABASE_URL` and the OIDC settings are runtime-only server configuration. Do
+`APP_BASE_URL`, `DATABASE_URL`, and the OIDC settings are runtime-only server configuration. Do
 not pass them to `docker build` or use `NEXT_PUBLIC_` variables. Supply them
 through your deployment platform, an environment file, or `docker run -e`; the
 container validates them during startup.
@@ -201,3 +201,9 @@ container validates them during startup.
 For TLS-enabled RDS, set `DATABASE_CA_PATH` to the path of the AWS RDS PEM CA
 bundle. Mount that file into the container so it is readable by the `nextjs`
 user; the app and `node migrate.js` verify the database certificate against it.
+
+`APP_BASE_URL` is required and defines the application root used for redirects
+and the identity provider's registered logout return URL. When upgrading an
+existing deployment, set it to the previous logout callback setting's value;
+there is no legacy fallback. Keep `OIDC_CALLBACK_URL` configured separately for
+the login callback.

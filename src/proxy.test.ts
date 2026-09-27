@@ -4,21 +4,20 @@ import { UserNotFoundError } from "@/server/user/user-errors";
 import { config, proxy } from "./proxy";
 
 const findBySessionKey = vi.hoisted(() => vi.fn());
-const authEnv = vi.hoisted(() => ({
-  OIDC_CALLBACK_URL: "https://callback.example.com/auth/callback",
-  OIDC_LOGOUT_CALLBACK_URL: "https://app.example.com/",
+const appEnv = vi.hoisted(() => ({
+  APP_BASE_URL: "https://app.example.com/",
 }));
 
 vi.mock("@/server/server", () => ({
   getUserService: () => ({ findBySessionKey }),
 }));
-vi.mock("@/server/env/authentication-env", () => ({
-  readAuthenticationEnv: () => authEnv,
+vi.mock("@/server/env/app-env", () => ({
+  readAppEnv: () => appEnv,
 }));
 
 afterEach(() => {
   findBySessionKey.mockReset();
-  authEnv.OIDC_LOGOUT_CALLBACK_URL = "https://app.example.com/";
+  appEnv.APP_BASE_URL = "https://app.example.com/";
 });
 
 function plannerRequest(sessionKey?: string) {
@@ -130,7 +129,7 @@ test("returns a server error if home page session lookup fails", async () => {
 test.each(["https://app.example.com", "https://app.example.com/"])(
   "uses app base URL %s for both proxy redirects",
   async (baseUrl) => {
-    authEnv.OIDC_LOGOUT_CALLBACK_URL = baseUrl;
+    appEnv.APP_BASE_URL = baseUrl;
     findBySessionKey.mockResolvedValue({ id: "user-id" });
 
     const homeResponse = await proxy(rootRequest("session-key"));

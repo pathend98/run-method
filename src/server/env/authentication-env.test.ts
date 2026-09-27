@@ -18,7 +18,6 @@ function stubValidOidcEnv() {
   vi.stubEnv("OIDC_CLIENT_ID", "run-method-web");
   vi.stubEnv("OIDC_PROVIDER", "keycloak");
   vi.stubEnv("OIDC_LOGOUT_ENDPOINT", "https://identity.example.com/logout");
-  vi.stubEnv("OIDC_LOGOUT_CALLBACK_URL", "https://app.example.com/");
   vi.stubEnv("OIDC_JWKS_URL", "https://identity.example.com/oauth2/certs");
   vi.stubEnv("OIDC_ISSUER", "https://identity.example.com");
   vi.stubEnv(
@@ -39,7 +38,6 @@ test("maps OIDC environment variables", async () => {
     OIDC_CLIENT_ID: "run-method-web",
     OIDC_PROVIDER: "keycloak",
     OIDC_LOGOUT_ENDPOINT: "https://identity.example.com/logout",
-    OIDC_LOGOUT_CALLBACK_URL: "https://app.example.com/",
     OIDC_JWKS_URL: "https://identity.example.com/oauth2/certs",
     OIDC_ISSUER: "https://identity.example.com",
     OIDC_TOKEN_ENDPOINT: "https://identity.example.com/oauth2/token",
@@ -54,7 +52,6 @@ test.each([
   ["OIDC_TOKEN_ENDPOINT", "not a URL"],
   ["OIDC_PROVIDER", "unknown"],
   ["OIDC_LOGOUT_ENDPOINT", "not a URL"],
-  ["OIDC_LOGOUT_CALLBACK_URL", "/"],
 ])("rejects an invalid %s", async (name, value) => {
   stubValidOidcEnv();
   vi.stubEnv(name, value);
@@ -69,7 +66,6 @@ test.each([
   "OIDC_ISSUER",
   "OIDC_PROVIDER",
   "OIDC_LOGOUT_ENDPOINT",
-  "OIDC_LOGOUT_CALLBACK_URL",
 ])("rejects a missing %s", async (name) => {
   stubValidOidcEnv();
   vi.stubEnv(name, undefined);

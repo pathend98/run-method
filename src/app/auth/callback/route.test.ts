@@ -11,13 +11,12 @@ import { GET } from "./route";
 const exchangeAuthorizationCode = vi.hoisted(() => vi.fn());
 const create = vi.hoisted(() => vi.fn());
 const createSession = vi.hoisted(() => vi.fn());
-const authEnv = vi.hoisted(() => ({
-  OIDC_CALLBACK_URL: "https://callback.example.com/auth/callback",
-  OIDC_LOGOUT_CALLBACK_URL: "https://app.example.com/",
+const appEnv = vi.hoisted(() => ({
+  APP_BASE_URL: "https://app.example.com/",
 }));
 
-vi.mock("@/server/env/authentication-env", () => ({
-  readAuthenticationEnv: () => authEnv,
+vi.mock("@/server/env/app-env", () => ({
+  readAppEnv: () => appEnv,
 }));
 
 vi.mock("@/server/server", () => ({
@@ -29,7 +28,7 @@ afterEach(() => {
   exchangeAuthorizationCode.mockReset();
   create.mockReset();
   createSession.mockReset();
-  authEnv.OIDC_LOGOUT_CALLBACK_URL = "https://app.example.com/";
+  appEnv.APP_BASE_URL = "https://app.example.com/";
 });
 
 function callbackRequest(
@@ -189,7 +188,7 @@ test.each(["create", "createSession"])(
 test.each(["https://app.example.com", "https://app.example.com/"])(
   "redirects successful authentication to app base URL %s",
   async (baseUrl) => {
-    authEnv.OIDC_LOGOUT_CALLBACK_URL = baseUrl;
+    appEnv.APP_BASE_URL = baseUrl;
     exchangeAuthorizationCode.mockResolvedValue(identity);
     create.mockResolvedValue({ id: "user-id" });
     createSession.mockResolvedValue("session-key");

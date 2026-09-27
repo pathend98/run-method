@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { USER_SESSION_COOKIE_NAME } from "@/server/authentication/authentication-constants";
-import { readAuthenticationEnv } from "@/server/env/authentication-env";
+import { readAppEnv } from "@/server/env/app-env";
 import { getUserService } from "@/server/server";
 import { UserNotFoundError } from "@/server/user/user-errors";
 
 function redirectToApp(path: string) {
-  // Use the logout callback until a dedicated app base URL is configured.
-  const baseUrl = readAuthenticationEnv().OIDC_LOGOUT_CALLBACK_URL;
+  const baseUrl = readAppEnv().APP_BASE_URL;
   return NextResponse.redirect(new URL(path, baseUrl));
 }
 
