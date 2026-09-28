@@ -25,7 +25,11 @@ function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
     url === "/api/v1/me"
       ? Promise.resolve({
           ok: true,
-          json: vi.fn().mockResolvedValue({ id: athleteId }),
+          json: vi.fn().mockResolvedValue({
+            id: athleteId,
+            kind: "REGISTERED",
+            expiresAt: null,
+          }),
         })
       : options === undefined
         ? fetchMock(url)

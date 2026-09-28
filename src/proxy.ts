@@ -2,24 +2,32 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { USER_SESSION_COOKIE_NAME } from "@/server/authentication/authentication-constants";
-import { readAuthenticationEnv } from "@/server/env/authentication-env";
+import { readAppEnv } from "@/server/env/app-env";
 import { getUserService } from "@/server/server";
+import { UserNotFoundError } from "@/server/user/user-errors";
 
-function redirectToAuth() {
-  const callbackUrl = readAuthenticationEnv().OIDC_CALLBACK_URL;
-  return NextResponse.redirect(new URL("/auth", callbackUrl));
+function redirectToApp(path: string) {
+  const baseUrl = readAppEnv().APP_BASE_URL;
+  return NextResponse.redirect(new URL(path, baseUrl));
 }
 
 export async function proxy(request: NextRequest) {
+  const isHomePage = request.nextUrl.pathname === "/";
   const sessionKey = request.cookies.get(USER_SESSION_COOKIE_NAME)?.value ?? "";
   if (!sessionKey) {
-    return redirectToAuth();
+    return isHomePage ? NextResponse.next() : redirectToApp("/auth");
   }
 
   try {
     const user = await getUserService().findBySessionKey(sessionKey);
-    return user ? NextResponse.next() : redirectToAuth();
-  } catch {
+    if (isHomePage) {
+      return user ? redirectToApp("/training-planner") : NextResponse.next();
+    }
+    return user ? NextResponse.next() : redirectToApp("/auth");
+  } catch (error) {
+    if (isHomePage && error instanceof UserNotFoundError) {
+      return NextResponse.next();
+    }
     return NextResponse.json(
       { error: "Unable to determine user session" },
       { status: 500 },
@@ -28,5 +36,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/training-planner",
+  matcher: ["/", "/training-planner"],
 };

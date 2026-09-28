@@ -34,7 +34,10 @@ function createService() {
     findByIdentity: vi.fn(),
     findBySessionKey: vi.fn(),
     create: vi.fn(),
+    createGuestUser: vi.fn(),
+    ...{ promoteGuestUser: vi.fn(), deleteGuestUser: vi.fn() },
     createSession: vi.fn(),
+    createGuestUserSession: vi.fn(),
     deleteSession: vi.fn(),
   };
 

@@ -4,7 +4,11 @@ import { AuthenticationLookupError } from "@/server/errors/authentication-lookup
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { UnauthorizedError } from "@/server/errors/unauthorized-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
-import { authenticateActor, authorizeAthlete } from "./athlete-authorization";
+import {
+  authenticateActor,
+  authenticateUser,
+  authorizeAthlete,
+} from "./athlete-authorization";
 
 const findBySessionKey = vi.hoisted(() => vi.fn());
 vi.mock("@/server/server", () => ({
@@ -25,11 +29,26 @@ test("rejects a missing cookie without looking up a user", async () => {
 });
 
 test("resolves the actor id from the session cookie", async () => {
-  findBySessionKey.mockResolvedValue({ id: "athlete-id" });
+  findBySessionKey.mockResolvedValue({
+    id: "athlete-id",
+    kind: "REGISTERED",
+    expiresAt: null,
+  });
   await expect(authenticateActor(request("session-key"))).resolves.toBe(
     "athlete-id",
   );
   expect(findBySessionKey).toHaveBeenCalledWith("session-key");
+});
+
+test("resolves the full user from the session cookie", async () => {
+  const user = {
+    id: "athlete-id",
+    kind: "GUEST",
+    expiresAt: new Date("2026-10-01T12:00:00.000Z"),
+  };
+  findBySessionKey.mockResolvedValue(user);
+
+  await expect(authenticateUser(request("session-key"))).resolves.toBe(user);
 });
 
 test("translates a missing user into UnauthorizedError", async () => {

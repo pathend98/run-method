@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import {
+  AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
+  AuthenticationTokenExchangeError,
+} from "@/server/authentication/authentication-errors";
 import { AuthenticationLookupError } from "@/server/errors/authentication-lookup-error";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
@@ -11,6 +16,21 @@ import { TrainingSessionsRequestValidationError } from "@/server/training-sessio
 const responseHeaders = { "Cache-Control": "private, no-store" };
 
 function errorResponse(error: unknown, failureMessage: string): NextResponse {
+  if (error instanceof AuthenticationCallbackError) {
+    return NextResponse.json(
+      { error: "Invalid authorization callback" },
+      { status: 400, headers: responseHeaders },
+    );
+  }
+  if (
+    error instanceof AuthenticationTokenExchangeError ||
+    error instanceof AuthenticationIdTokenVerificationError
+  ) {
+    return NextResponse.json(
+      { error: failureMessage },
+      { status: 502, headers: responseHeaders },
+    );
+  }
   if (error instanceof TrainingSessionsRequestValidationError) {
     return NextResponse.json(
       { error: error.message, fieldErrors: error.fieldErrors },
@@ -37,6 +57,14 @@ function errorResponse(error: unknown, failureMessage: string): NextResponse {
   );
 }
 
+export function withApiHandler<Args extends [NextRequest, ...unknown[]]>(
+  handler: (...args: Args) => NextResponse | Promise<NextResponse>,
+  failureMessage: string,
+): (...args: Args) => Promise<NextResponse>;
+export function withApiHandler<Args extends [NextRequest, ...unknown[]]>(
+  handler: (...args: Args) => Response | Promise<Response>,
+  failureMessage: string,
+): (...args: Args) => Promise<Response>;
 export function withApiHandler<Args extends [NextRequest, ...unknown[]]>(
   handler: (...args: Args) => Response | Promise<Response>,
   failureMessage: string,

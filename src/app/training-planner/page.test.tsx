@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import TrainingPlannerPage from "./page";
+import { QueryProvider } from "../query-provider";
 
 const navigation = vi.hoisted(() => ({ suspend: false }));
 
@@ -25,7 +26,11 @@ test("TrainingPlannerPage", () => {
     vi.fn(() => new Promise(() => undefined)),
   );
 
-  render(<TrainingPlannerPage />);
+  render(
+    <QueryProvider>
+      <TrainingPlannerPage />
+    </QueryProvider>,
+  );
 
   expect(screen.getByRole("main")).toBeDefined();
   const heading = screen.getByRole("heading", {
@@ -41,7 +46,11 @@ test("TrainingPlannerPage", () => {
 test("TrainingPlannerPage renders its planner fallback while URL parameters resolve", () => {
   navigation.suspend = true;
 
-  render(<TrainingPlannerPage />);
+  render(
+    <QueryProvider>
+      <TrainingPlannerPage />
+    </QueryProvider>,
+  );
 
   expect(
     screen.getByRole("heading", { level: 1, name: "Training Plan" }),

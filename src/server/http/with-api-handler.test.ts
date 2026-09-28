@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  AuthenticationCallbackError,
+  AuthenticationIdTokenVerificationError,
+  AuthenticationTokenExchangeError,
+} from "@/server/authentication/authentication-errors";
 import { AuthenticationLookupError } from "@/server/errors/authentication-lookup-error";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
@@ -61,3 +66,34 @@ test("forwards the request and context and preserves successful responses", asyn
   expect(result.status).toBe(201);
   expect(result.headers.get("x-route")).toBe("test");
 });
+
+test.each([
+  [
+    new AuthenticationCallbackError("State mismatch"),
+    400,
+    "Invalid authorization callback",
+  ],
+  [
+    new AuthenticationTokenExchangeError(),
+    502,
+    "Unable to complete authentication",
+  ],
+  [
+    new AuthenticationIdTokenVerificationError(),
+    502,
+    "Unable to complete authentication",
+  ],
+] as const)(
+  "maps authentication error %s to a safe response",
+  async (error, status, message) => {
+    const handler = withApiHandler(async () => {
+      throw error;
+    }, "Unable to complete authentication");
+
+    const response = await handler(request);
+
+    expect(response.status).toBe(status);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toEqual({ error: message });
+  },
+);

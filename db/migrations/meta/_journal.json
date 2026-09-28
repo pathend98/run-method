@@ -64,6 +64,13 @@
       "when": 1790419033545,
       "tag": "0008_wandering_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790531731542,
+      "tag": "0009_guest_user_storage",
+      "breakpoints": true
     }
   ]
 }

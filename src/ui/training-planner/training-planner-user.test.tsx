@@ -41,7 +41,11 @@ test("waits for the user ID before fetching sessions", async () => {
   });
   userResponse.resolve({
     ok: true,
-    json: vi.fn().mockResolvedValue({ id: athleteId }),
+    json: vi.fn().mockResolvedValue({
+      id: athleteId,
+      kind: "REGISTERED",
+      expiresAt: null,
+    }),
   });
   await screen.findByRole("list", { name: "Weekly training planner" });
   expect(fetchMock).toHaveBeenCalledWith(
@@ -60,7 +64,9 @@ test("retries a failed current-user lookup", async () => {
         json: vi
           .fn()
           .mockResolvedValue(
-            userRequests > 1 ? { id: athleteId } : { error: "Lookup failed" },
+            userRequests > 1
+              ? { id: athleteId, kind: "REGISTERED", expiresAt: null }
+              : { error: "Lookup failed" },
           ),
       });
     }

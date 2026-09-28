@@ -8,6 +8,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import { DefaultAuthenticationService } from "./authentication/authentication-service";
+import { readAppEnv } from "./env/app-env";
 import { readAuthenticationEnv } from "./env/authentication-env";
 import { readDatabaseEnv } from "./env/database-env";
 import { readDatabaseTlsOptions } from "./env/database-tls";
@@ -103,7 +104,7 @@ export function getLogoutUrlStrategy(): LogoutProvider {
   const env = readAuthenticationEnv();
   const configuration = {
     endpoint: env.OIDC_LOGOUT_ENDPOINT,
-    callbackUrl: env.OIDC_LOGOUT_CALLBACK_URL,
+    callbackUrl: readAppEnv().APP_BASE_URL,
     clientId: env.OIDC_CLIENT_ID,
   };
   return env.OIDC_PROVIDER === "keycloak"

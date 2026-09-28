@@ -13,7 +13,11 @@ export type CreateUserSession = UserIdentity & {
   refreshToken: string;
 };
 
-export type CreateUserSessionRecord = CreateUserSession & {
+export type CreateUserSessionRecord = {
+  userId: string;
+  accessToken: string | null;
+  idToken: string | null;
+  refreshToken: string | null;
   sessionKeyHash: string;
   expiresAt: Date;
 };

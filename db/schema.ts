@@ -10,24 +10,46 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const users = pgTable("user", {
-  id: uuid("id").primaryKey().defaultRandom(),
-});
+export const users = pgTable(
+  "user",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind", { enum: ["REGISTERED", "GUEST"] })
+      .notNull()
+      .default("REGISTERED"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+  },
+  (table) => [
+    check("user_kind_valid", sql`${table.kind} in ('REGISTERED', 'GUEST')`),
+    unique("user_id_kind_unique").on(table.id, table.kind),
+  ],
+);
 
 export const userIdentities = pgTable(
   "user_identity",
   {
-    userId: uuid("user_id")
+    userId: uuid("user_id").notNull(),
+    userKind: text("user_kind", { enum: ["REGISTERED"] })
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .default("REGISTERED"),
     issuer: text("issuer").notNull(),
     subject: text("subject").notNull(),
     email: text("email").notNull(),
   },
   (table) => [
+    check(
+      "user_identity_registered_only",
+      sql`${table.userKind} = 'REGISTERED'`,
+    ),
+    foreignKey({
+      columns: [table.userId, table.userKind],
+      foreignColumns: [users.id, users.kind],
+      name: "user_identity_registered_user_fk",
+    }).onDelete("cascade"),
     uniqueIndex("user_identity_issuer_subject_idx").on(
       table.issuer,
       table.subject,
@@ -35,25 +57,16 @@ export const userIdentities = pgTable(
   ],
 );
 
-export const userSessions = pgTable(
-  "user_session",
-  {
-    sessionKeyHash: text("session_key_hash").primaryKey(),
-    issuer: text("issuer").notNull(),
-    subject: text("subject").notNull(),
-    accessToken: text("access_token").notNull(),
-    idToken: text("id_token").notNull(),
-    refreshToken: text("refresh_token").notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.issuer, table.subject],
-      foreignColumns: [userIdentities.issuer, userIdentities.subject],
-      name: "user_session_identity_fk",
-    }).onDelete("cascade"),
-  ],
-);
+export const userSessions = pgTable("user_session", {
+  sessionKeyHash: text("session_key_hash").primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  idToken: text("id_token"),
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
 
 export const trainingSessions = pgTable(
   "training_sessions",

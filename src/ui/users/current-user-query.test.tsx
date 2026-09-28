@@ -11,7 +11,11 @@ function CurrentUserId() {
 test("current-user query shares one request across consumers", async () => {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,
-    json: vi.fn().mockResolvedValue({ id: "user-id" }),
+    json: vi.fn().mockResolvedValue({
+      id: "user-id",
+      kind: "REGISTERED",
+      expiresAt: null,
+    }),
   });
   vi.stubGlobal("fetch", fetchMock);
 
