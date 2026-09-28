@@ -4,9 +4,10 @@ import type { User } from "@/domain/user-types";
 import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import type { CreateUser, CreateUserSession, UserIdentity } from "./user-types";
-
-export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
-export const GUEST_USER_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+import {
+  GUEST_USER_MAX_AGE_SECONDS,
+  SESSION_MAX_AGE_SECONDS,
+} from "./user-constants";
 
 export interface UserService {
   findById(id: string): Promise<User>;

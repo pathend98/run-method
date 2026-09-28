@@ -13,7 +13,7 @@ import {
 } from "@/server/authentication/authentication-errors";
 import { readAppEnv } from "@/server/env/app-env";
 import { getAuthenticationService, getUserService } from "@/server/server";
-import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-service";
+import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-constants";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code") ?? "";

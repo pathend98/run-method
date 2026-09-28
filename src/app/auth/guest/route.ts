@@ -6,7 +6,7 @@ import {
 } from "@/server/authentication/authentication-constants";
 import { readAppEnv } from "@/server/env/app-env";
 import { getUserService } from "@/server/server";
-import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-service";
+import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-constants";
 
 export async function GET() {
   try {
