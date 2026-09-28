@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/pathend98/run-method/compare/v0.6.0...v0.7.0) (2026-09-28)
+
+### Features
+
+- allow users to continue as a guest and use the app ([9d5fc1e](https://github.com/pathend98/run-method/commit/9d5fc1edf01f60651809f2d778e90cb0b81c0007))
+- ensure guest user activities are persisted after user registration ([3cdb3d6](https://github.com/pathend98/run-method/commit/3cdb3d6517946bda7d743820089380c34f9485f0))
+- present users with no session with a choice to login or continue as guest ([235cc8c](https://github.com/pathend98/run-method/commit/235cc8c00d406f1e5c49a74630d862c7fffa4a91))
+
 ## [0.6.0](https://github.com/pathend98/run-method/compare/v0.5.1...v0.6.0) (2026-09-27)
 
 ### Features
