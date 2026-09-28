@@ -1,17 +1,45 @@
 import { UserApiError } from "./errors/user-api-error";
 import { fetchCurrentUser } from "./user-api-client";
 
-test("fetchCurrentUser returns the validated user ID", async () => {
+test("fetchCurrentUser returns a validated registered user", async () => {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({ id: "user-id" }),
+      json: vi.fn().mockResolvedValue({
+        id: "user-id",
+        kind: "REGISTERED",
+        expiresAt: null,
+      }),
     }),
   );
 
-  await expect(fetchCurrentUser()).resolves.toEqual({ id: "user-id" });
+  await expect(fetchCurrentUser()).resolves.toEqual({
+    id: "user-id",
+    kind: "REGISTERED",
+    expiresAt: null,
+  });
   expect(fetch).toHaveBeenCalledWith("/api/v1/me", { cache: "no-store" });
+});
+
+test("fetchCurrentUser parses a guest expiry into a Date", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        id: "guest-id",
+        kind: "GUEST",
+        expiresAt: "2026-10-01T12:00:00.000Z",
+      }),
+    }),
+  );
+
+  await expect(fetchCurrentUser()).resolves.toEqual({
+    id: "guest-id",
+    kind: "GUEST",
+    expiresAt: new Date("2026-10-01T12:00:00.000Z"),
+  });
 });
 
 test("fetchCurrentUser exposes API error status and message", async () => {
@@ -51,7 +79,11 @@ test("fetchCurrentUser rejects a malformed response", async () => {
     "fetch",
     vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({ id: "" }),
+      json: vi.fn().mockResolvedValue({
+        id: "",
+        kind: "REGISTERED",
+        expiresAt: null,
+      }),
     }),
   );
 

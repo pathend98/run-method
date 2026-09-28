@@ -1,4 +1,4 @@
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, isNull, or } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { userIdentities, userSessions, users } from "@db/schema";
@@ -10,11 +10,18 @@ import type {
   UserIdentity,
 } from "./user-types";
 
+const userSelection = {
+  id: users.id,
+  kind: users.kind,
+  expiresAt: users.expiresAt,
+};
+
 export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByIdentity(identity: UserIdentity): Promise<User | null>;
   findBySessionKeyHash(sessionKeyHash: string, now: Date): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
+  createGuestUser(expiresAt: Date): Promise<User>;
   createSession(input: CreateUserSessionRecord): Promise<void>;
   deleteSessionBySessionKeyHash(sessionKeyHash: string): Promise<string | null>;
 }
@@ -34,9 +41,9 @@ export class DrizzleUserRepository implements UserRepository {
 
   async findById(id: string): Promise<User | null> {
     const [user] = await this.db
-      .select({ id: users.id })
+      .select(userSelection)
       .from(users)
-      .where(eq(users.id, id))
+      .where(and(eq(users.id, id), this.userIsActive(new Date())))
       .limit(1);
 
     return user ?? null;
@@ -44,7 +51,7 @@ export class DrizzleUserRepository implements UserRepository {
 
   async findByIdentity(identity: UserIdentity): Promise<User | null> {
     const [user] = await this.db
-      .select({ id: users.id })
+      .select(userSelection)
       .from(userIdentities)
       .innerJoin(users, eq(userIdentities.userId, users.id))
       .where(
@@ -63,13 +70,14 @@ export class DrizzleUserRepository implements UserRepository {
     now: Date,
   ): Promise<User | null> {
     const [user] = await this.db
-      .select({ id: users.id })
+      .select(userSelection)
       .from(userSessions)
       .innerJoin(users, eq(userSessions.userId, users.id))
       .where(
         and(
           eq(userSessions.sessionKeyHash, sessionKeyHash),
           gt(userSessions.expiresAt, now),
+          this.userIsActive(now),
         ),
       )
       .limit(1);
@@ -83,7 +91,7 @@ export class DrizzleUserRepository implements UserRepository {
         const [user] = await tx
           .insert(users)
           .values({})
-          .returning({ id: users.id });
+          .returning(userSelection);
         const [identity] = await tx
           .insert(userIdentities)
           .values({
@@ -107,6 +115,18 @@ export class DrizzleUserRepository implements UserRepository {
       if (!existing) throw error;
       return existing;
     }
+  }
+
+  async createGuestUser(expiresAt: Date): Promise<User> {
+    const [user] = await this.db
+      .insert(users)
+      .values({ kind: "GUEST", expiresAt })
+      .returning(userSelection);
+    return user;
+  }
+
+  private userIsActive(now: Date) {
+    return or(isNull(users.expiresAt), gt(users.expiresAt, now));
   }
 
   async createSession(input: CreateUserSessionRecord): Promise<void> {

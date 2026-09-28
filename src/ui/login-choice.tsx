@@ -10,7 +10,12 @@ export function LoginChoice() {
         <Button type="submit" variant="primary">
           Continue to login / signup
         </Button>
-        <Button type="button" variant="secondary">
+        <Button
+          type="submit"
+          formAction="/auth/guest"
+          formMethod="get"
+          variant="secondary"
+        >
           Continue as guest
         </Button>
       </form>

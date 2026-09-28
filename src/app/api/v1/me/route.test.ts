@@ -21,14 +21,24 @@ function meRequest(sessionKey?: string) {
   });
 }
 
-test("returns the ID of the user with the active session", async () => {
-  findBySessionKey.mockResolvedValue({ id: "user-id" });
+test.each([
+  { id: "user-id", kind: "REGISTERED", expiresAt: null },
+  {
+    id: "guest-id",
+    kind: "GUEST",
+    expiresAt: new Date("2026-10-01T12:00:00.000Z"),
+  },
+])("returns the full user with the active session (%s)", async (user) => {
+  findBySessionKey.mockResolvedValue(user);
 
   const response = await GET(meRequest("session-key"));
 
   expect(response.status).toBe(200);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
-  await expect(response.json()).resolves.toEqual({ id: "user-id" });
+  await expect(response.json()).resolves.toEqual({
+    ...user,
+    expiresAt: user.expiresAt?.toISOString() ?? null,
+  });
   expect(findBySessionKey).toHaveBeenCalledExactlyOnceWith("session-key");
 });
 

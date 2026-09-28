@@ -20,19 +20,16 @@ test("starts login through a native GET form targeting auth", () => {
   expect(submit).toHaveBeenCalledOnce();
 });
 
-test("leaves the view unchanged without submitting when continuing as guest", () => {
-  const { container } = render(<LoginChoice />);
+test("starts guest creation through a native GET form targeting auth/guest", () => {
+  render(<LoginChoice />);
   const guest = screen.getByRole("button", { name: "Continue as guest" });
   const submit = vi.fn((event: Event) => event.preventDefault());
   guest.closest("form")!.addEventListener("submit", submit);
-  const originalView = container.innerHTML;
-  const originalUrl = window.location.href;
 
-  expect(guest).toHaveProperty("disabled", false);
-  expect(guest).toHaveProperty("type", "button");
+  expect(guest).toHaveProperty("type", "submit");
+  expect(guest.getAttribute("formaction")).toBe("/auth/guest");
+  expect(guest.getAttribute("formmethod")).toBe("get");
   fireEvent.click(guest);
 
-  expect(submit).not.toHaveBeenCalled();
-  expect(container.innerHTML).toBe(originalView);
-  expect(window.location.href).toBe(originalUrl);
+  expect(submit).toHaveBeenCalledOnce();
 });

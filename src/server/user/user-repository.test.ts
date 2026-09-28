@@ -46,9 +46,18 @@ const input = {
   subject: "subject-1",
   email: "runner@example.com",
 };
-const user = { id: "11111111-1111-4111-8111-111111111111" };
+const user = {
+  id: "11111111-1111-4111-8111-111111111111",
+  kind: "REGISTERED" as const,
+  expiresAt: null,
+};
+const guestUser = {
+  ...user,
+  kind: "GUEST" as const,
+  expiresAt: new Date("2026-10-01T12:00:00.000Z"),
+};
 
-function lookupRepository(rows: { id: string }[]) {
+function lookupRepository(rows: (typeof user)[]) {
   const limit = vi.fn().mockResolvedValue(rows);
   const where = vi.fn().mockReturnValue({ limit });
   const innerJoin = vi.fn().mockReturnValue({ where });
@@ -59,6 +68,7 @@ function lookupRepository(rows: { id: string }[]) {
     from,
     innerJoin,
     limit,
+    select,
     where,
   };
 }
@@ -76,17 +86,30 @@ test.each([{ rows: [user] }, { rows: [] }])(
       rows[0] ?? null,
     );
     expect(from).toHaveBeenCalledWith(users);
-    expect(new PgDialect().sqlToQuery(where.mock.calls[0][0]).params).toEqual([
-      user.id,
-    ]);
+    expect(select).toHaveBeenCalledExactlyOnceWith({
+      id: users.id,
+      kind: users.kind,
+      expiresAt: users.expiresAt,
+    });
+    const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+    expect(query.sql).toContain('"user"."expires_at" is null');
+    expect(query.sql).toContain('"user"."expires_at" >');
+    expect(query.params[0]).toBe(user.id);
     expect(limit).toHaveBeenCalledWith(1);
   },
 );
 
 test("finds the user joined to an identity", async () => {
-  const { repository, from, innerJoin, limit } = lookupRepository([user]);
+  const { repository, from, innerJoin, limit, select } = lookupRepository([
+    user,
+  ]);
 
   await expect(repository.findByIdentity(input)).resolves.toEqual(user);
+  expect(select).toHaveBeenCalledExactlyOnceWith({
+    id: users.id,
+    kind: users.kind,
+    expiresAt: users.expiresAt,
+  });
   expect(from).toHaveBeenCalledWith(userIdentities);
   expect(innerJoin).toHaveBeenCalledWith(users, expect.anything());
   expect(limit).toHaveBeenCalledWith(1);
@@ -99,7 +122,9 @@ test("returns null when the identity has no user", async () => {
 });
 
 test("finds a user joined to an unexpired session", async () => {
-  const { repository, from, innerJoin, limit } = lookupRepository([user]);
+  const { repository, from, innerJoin, limit, select } = lookupRepository([
+    user,
+  ]);
   const now = new Date("2026-09-25T12:00:00.000Z");
   const where = vi.fn().mockReturnValue({ limit });
   innerJoin.mockReturnValue({ innerJoin, where });
@@ -108,6 +133,11 @@ test("finds a user joined to an unexpired session", async () => {
     repository.findBySessionKeyHash("hashed-key", now),
   ).resolves.toEqual(user);
   expect(from).toHaveBeenCalledWith(userSessions);
+  expect(select).toHaveBeenCalledExactlyOnceWith({
+    id: users.id,
+    kind: users.kind,
+    expiresAt: users.expiresAt,
+  });
   expect(innerJoin).toHaveBeenCalledExactlyOnceWith(users, expect.anything());
   expect(new PgDialect().sqlToQuery(innerJoin.mock.calls[0][1]).sql).toBe(
     '"user_session"."user_id" = "user"."id"',
@@ -115,7 +145,13 @@ test("finds a user joined to an unexpired session", async () => {
   const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
   expect(query.sql).toContain('"user_session"."session_key_hash" = $1');
   expect(query.sql).toContain('"user_session"."expires_at" > $2');
-  expect(query.params).toEqual(["hashed-key", now.toISOString()]);
+  expect(query.sql).toContain('"user"."expires_at" is null');
+  expect(query.sql).toContain('"user"."expires_at" > $3');
+  expect(query.params).toEqual([
+    "hashed-key",
+    now.toISOString(),
+    now.toISOString(),
+  ]);
   expect(limit).toHaveBeenCalledWith(1);
 });
 
@@ -147,6 +183,7 @@ function creationRepository(identityRows: { userId: string }[]) {
     transaction,
     insert,
     userValues,
+    userReturning,
     identityValues,
     onConflictDoNothing,
   };
@@ -158,6 +195,7 @@ test("creates the user and identity in one transaction", async () => {
     transaction,
     insert,
     userValues,
+    userReturning,
     identityValues,
     onConflictDoNothing,
   } = creationRepository([{ userId: user.id }]);
@@ -167,6 +205,11 @@ test("creates the user and identity in one transaction", async () => {
   expect(insert).toHaveBeenNthCalledWith(1, users);
   expect(insert).toHaveBeenNthCalledWith(2, userIdentities);
   expect(userValues).toHaveBeenCalledWith({});
+  expect(userReturning).toHaveBeenCalledWith({
+    id: users.id,
+    kind: users.kind,
+    expiresAt: users.expiresAt,
+  });
   expect(identityValues).toHaveBeenCalledWith({
     userId: user.id,
     ...input,
@@ -202,10 +245,32 @@ test("propagates unrelated transaction failures", async () => {
   await expect(repository.create(input)).rejects.toBe(failure);
 });
 
+test("inserts a guest user without an identity", async () => {
+  const returning = vi.fn().mockResolvedValue([guestUser]);
+  const values = vi.fn().mockReturnValue({ returning });
+  const insert = vi.fn().mockReturnValue({ values });
+  const repository = new DrizzleUserRepository({ insert } as never);
+  const expiresAt = new Date("2026-10-01T12:00:00.000Z");
+
+  await expect(repository.createGuestUser(expiresAt)).resolves.toEqual(
+    guestUser,
+  );
+  expect(insert).toHaveBeenCalledExactlyOnceWith(users);
+  expect(values).toHaveBeenCalledExactlyOnceWith({
+    kind: "GUEST",
+    expiresAt,
+  });
+  expect(returning).toHaveBeenCalledExactlyOnceWith({
+    id: users.id,
+    kind: users.kind,
+    expiresAt: users.expiresAt,
+  });
+});
+
 test("concurrent creation returns the same user for a shared identity", async () => {
-  const winner = { id: "22222222-2222-4222-8222-222222222222" };
+  const winner = { ...user, id: "22222222-2222-4222-8222-222222222222" };
   let nextId = 0;
-  let storedUser: typeof winner | null = null;
+  let storedUser: typeof user | null = null;
   const transaction = vi.fn(async (callback) => {
     const candidate = nextId++ === 0 ? winner : user;
     const insert = vi.fn((table) => ({
@@ -217,7 +282,7 @@ test("concurrent creation returns the same user for a shared identity", async ()
           onConflictDoNothing: vi.fn().mockReturnValue({
             returning: vi.fn(async () => {
               if (storedUser) return [];
-              storedUser = { id: value.userId };
+              storedUser = { ...user, id: value.userId };
               return [{ userId: value.userId }];
             }),
           }),

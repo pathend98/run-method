@@ -60,7 +60,9 @@ function renderModal(response: TrainingSession[] = sessions) {
         json: vi
           .fn()
           .mockResolvedValue(
-            url === "/api/v1/me" ? { id: athleteId } : response,
+            url === "/api/v1/me"
+              ? { id: athleteId, kind: "REGISTERED", expiresAt: null }
+              : response,
           ),
       }),
     ),

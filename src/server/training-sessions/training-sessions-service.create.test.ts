@@ -44,7 +44,11 @@ test.each([undefined, null, "invalid"])(
 
 test("checks the athlete before creating a session", async () => {
   const { repository, service, userService } = createService();
-  vi.mocked(userService.findById).mockResolvedValue({ id: athleteId });
+  vi.mocked(userService.findById).mockResolvedValue({
+    id: athleteId,
+    kind: "REGISTERED",
+    expiresAt: null,
+  });
   vi.mocked(repository.create).mockResolvedValue({ id: "created" } as never);
 
   await service.create(request);
