@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/ui/navbar/navbar";
+import { QueryProvider } from "./query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <Navbar />
-        {children}
+        <QueryProvider>
+          <Navbar />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

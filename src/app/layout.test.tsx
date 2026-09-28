@@ -1,6 +1,7 @@
 import { isValidElement } from "react";
 import RootLayout, { metadata } from "./layout";
 import { Navbar } from "@/ui/navbar/navbar";
+import { QueryProvider } from "./query-provider";
 
 test("exports the application metadata", () => {
   expect(metadata).toEqual({
@@ -24,6 +25,8 @@ test("renders the root html and body structure", () => {
   expect(isValidElement(body)).toBe(true);
   expect(body.type).toBe("body");
   expect(body.props.suppressHydrationWarning).toBe(true);
-  expect(body.props.children[0].type).toBe(Navbar);
-  expect(body.props.children[1]).toBe(child);
+  const provider = body.props.children;
+  expect(provider.type).toBe(QueryProvider);
+  expect(provider.props.children[0].type).toBe(Navbar);
+  expect(provider.props.children[1]).toBe(child);
 });

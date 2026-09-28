@@ -1,6 +1,26 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Navbar } from "./navbar";
 
+const account = vi.hoisted(() => ({
+  kind: "REGISTERED" as "REGISTERED" | "GUEST" | null,
+  pathname: "/training-planner",
+  error: false,
+}));
+
+vi.mock("next/navigation", () => ({ usePathname: () => account.pathname }));
+vi.mock("@/ui/users/current-user-query", () => ({
+  useCurrentUserQuery: (enabled: boolean) => ({
+    isSuccess: enabled && !account.error && account.kind !== null,
+    data: { kind: account.kind },
+  }),
+}));
+
+beforeEach(() => {
+  account.kind = "REGISTERED";
+  account.pathname = "/training-planner";
+  account.error = false;
+});
+
 function trigger() {
   return screen.getByRole("button", { name: "User menu" });
 }
@@ -15,8 +35,37 @@ test("renders accessible navigation with the menu initially closed", () => {
     screen.getByRole("link", { name: "Training planner" }).getAttribute("href"),
   ).toBe("/training-planner");
   expect(trigger().getAttribute("aria-expanded")).toBe("false");
+  expect(trigger().textContent).toContain("User");
   expect(screen.queryByRole("menu")).toBeNull();
 });
+
+test("offers registration to guests without a logout action", () => {
+  account.kind = "GUEST";
+  render(<Navbar />);
+  expect(trigger().textContent).toContain("Guest");
+  fireEvent.click(trigger());
+  const register = screen.getByRole("menuitem", { name: "Register" });
+  expect(register.getAttribute("href")).toBe("/auth");
+  expect(screen.queryByRole("menuitem", { name: "Log out" })).toBeNull();
+  expect(document.activeElement).toBe(register);
+  fireEvent.keyDown(register, { key: "Escape" });
+  expect(screen.queryByRole("menu")).toBeNull();
+  expect(document.activeElement).toBe(trigger());
+});
+
+test.each(["loading", "error", "welcome page"])(
+  "shows icon only for %s",
+  (state) => {
+    account.kind = state === "loading" ? null : "REGISTERED";
+    account.error = state === "error";
+    account.pathname = state === "welcome page" ? "/" : "/training-planner";
+    render(<Navbar />);
+    expect(trigger().textContent).toBe("");
+    expect(trigger().hasAttribute("disabled")).toBe(true);
+    fireEvent.click(trigger());
+    expect(screen.queryByRole("menu")).toBeNull();
+  },
+);
 
 test("toggles a labelled menu and focuses the existing logout endpoint", () => {
   render(<Navbar />);

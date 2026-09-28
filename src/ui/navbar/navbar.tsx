@@ -2,8 +2,10 @@
 
 import { CalendarDays, UserRound } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/ui/components/button";
+import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,12 +13,18 @@ export function Navbar() {
   const triggerId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const logoutRef = useRef<HTMLAnchorElement>(null);
+  const actionRef = useRef<HTMLAnchorElement>(null);
+  const pathname = usePathname();
+  const currentUser = useCurrentUserQuery(pathname === "/training-planner");
+  const kind = currentUser.isSuccess ? currentUser.data.kind : null;
+  const actionLabel =
+    kind === "GUEST" ? "Register" : kind === "REGISTERED" ? "Log out" : null;
+  const actionHref = kind === "GUEST" ? "/auth" : "/auth/logout";
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !actionLabel) return;
 
-    logoutRef.current!.focus();
+    actionRef.current?.focus();
 
     function dismissOutside(event: PointerEvent) {
       if (!containerRef.current!.contains(event.target as Node)) {
@@ -26,7 +34,7 @@ export function Navbar() {
 
     document.addEventListener("pointerdown", dismissOutside);
     return () => document.removeEventListener("pointerdown", dismissOutside);
-  }, [isOpen]);
+  }, [isOpen, actionLabel]);
 
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white">
@@ -59,7 +67,7 @@ export function Navbar() {
             if (event.key === "ArrowDown" || event.key === "ArrowUp") {
               event.preventDefault();
               setIsOpen(true);
-              if (isOpen) logoutRef.current!.focus();
+              if (isOpen) actionRef.current?.focus();
             }
           }}
         >
@@ -68,16 +76,17 @@ export function Navbar() {
             aria-expanded={isOpen}
             aria-haspopup="menu"
             aria-label="User menu"
-            className="min-h-11 min-w-11"
+            className="min-h-11 min-w-11 gap-2 px-3"
+            disabled={!actionLabel}
             id={triggerId}
             onClick={() => setIsOpen((open) => !open)}
             ref={triggerRef}
-            size="icon"
             variant="tertiary"
           >
+            {kind ? <span>{kind === "GUEST" ? "Guest" : "User"}</span> : null}
             <UserRound aria-hidden="true" className="size-5" />
           </Button>
-          {isOpen ? (
+          {isOpen && actionLabel ? (
             <div
               aria-labelledby={triggerId}
               className="absolute right-0 mt-2 w-44 max-w-[calc(100vw-2rem)] rounded-md border border-zinc-200 bg-white p-1 shadow-lg"
@@ -86,12 +95,12 @@ export function Navbar() {
             >
               <a
                 className="flex min-h-11 items-center rounded px-3 text-sm text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-teal-600"
-                href="/auth/logout"
-                ref={logoutRef}
+                href={actionHref}
+                ref={actionRef}
                 role="menuitem"
                 tabIndex={-1}
               >
-                Log out
+                {actionLabel}
               </a>
             </div>
           ) : null}
