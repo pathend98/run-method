@@ -50,6 +50,8 @@ test("finds a user by issuer and subject", async () => {
     deleteSessionBySessionKeyHash: vi.fn(),
     create: vi.fn(),
     createGuestUser: vi.fn(),
+    promoteGuestUser: vi.fn(),
+    deleteGuestUser: vi.fn(),
     createSession: vi.fn(),
   };
   const service = new DefaultUserService(repository);
@@ -68,6 +70,8 @@ test("creates a user from an identity and email", async () => {
     deleteSessionBySessionKeyHash: vi.fn(),
     create: vi.fn().mockResolvedValue(user),
     createGuestUser: vi.fn(),
+    promoteGuestUser: vi.fn(),
+    deleteGuestUser: vi.fn(),
     createSession: vi.fn(),
   };
   const service = new DefaultUserService(repository);
@@ -97,6 +101,8 @@ function sessionService(identity: User | null = registeredUser) {
     deleteSessionBySessionKeyHash: vi.fn(),
     create: vi.fn(),
     createGuestUser: vi.fn(),
+    promoteGuestUser: vi.fn(),
+    deleteGuestUser: vi.fn(),
     createSession: vi.fn().mockResolvedValue(undefined),
   };
   return { service: new DefaultUserService(repository), repository };
@@ -230,6 +236,37 @@ test("creates a guest user that expires seven days after creation", async () => 
   } finally {
     vi.useRealTimers();
   }
+});
+
+test("promotes a guest through the repository and preserves its ID", async () => {
+  const { service, repository } = sessionService();
+  const identity = {
+    issuer: "issuer",
+    subject: "subject",
+    email: "runner@example.com",
+  };
+  const promoted = {
+    ...guestUser,
+    kind: "REGISTERED" as const,
+    expiresAt: null,
+  };
+  vi.mocked(repository.promoteGuestUser).mockResolvedValue(promoted);
+
+  await expect(
+    service.promoteGuestUser(guestUser.id, identity),
+  ).resolves.toEqual(promoted);
+  expect(repository.promoteGuestUser).toHaveBeenCalledExactlyOnceWith(
+    guestUser.id,
+    identity,
+  );
+});
+
+test("deletes a guest through the repository", async () => {
+  const { service, repository } = sessionService();
+  await service.deleteGuestUser(guestUser.id);
+  expect(repository.deleteGuestUser).toHaveBeenCalledExactlyOnceWith(
+    guestUser.id,
+  );
 });
 
 test("creates distinct tokenless guest sessions using the regular key format", async () => {

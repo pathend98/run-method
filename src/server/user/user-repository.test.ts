@@ -1,6 +1,8 @@
 import { userIdentities, userSessions, users } from "@db/schema";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { DrizzleUserRepository } from "./user-repository";
+import { IdentityAlreadyExistsError } from "./user-errors";
+import { UserNotFoundError } from "./user-errors";
 
 test.each([undefined, "id-token", null])(
   "deletes only the matching session regardless of expiry (%s)",
@@ -265,6 +267,120 @@ test("inserts a guest user without an identity", async () => {
     kind: users.kind,
     expiresAt: users.expiresAt,
   });
+});
+
+test("promotes a guest and links its identity in one transaction", async () => {
+  const promoted = {
+    ...guestUser,
+    kind: "REGISTERED" as const,
+    expiresAt: null,
+  };
+  const updateReturning = vi.fn().mockResolvedValue([promoted]);
+  const updateWhere = vi.fn().mockReturnValue({ returning: updateReturning });
+  const set = vi.fn().mockReturnValue({ where: updateWhere });
+  const identityReturning = vi
+    .fn()
+    .mockResolvedValue([{ userId: guestUser.id }]);
+  const onConflictDoNothing = vi
+    .fn()
+    .mockReturnValue({ returning: identityReturning });
+  const values = vi.fn().mockReturnValue({ onConflictDoNothing });
+  const tx = {
+    update: vi.fn().mockReturnValue({ set }),
+    insert: vi.fn().mockReturnValue({ values }),
+  };
+  const transaction = vi.fn(async (callback) => callback(tx));
+  const repository = new DrizzleUserRepository({ transaction } as never);
+
+  await expect(
+    repository.promoteGuestUser(guestUser.id, input),
+  ).resolves.toEqual(promoted);
+  expect(transaction).toHaveBeenCalledOnce();
+  expect(tx.update).toHaveBeenCalledWith(users);
+  expect(set).toHaveBeenCalledWith({ kind: "REGISTERED", expiresAt: null });
+  const query = new PgDialect().sqlToQuery(updateWhere.mock.calls[0][0]);
+  expect(query.sql).toContain('"user"."id" = $1');
+  expect(query.sql).toContain('"user"."kind" = $2');
+  expect(query.params).toEqual([guestUser.id, "GUEST"]);
+  expect(tx.insert).toHaveBeenCalledWith(userIdentities);
+  expect(values).toHaveBeenCalledWith({ userId: guestUser.id, ...input });
+});
+
+test("rolls back guest promotion if identity linking conflicts", async () => {
+  const updateReturning = vi
+    .fn()
+    .mockResolvedValue([{ ...guestUser, kind: "REGISTERED", expiresAt: null }]);
+  const tx = {
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({ returning: updateReturning }),
+      }),
+    }),
+    insert: vi.fn().mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        onConflictDoNothing: vi
+          .fn()
+          .mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
+      }),
+    }),
+  };
+  const transaction = vi.fn(async (callback) => callback(tx));
+  const repository = new DrizzleUserRepository({ transaction } as never);
+
+  await expect(
+    repository.promoteGuestUser(guestUser.id, input),
+  ).rejects.toBeInstanceOf(IdentityAlreadyExistsError);
+  expect(transaction).toHaveBeenCalledOnce();
+});
+
+test("refuses to promote a user that is no longer a guest", async () => {
+  const tx = {
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi
+          .fn()
+          .mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
+      }),
+    }),
+    insert: vi.fn(),
+  };
+  const repository = new DrizzleUserRepository({
+    transaction: vi.fn(async (callback) => callback(tx)),
+  } as never);
+
+  await expect(
+    repository.promoteGuestUser(guestUser.id, input),
+  ).rejects.toBeInstanceOf(UserNotFoundError);
+  expect(tx.insert).not.toHaveBeenCalled();
+});
+
+test("deletes only a guest user, allowing database cascades to remove activities", async () => {
+  const returning = vi.fn().mockResolvedValue([{ id: guestUser.id }]);
+  const where = vi.fn().mockReturnValue({ returning });
+  const repository = new DrizzleUserRepository({
+    delete: vi.fn().mockReturnValue({ where }),
+  } as never);
+
+  await expect(
+    repository.deleteGuestUser(guestUser.id),
+  ).resolves.toBeUndefined();
+  const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+  expect(query.sql).toContain('"user"."id" = $1');
+  expect(query.sql).toContain('"user"."kind" = $2');
+  expect(query.params).toEqual([guestUser.id, "GUEST"]);
+});
+
+test("refuses to delete a user that is no longer a guest", async () => {
+  const where = vi
+    .fn()
+    .mockReturnValue({ returning: vi.fn().mockResolvedValue([]) });
+  const repository = new DrizzleUserRepository({
+    delete: vi.fn().mockReturnValue({ where }),
+  } as never);
+
+  await expect(repository.deleteGuestUser(guestUser.id)).rejects.toBeInstanceOf(
+    UserNotFoundError,
+  );
 });
 
 test("concurrent creation returns the same user for a shared identity", async () => {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import type { User } from "@/domain/user-types";
 
 import {
   COOKIE_OPTIONS,
@@ -11,6 +12,10 @@ import {
   AuthenticationIdTokenVerificationError,
   AuthenticationTokenExchangeError,
 } from "@/server/authentication/authentication-errors";
+import {
+  IdentityAlreadyExistsError,
+  UserNotFoundError,
+} from "@/server/user/user-errors";
 import { readAppEnv } from "@/server/env/app-env";
 import { getAuthenticationService, getUserService } from "@/server/server";
 import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-constants";
@@ -37,7 +42,43 @@ export async function GET(request: NextRequest) {
     const userService = getUserService();
     const { issuer, subject, email, accessToken, idToken, refreshToken } =
       identity;
-    await userService.create({ issuer, subject, email });
+    const oldSessionKey = request.cookies.get(USER_SESSION_COOKIE_NAME)?.value;
+    let previousUser: User | null = null;
+    if (oldSessionKey) {
+      try {
+        previousUser = await userService.findBySessionKey(oldSessionKey);
+      } catch (error) {
+        if (!(error instanceof UserNotFoundError)) throw error;
+      }
+      await userService.deleteSession(oldSessionKey);
+    }
+
+    let existingUser: User | null = null;
+    try {
+      existingUser = await userService.findByIdentity({ issuer, subject });
+    } catch (error) {
+      if (!(error instanceof UserNotFoundError)) throw error;
+    }
+
+    if (previousUser?.kind === "GUEST") {
+      if (existingUser) {
+        await userService.deleteGuestUser(previousUser.id);
+      } else {
+        try {
+          await userService.promoteGuestUser(previousUser.id, {
+            issuer,
+            subject,
+            email,
+          });
+        } catch (error) {
+          if (!(error instanceof IdentityAlreadyExistsError)) throw error;
+          await userService.findByIdentity({ issuer, subject });
+          await userService.deleteGuestUser(previousUser.id);
+        }
+      }
+    } else if (!existingUser) {
+      await userService.create({ issuer, subject, email });
+    }
     const sessionKey = await userService.createSession({
       issuer,
       subject,

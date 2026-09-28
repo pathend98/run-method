@@ -3,7 +3,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { userIdentities, userSessions, users } from "@db/schema";
 import type { User } from "@/domain/user-types";
-import { IdentityAlreadyExistsError } from "./user-errors";
+import { IdentityAlreadyExistsError, UserNotFoundError } from "./user-errors";
 import type {
   CreateUser,
   CreateUserSessionRecord,
@@ -22,12 +22,43 @@ export interface UserRepository {
   findBySessionKeyHash(sessionKeyHash: string, now: Date): Promise<User | null>;
   create(input: CreateUser): Promise<User>;
   createGuestUser(expiresAt: Date): Promise<User>;
+  promoteGuestUser(userId: string, identity: CreateUser): Promise<User>;
+  deleteGuestUser(userId: string): Promise<void>;
   createSession(input: CreateUserSessionRecord): Promise<void>;
   deleteSessionBySessionKeyHash(sessionKeyHash: string): Promise<string | null>;
 }
 
 export class DrizzleUserRepository implements UserRepository {
   constructor(private readonly db: NodePgDatabase) {}
+
+  async promoteGuestUser(userId: string, identity: CreateUser): Promise<User> {
+    return this.db.transaction(async (tx) => {
+      const [user] = await tx
+        .update(users)
+        .set({ kind: "REGISTERED", expiresAt: null })
+        .where(and(eq(users.id, userId), eq(users.kind, "GUEST")))
+        .returning(userSelection);
+      if (!user) throw new UserNotFoundError();
+
+      const [linkedIdentity] = await tx
+        .insert(userIdentities)
+        .values({ userId, ...identity })
+        .onConflictDoNothing({
+          target: [userIdentities.issuer, userIdentities.subject],
+        })
+        .returning({ userId: userIdentities.userId });
+      if (!linkedIdentity) throw new IdentityAlreadyExistsError();
+      return user;
+    });
+  }
+
+  async deleteGuestUser(userId: string): Promise<void> {
+    const [deleted] = await this.db
+      .delete(users)
+      .where(and(eq(users.id, userId), eq(users.kind, "GUEST")))
+      .returning({ id: users.id });
+    if (!deleted) throw new UserNotFoundError();
+  }
 
   async deleteSessionBySessionKeyHash(
     sessionKeyHash: string,

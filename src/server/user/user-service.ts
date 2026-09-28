@@ -15,6 +15,8 @@ export interface UserService {
   findBySessionKey(sessionKey: string): Promise<User>;
   create(input: CreateUser): Promise<User>;
   createGuestUser(): Promise<User>;
+  promoteGuestUser(userId: string, identity: CreateUser): Promise<User>;
+  deleteGuestUser(userId: string): Promise<void>;
   createSession(input: CreateUserSession): Promise<string>;
   createGuestUserSession(userId: string): Promise<string>;
   deleteSession(sessionKey: string): Promise<string | null>;
@@ -64,6 +66,14 @@ export class DefaultUserService implements UserService {
     return this.repository.createGuestUser(
       new Date(Date.now() + GUEST_USER_MAX_AGE_SECONDS * 1000),
     );
+  }
+
+  promoteGuestUser(userId: string, identity: CreateUser): Promise<User> {
+    return this.repository.promoteGuestUser(userId, identity);
+  }
+
+  deleteGuestUser(userId: string): Promise<void> {
+    return this.repository.deleteGuestUser(userId);
   }
 
   async createGuestUserSession(userId: string): Promise<string> {
