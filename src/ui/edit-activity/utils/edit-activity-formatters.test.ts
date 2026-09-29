@@ -13,15 +13,19 @@ const run = createRunActivity({
 const strength = createStrengthActivity({ description: "Controlled effort" });
 
 test("formats the available locked run targets", () => {
-  expect(formatLockedTargets(run)).toBe("6.00 km · 30m");
+  expect(formatLockedTargets(run, "KILOMETRES")).toBe("6.00 km · 30m");
+  expect(formatLockedTargets(run, "MILES")).toBe("3.73 mi · 30m");
 });
 
 test("formats strength duration with a missing-target fallback", () => {
-  expect(formatLockedTargets(strength)).toBe("45m");
+  expect(formatLockedTargets(strength, "MILES")).toBe("45m");
   expect(
-    formatLockedTargets({
-      ...strength,
-      targetDurationSeconds: null,
-    }),
+    formatLockedTargets(
+      {
+        ...strength,
+        targetDurationSeconds: null,
+      },
+      "MILES",
+    ),
   ).toBe("No target duration");
 });

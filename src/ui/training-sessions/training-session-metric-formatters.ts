@@ -1,5 +1,17 @@
-export function formatDistance(metres: number | null) {
-  return metres === null ? null : `${(metres / 1000).toFixed(2)} km`;
+import type { User } from "@/domain/user-types";
+
+export function formatDistance(
+  metres: number | null,
+  measurementUnit: User["measurementUnit"],
+  options: { decimalPlaces?: 1 | 2 } = {},
+) {
+  if (metres === null) {
+    return null;
+  }
+
+  const metresPerUnit = measurementUnit === "MILES" ? 1609.344 : 1000;
+  const unitLabel = measurementUnit === "MILES" ? "mi" : "km";
+  return `${(metres / metresPerUnit).toFixed(options.decimalPlaces ?? 2)} ${unitLabel}`;
 }
 
 export function formatDuration(seconds: number | null) {

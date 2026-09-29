@@ -5,6 +5,7 @@ import {
   createStrengthActivity,
 } from "@/test-support/fixtures/activity";
 import { SkippedActivitySummary } from "./skipped-activity-summary";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const activity = createRunActivity({
   id: "run",
@@ -16,6 +17,15 @@ const activity = createRunActivity({
 test("shows planned run metrics with a human-readable duration", () => {
   render(<SkippedActivitySummary activity={activity} />);
   expect(screen.getByText("8.00 km · 40m · 5:00 / km")).toBeDefined();
+});
+
+test("shows the planned run distance in miles with kilometre pace", () => {
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <SkippedActivitySummary activity={activity} />
+    </DistanceDisplayProvider>,
+  );
+  expect(screen.getByText("4.97 mi · 40m · 5:00 / km")).toBeDefined();
 });
 
 test("shows strength duration without run metrics", () => {

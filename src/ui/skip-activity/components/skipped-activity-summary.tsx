@@ -4,12 +4,14 @@ import {
   formatDuration,
   formatPace,
 } from "@/ui/training-sessions/training-session-metric-formatters";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type SkippedActivitySummaryProps = { activity: TrainingSession };
 
 export function SkippedActivitySummary({
   activity,
 }: SkippedActivitySummaryProps) {
+  const measurementUnit = useDistanceDisplayUnit();
   if (activity.activityType === "STRENGTH") {
     return activity.targetDurationSeconds === null ? null : (
       <p className="mt-3 text-sm text-zinc-600">
@@ -23,7 +25,7 @@ export function SkippedActivitySummary({
   );
   return (
     <p className="mt-3 text-sm text-zinc-600">
-      {formatDistance(activity.targetDistanceMetres)} ·{" "}
+      {formatDistance(activity.targetDistanceMetres, measurementUnit)} ·{" "}
       {formatDuration(activity.targetDurationSeconds)} · {formatPace(pace)}
     </p>
   );

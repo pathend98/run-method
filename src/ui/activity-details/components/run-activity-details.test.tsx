@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import { createRunActivity } from "@/test-support/fixtures/activity";
 import { RunActivityDetails } from "./run-activity-details";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 type RunOverride = Partial<RunTrainingSession>;
 
@@ -107,6 +108,19 @@ test("prioritizes completed run actuals and shows their targets as supporting te
   expect(
     screen.queryByRole("heading", { name: "Recorded metrics" }),
   ).toBeNull();
+});
+
+test("shows target and actual distances in miles while pace remains per kilometre", () => {
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <RunActivityDetails activity={runActivity({ status: "COMPLETED" })} />
+    </DistanceDisplayProvider>,
+  );
+
+  const completedMetrics = screen.getByLabelText("Completed activity metrics");
+  expect(within(completedMetrics).getByText("3.67 mi")).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 3.73 mi")).toBeDefined();
+  expect(within(completedMetrics).getByText("4:14 / km")).toBeDefined();
 });
 
 test.each([

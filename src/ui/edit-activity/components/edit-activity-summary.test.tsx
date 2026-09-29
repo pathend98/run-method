@@ -6,6 +6,7 @@ import {
   createStrengthActivity,
 } from "@/test-support/fixtures/activity";
 import { EditActivitySummary } from "./edit-activity-summary";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const runActivity = createRunActivity({
   description: "Controlled effort",
@@ -64,6 +65,15 @@ test("formats terminal AM and PM values for display", () => {
     />,
   );
   expect(screen.getByText("Evening")).toBeDefined();
+});
+
+test("shows locked run targets in miles", () => {
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <EditActivitySummary activity={{ ...runActivity, status: "COMPLETED" }} />
+    </DistanceDisplayProvider>,
+  );
+  expect(screen.getByText("3.73 mi · 25m 30s")).toBeDefined();
 });
 
 test("hides the editable target duration for scheduled strength activities", () => {

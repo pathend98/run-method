@@ -4,6 +4,7 @@ import {
   createStrengthActivity,
 } from "@/test-support/fixtures/activity";
 import { TrainingActivityCard } from "./training-activity-card";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import type { TrainingActivity } from "../types/training-planner-types";
 
 function runActivity(
@@ -33,6 +34,16 @@ test("renders a compact activity summary", () => {
   expect(screen.getByText("Run", { selector: ".sr-only" })).toBeDefined();
   expect(document.querySelector("svg.lucide-sport-shoe")).not.toBeNull();
   expect(screen.queryByText("Controlled effort")).toBeNull();
+});
+
+test("shows the selected distance unit in a run card", () => {
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <TrainingActivityCard activity={runActivity()} />
+    </DistanceDisplayProvider>,
+  );
+
+  expect(screen.getByText("3.73 mi · 25m 30s")).toBeDefined();
 });
 
 test("merges an optional class name into the activity button", () => {

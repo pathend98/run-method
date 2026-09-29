@@ -11,6 +11,7 @@ import {
   formatDistance,
 } from "@/ui/training-sessions/training-session-metric-formatters";
 import { formatStatus } from "@/ui/training-sessions/training-session-label-formatters";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type TrainingActivityCardProps = {
   activity: TrainingActivity;
@@ -38,6 +39,7 @@ export function TrainingActivityCard({
   className,
   onSelect,
 }: TrainingActivityCardProps) {
+  const measurementUnit = useDistanceDisplayUnit();
   const statusStyle = statusStyles[activity.status];
   const StatusIcon = statusStyle.icon;
   const ActivityIcon = activity.activityType === "RUN" ? SportShoe : Dumbbell;
@@ -48,6 +50,7 @@ export function TrainingActivityCard({
           isCompleted
             ? activity.actualDistanceMetres
             : activity.targetDistanceMetres,
+          measurementUnit,
         )
       : null;
   const duration = formatCompactDuration(

@@ -12,6 +12,7 @@ import {
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { ReviewActivitiesModal } from "./review-activities-modal";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const sessions = [
   createRunActivity({
@@ -30,7 +31,10 @@ const sessions = [
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
-function renderModal(response: TrainingSession[] = sessions) {
+function renderModal(
+  response: TrainingSession[] = sessions,
+  measurementUnit: "KILOMETRES" | "MILES" = "KILOMETRES",
+) {
   const store = createTrainingPlannerStore();
   store.getState().openReviewActivities();
   vi.stubGlobal(
@@ -49,7 +53,9 @@ function renderModal(response: TrainingSession[] = sessions) {
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <ReviewActivitiesModal />
+        <DistanceDisplayProvider measurementUnit={measurementUnit}>
+          <ReviewActivitiesModal />
+        </DistanceDisplayProvider>
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
@@ -91,6 +97,12 @@ test("opens the skip flow from the review list", async () => {
     kind: "skip",
     returnTo: "review",
   });
+});
+
+test("shows review list distances in miles", async () => {
+  renderModal(sessions, "MILES");
+  expect(await screen.findByText("7.46 mi · 56m")).toBeDefined();
+  expect(screen.getByText("4.97 mi · 41m")).toBeDefined();
 });
 
 test("shows duration-only planned metrics for strength activities", async () => {

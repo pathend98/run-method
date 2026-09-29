@@ -14,6 +14,7 @@ import {
   formatDistanceVariance,
   formatDurationVariance,
 } from "./utils/summary-variance";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type WeeklySummaryProps = {
   activities: TrainingSession[];
@@ -26,6 +27,7 @@ export function WeeklySummary({
   className,
   weekRange,
 }: WeeklySummaryProps) {
+  const measurementUnit = useDistanceDisplayUnit();
   const summary = getWeeklySummary(
     activities,
     weekRange,
@@ -54,18 +56,25 @@ export function WeeklySummary({
       className={`grid grid-cols-2 gap-5 sm:grid-cols-3${className ? ` ${className}` : ""}`}
     >
       <SummaryMetric
-        completed={formatDistance(summary.completedDistanceMetres)}
+        completed={formatDistance(
+          summary.completedDistanceMetres,
+          measurementUnit,
+        )}
         completedValue={summary.completedDistanceMetres}
         isFutureWeek={summary.isFutureWeek}
         isPastWeek={summary.isPastWeek}
         label="Running distance"
-        scheduled={formatDistance(summary.scheduledDistanceMetres)}
+        scheduled={formatDistance(
+          summary.scheduledDistanceMetres,
+          measurementUnit,
+        )}
         scheduledValue={summary.scheduledDistanceMetres}
         variance={
           summary.isPastWeek
             ? formatDistanceVariance(
                 summary.completedDistanceMetres -
                   summary.scheduledDistanceMetres,
+                measurementUnit,
               )
             : null
         }

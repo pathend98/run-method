@@ -92,8 +92,8 @@ export function SettingsForm({ user }: SettingsFormProps) {
         </select>
       </FormField>
       <p className="text-sm text-zinc-600">
-        The training planner currently displays and accepts distances in
-        kilometres.
+        Read-only distances use your selected unit. Distance fields use
+        kilometres, and pace uses minutes per kilometre.
       </p>
       <div className="flex items-center gap-3">
         <Button

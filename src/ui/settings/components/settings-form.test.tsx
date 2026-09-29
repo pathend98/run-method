@@ -28,6 +28,9 @@ test("initializes from the user and does not submit unchanged values", async () 
     "value",
     "KILOMETRES",
   );
+  expect(
+    screen.getByText(/Read-only distances use your selected unit/),
+  ).toBeDefined();
   const save = screen.getByRole("button", { name: "Save changes" });
   expect(save).toHaveProperty("disabled", true);
   fireEvent.submit(save.closest("form")!);

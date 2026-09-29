@@ -1,9 +1,15 @@
-export function formatDistanceVariance(metres: number) {
+import type { User } from "@/domain/user-types";
+import { formatDistance } from "@/ui/training-sessions/training-session-metric-formatters";
+
+export function formatDistanceVariance(
+  metres: number,
+  measurementUnit: User["measurementUnit"],
+) {
   if (metres === 0) {
     return null;
   }
 
-  return `${getVarianceSign(metres)}${(Math.abs(metres) / 1000).toFixed(1)} km`;
+  return `${getVarianceSign(metres)}${formatDistance(Math.abs(metres), measurementUnit, { decimalPlaces: 1 })}`;
 }
 
 export function formatDurationVariance(seconds: number) {

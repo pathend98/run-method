@@ -2,8 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
 import { TrainingPlanner } from "./training-planner";
+import { getCurrentWeekRange } from "./services/training-planner-service";
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
@@ -83,4 +85,41 @@ test("retries a failed current-user lookup", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
   await screen.findByRole("list", { name: "Weekly training planner" });
   expect(userRequests).toBe(2);
+});
+
+test("uses the loaded user's miles preference for planner distances", async () => {
+  const activity = createRunActivity({
+    date: getCurrentWeekRange().from,
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: 1530,
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: vi
+          .fn()
+          .mockResolvedValue(
+            url === "/api/v1/me"
+              ? createUser({ id: athleteId, measurementUnit: "MILES" })
+              : [activity],
+          ),
+      }),
+    ),
+  );
+
+  renderPlanner();
+
+  const planner = await screen.findByRole("list", {
+    name: "Weekly training planner",
+  });
+  expect(screen.getAllByText("3.73 mi · 25m 30s").length).toBeGreaterThan(0);
+  fireEvent.click(
+    planner.querySelector<HTMLButtonElement>(
+      '[aria-label="View Tempo run details"]',
+    )!,
+  );
+  expect(screen.getByText("3.73 mi")).toBeDefined();
+  expect(screen.getByText("4:15 / km")).toBeDefined();
 });
