@@ -26,7 +26,8 @@ export function SkippedActivitySummary({
   return (
     <p className="mt-3 text-sm text-zinc-600">
       {formatDistance(activity.targetDistanceMetres, measurementUnit)} ·{" "}
-      {formatDuration(activity.targetDurationSeconds)} · {formatPace(pace)}
+      {formatDuration(activity.targetDurationSeconds)} ·{" "}
+      {formatPace(pace, measurementUnit)}
     </p>
   );
 }

@@ -121,5 +121,5 @@ test("uses the loaded user's miles preference for planner distances", async () =
     )!,
   );
   expect(screen.getByText("3.73 mi")).toBeDefined();
-  expect(screen.getByText("4:15 / km")).toBeDefined();
+  expect(screen.getByText("6:50 / mi")).toBeDefined();
 });

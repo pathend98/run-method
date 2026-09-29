@@ -24,6 +24,7 @@ export function PlannedRunSummary({ activity }: PlannedRunSummaryProps) {
           activity.targetDistanceMetres,
           activity.targetDurationSeconds,
         ),
+        measurementUnit,
       )}
     </p>
   );

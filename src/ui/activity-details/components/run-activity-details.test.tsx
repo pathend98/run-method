@@ -110,7 +110,7 @@ test("prioritizes completed run actuals and shows their targets as supporting te
   ).toBeNull();
 });
 
-test("shows target and actual distances in miles while pace remains per kilometre", () => {
+test("shows target and actual distances and paces in miles", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
       <RunActivityDetails activity={runActivity({ status: "COMPLETED" })} />
@@ -120,7 +120,8 @@ test("shows target and actual distances in miles while pace remains per kilometr
   const completedMetrics = screen.getByLabelText("Completed activity metrics");
   expect(within(completedMetrics).getByText("3.67 mi")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 3.73 mi")).toBeDefined();
-  expect(within(completedMetrics).getByText("4:14 / km")).toBeDefined();
+  expect(within(completedMetrics).getByText("6:49 / mi")).toBeDefined();
+  expect(within(completedMetrics).getByText("Target: 6:50 / mi")).toBeDefined();
 });
 
 test.each([

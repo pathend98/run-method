@@ -19,13 +19,13 @@ test("shows planned run metrics with a human-readable duration", () => {
   expect(screen.getByText("8.00 km · 40m · 5:00 / km")).toBeDefined();
 });
 
-test("shows the planned run distance in miles with kilometre pace", () => {
+test("shows the planned run distance and pace in miles", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
       <SkippedActivitySummary activity={activity} />
     </DistanceDisplayProvider>,
   );
-  expect(screen.getByText("4.97 mi · 40m · 5:00 / km")).toBeDefined();
+  expect(screen.getByText("4.97 mi · 40m · 8:03 / mi")).toBeDefined();
 });
 
 test("shows strength duration without run metrics", () => {

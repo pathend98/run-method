@@ -35,14 +35,17 @@ test("formats compact durations without seconds after one hour", () => {
 });
 
 test("formats pace with padded seconds and an optional unit", () => {
-  expect(formatPace(255)).toBe("4:15 / km");
-  expect(formatPace(245)).toBe("4:05 / km");
-  expect(formatPace(255, { includeUnit: false })).toBe("4:15");
+  expect(formatPace(255, "KILOMETRES")).toBe("4:15 / km");
+  expect(formatPace(245, "KILOMETRES")).toBe("4:05 / km");
+  expect(formatPace(255, "KILOMETRES", { includeUnit: false })).toBe("4:15");
+  expect(formatPace(255, "MILES")).toBe("6:50 / mi");
+  expect(formatPace(300, "MILES")).toBe("8:03 / mi");
+  expect(formatPace(300, "MILES", { includeUnit: false })).toBe("8:03");
 });
 
 test("preserves null metric values", () => {
   expect(formatDistance(null, "MILES")).toBeNull();
   expect(formatDuration(null)).toBeNull();
   expect(formatCompactDuration(null)).toBeNull();
-  expect(formatPace(null)).toBeNull();
+  expect(formatPace(null, "MILES")).toBeNull();
 });

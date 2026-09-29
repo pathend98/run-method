@@ -101,6 +101,7 @@ function defaultValues(activity: TrainingSession): CompleteActivityFormValues {
         activity.targetDistanceMetres,
         activity.targetDurationSeconds,
       ),
+      "KILOMETRES",
       { includeUnit: false },
     ),
   };

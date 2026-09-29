@@ -29,7 +29,7 @@ test("initializes from the user and does not submit unchanged values", async () 
     "KILOMETRES",
   );
   expect(
-    screen.getByText(/Read-only distances use your selected unit/),
+    screen.getByText(/Read-only distances and paces use your selected unit/),
   ).toBeDefined();
   const save = screen.getByRole("button", { name: "Save changes" });
   expect(save).toHaveProperty("disabled", true);
