@@ -13,10 +13,18 @@ export function Navbar() {
   const triggerId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const settingsRef = useRef<HTMLAnchorElement>(null);
   const actionRef = useRef<HTMLAnchorElement>(null);
   const pathname = usePathname();
-  const currentUser = useCurrentUserQuery(pathname === "/training-planner");
+  const currentUser = useCurrentUserQuery(
+    pathname === "/training-planner" || pathname === "/settings",
+  );
   const kind = currentUser.isSuccess ? currentUser.data.kind : null;
+  const userLabel = currentUser.isSuccess
+    ? currentUser.data.kind === "GUEST"
+      ? "Guest"
+      : (currentUser.data.firstName ?? "You")
+    : null;
   const actionLabel =
     kind === "GUEST" ? "Register" : kind === "REGISTERED" ? "Log out" : null;
   const actionHref = kind === "GUEST" ? "/auth" : "/auth/logout";
@@ -24,7 +32,7 @@ export function Navbar() {
   useEffect(() => {
     if (!isOpen || !actionLabel) return;
 
-    actionRef.current?.focus();
+    (settingsRef.current ?? actionRef.current)?.focus();
 
     function dismissOutside(event: PointerEvent) {
       if (!containerRef.current!.contains(event.target as Node)) {
@@ -66,8 +74,17 @@ export function Navbar() {
             }
             if (event.key === "ArrowDown" || event.key === "ArrowUp") {
               event.preventDefault();
-              setIsOpen(true);
-              if (isOpen) actionRef.current?.focus();
+              if (!isOpen) {
+                setIsOpen(true);
+              } else {
+                const first = settingsRef.current ?? actionRef.current;
+                const second = settingsRef.current ? actionRef.current : null;
+                if (second && document.activeElement === first) {
+                  second.focus();
+                } else {
+                  first?.focus();
+                }
+              }
             }
           }}
         >
@@ -83,7 +100,7 @@ export function Navbar() {
             ref={triggerRef}
             variant="tertiary"
           >
-            {kind ? <span>{kind === "GUEST" ? "Guest" : "User"}</span> : null}
+            {userLabel ? <span>{userLabel}</span> : null}
             <UserRound aria-hidden="true" className="size-5" />
           </Button>
           {isOpen && actionLabel ? (
@@ -93,6 +110,18 @@ export function Navbar() {
               id={menuId}
               role="menu"
             >
+              {kind === "REGISTERED" ? (
+                <Link
+                  className="flex min-h-11 items-center rounded px-3 text-sm text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-teal-600"
+                  href="/settings"
+                  onClick={() => setIsOpen(false)}
+                  ref={settingsRef}
+                  role="menuitem"
+                  tabIndex={-1}
+                >
+                  Settings
+                </Link>
+              ) : null}
               <a
                 className="flex min-h-11 items-center rounded px-3 text-sm text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-teal-600"
                 href={actionHref}
