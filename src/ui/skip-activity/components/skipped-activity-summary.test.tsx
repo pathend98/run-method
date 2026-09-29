@@ -1,25 +1,17 @@
 import { render, screen } from "@testing-library/react";
 
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { SkippedActivitySummary } from "./skipped-activity-summary";
 
-const activity = {
+const activity = createRunActivity({
   id: "run",
-  athleteId: "33333333-3333-4333-8333-333333333333",
   title: "Easy run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
   timeOfDay: null,
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
-  targetDistanceMetres: 8000,
   targetDurationSeconds: 2400,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} as const;
+});
 
 test("shows planned run metrics with a human-readable duration", () => {
   render(<SkippedActivitySummary activity={activity} />);
@@ -29,11 +21,12 @@ test("shows planned run metrics with a human-readable duration", () => {
 test("shows strength duration without run metrics", () => {
   render(
     <SkippedActivitySummary
-      activity={{
-        ...activity,
-        activityType: "STRENGTH",
+      activity={createStrengthActivity({
+        id: activity.id,
+        title: activity.title,
+        timeOfDay: activity.timeOfDay,
         targetDurationSeconds: 1800,
-      }}
+      })}
     />,
   );
   expect(screen.getByText("30m")).toBeDefined();
@@ -43,11 +36,12 @@ test("shows strength duration without run metrics", () => {
 test("omits metrics for strength activities without a target duration", () => {
   const { container } = render(
     <SkippedActivitySummary
-      activity={{
-        ...activity,
-        activityType: "STRENGTH",
+      activity={createStrengthActivity({
+        id: activity.id,
+        title: activity.title,
+        timeOfDay: activity.timeOfDay,
         targetDurationSeconds: null,
-      }}
+      })}
     />,
   );
   expect(container.childElementCount).toBe(0);

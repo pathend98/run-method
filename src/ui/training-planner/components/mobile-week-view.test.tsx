@@ -1,4 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 
 import { MobileWeekView } from "./mobile-week-view";
 import type {
@@ -7,23 +11,14 @@ import type {
 } from "../types/training-planner-types";
 
 const baseActivity = {
-  activityType: "RUN",
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  date: "2026-08-19",
+  ...createRunActivity({
+    date: "2026-08-19",
+    id: "activity",
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: 1800,
+    title: "Easy run",
+  }),
   day: "Wednesday",
-  description: null,
-  id: "activity",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  skipReason: null,
-  sortOrder: 0,
-  status: "SCHEDULED",
-  targetDistanceMetres: 6000,
-  targetDurationSeconds: 1800,
-  timeOfDay: "AM",
-  title: "Easy run",
-  updatedAt: "2026-08-01T10:00:00.000Z",
 } satisfies TrainingActivity;
 
 function activity(overrides: Partial<TrainingActivity> = {}): TrainingActivity {
@@ -39,13 +34,14 @@ function createWeek(): TrainingDay[] {
       date: "2026-08-19",
       activities: [
         activity({ id: "morning", title: "Easy run" }),
-        activity({
-          activityType: "STRENGTH",
-          id: "evening",
-          targetDurationSeconds: 2700,
-          timeOfDay: "PM",
-          title: "Strength",
-        }),
+        {
+          ...createStrengthActivity({
+            id: "evening",
+            date: "2026-08-19",
+            timeOfDay: "PM",
+          }),
+          day: "Wednesday",
+        },
         activity({
           id: "anytime",
           timeOfDay: null,

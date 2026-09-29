@@ -2,6 +2,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
+import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
@@ -17,22 +21,11 @@ vi.mock(
 );
 
 const activity = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: null,
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
-  targetDistanceMetres: 6000,
-  targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
+  ...createRunActivity({
+    timeOfDay: null,
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: 1530,
+  }),
   day: "Monday",
 } as const;
 
@@ -103,9 +96,14 @@ test("disables dismissal while completion is pending", async () => {
 test("shows a duration-only completion dialog for strength", () => {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails({
-    ...activity,
-    activityType: "STRENGTH",
-    targetDurationSeconds: 1800,
+    ...createStrengthActivity({
+      id: activity.id,
+      title: activity.title,
+      date: activity.date,
+      timeOfDay: activity.timeOfDay,
+      description: activity.description,
+      targetDurationSeconds: 1800,
+    }),
     day: "Monday",
   });
   store.getState().openCompleteActivity();

@@ -1,36 +1,25 @@
-import type {
-  RunTrainingSession,
-  StrengthTrainingSession,
-} from "@/domain/training-sessions";
+import type { RunTrainingSession } from "@/domain/training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import {
   calculatePaceSecondsPerKilometre,
   createCompleteActivityFormSchema,
   toCompleteTrainingSessionRequest,
 } from "./complete-activity-form";
 
-const run = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const run = createRunActivity({
   title: "Run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
   timeOfDay: null,
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
-const strength = {
-  ...run,
-  activityType: "STRENGTH",
+}) satisfies RunTrainingSession;
+const strength = createStrengthActivity({
+  title: run.title,
+  timeOfDay: run.timeOfDay,
   targetDurationSeconds: null,
-} satisfies StrengthTrainingSession;
+});
 const fields = {
   derivedMetric: "pace" as const,
   pacePerKilometre: "5:00",

@@ -2,72 +2,52 @@ import type {
   RunTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { getWeeklySummary } from "./weekly-summary-service";
 
-const baseActivity = {
-  date: "2026-08-17",
-  description: null,
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  skipReason: null,
-  sortOrder: 0,
-  timeOfDay: null,
-  title: "Activity",
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-} as const;
-
 const activities: TrainingSession[] = [
-  {
-    ...baseActivity,
-    activityType: "RUN",
+  createRunActivity({
+    title: "Activity",
+    timeOfDay: null,
     actualDistanceMetres: 9500,
     actualDurationSeconds: 3600,
     status: "COMPLETED",
     targetDistanceMetres: 10000,
     targetDurationSeconds: 3000,
-  },
-  {
-    ...baseActivity,
+  }),
+  createStrengthActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    activityType: "STRENGTH",
+    title: "Activity",
+    timeOfDay: null,
     actualDurationSeconds: 1800,
     status: "COMPLETED",
     targetDurationSeconds: null,
-  },
-  {
-    ...baseActivity,
+  }),
+  createRunActivity({
     id: "33333333-3333-4333-8333-333333333333",
-    athleteId: "33333333-3333-4333-8333-333333333333",
     date: "2026-08-20",
-    activityType: "RUN",
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
-    status: "SCHEDULED",
+    title: "Activity",
+    timeOfDay: null,
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
-  },
-  {
-    ...baseActivity,
+  }),
+  createStrengthActivity({
     id: "44444444-4444-4444-8444-444444444444",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    activityType: "STRENGTH",
-    actualDurationSeconds: null,
+    title: "Activity",
+    timeOfDay: null,
     skipReason: "Tired",
     status: "SKIPPED",
     targetDurationSeconds: 1200,
-  },
-  {
-    ...baseActivity,
+  }),
+  createStrengthActivity({
     id: "55555555-5555-4555-8555-555555555555",
-    athleteId: "33333333-3333-4333-8333-333333333333",
     date: "2026-08-22",
-    activityType: "STRENGTH",
-    actualDurationSeconds: null,
-    status: "SCHEDULED",
-    targetDurationSeconds: 2700,
-  },
+    title: "Activity",
+    timeOfDay: null,
+  }),
 ];
 
 test("summarises current-week actuals, original plan totals, and activity state", () => {

@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import {
   fireEvent,
   render,
@@ -118,22 +119,11 @@ import type {
 } from "../types/training-planner-types";
 
 const activity = {
-  id: "activity",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  activityType: "RUN",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  targetDistanceMetres: 6000,
-  targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
+  ...createRunActivity({
+    id: "activity",
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: 1530,
+  }),
   day: "Monday",
 } satisfies TrainingActivity;
 

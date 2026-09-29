@@ -1,26 +1,16 @@
 import { render, screen } from "@testing-library/react";
 
 import type { TrainingSession } from "@/domain/training-sessions";
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { WeeklySummary } from "./weekly-summary";
 
-const activity: TrainingSession = {
-  activityType: "RUN",
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
+const activity: TrainingSession = createRunActivity({
   date: "2026-08-22",
-  description: null,
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  skipReason: null,
-  sortOrder: 0,
-  status: "SCHEDULED",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
   timeOfDay: null,
   title: "Long run",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-};
+});
 
 beforeEach(() => {
   vi.useFakeTimers();

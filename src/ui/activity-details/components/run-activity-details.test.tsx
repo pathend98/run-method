@@ -1,29 +1,22 @@
 import { render, screen, within } from "@testing-library/react";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { RunActivityDetails } from "./run-activity-details";
 
 type RunOverride = Partial<RunTrainingSession>;
 
 function runActivity(override: RunOverride = {}): RunTrainingSession {
-  return {
+  return createRunActivity({
     id: "run",
-    title: "Tempo run",
-    status: "SCHEDULED",
-    date: "2026-08-17",
-    timeOfDay: "AM",
     description: "Controlled effort",
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
     updatedAt: "2026-08-01T11:30:00.000Z",
-    activityType: "RUN",
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
     actualDistanceMetres: 5900,
     actualDurationSeconds: 1500,
     ...override,
-  } as RunTrainingSession;
+  });
 }
 
 test("renders scheduled run targets without recorded actual values", () => {

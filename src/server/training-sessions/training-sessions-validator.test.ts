@@ -1,3 +1,7 @@
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import type {
   EditTrainingSessionRequest,
   TrainingSession,
@@ -8,24 +12,12 @@ const validator = new DefaultTrainingSessionsValidator();
 const today = new Date("2026-08-26T12:00:00");
 const timeZone = "UTC";
 
-const runSession: TrainingSession = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const runSession: TrainingSession = createRunActivity({
   title: "Easy run",
-  activityType: "RUN",
-  status: "SCHEDULED",
   date: "2026-08-26",
-  timeOfDay: "AM",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1500,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-};
+});
 
 const runEdit: EditTrainingSessionRequest = {
   title: "Long easy run",
@@ -237,22 +229,11 @@ test.each([
 
 test("rejects future strength session transitions", () => {
   const validator = new DefaultTrainingSessionsValidator(() => today);
-  const strength: TrainingSession = {
+  const strength: TrainingSession = createStrengthActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    title: "Strength",
-    activityType: "STRENGTH",
-    status: "SCHEDULED",
     date: "2026-08-27",
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDurationSeconds: 1800,
-    actualDurationSeconds: null,
-  };
+  });
 
   expect(() => validator.validateSkip(strength, timeZone)).toThrow(
     "future training sessions cannot be skipped",
@@ -290,22 +271,11 @@ test("allows run completion actuals", () => {
 });
 
 test("rejects distance when completing strength sessions", () => {
-  const strength: TrainingSession = {
+  const strength: TrainingSession = createStrengthActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    title: "Strength",
-    activityType: "STRENGTH",
-    status: "SCHEDULED",
     date: "2026-08-26",
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDurationSeconds: 1800,
-    actualDurationSeconds: null,
-  };
+  });
 
   expect(() =>
     validator.validateComplete(
@@ -320,22 +290,14 @@ test("rejects distance when completing strength sessions", () => {
 });
 
 test("allows title and description edits on terminal strength sessions", () => {
-  const current: TrainingSession = {
+  const current: TrainingSession = createStrengthActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    title: "Strength",
-    activityType: "STRENGTH",
     status: "SKIPPED",
     date: "2026-08-26",
     timeOfDay: null,
-    description: null,
-    sortOrder: 0,
     skipReason: "Sick",
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDurationSeconds: 1800,
-    actualDurationSeconds: null,
-  };
+  });
 
   expect(() =>
     validator.validateEdit(current, {
@@ -354,22 +316,14 @@ test.each([
 ])(
   "rejects changed strength duration for %s sessions",
   (_name, status, targetDurationSeconds) => {
-    const current: TrainingSession = {
+    const current: TrainingSession = createStrengthActivity({
       id: "22222222-2222-4222-8222-222222222222",
-      athleteId: "33333333-3333-4333-8333-333333333333",
-      title: "Strength",
-      activityType: "STRENGTH",
       status,
       date: "2026-08-26",
       timeOfDay: null,
-      description: null,
-      sortOrder: 0,
       skipReason: status === "SKIPPED" ? "Sick" : null,
-      createdAt: "2026-08-01T10:00:00.000Z",
-      updatedAt: "2026-08-01T10:00:00.000Z",
       targetDurationSeconds: 1800,
-      actualDurationSeconds: null,
-    };
+    });
 
     expect(() =>
       validator.validateEdit(current, {
