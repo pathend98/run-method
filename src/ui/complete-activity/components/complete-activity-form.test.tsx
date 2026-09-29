@@ -39,7 +39,7 @@ function renderForm(
 
 test("prefills run actuals from targets and submits them", async () => {
   const { onComplete } = renderForm();
-  expect(screen.getByLabelText("Distance (km)")).toHaveProperty("value", "6.0");
+  expect(screen.getByLabelText("Distance (km)")).toHaveProperty("value", "6");
   expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
     "value",
     "25",

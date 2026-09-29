@@ -4,7 +4,6 @@ import {
   createStrengthActivity,
 } from "@/test-support/fixtures/activity";
 import {
-  calculatePaceSecondsPerKilometre,
   createCompleteActivityFormSchema,
   toCompleteTrainingSessionRequest,
 } from "./complete-activity-form";
@@ -30,7 +29,6 @@ const fields = {
 };
 
 test("validates and converts run and strength actuals", () => {
-  expect(calculatePaceSecondsPerKilometre(5000, 1500)).toBe(300);
   expect(toCompleteTrainingSessionRequest(run, fields, "KILOMETRES")).toEqual({
     actualDurationSeconds: 1800,
     actualDistanceMetres: 5000,
@@ -89,4 +87,15 @@ test("preserves the planned metres when mile prefill is submitted unchanged", ()
   if (!invalid.success) {
     expect(invalid.error.issues[0].message).toBe("Enter a distance in miles");
   }
+});
+
+test("preserves the planned metres when a kilometre prefill is submitted unchanged", () => {
+  const planned = { ...run, targetDistanceMetres: 6001 };
+  expect(
+    toCompleteTrainingSessionRequest(
+      planned,
+      { ...fields, distance: "6.001" },
+      "KILOMETRES",
+    ),
+  ).toMatchObject({ actualDistanceMetres: 6001 });
 });

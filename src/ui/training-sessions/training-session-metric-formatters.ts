@@ -1,4 +1,5 @@
 import type { User } from "@/domain/user-types";
+import { RunningMetrics } from "@/ui/running-metrics/running-metrics";
 
 export function formatDistance(
   metres: number | null,
@@ -9,9 +10,9 @@ export function formatDistance(
     return null;
   }
 
-  const metresPerUnit = measurementUnit === "MILES" ? 1609.344 : 1000;
+  const distance = new RunningMetrics(measurementUnit).distanceInUnit(metres);
   const unitLabel = measurementUnit === "MILES" ? "mi" : "km";
-  return `${(metres / metresPerUnit).toFixed(options.decimalPlaces ?? 2)} ${unitLabel}`;
+  return `${distance.toFixed(options.decimalPlaces ?? 2)} ${unitLabel}`;
 }
 
 export function formatDuration(seconds: number | null) {
@@ -73,10 +74,9 @@ export function formatPace(
     return null;
   }
 
-  const paceSeconds =
-    measurementUnit === "MILES"
-      ? Math.round(secondsPerKilometre * 1.609344)
-      : secondsPerKilometre;
+  const paceSeconds = new RunningMetrics(measurementUnit).paceInUnit(
+    secondsPerKilometre,
+  );
   const minutes = Math.floor(paceSeconds / 60);
   const seconds = String(paceSeconds % 60).padStart(2, "0");
   const pace = `${minutes}:${seconds}`;

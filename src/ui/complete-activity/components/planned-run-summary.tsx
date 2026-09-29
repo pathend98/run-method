@@ -1,11 +1,11 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
+import { RunningMetrics } from "@/ui/running-metrics/running-metrics";
 import {
   formatDistance,
   formatDuration,
   formatPace,
 } from "@/ui/training-sessions/training-session-metric-formatters";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
-import { calculatePaceSecondsPerKilometre } from "../utils/complete-activity-form";
 
 type PlannedRunSummaryProps = { activity: RunTrainingSession };
 
@@ -20,7 +20,7 @@ export function PlannedRunSummary({ activity }: PlannedRunSummaryProps) {
       })}{" "}
       · {duration} ·{" "}
       {formatPace(
-        calculatePaceSecondsPerKilometre(
+        new RunningMetrics(measurementUnit).paceForRun(
           activity.targetDistanceMetres,
           activity.targetDurationSeconds,
         ),

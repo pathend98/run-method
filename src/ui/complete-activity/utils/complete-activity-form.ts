@@ -5,24 +5,14 @@ import type {
   TrainingSession,
 } from "@/domain/training-sessions";
 import {
-  distanceToMetres,
-  formatDistanceInput,
-  type RunFieldUnit,
-} from "@/ui/run-field-input/run-field-units";
+  RunningMetrics,
+  type RunningMetricUnit,
+} from "@/ui/running-metrics/running-metrics";
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
 } from "@/ui/training-sessions/duration-fields";
-
-function positiveDistanceSchema(unit: RunFieldUnit) {
-  return z
-    .string()
-    .regex(
-      /^\d+(?:\.\d{1,3})?$/,
-      `Enter a distance in ${unit === "MILES" ? "miles" : "kilometres"}`,
-    )
-    .refine((value) => Number(value) > 0, "Distance must be greater than zero");
-}
+import { runFieldIssueMessage } from "@/ui/running-metrics/run-field-issues";
 
 export const completeActivityFormSchema = z
   .object({
@@ -45,25 +35,20 @@ export type CompleteActivityFormValues = z.infer<
   typeof completeActivityFormSchema
 >;
 
-export function calculatePaceSecondsPerKilometre(
-  distanceMetres: number,
-  durationSeconds: number,
-) {
-  return Math.round((durationSeconds * 1000) / distanceMetres);
-}
-
 export function createCompleteActivityFormSchema(
   activity: TrainingSession,
-  unit: RunFieldUnit,
+  unit: RunningMetricUnit,
 ) {
   return completeActivityFormSchema.superRefine((values, context) => {
     if (activity.activityType !== "RUN") return;
-    const result = positiveDistanceSchema(unit).safeParse(values.distance);
-    if (!result.success) {
+    const distanceIssue = new RunningMetrics(unit)
+      .validate(values, false)
+      .find((issue) => issue.field === "distance");
+    if (distanceIssue) {
       context.addIssue({
         code: "custom",
         path: ["distance"],
-        message: result.error.issues[0].message,
+        message: runFieldIssueMessage(distanceIssue, unit),
       });
     }
   });
@@ -72,20 +57,18 @@ export function createCompleteActivityFormSchema(
 export function toCompleteTrainingSessionRequest(
   activity: TrainingSession,
   values: CompleteActivityFormValues,
-  unit: RunFieldUnit,
+  unit: RunningMetricUnit,
 ): CompleteTrainingSessionRequest {
   const parsed = createCompleteActivityFormSchema(activity, unit).parse(values);
+  const metrics = new RunningMetrics(unit);
   return {
     actualDurationSeconds: durationFieldsToSeconds(parsed),
     ...(activity.activityType === "RUN"
       ? {
-          actualDistanceMetres:
-            parsed.distance ===
-            (unit === "MILES"
-              ? formatDistanceInput(activity.targetDistanceMetres, unit)
-              : (activity.targetDistanceMetres / 1000).toFixed(1))
-              ? activity.targetDistanceMetres
-              : distanceToMetres(parsed.distance, unit),
+          actualDistanceMetres: metrics.readDistanceInput(
+            parsed.distance,
+            activity.targetDistanceMetres,
+          ),
         }
       : {}),
   };
