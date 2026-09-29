@@ -4,6 +4,7 @@ import { AuthenticationLookupError } from "@/server/errors/authentication-lookup
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { UnauthorizedError } from "@/server/errors/unauthorized-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
+import { createUser } from "@/test-support/fixtures/user";
 import {
   authenticateActor,
   authenticateUser,
@@ -29,11 +30,11 @@ test("rejects a missing cookie without looking up a user", async () => {
 });
 
 test("resolves the actor id from the session cookie", async () => {
-  findBySessionKey.mockResolvedValue({
-    id: "athlete-id",
-    kind: "REGISTERED",
-    expiresAt: null,
-  });
+  findBySessionKey.mockResolvedValue(
+    createUser({
+      id: "athlete-id",
+    }),
+  );
   await expect(authenticateActor(request("session-key"))).resolves.toBe(
     "athlete-id",
   );
@@ -41,11 +42,11 @@ test("resolves the actor id from the session cookie", async () => {
 });
 
 test("resolves the full user from the session cookie", async () => {
-  const user = {
+  const user = createUser({
     id: "athlete-id",
     kind: "GUEST",
     expiresAt: new Date("2026-10-01T12:00:00.000Z"),
-  };
+  });
   findBySessionKey.mockResolvedValue(user);
 
   await expect(authenticateUser(request("session-key"))).resolves.toBe(user);

@@ -6,6 +6,7 @@ import {
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { AddActivityModal } from "./add-activity-modal";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const api = vi.hoisted(() => ({ createTrainingSession: vi.fn() }));
 
@@ -21,6 +22,7 @@ const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
 
 type AddActivityModalTestProps = {
   onCreate?: (request: unknown) => Promise<unknown>;
+  measurementUnit?: "KILOMETRES" | "MILES";
 };
 
 function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
@@ -35,7 +37,11 @@ function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
     ...render(
       <TrainingPlannerStoreProvider store={store}>
         <QueryProvider>
-          <AddActivityModal athleteId="33333333-3333-4333-8333-333333333333" />
+          <DistanceDisplayProvider
+            measurementUnit={props.measurementUnit ?? "KILOMETRES"}
+          >
+            <AddActivityModal athleteId="33333333-3333-4333-8333-333333333333" />
+          </DistanceDisplayProvider>
         </QueryProvider>
       </TrainingPlannerStoreProvider>,
     ),
@@ -89,6 +95,34 @@ test("submits a converted activity for its selected day and closes", async () =>
     ),
   );
   expect(store.getState().activeModal).toBeNull();
+});
+
+test("accepts distance and pace in miles", async () => {
+  const onCreate = vi.fn().mockResolvedValue(undefined);
+  renderAddActivityModal({ measurementUnit: "MILES", onCreate });
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Five miles" },
+  });
+  fireEvent.change(screen.getByLabelText("Distance (mi)"), {
+    target: { value: "5" },
+  });
+  fireEvent.change(screen.getByLabelText("Pace (mm:ss / mi)"), {
+    target: { value: "8:00" },
+  });
+  expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
+    "value",
+    "40",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  await waitFor(() =>
+    expect(onCreate).toHaveBeenCalledWith(
+      "33333333-3333-4333-8333-333333333333",
+      expect.objectContaining({
+        targetDistanceMetres: 8047,
+        targetDurationSeconds: 2400,
+      }),
+    ),
+  );
 });
 
 test("keeps the form open after a failed creation and supports dismissal", async () => {

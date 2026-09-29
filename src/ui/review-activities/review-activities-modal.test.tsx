@@ -1,55 +1,40 @@
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import type { TrainingSession } from "@/domain/training-sessions";
+import { createUser } from "@/test-support/fixtures/user";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { ReviewActivitiesModal } from "./review-activities-modal";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const sessions = [
-  {
-    id: "11111111-1111-4111-8111-111111111111",
-    athleteId: "33333333-3333-4333-8333-333333333333",
+  createRunActivity({
     title: "Easy run",
-    activityType: "RUN",
-    status: "SCHEDULED",
     date: "2026-08-31",
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDistanceMetres: 12000,
     targetDurationSeconds: 3360,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
-  },
-  {
+  }),
+  createRunActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Easy run 2",
-    activityType: "RUN",
-    status: "SCHEDULED",
     date: "2026-08-31",
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
-    targetDistanceMetres: 8000,
     targetDurationSeconds: 2460,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
-  },
+  }),
 ] satisfies TrainingSession[];
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
-function renderModal(response: TrainingSession[] = sessions) {
+function renderModal(
+  response: TrainingSession[] = sessions,
+  measurementUnit: "KILOMETRES" | "MILES" = "KILOMETRES",
+) {
   const store = createTrainingPlannerStore();
   store.getState().openReviewActivities();
   vi.stubGlobal(
@@ -60,9 +45,7 @@ function renderModal(response: TrainingSession[] = sessions) {
         json: vi
           .fn()
           .mockResolvedValue(
-            url === "/api/v1/me"
-              ? { id: athleteId, kind: "REGISTERED", expiresAt: null }
-              : response,
+            url === "/api/v1/me" ? createUser({ id: athleteId }) : response,
           ),
       }),
     ),
@@ -70,7 +53,9 @@ function renderModal(response: TrainingSession[] = sessions) {
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <ReviewActivitiesModal />
+        <DistanceDisplayProvider measurementUnit={measurementUnit}>
+          <ReviewActivitiesModal />
+        </DistanceDisplayProvider>
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
@@ -114,24 +99,21 @@ test("opens the skip flow from the review list", async () => {
   });
 });
 
+test("shows review list distances in miles", async () => {
+  renderModal(sessions, "MILES");
+  expect(await screen.findByText("7.46 mi · 56m")).toBeDefined();
+  expect(screen.getByText("4.97 mi · 41m")).toBeDefined();
+});
+
 test("shows duration-only planned metrics for strength activities", async () => {
   renderModal([
-    {
+    createStrengthActivity({
       id: "33333333-3333-4333-8333-333333333333",
-      athleteId: "33333333-3333-4333-8333-333333333333",
       title: "Strength session",
-      activityType: "STRENGTH",
-      status: "SCHEDULED",
       date: "2026-09-01",
       timeOfDay: null,
-      description: null,
-      sortOrder: 0,
-      skipReason: null,
-      createdAt: "2026-08-01T10:00:00.000Z",
-      updatedAt: "2026-08-01T10:00:00.000Z",
       targetDurationSeconds: 1800,
-      actualDurationSeconds: null,
-    },
+    }),
   ]);
 
   expect(await screen.findByText("Strength session")).toBeDefined();

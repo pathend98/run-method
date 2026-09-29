@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { UserNotFoundError } from "@/server/user/user-errors";
+import { createUser } from "@/test-support/fixtures/user";
 
 import { config, proxy } from "./proxy";
 
@@ -28,12 +29,36 @@ function plannerRequest(sessionKey?: string) {
   });
 }
 
-test("matches the home and training planner routes", () => {
-  expect(config.matcher).toEqual(["/", "/training-planner"]);
+test("matches the home, training planner, and settings routes", () => {
+  expect(config.matcher).toEqual(["/", "/training-planner", "/settings"]);
+});
+
+test("allows a guest session to open settings for the registration message", async () => {
+  findBySessionKey.mockResolvedValue(
+    createUser({ id: "guest-id", kind: "GUEST" }),
+  );
+
+  const response = await proxy(
+    new NextRequest("https://app.example.com/settings", {
+      headers: { cookie: "__Host-user-session=session-key" },
+    }),
+  );
+
+  expect(response.status).toBe(200);
+  expect(response.headers.get("x-middleware-next")).toBe("1");
+});
+
+test("redirects a visitor without a session away from settings", async () => {
+  const response = await proxy(
+    new NextRequest("https://app.example.com/settings"),
+  );
+
+  expect(response.status).toBe(307);
+  expect(response.headers.get("location")).toBe("https://app.example.com/auth");
 });
 
 test("allows an identified user to open the planner", async () => {
-  findBySessionKey.mockResolvedValue({ id: "user-id" });
+  findBySessionKey.mockResolvedValue(createUser());
 
   const response = await proxy(plannerRequest("session-key"));
 
@@ -79,7 +104,7 @@ function rootRequest(sessionKey?: string) {
 }
 
 test("redirects an identified home page user to the planner", async () => {
-  findBySessionKey.mockResolvedValue({ id: "user-id" });
+  findBySessionKey.mockResolvedValue(createUser());
 
   const response = await proxy(rootRequest("session-key"));
 
@@ -130,7 +155,7 @@ test.each(["https://app.example.com", "https://app.example.com/"])(
   "uses app base URL %s for both proxy redirects",
   async (baseUrl) => {
     appEnv.APP_BASE_URL = baseUrl;
-    findBySessionKey.mockResolvedValue({ id: "user-id" });
+    findBySessionKey.mockResolvedValue(createUser());
 
     const homeResponse = await proxy(rootRequest("session-key"));
     const plannerResponse = await proxy(plannerRequest());

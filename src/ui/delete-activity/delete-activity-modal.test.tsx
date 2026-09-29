@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import {
   act,
   fireEvent,
@@ -23,22 +24,11 @@ vi.mock(
 );
 
 const activity = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Easy run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: null,
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
-  targetDistanceMetres: 8000,
-  targetDurationSeconds: 2400,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
+  ...createRunActivity({
+    title: "Easy run",
+    timeOfDay: null,
+    targetDurationSeconds: 2400,
+  }),
   day: "Monday",
 } as const;
 

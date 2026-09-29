@@ -9,20 +9,20 @@ import {
 } from "./run-field-form-input";
 
 const defaultValues: RunFieldInputValue = {
-  distanceKilometres: "5",
+  distance: "5",
   durationHours: "00",
   durationMinutes: "30",
   durationSeconds: "00",
-  pacePerKilometre: "6:00",
+  pace: "6:00",
   derivedMetric: "pace",
 };
 
 const schema = z.object({
-  distanceKilometres: z.string().min(1, "Bad distance"),
+  distance: z.string().min(1, "Bad distance"),
   durationHours: z.string(),
   durationMinutes: z.string(),
   durationSeconds: z.string(),
-  pacePerKilometre: z.string(),
+  pace: z.string(),
   derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
 });
 
@@ -48,9 +48,9 @@ function Harness({
         <button type="submit">Submit</button>
         <button
           onClick={() => {
-            form.setError("distanceKilometres", { message: "Bad distance" });
+            form.setError("distance", { message: "Bad distance" });
             form.setError("durationMinutes", { message: "Bad duration" });
-            form.setError("pacePerKilometre", { message: "Bad pace" });
+            form.setError("pace", { message: "Bad pace" });
           }}
           type="button"
         >
@@ -79,10 +79,10 @@ test("reads form values and updates derived fields with dirty state", () => {
     "3:00",
   );
   expect(screen.getByTestId("dirty-fields").textContent).toContain(
-    '"distanceKilometres":true',
+    '"distance":true',
   );
   expect(screen.getByTestId("dirty-fields").textContent).toContain(
-    '"pacePerKilometre":true',
+    '"pace":true',
   );
 });
 
@@ -116,7 +116,7 @@ test("revalidates run fields when the metric loses focus", async () => {
     <Harness
       initialValues={{
         ...defaultValues,
-        distanceKilometres: "",
+        distance: "",
         derivedMetric: null,
       }}
     />,

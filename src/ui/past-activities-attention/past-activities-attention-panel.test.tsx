@@ -1,31 +1,21 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { format, subDays } from "date-fns";
 
 import { QueryProvider } from "@/app/query-provider";
+import { createUser } from "@/test-support/fixtures/user";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { PastActivitiesAttentionPanel } from "./past-activities-attention-panel";
 
-const session = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const session = createRunActivity({
   title: "Easy run",
-  activityType: "RUN",
-  status: "SCHEDULED",
   date: "2026-08-31",
-  timeOfDay: "AM",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
   targetDistanceMetres: 12000,
   targetDurationSeconds: 3360,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-};
+});
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
@@ -34,11 +24,11 @@ function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
     url === "/api/v1/me"
       ? Promise.resolve({
           ok: true,
-          json: vi.fn().mockResolvedValue({
-            id: athleteId,
-            kind: "REGISTERED",
-            expiresAt: null,
-          }),
+          json: vi.fn().mockResolvedValue(
+            createUser({
+              id: athleteId,
+            }),
+          ),
         })
       : options === undefined
         ? fetchMock(url)

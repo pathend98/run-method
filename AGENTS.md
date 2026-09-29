@@ -64,6 +64,8 @@ Vitest globals are enabled, so do not import from `vitest` in test files.
 
 Implementation tests may import the internal file they test directly. Cross-module or integration-style tests should import through the module's public interface.
 
+Put reusable domain fixture factories in `src/test-support/fixtures/`. Use their typed defaults in tests and override only fields relevant to each case. Keep intentionally malformed inputs explicit in validation tests.
+
 When running tests, always use `pnpm test` over a bespoke `npx vitest` command, as the coverage checks may cause the tests to fail even though every test passes.
 
 ### Testing Server Code

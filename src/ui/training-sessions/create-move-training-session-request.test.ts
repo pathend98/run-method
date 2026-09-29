@@ -1,27 +1,16 @@
 import { createMoveTrainingSessionRequest } from "./create-move-training-session-request";
-import type {
-  RunTrainingSession,
-  StrengthTrainingSession,
-} from "@/domain/training-sessions";
+import type { RunTrainingSession } from "@/domain/training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 
-const run = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  activityType: "RUN",
-  status: "SCHEDULED",
+const run = createRunActivity({
   date: "2026-09-10",
-  timeOfDay: "AM",
   description: "Controlled effort",
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
+}) satisfies RunTrainingSession;
 
 test("creates an edit request for a moved run", () => {
   expect(
@@ -41,12 +30,12 @@ test("creates an edit request for a moved run", () => {
 });
 
 test("creates an edit request for a moved strength activity", () => {
-  const strength = {
-    ...run,
-    activityType: "STRENGTH",
+  const strength = createStrengthActivity({
+    title: run.title,
+    date: run.date,
+    description: run.description,
     targetDurationSeconds: null,
-    actualDurationSeconds: null,
-  } satisfies StrengthTrainingSession;
+  });
 
   expect(
     createMoveTrainingSessionRequest(strength, {

@@ -1,3 +1,7 @@
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import type {
   EditTrainingSessionRequest,
@@ -34,7 +38,7 @@ function createService() {
     findByIdentity: vi.fn(),
     findBySessionKey: vi.fn(),
     create: vi.fn(),
-    createGuestUser: vi.fn(),
+    ...{ createGuestUser: vi.fn(), updateProfile: vi.fn() },
     ...{ promoteGuestUser: vi.fn(), deleteGuestUser: vi.fn() },
     createSession: vi.fn(),
     createGuestUserSession: vi.fn(),
@@ -124,17 +128,12 @@ test("delegates creation to the repository", async () => {
     description: null,
     targetDurationSeconds: 1800,
   };
-  const created = {
-    ...request,
-    id: "11111111-1111-4111-8111-111111111111",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    status: "SCHEDULED" as const,
-    sortOrder: 0,
-    skipReason: null,
+  const created = createStrengthActivity({
+    date: request.date,
+    targetDurationSeconds: request.targetDurationSeconds,
     createdAt: "2026-08-26T10:00:00.000Z",
     updatedAt: "2026-08-26T10:00:00.000Z",
-    actualDurationSeconds: null,
-  };
+  });
   vi.mocked(repository.create).mockResolvedValue(created);
 
   await expect(service.create(request)).resolves.toEqual(created);
@@ -280,24 +279,12 @@ test.each(["skip", "complete"] as const)(
   },
 );
 
-const runSession: TrainingSession = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const runSession: TrainingSession = createRunActivity({
   title: "Easy run",
-  activityType: "RUN",
-  status: "SCHEDULED",
   date: "2026-08-26",
-  timeOfDay: "AM",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1500,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-};
+});
 
 const runEdit: EditTrainingSessionRequest = {
   title: "Long easy run",
@@ -491,22 +478,14 @@ test("does not write unchanged completed actuals", async () => {
 
 test("does not write an unchanged completed strength actual duration", async () => {
   const { repository, service } = createService();
-  const completed: StrengthTrainingSession = {
+  const completed: StrengthTrainingSession = createStrengthActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    title: "Strength",
-    activityType: "STRENGTH",
     status: "COMPLETED",
     date: "2026-08-26",
     timeOfDay: null,
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDurationSeconds: 1800,
     actualDurationSeconds: 1750,
-  };
+  });
   const edit = {
     title: completed.title,
     description: completed.description,
@@ -523,22 +502,12 @@ test("does not write an unchanged completed strength actual duration", async () 
 
 test("edits scheduled strength sessions", async () => {
   const { repository, service } = createService();
-  const strength: TrainingSession = {
+  const strength: TrainingSession = createStrengthActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    title: "Strength",
-    activityType: "STRENGTH",
-    status: "SCHEDULED",
     date: "2026-08-26",
     timeOfDay: null,
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDurationSeconds: 1800,
-    actualDurationSeconds: null,
-  };
+  });
   const edit = {
     title: "Upper-body strength",
     description: "Pull focus",
@@ -556,22 +525,12 @@ test("edits scheduled strength sessions", async () => {
 
 test("returns unchanged strength sessions without writing", async () => {
   const { repository, service } = createService();
-  const strength: TrainingSession = {
+  const strength: TrainingSession = createStrengthActivity({
     id: "22222222-2222-4222-8222-222222222222",
-    athleteId: "33333333-3333-4333-8333-333333333333",
-    title: "Strength",
-    activityType: "STRENGTH",
-    status: "SCHEDULED",
     date: "2026-08-26",
     timeOfDay: null,
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDurationSeconds: 1800,
-    actualDurationSeconds: null,
-  };
+  });
   const edit = {
     title: strength.title,
     description: strength.description,
@@ -589,22 +548,12 @@ test.each([2400, null])(
   "writes a scheduled strength duration change to %s",
   async (targetDurationSeconds) => {
     const { repository, service } = createService();
-    const strength: TrainingSession = {
+    const strength: TrainingSession = createStrengthActivity({
       id: "22222222-2222-4222-8222-222222222222",
-      athleteId: "33333333-3333-4333-8333-333333333333",
-      title: "Strength",
-      activityType: "STRENGTH",
-      status: "SCHEDULED",
       date: "2026-08-26",
       timeOfDay: null,
-      description: null,
-      sortOrder: 0,
-      skipReason: null,
-      createdAt: "2026-08-01T10:00:00.000Z",
-      updatedAt: "2026-08-01T10:00:00.000Z",
       targetDurationSeconds: 1800,
-      actualDurationSeconds: null,
-    };
+    });
     const edit = {
       title: strength.title,
       description: strength.description,

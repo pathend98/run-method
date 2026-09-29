@@ -1,66 +1,59 @@
-import type {
-  RunTrainingSession,
-  StrengthTrainingSession,
-} from "@/domain/training-sessions";
+import type { RunTrainingSession } from "@/domain/training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import {
   calculatePaceSecondsPerKilometre,
   createCompleteActivityFormSchema,
   toCompleteTrainingSessionRequest,
 } from "./complete-activity-form";
 
-const run = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const run = createRunActivity({
   title: "Run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
   timeOfDay: null,
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
-const strength = {
-  ...run,
-  activityType: "STRENGTH",
+}) satisfies RunTrainingSession;
+const strength = createStrengthActivity({
+  title: run.title,
+  timeOfDay: run.timeOfDay,
   targetDurationSeconds: null,
-} satisfies StrengthTrainingSession;
+});
 const fields = {
   derivedMetric: "pace" as const,
-  pacePerKilometre: "5:00",
+  pace: "5:00",
   durationHours: "00",
   durationMinutes: "30",
   durationSeconds: "00",
-  distanceKilometres: "5",
+  distance: "5",
 };
 
 test("validates and converts run and strength actuals", () => {
   expect(calculatePaceSecondsPerKilometre(5000, 1500)).toBe(300);
-  expect(toCompleteTrainingSessionRequest(run, fields)).toEqual({
+  expect(toCompleteTrainingSessionRequest(run, fields, "KILOMETRES")).toEqual({
     actualDurationSeconds: 1800,
     actualDistanceMetres: 5000,
   });
   expect(
-    toCompleteTrainingSessionRequest(strength, {
-      ...fields,
-      distanceKilometres: "",
-    }),
+    toCompleteTrainingSessionRequest(
+      strength,
+      {
+        ...fields,
+        distance: "",
+      },
+      "KILOMETRES",
+    ),
   ).toEqual({ actualDurationSeconds: 1800 });
 });
 
 test.each(["", "0", "5.1234", "five"])(
   "rejects invalid run distance %s",
-  (distanceKilometres) => {
+  (distance) => {
     expect(
-      createCompleteActivityFormSchema(run).safeParse({
+      createCompleteActivityFormSchema(run, "KILOMETRES").safeParse({
         ...fields,
-        distanceKilometres,
+        distance,
       }).success,
     ).toBe(false);
   },
@@ -68,9 +61,32 @@ test.each(["", "0", "5.1234", "five"])(
 
 test("requires a non-zero duration", () => {
   expect(
-    createCompleteActivityFormSchema(run).safeParse({
+    createCompleteActivityFormSchema(run, "KILOMETRES").safeParse({
       ...fields,
       durationMinutes: "00",
     }).success,
   ).toBe(false);
+});
+
+test("preserves the planned metres when mile prefill is submitted unchanged", () => {
+  const planned = { ...run, targetDistanceMetres: 6001 };
+  const values = { ...fields, distance: "3.729" };
+  expect(
+    toCompleteTrainingSessionRequest(planned, values, "MILES"),
+  ).toMatchObject({ actualDistanceMetres: 6001 });
+  expect(
+    toCompleteTrainingSessionRequest(
+      planned,
+      { ...values, distance: "5" },
+      "MILES",
+    ),
+  ).toMatchObject({ actualDistanceMetres: 8047 });
+  const invalid = createCompleteActivityFormSchema(planned, "MILES").safeParse({
+    ...values,
+    distance: "3.1234",
+  });
+  expect(invalid.success).toBe(false);
+  if (!invalid.success) {
+    expect(invalid.error.issues[0].message).toBe("Enter a distance in miles");
+  }
 });

@@ -1,10 +1,19 @@
 import type { TrainingSession } from "@/domain/training-sessions";
-import { calculateDerivedMetric } from "@/ui/run-field-input/run-field-form-input";
-import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
+import {
+  formatDistanceInput,
+  formatPaceInput,
+  metresPerUnit,
+  type RunFieldUnit,
+} from "@/ui/run-field-input/run-field-units";
+import {
+  durationFieldsToSeconds,
+  durationSecondsToFields,
+} from "@/ui/training-sessions/duration-fields";
 import type { EditActivityFormValues } from "./edit-activity-form-schema";
 
 export function getEditActivityFormValues(
   activity: TrainingSession,
+  unit: RunFieldUnit,
 ): EditActivityFormValues {
   const isCompleted = activity.status === "COMPLETED";
   const values: EditActivityFormValues = {
@@ -13,28 +22,36 @@ export function getEditActivityFormValues(
     timeOfDay: activity.timeOfDay ?? "ANY",
     description: activity.description ?? "",
     derivedMetric: null,
-    distanceKilometres: "",
+    distance: "",
     ...durationSecondsToFields(
       isCompleted
         ? (activity.actualDurationSeconds ?? activity.targetDurationSeconds)
         : activity.targetDurationSeconds,
     ),
-    pacePerKilometre: "",
+    pace: "",
   };
 
   if (activity.activityType === "STRENGTH") return values;
 
+  const distanceMetres = isCompleted
+    ? (activity.actualDistanceMetres ?? activity.targetDistanceMetres)
+    : activity.targetDistanceMetres;
   const runValues = {
     ...values,
-    distanceKilometres: String(
-      (isCompleted
-        ? (activity.actualDistanceMetres ?? activity.targetDistanceMetres)
-        : activity.targetDistanceMetres) / 1000,
-    ),
+    distance: formatDistanceInput(distanceMetres, unit),
   };
 
   return {
     ...runValues,
-    ...calculateDerivedMetric(runValues, "pace")!,
+    derivedMetric: "pace",
+    pace: formatPaceInput(
+      Math.max(
+        1,
+        Math.round(
+          (durationFieldsToSeconds(runValues) * metresPerUnit(unit)) /
+            distanceMetres,
+        ),
+      ),
+    ),
   };
 }

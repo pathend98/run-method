@@ -1,39 +1,23 @@
 import { render, screen } from "@testing-library/react";
 
-import type {
-  RunTrainingSession,
-  StrengthTrainingSession,
-} from "@/domain/training-sessions";
+import type { RunTrainingSession } from "@/domain/training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { EditActivitySummary } from "./edit-activity-summary";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const runActivity = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
+const runActivity = createRunActivity({
   description: "Controlled effort",
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
+}) satisfies RunTrainingSession;
 
-const strengthActivity = {
-  ...runActivity,
+const strengthActivity = createStrengthActivity({
   id: "22222222-2222-4222-8222-222222222222",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Strength",
-  activityType: "STRENGTH",
-  targetDurationSeconds: 2700,
-  actualDurationSeconds: null,
-} satisfies StrengthTrainingSession;
+  description: runActivity.description,
+});
 
 test("renders scheduled run summary without locked targets", () => {
   render(<EditActivitySummary activity={runActivity} />);
@@ -81,6 +65,15 @@ test("formats terminal AM and PM values for display", () => {
     />,
   );
   expect(screen.getByText("Evening")).toBeDefined();
+});
+
+test("shows locked run targets in miles", () => {
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <EditActivitySummary activity={{ ...runActivity, status: "COMPLETED" }} />
+    </DistanceDisplayProvider>,
+  );
+  expect(screen.getByText("3.73 mi · 25m 30s")).toBeDefined();
 });
 
 test("hides the editable target duration for scheduled strength activities", () => {

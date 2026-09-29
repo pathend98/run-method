@@ -1,5 +1,17 @@
-export function formatDistance(metres: number | null) {
-  return metres === null ? null : `${(metres / 1000).toFixed(2)} km`;
+import type { User } from "@/domain/user-types";
+
+export function formatDistance(
+  metres: number | null,
+  measurementUnit: User["measurementUnit"],
+  options: { decimalPlaces?: 1 | 2 } = {},
+) {
+  if (metres === null) {
+    return null;
+  }
+
+  const metresPerUnit = measurementUnit === "MILES" ? 1609.344 : 1000;
+  const unitLabel = measurementUnit === "MILES" ? "mi" : "km";
+  return `${(metres / metresPerUnit).toFixed(options.decimalPlaces ?? 2)} ${unitLabel}`;
 }
 
 export function formatDuration(seconds: number | null) {
@@ -44,23 +56,32 @@ export function formatCompactDuration(seconds: number | null) {
 
 export function formatPace(
   secondsPerKilometre: number,
+  measurementUnit: User["measurementUnit"],
   options?: { includeUnit?: boolean },
 ): string;
 export function formatPace(
   secondsPerKilometre: number | null,
+  measurementUnit: User["measurementUnit"],
   options?: { includeUnit?: boolean },
 ): string | null;
 export function formatPace(
   secondsPerKilometre: number | null,
+  measurementUnit: User["measurementUnit"],
   options: { includeUnit?: boolean } = {},
 ) {
   if (secondsPerKilometre === null) {
     return null;
   }
 
-  const minutes = Math.floor(secondsPerKilometre / 60);
-  const seconds = String(secondsPerKilometre % 60).padStart(2, "0");
+  const paceSeconds =
+    measurementUnit === "MILES"
+      ? Math.round(secondsPerKilometre * 1.609344)
+      : secondsPerKilometre;
+  const minutes = Math.floor(paceSeconds / 60);
+  const seconds = String(paceSeconds % 60).padStart(2, "0");
   const pace = `${minutes}:${seconds}`;
 
-  return options.includeUnit === false ? pace : `${pace} / km`;
+  return options.includeUnit === false
+    ? pace
+    : `${pace} / ${measurementUnit === "MILES" ? "mi" : "km"}`;
 }

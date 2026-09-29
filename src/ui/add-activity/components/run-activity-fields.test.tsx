@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import {
-  addActivityFormSchema,
+  createAddActivityFormSchema,
   defaultAddActivityFormValues,
   type AddActivityFormValues,
 } from "../utils/add-activity-form";
@@ -13,7 +13,7 @@ import { RunActivityFields } from "./run-activity-fields";
 function RunActivityFieldsHarness({ children }: { children: ReactNode }) {
   const form = useForm<AddActivityFormValues>({
     defaultValues: defaultAddActivityFormValues,
-    resolver: zodResolver(addActivityFormSchema),
+    resolver: zodResolver(createAddActivityFormSchema("KILOMETRES")),
   });
 
   return (
@@ -72,7 +72,7 @@ test("does not validate untouched metrics when distance is entered", () => {
   expect(screen.queryByText("Duration must be greater than zero")).toBeNull();
   expect(screen.queryByText("Enter pace as mm:ss")).toBeNull();
   expect(screen.getByTestId("dirty-fields").textContent).toBe(
-    JSON.stringify({ distanceKilometres: true }),
+    JSON.stringify({ distance: true }),
   );
 });
 

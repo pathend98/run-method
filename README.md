@@ -89,6 +89,10 @@ pnpm db:view
 pnpm start
 ```
 
+## Testing
+
+Reusable domain test fixtures live in `src/test-support/fixtures/`. For example, `createUser({ firstName: "Ada" })` returns a typed `User` with the other fields supplied by the factory. Override fields relevant to the test; write intentionally malformed inputs explicitly when testing validation.
+
 ## Local authentication
 
 Keycloak provides the local OIDC identity provider at

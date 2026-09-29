@@ -1,34 +1,24 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type {
   RunTrainingSession,
-  StrengthTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { CompleteActivityForm } from "./complete-activity-form";
 
-const run = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const run = createRunActivity({
   title: "Tempo",
-  status: "SCHEDULED",
-  date: "2026-08-17",
   timeOfDay: null,
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
-const strength = {
-  ...run,
-  activityType: "STRENGTH",
-  targetDurationSeconds: 2700,
-} satisfies StrengthTrainingSession;
+}) satisfies RunTrainingSession;
+const strength = createStrengthActivity({
+  title: run.title,
+  timeOfDay: run.timeOfDay,
+});
 
 function renderForm(
   activity: TrainingSession = run,

@@ -5,6 +5,11 @@ import {
 } from "@/domain/training-sessions";
 import { durationFieldsToSeconds } from "@/ui/training-sessions/duration-fields";
 import {
+  distanceToMetres,
+  formatDistanceInput,
+  type RunFieldUnit,
+} from "@/ui/run-field-input/run-field-units";
+import {
   createEditActivityFormSchema,
   type EditActivityFormValues,
 } from "./edit-activity-form-schema";
@@ -12,8 +17,9 @@ import {
 export function toEditTrainingSessionRequest(
   values: EditActivityFormValues,
   activity: TrainingSession,
+  unit: RunFieldUnit,
 ): EditTrainingSessionRequest {
-  const parsed = createEditActivityFormSchema(activity).parse(values);
+  const parsed = createEditActivityFormSchema(activity, unit).parse(values);
   const base = {
     title: parsed.title,
     description: parsed.description.trim() || null,
@@ -48,7 +54,11 @@ export function toEditTrainingSessionRequest(
       activityType: activity.activityType,
       targetDistanceMetres: activity.targetDistanceMetres,
       targetDurationSeconds: activity.targetDurationSeconds,
-      actualDistanceMetres: Number(parsed.distanceKilometres) * 1000,
+      actualDistanceMetres: requestDistance(
+        parsed.distance,
+        activity.actualDistanceMetres ?? activity.targetDistanceMetres,
+        unit,
+      ),
       actualDurationSeconds: durationFieldsToSeconds(parsed),
     });
   }
@@ -62,7 +72,11 @@ export function toEditTrainingSessionRequest(
     });
   }
 
-  const distance = Number(parsed.distanceKilometres) * 1000;
+  const distance = requestDistance(
+    parsed.distance,
+    activity.targetDistanceMetres,
+    unit,
+  );
   const duration = durationFieldsToSeconds(parsed);
   return editTrainingSessionRequestSchema.parse({
     ...base,
@@ -70,4 +84,14 @@ export function toEditTrainingSessionRequest(
     targetDistanceMetres: distance,
     targetDurationSeconds: duration,
   });
+}
+
+function requestDistance(
+  distance: string,
+  originalMetres: number,
+  unit: RunFieldUnit,
+) {
+  return distance === formatDistanceInput(originalMetres, unit)
+    ? originalMetres
+    : distanceToMetres(distance, unit);
 }

@@ -1,42 +1,81 @@
-import { userSchema } from "./user-types";
+import { createUser } from "@/test-support/fixtures/user";
+import { updateUserProfileSchema, userSchema } from "./user-types";
+
+const registeredUser = createUser({
+  firstName: "Ada",
+  measurementUnit: "MILES",
+});
+
+const guestUser = createUser({
+  id: "guest-id",
+  kind: "GUEST",
+  expiresAt: new Date("2026-10-01T12:00:00.000Z"),
+});
 
 test("userSchema accepts registered and guest users", () => {
-  const expiresAt = new Date("2026-10-01T12:00:00.000Z");
-  expect(
-    userSchema.parse({ id: "user-id", kind: "REGISTERED", expiresAt: null }),
-  ).toEqual({ id: "user-id", kind: "REGISTERED", expiresAt: null });
-  expect(
-    userSchema.parse({ id: "guest-id", kind: "GUEST", expiresAt }),
-  ).toEqual({ id: "guest-id", kind: "GUEST", expiresAt });
+  expect(userSchema.parse(registeredUser)).toEqual(registeredUser);
+  expect(userSchema.parse(guestUser)).toEqual(guestUser);
   expect(
     userSchema.parse({
-      id: "guest-id",
-      kind: "GUEST",
-      expiresAt: expiresAt.toISOString(),
+      ...guestUser,
+      expiresAt: guestUser.expiresAt!.toISOString(),
     }),
-  ).toEqual({ id: "guest-id", kind: "GUEST", expiresAt });
+  ).toEqual(guestUser);
 });
 
 test.each(["", null, undefined])("userSchema rejects invalid ID %#", (id) => {
-  expect(() =>
-    userSchema.parse({ id, kind: "REGISTERED", expiresAt: null }),
-  ).toThrow();
+  expect(() => userSchema.parse({ ...registeredUser, id })).toThrow();
 });
 
 test.each(["UNKNOWN", null, undefined])(
   "userSchema rejects invalid kind %#",
   (kind) => {
-    expect(() =>
-      userSchema.parse({ id: "user-id", kind, expiresAt: null }),
-    ).toThrow();
+    expect(() => userSchema.parse({ ...registeredUser, kind })).toThrow();
   },
 );
 
 test.each(["invalid", 123, undefined])(
   "userSchema rejects invalid expiry %#",
   (expiresAt) => {
+    expect(() => userSchema.parse({ ...guestUser, expiresAt })).toThrow();
+  },
+);
+
+test.each([undefined, "", " ", 42])(
+  "userSchema rejects an absent or invalid first name %#",
+  (firstName) => {
+    expect(() => userSchema.parse({ ...registeredUser, firstName })).toThrow();
+  },
+);
+
+test.each([undefined, null, "KM", "METRES"])(
+  "userSchema rejects an invalid measurement unit %#",
+  (measurementUnit) => {
     expect(() =>
-      userSchema.parse({ id: "user-id", kind: "GUEST", expiresAt }),
+      userSchema.parse({ ...registeredUser, measurementUnit }),
     ).toThrow();
   },
 );
+
+test("profile updates allow one field, trim names, and clear names", () => {
+  expect(updateUserProfileSchema.parse({ firstName: "  Ada  " })).toEqual({
+    firstName: "Ada",
+  });
+  expect(updateUserProfileSchema.parse({ firstName: null })).toEqual({
+    firstName: null,
+  });
+  expect(updateUserProfileSchema.parse({ measurementUnit: "MILES" })).toEqual({
+    measurementUnit: "MILES",
+  });
+});
+
+test.each([
+  {},
+  { firstName: "" },
+  { firstName: " " },
+  { firstName: "x".repeat(101) },
+  { measurementUnit: "KM" },
+  { firstName: "Ada", role: "ADMIN" },
+])("profile update rejects invalid body %#", (body) => {
+  expect(() => updateUserProfileSchema.parse(body)).toThrow();
+});

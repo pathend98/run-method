@@ -1,3 +1,7 @@
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import type {
   EditTrainingSessionRequest,
   RunTrainingSession,
@@ -6,41 +10,21 @@ import type {
 import { DrizzleTrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
 
-const run: RunTrainingSession = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const run: RunTrainingSession = createRunActivity({
   title: "Easy run",
-  activityType: "RUN",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T10:30:00.000Z",
-  targetDistanceMetres: 8000,
-  targetDurationSeconds: 2700,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-};
+});
 
-const strength: Extract<TrainingSession, { activityType: "STRENGTH" }> = {
-  id: "22222222-2222-4222-8222-222222222222",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Strength",
-  activityType: "STRENGTH",
-  status: "COMPLETED",
-  date: "2026-08-17",
-  timeOfDay: "PM",
-  description: "Lower body",
-  sortOrder: 1,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:30:00.000Z",
-  targetDurationSeconds: 2700,
-  actualDurationSeconds: 2400,
-};
+const strength: Extract<TrainingSession, { activityType: "STRENGTH" }> =
+  createStrengthActivity({
+    id: "22222222-2222-4222-8222-222222222222",
+    status: "COMPLETED",
+    timeOfDay: "PM",
+    description: "Lower body",
+    sortOrder: 1,
+    updatedAt: "2026-08-01T10:30:00.000Z",
+    actualDurationSeconds: 2400,
+  });
 
 function createRepository(
   current: TrainingSession,

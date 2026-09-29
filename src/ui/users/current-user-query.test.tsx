@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
+import { createUser } from "@/test-support/fixtures/user";
 import { useCurrentUserQuery } from "./current-user-query";
 
 function CurrentUserId() {
@@ -11,11 +12,7 @@ function CurrentUserId() {
 test("current-user query shares one request across consumers", async () => {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,
-    json: vi.fn().mockResolvedValue({
-      id: "user-id",
-      kind: "REGISTERED",
-      expiresAt: null,
-    }),
+    json: vi.fn().mockResolvedValue(createUser()),
   });
   vi.stubGlobal("fetch", fetchMock);
 

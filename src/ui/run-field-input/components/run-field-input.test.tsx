@@ -2,14 +2,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 
 import type { RunFieldInputValue } from "../utils/run-field-calculations";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { RunFieldInput } from "./run-field-input";
 
 const initialValue: RunFieldInputValue = {
-  distanceKilometres: "",
+  distance: "",
   durationHours: "00",
   durationMinutes: "00",
   durationSeconds: "00",
-  pacePerKilometre: "",
+  pace: "",
   derivedMetric: null,
 };
 
@@ -86,6 +87,35 @@ test("derives duration from distance and pace", () => {
   expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
     "value",
     "44",
+  );
+});
+
+test("uses mile labels and recalculates when the automatic metric changes", () => {
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <Harness />
+    </DistanceDisplayProvider>,
+  );
+  fireEvent.change(screen.getByLabelText("Distance (mi)"), {
+    target: { value: "5" },
+  });
+  fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
+    target: { value: "40" },
+  });
+  const pace = screen.getByLabelText("Pace (mm:ss / mi) · Auto");
+  expect(pace).toHaveProperty("value", "8:00");
+
+  fireEvent.focus(pace);
+  fireEvent.change(pace, { target: { value: "7:30" } });
+  fireEvent.blur(pace);
+  fireEvent.click(screen.getByRole("button", { name: "Keep distance" }));
+  expect(screen.getByLabelText("Duration (minutes)")).toHaveProperty(
+    "value",
+    "37",
+  );
+  expect(screen.getByLabelText("Duration (hh:mm:ss) seconds")).toHaveProperty(
+    "value",
+    "30",
   );
 });
 

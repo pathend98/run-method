@@ -10,11 +10,20 @@ import {
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/training-sessions/duration-fields";
+import {
+  distanceToMetres,
+  type RunFieldUnit,
+} from "@/ui/run-field-input/run-field-units";
 
-const positiveDistanceSchema = z
-  .string()
-  .regex(/^\d+(?:\.\d{1,3})?$/, "Enter a distance in kilometres")
-  .refine((value) => Number(value) > 0, "Distance must be greater than zero");
+function positiveDistanceSchema(unit: RunFieldUnit) {
+  return z
+    .string()
+    .regex(
+      /^\d+(?:\.\d{1,3})?$/,
+      `Enter a distance in ${unit === "MILES" ? "miles" : "kilometres"}`,
+    )
+    .refine((value) => Number(value) > 0, "Distance must be greater than zero");
+}
 const pace = z
   .string()
   .regex(/^\d+:[0-5]\d$/, "Enter pace as mm:ss")
@@ -23,20 +32,21 @@ const pace = z
     return minutes * 60 + seconds > 0;
   }, "Pace must be greater than zero");
 
-export const addActivityFormSchema = z
-  .object({
-    title: z.string().trim().min(1, "Enter an activity title"),
-    activityType: z.enum(["RUN", "STRENGTH"]),
-    derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
-    timeOfDay: z.enum(["AM", "ANY", "PM"]),
-    description: z.string(),
-    distanceKilometres: z.string(),
-    durationHours: z.string(),
-    durationMinutes: z.string(),
-    durationSeconds: z.string(),
-    pacePerKilometre: z.string(),
-  })
-  .superRefine((value, context) => {
+const addActivityFormBaseSchema = z.object({
+  title: z.string().trim().min(1, "Enter an activity title"),
+  activityType: z.enum(["RUN", "STRENGTH"]),
+  derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
+  timeOfDay: z.enum(["AM", "ANY", "PM"]),
+  description: z.string(),
+  distance: z.string(),
+  durationHours: z.string(),
+  durationMinutes: z.string(),
+  durationSeconds: z.string(),
+  pace: z.string(),
+});
+
+export function createAddActivityFormSchema(unit: RunFieldUnit) {
+  return addActivityFormBaseSchema.superRefine((value, context) => {
     if (value.activityType === "STRENGTH") {
       if (!isZeroDuration(value)) {
         validateDuration(context, value, false);
@@ -46,15 +56,16 @@ export const addActivityFormSchema = z
 
     validateField(
       context,
-      "distanceKilometres",
-      positiveDistanceSchema,
-      value.distanceKilometres,
+      "distance",
+      positiveDistanceSchema(unit),
+      value.distance,
     );
     validateDuration(context, value, true);
-    validateField(context, "pacePerKilometre", pace, value.pacePerKilometre);
+    validateField(context, "pace", pace, value.pace);
   });
+}
 
-export type AddActivityFormValues = z.infer<typeof addActivityFormSchema>;
+export type AddActivityFormValues = z.infer<typeof addActivityFormBaseSchema>;
 
 export const defaultAddActivityFormValues: AddActivityFormValues = {
   title: "",
@@ -62,16 +73,17 @@ export const defaultAddActivityFormValues: AddActivityFormValues = {
   derivedMetric: null,
   timeOfDay: "ANY",
   description: "",
-  distanceKilometres: "",
+  distance: "",
   ...defaultDurationFields,
-  pacePerKilometre: "",
+  pace: "",
 };
 
 export function toCreateTrainingSessionRequest(
   values: AddActivityFormValues,
   date: string,
+  unit: RunFieldUnit,
 ): CreateTrainingSessionRequest {
-  const parsed = addActivityFormSchema.parse(values);
+  const parsed = createAddActivityFormSchema(unit).parse(values);
   const base = {
     title: parsed.title,
     date,
@@ -90,7 +102,7 @@ export function toCreateTrainingSessionRequest(
     });
   }
 
-  const distance = Number(parsed.distanceKilometres) * 1000;
+  const distance = distanceToMetres(parsed.distance, unit);
   const duration = durationFieldsToSeconds(parsed);
   return createTrainingSessionRequestSchema.parse({
     ...base,
@@ -102,7 +114,7 @@ export function toCreateTrainingSessionRequest(
 
 function validateField(
   context: z.RefinementCtx,
-  field: "distanceKilometres" | "pacePerKilometre",
+  field: "distance" | "pace",
   schema: z.ZodType<string>,
   value: string,
 ) {

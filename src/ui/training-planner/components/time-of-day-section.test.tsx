@@ -1,24 +1,15 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { TimeOfDaySection } from "./time-of-day-section";
 import type { TrainingActivity } from "../types/training-planner-types";
 
 const baseActivity = {
-  id: "activity",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  activityType: "RUN",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
-  description: "Controlled effort",
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  targetDistanceMetres: 6000,
-  targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
+  ...createRunActivity({
+    id: "activity",
+    description: "Controlled effort",
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: 1530,
+  }),
   day: "Monday",
 } satisfies TrainingActivity;
 

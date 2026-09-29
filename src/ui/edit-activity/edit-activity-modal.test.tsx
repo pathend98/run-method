@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
@@ -18,24 +19,11 @@ vi.mock(
   }),
 );
 
-const activity = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
+const activity = createRunActivity({
   description: "Controlled effort",
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
+}) satisfies RunTrainingSession;
 
 type EditActivityModalTestProps = {
   onEdit?: (id: string, request: unknown) => Promise<RunTrainingSession>;

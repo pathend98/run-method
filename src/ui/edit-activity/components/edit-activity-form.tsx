@@ -7,6 +7,7 @@ import type {
   TrainingSession,
 } from "@/domain/training-sessions";
 import { DurationFormInput } from "@/ui/components/duration-form-input";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import { FormField } from "@/ui/components/form-field";
 import {
   createEditActivityFormSchema,
@@ -31,11 +32,12 @@ export function EditActivityForm({
   onEdit,
   onRunFieldsPendingChange = doNothing,
 }: EditActivityFormProps) {
+  const unit = useDistanceDisplayUnit();
   const form = useForm<EditActivityFormValues>({
-    defaultValues: getEditActivityFormValues(activity),
+    defaultValues: getEditActivityFormValues(activity, unit),
     mode: "onBlur",
     reValidateMode: "onBlur",
-    resolver: zodResolver(createEditActivityFormSchema(activity)),
+    resolver: zodResolver(createEditActivityFormSchema(activity, unit)),
   });
   const {
     formState: { errors },
@@ -48,7 +50,7 @@ export function EditActivityForm({
 
   async function submit(values: EditActivityFormValues) {
     try {
-      await onEdit(toEditTrainingSessionRequest(values, activity));
+      await onEdit(toEditTrainingSessionRequest(values, activity, unit));
       onClose();
     } catch {
       setError("root", {

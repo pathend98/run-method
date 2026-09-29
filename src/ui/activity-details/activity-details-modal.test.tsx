@@ -12,6 +12,10 @@ import type {
   RunTrainingSession,
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { ActivityDetailsModal as ActualActivityDetailsModal } from "./activity-details-modal";
 import {
   createTrainingPlannerStore,
@@ -32,35 +36,25 @@ vi.mock(
   }),
 );
 
-const runActivity = {
+const runActivity = createRunActivity({
   id: "run",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  status: "SCHEDULED",
   date: format(new Date(), "yyyy-MM-dd"),
-  timeOfDay: "AM",
   description: "Controlled effort",
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T11:30:00.000Z",
-  activityType: "RUN",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
   actualDistanceMetres: 5900,
   actualDurationSeconds: 1500,
-} satisfies RunTrainingSession;
+}) satisfies RunTrainingSession;
 
-const strengthActivity = {
-  ...runActivity,
+const strengthActivity = createStrengthActivity({
   id: "strength",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Strength",
-  activityType: "STRENGTH",
+  date: runActivity.date,
   timeOfDay: "PM",
-  targetDurationSeconds: 2700,
+  description: runActivity.description,
+  updatedAt: runActivity.updatedAt,
   actualDurationSeconds: 2400,
-} satisfies StrengthTrainingSession;
+});
 
 type ActivityDetailsModalTestProps = {
   activity: RunTrainingSession | StrengthTrainingSession;

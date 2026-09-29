@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { Button } from "@/ui/components/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
@@ -110,7 +111,7 @@ export function TrainingPlanner() {
   const week = groupSessionsByWeekday(query.data, weekRange);
 
   return (
-    <>
+    <DistanceDisplayProvider measurementUnit={currentUser.data.measurementUnit}>
       <TrainingPlannerView
         isCurrentWeek={weekRange.from === currentWeekRange.from}
         onCurrentWeek={() => navigateToWeek(null)}
@@ -135,6 +136,6 @@ export function TrainingPlanner() {
         <AddActivityModal athleteId={currentUser.data.id} />
       ) : null}
       {activeModalKind === "review" ? <ReviewActivitiesModal /> : null}
-    </>
+    </DistanceDisplayProvider>
   );
 }

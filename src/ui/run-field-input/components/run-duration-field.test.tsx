@@ -5,11 +5,11 @@ import type { RunFieldInputValue } from "../utils/run-field-calculations";
 import { RunDurationField } from "./run-duration-field";
 
 const zeroValue: RunFieldInputValue = {
-  distanceKilometres: "",
+  distance: "",
   durationHours: "00",
   durationMinutes: "00",
   durationSeconds: "00",
-  pacePerKilometre: "",
+  pace: "",
   derivedMetric: null,
 };
 

@@ -6,12 +6,14 @@ import {
 } from "@/ui/training-sessions/training-session-label-formatters";
 import { formatLockedTargets } from "../utils/edit-activity-formatters";
 import { ReadOnlyDetail } from "./read-only-detail";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type EditActivitySummaryProps = {
   activity: TrainingSession;
 };
 
 export function EditActivitySummary({ activity }: EditActivitySummaryProps) {
+  const measurementUnit = useDistanceDisplayUnit();
   const isScheduled = activity.status === "SCHEDULED";
   const showLockedTargets = !isScheduled;
 
@@ -31,7 +33,7 @@ export function EditActivitySummary({ activity }: EditActivitySummaryProps) {
       {showLockedTargets ? (
         <ReadOnlyDetail
           label="Target details"
-          value={formatLockedTargets(activity)}
+          value={formatLockedTargets(activity, measurementUnit)}
         />
       ) : null}
     </dl>

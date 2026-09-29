@@ -15,11 +15,11 @@ type RunFieldFormInputProps = {
 };
 
 const fieldNames = [
-  "distanceKilometres",
+  "distance",
   "durationHours",
   "durationMinutes",
   "durationSeconds",
-  "pacePerKilometre",
+  "pace",
   "derivedMetric",
 ] as const;
 
@@ -35,11 +35,11 @@ export function RunFieldFormInput({
   } = useFormContext<RunFieldInputValue>();
   const fields = useWatch({ control, name: fieldNames });
   const value: RunFieldInputValue = {
-    distanceKilometres: fields[0],
+    distance: fields[0],
     durationHours: fields[1],
     durationMinutes: fields[2],
     durationSeconds: fields[3],
-    pacePerKilometre: fields[4],
+    pace: fields[4],
     derivedMetric: fields[5],
   };
 
@@ -61,16 +61,16 @@ export function RunFieldFormInput({
     <RunFieldInput
       disabled={disabled}
       errors={{
-        distance: errors.distanceKilometres?.message,
+        distance: errors.distance?.message,
         duration:
           errors.durationHours?.message ??
           errors.durationMinutes?.message ??
           errors.durationSeconds?.message,
-        pace: errors.pacePerKilometre?.message,
+        pace: errors.pace?.message,
       }}
       onChange={changeValue}
       onMetricBlur={(metric) => {
-        if (metric === "distance") validateFields(["distanceKilometres"]);
+        if (metric === "distance") validateFields(["distance"]);
         if (metric === "duration") {
           validateFields([
             "durationHours",
@@ -78,7 +78,7 @@ export function RunFieldFormInput({
             "durationSeconds",
           ]);
         }
-        if (metric === "pace") validateFields(["pacePerKilometre"]);
+        if (metric === "pace") validateFields(["pace"]);
       }}
       onPendingChange={onPendingChange}
       value={value}

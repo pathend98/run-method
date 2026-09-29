@@ -63,7 +63,6 @@ export function SkipActivityForm({
               {...register("skipReason")}
             />
           </FormField>
-          <p className="mt-2 text-sm text-zinc-600">Required</p>
         </fieldset>
       </form>
     </FormProvider>

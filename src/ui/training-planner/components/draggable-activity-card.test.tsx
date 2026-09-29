@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 const dndMocks = vi.hoisted(() => ({
@@ -17,23 +18,12 @@ import { DraggableActivityCard } from "./draggable-activity-card";
 import type { TrainingActivity } from "../types/training-planner-types";
 
 const activity = {
-  activityType: "RUN",
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  date: "2026-08-17",
+  ...createRunActivity({
+    id: "activity",
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: 1530,
+  }),
   day: "Monday",
-  description: null,
-  id: "activity",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  skipReason: null,
-  sortOrder: 0,
-  status: "SCHEDULED",
-  targetDistanceMetres: 6000,
-  targetDurationSeconds: 1530,
-  timeOfDay: "AM",
-  title: "Tempo run",
-  updatedAt: "2026-08-01T10:00:00.000Z",
 } satisfies TrainingActivity;
 
 test("fades the source card while it is being dragged", () => {

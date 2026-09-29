@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
 import { trainingSessionsRequestValidator } from "@/server/server";
+import { createUser } from "@/test-support/fixtures/user";
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsRequestValidationError,
@@ -25,7 +26,7 @@ const athleteId = "33333333-3333-4333-8333-333333333333";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  findBySessionKey.mockResolvedValue({ id: athleteId });
+  findBySessionKey.mockResolvedValue(createUser({ id: athleteId }));
   service.findById.mockResolvedValue({ id, athleteId });
 });
 const skipRequest = { skipReason: "Recovery" };

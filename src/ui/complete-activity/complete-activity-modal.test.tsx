@@ -2,10 +2,15 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
+import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { CompleteActivityModal } from "./complete-activity-modal";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const api = vi.hoisted(() => ({ completeTrainingSession: vi.fn() }));
 vi.mock(
@@ -17,33 +22,24 @@ vi.mock(
 );
 
 const activity = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: null,
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
-  targetDistanceMetres: 6000,
-  targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
+  ...createRunActivity({
+    timeOfDay: null,
+    targetDistanceMetres: 6000,
+    targetDurationSeconds: 1530,
+  }),
   day: "Monday",
 } as const;
 
-function renderModal() {
+function renderModal(measurementUnit: "KILOMETRES" | "MILES" = "KILOMETRES") {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails(activity);
   store.getState().openCompleteActivity();
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <CompleteActivityModal />
+        <DistanceDisplayProvider measurementUnit={measurementUnit}>
+          <CompleteActivityModal />
+        </DistanceDisplayProvider>
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
@@ -71,6 +67,21 @@ test("shows the focused completion dialog and returns to details when cancelled"
   ).toBeDefined();
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   expect(store.getState().activeModal).toMatchObject({ kind: "details" });
+});
+
+test("shows planned miles and mile pace with mile completion inputs", () => {
+  renderModal("MILES");
+  expect(
+    screen.getByText("Planned: 3.7 mi · 25m 30s · 6:50 / mi"),
+  ).toBeDefined();
+  expect(screen.getByLabelText("Distance (mi)")).toHaveProperty(
+    "value",
+    "3.728",
+  );
+  expect(screen.getByLabelText("Pace (mm:ss / mi) · Auto")).toHaveProperty(
+    "value",
+    "6:50",
+  );
 });
 
 test("completes the activity and closes the modal flow", async () => {
@@ -103,9 +114,14 @@ test("disables dismissal while completion is pending", async () => {
 test("shows a duration-only completion dialog for strength", () => {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails({
-    ...activity,
-    activityType: "STRENGTH",
-    targetDurationSeconds: 1800,
+    ...createStrengthActivity({
+      id: activity.id,
+      title: activity.title,
+      date: activity.date,
+      timeOfDay: activity.timeOfDay,
+      description: activity.description,
+      targetDurationSeconds: 1800,
+    }),
     day: "Monday",
   });
   store.getState().openCompleteActivity();

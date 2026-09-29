@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type {
   RunTrainingSession,
@@ -6,6 +7,7 @@ import type {
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
 import type { TrainingActivity } from "./types/training-planner-types";
 import { QueryProvider } from "@/app/query-provider";
+import { createUser } from "@/test-support/fixtures/user";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
 
 const navigation = vi.hoisted(() => ({
@@ -47,35 +49,23 @@ vi.mock("./components/training-planner-view", () => ({
 
 import { TrainingPlanner } from "./training-planner";
 
-const activity = {
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
+const activity = createRunActivity({
   title: "Easy run",
-  activityType: "RUN",
-  status: "SCHEDULED",
   date: "2026-09-07",
-  timeOfDay: "AM",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
+}) satisfies RunTrainingSession;
 
 test("persists a drag move through the existing edit mutation", async () => {
   const fetchMock = vi.fn().mockImplementation((_url, options) => {
     if (_url === "/api/v1/me") {
       return Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue({
-          id: "33333333-3333-4333-8333-333333333333",
-          kind: "REGISTERED",
-          expiresAt: null,
-        }),
+        json: vi.fn().mockResolvedValue(
+          createUser({
+            id: "33333333-3333-4333-8333-333333333333",
+          }),
+        ),
       });
     }
     if (options?.method === "PATCH") {

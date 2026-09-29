@@ -1,31 +1,23 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { TrainingActivityCard } from "./training-activity-card";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import type { TrainingActivity } from "../types/training-planner-types";
-
-const baseActivity = {
-  id: "activity",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
-  description: "Controlled effort",
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  day: "Monday",
-} satisfies Partial<TrainingActivity>;
 
 function runActivity(
   override: Partial<TrainingActivity> = {},
 ): TrainingActivity {
   return {
-    ...baseActivity,
-    activityType: "RUN",
-    targetDistanceMetres: 6000,
-    targetDurationSeconds: 1530,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
+    ...createRunActivity({
+      id: "activity",
+      description: "Controlled effort",
+      targetDistanceMetres: 6000,
+      targetDurationSeconds: 1530,
+    }),
+    day: "Monday",
     ...override,
   } as TrainingActivity;
 }
@@ -42,6 +34,16 @@ test("renders a compact activity summary", () => {
   expect(screen.getByText("Run", { selector: ".sr-only" })).toBeDefined();
   expect(document.querySelector("svg.lucide-sport-shoe")).not.toBeNull();
   expect(screen.queryByText("Controlled effort")).toBeNull();
+});
+
+test("shows the selected distance unit in a run card", () => {
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <TrainingActivityCard activity={runActivity()} />
+    </DistanceDisplayProvider>,
+  );
+
+  expect(screen.getByText("3.73 mi · 25m 30s")).toBeDefined();
 });
 
 test("merges an optional class name into the activity button", () => {
@@ -97,10 +99,13 @@ test("shows duration only for strength activities", () => {
   render(
     <TrainingActivityCard
       activity={{
-        ...runActivity(),
-        activityType: "STRENGTH",
-        targetDurationSeconds: 5400,
-        actualDurationSeconds: null,
+        ...createStrengthActivity({
+          id: "activity",
+          title: "Tempo run",
+          description: "Controlled effort",
+          targetDurationSeconds: 5400,
+        }),
+        day: "Monday",
       }}
     />,
   );

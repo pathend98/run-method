@@ -1,26 +1,17 @@
 import { render, screen } from "@testing-library/react";
 
 import type { TrainingSession } from "@/domain/training-sessions";
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { WeeklySummary } from "./weekly-summary";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const activity: TrainingSession = {
-  activityType: "RUN",
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
+const activity: TrainingSession = createRunActivity({
   date: "2026-08-22",
-  description: null,
-  id: "11111111-1111-4111-8111-111111111111",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  skipReason: null,
-  sortOrder: 0,
-  status: "SCHEDULED",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
   timeOfDay: null,
   title: "Long run",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-};
+});
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -140,6 +131,30 @@ test("shows planned totals and variance for a past week", () => {
       .getByRole("progressbar", { name: "Running distance progress" })
       .getAttribute("aria-valuenow"),
   ).toBe("100");
+});
+
+test("shows past-week totals and variance in miles", () => {
+  vi.setSystemTime(new Date(2026, 7, 24, 12));
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <WeeklySummary
+        activities={[
+          {
+            ...activity,
+            actualDistanceMetres: 9656,
+            actualDurationSeconds: 1800,
+            date: "2026-08-17",
+            status: "COMPLETED",
+            targetDistanceMetres: 8047,
+          },
+        ]}
+        weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
+      />
+    </DistanceDisplayProvider>,
+  );
+
+  expect(screen.getByText("6.00 mi")).toBeDefined();
+  expect(screen.getByText("5.00 mi planned · +1.0 mi")).toBeDefined();
 });
 
 test("includes due activities when present", () => {

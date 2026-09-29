@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { render } from "@testing-library/react";
 
 import type {
@@ -10,22 +11,11 @@ import {
 } from "./training-planner-store";
 
 const activity = {
-  id: "activity",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  activityType: "RUN",
-  targetDistanceMetres: 5000,
-  targetDurationSeconds: 1800,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
+  ...createRunActivity({
+    id: "activity",
+    targetDistanceMetres: 5000,
+    targetDurationSeconds: 1800,
+  }),
   day: "Monday",
 } satisfies TrainingActivity;
 const day = {

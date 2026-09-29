@@ -1,34 +1,20 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 import { DayColumn } from "./day-column";
 import type {
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
 
-const baseActivity = {
-  id: "activity",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  description: null,
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
-  updatedAt: "2026-08-01T10:00:00.000Z",
-  day: "Monday",
-} satisfies Partial<TrainingActivity>;
-
 function runActivity(
   override: Partial<TrainingActivity> = {},
 ): TrainingActivity {
   return {
-    ...baseActivity,
-    activityType: "RUN",
-    timeOfDay: "AM",
-    targetDistanceMetres: 8000,
-    targetDurationSeconds: 2700,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
+    ...createRunActivity({ id: "activity" }),
+    day: "Monday",
     ...override,
   } as TrainingActivity;
 }
@@ -37,13 +23,8 @@ function strengthActivity(
   override: Partial<TrainingActivity> = {},
 ): TrainingActivity {
   return {
-    ...baseActivity,
-    id: "strength",
-    title: "Strength",
-    activityType: "STRENGTH",
-    timeOfDay: "PM",
-    targetDurationSeconds: 2700,
-    actualDurationSeconds: null,
+    ...createStrengthActivity({ id: "strength", timeOfDay: "PM" }),
+    day: "Monday",
     ...override,
   } as TrainingActivity;
 }

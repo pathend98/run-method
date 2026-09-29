@@ -6,29 +6,22 @@ import type {
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
 import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
+import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { ActivityDetailsModal } from "./activity-details-modal";
 
-const runActivity = {
+const runActivity = createRunActivity({
   id: "run",
-  athleteId: "33333333-3333-4333-8333-333333333333",
-  title: "Tempo run",
-  status: "SCHEDULED",
-  date: "2026-08-17",
-  timeOfDay: "AM",
   description: "Controlled effort",
-  sortOrder: 0,
-  skipReason: null,
-  createdAt: "2026-08-01T10:00:00.000Z",
   updatedAt: "2026-08-01T11:30:00.000Z",
-  activityType: "RUN",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
-  actualDistanceMetres: null,
-  actualDurationSeconds: null,
-} satisfies RunTrainingSession;
+}) satisfies RunTrainingSession;
 
 function renderActivityDetails(
   activity: RunTrainingSession | StrengthTrainingSession,
@@ -48,15 +41,12 @@ function renderActivityDetails(
 test.each([
   [runActivity, "Run · Scheduled · Morning"],
   [
-    {
-      ...runActivity,
-      activityType: "STRENGTH",
-      actualDurationSeconds: null,
+    createStrengthActivity({
       id: "strength",
-      targetDurationSeconds: 2700,
       timeOfDay: "PM",
-      title: "Strength",
-    } satisfies StrengthTrainingSession,
+      description: runActivity.description,
+      updatedAt: runActivity.updatedAt,
+    }),
     "Strength · Scheduled · Evening",
   ],
   [{ ...runActivity, timeOfDay: null }, "Run · Scheduled · Anytime"],

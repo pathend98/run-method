@@ -7,10 +7,15 @@ import type {
 } from "@/domain/training-sessions";
 import { DurationFormInput } from "@/ui/components/duration-form-input";
 import { RunFieldFormInput } from "@/ui/run-field-input/run-field-form-input";
-import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
-import { formatPace } from "@/ui/training-sessions/training-session-metric-formatters";
 import {
-  calculatePaceSecondsPerKilometre,
+  formatDistanceInput,
+  formatPaceInput,
+  metresPerUnit,
+  type RunFieldUnit,
+} from "@/ui/run-field-input/run-field-units";
+import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
+import {
   createCompleteActivityFormSchema,
   toCompleteTrainingSessionRequest,
   type CompleteActivityFormValues,
@@ -29,11 +34,12 @@ export function CompleteActivityForm({
   onComplete,
   onRunFieldsPendingChange,
 }: CompleteActivityFormProps) {
+  const unit = useDistanceDisplayUnit();
   const form = useForm<CompleteActivityFormValues>({
-    defaultValues: defaultValues(activity),
+    defaultValues: defaultValues(activity, unit),
     mode: "onBlur",
     reValidateMode: "onBlur",
-    resolver: zodResolver(createCompleteActivityFormSchema(activity)),
+    resolver: zodResolver(createCompleteActivityFormSchema(activity, unit)),
   });
   const {
     formState: { errors },
@@ -43,7 +49,9 @@ export function CompleteActivityForm({
 
   async function submit(values: CompleteActivityFormValues) {
     try {
-      await onComplete(toCompleteTrainingSessionRequest(activity, values));
+      await onComplete(
+        toCompleteTrainingSessionRequest(activity, values, unit),
+      );
     } catch {
       setError("root", {
         message: "Unable to complete activity. Please try again.",
@@ -82,26 +90,31 @@ export function CompleteActivityForm({
   );
 }
 
-function defaultValues(activity: TrainingSession): CompleteActivityFormValues {
+function defaultValues(
+  activity: TrainingSession,
+  unit: RunFieldUnit,
+): CompleteActivityFormValues {
   const duration = durationSecondsToFields(activity.targetDurationSeconds);
   if (activity.activityType !== "RUN") {
     return {
       ...duration,
       derivedMetric: null,
-      distanceKilometres: "",
-      pacePerKilometre: "",
+      distance: "",
+      pace: "",
     };
   }
   return {
     ...duration,
     derivedMetric: "pace",
-    distanceKilometres: (activity.targetDistanceMetres / 1000).toFixed(1),
-    pacePerKilometre: formatPace(
-      calculatePaceSecondsPerKilometre(
-        activity.targetDistanceMetres,
-        activity.targetDurationSeconds,
+    distance:
+      unit === "MILES"
+        ? formatDistanceInput(activity.targetDistanceMetres, unit)
+        : (activity.targetDistanceMetres / 1000).toFixed(1),
+    pace: formatPaceInput(
+      Math.round(
+        (activity.targetDurationSeconds * metresPerUnit(unit)) /
+          activity.targetDistanceMetres,
       ),
-      { includeUnit: false },
     ),
   };
 }

@@ -1,11 +1,19 @@
+import {
+  distanceToMetres,
+  formatDistanceInput,
+  formatPaceInput,
+  metresPerUnit,
+  type RunFieldUnit,
+} from "../run-field-units";
+
 export type RunFieldMetric = "distance" | "duration" | "pace";
 
 export type RunFieldInputValue = {
-  distanceKilometres: string;
+  distance: string;
   durationHours: string;
   durationMinutes: string;
   durationSeconds: string;
-  pacePerKilometre: string;
+  pace: string;
   derivedMetric: RunFieldMetric | null;
 };
 
@@ -14,26 +22,28 @@ const metrics: RunFieldMetric[] = ["distance", "duration", "pace"];
 export function isValidRunMetric(
   metric: RunFieldMetric,
   value: RunFieldInputValue,
+  unit: RunFieldUnit,
 ) {
-  return metricValueInBaseUnits(metric, value) !== null;
+  return metricValueInBaseUnits(metric, value, unit) !== null;
 }
 
 export function calculateDerivedMetric(
   value: RunFieldInputValue,
   derivedMetric: RunFieldMetric,
+  unit: RunFieldUnit,
 ): RunFieldInputValue | null {
-  const distanceMetres = metricValueInBaseUnits("distance", value);
-  const durationSeconds = metricValueInBaseUnits("duration", value);
-  const paceSeconds = metricValueInBaseUnits("pace", value);
+  const distanceMetres = metricValueInBaseUnits("distance", value, unit);
+  const durationSeconds = metricValueInBaseUnits("duration", value, unit);
+  const paceSeconds = metricValueInBaseUnits("pace", value, unit);
 
   if (derivedMetric === "pace" && distanceMetres && durationSeconds) {
     const calculatedPace = Math.max(
       1,
-      Math.round((durationSeconds * 1000) / distanceMetres),
+      Math.round((durationSeconds * metresPerUnit(unit)) / distanceMetres),
     );
     return {
       ...value,
-      pacePerKilometre: formatPace(calculatedPace),
+      pace: formatPaceInput(calculatedPace),
       derivedMetric,
     };
   }
@@ -41,7 +51,7 @@ export function calculateDerivedMetric(
   if (derivedMetric === "duration" && distanceMetres && paceSeconds) {
     const calculatedDuration = Math.max(
       1,
-      Math.round((distanceMetres * paceSeconds) / 1000),
+      Math.round((distanceMetres * paceSeconds) / metresPerUnit(unit)),
     );
     return {
       ...value,
@@ -53,11 +63,11 @@ export function calculateDerivedMetric(
   if (derivedMetric === "distance" && durationSeconds && paceSeconds) {
     const calculatedDistance = Math.max(
       1,
-      Math.round((durationSeconds * 1000) / paceSeconds),
+      Math.round((durationSeconds * metresPerUnit(unit)) / paceSeconds),
     );
     return {
       ...value,
-      distanceKilometres: String(calculatedDistance / 1000),
+      distance: formatDistanceInput(calculatedDistance, unit),
       derivedMetric,
     };
   }
@@ -69,8 +79,8 @@ export function clearMetric(
   value: RunFieldInputValue,
   metric: RunFieldMetric,
 ): RunFieldInputValue {
-  if (metric === "distance") return { ...value, distanceKilometres: "" };
-  if (metric === "pace") return { ...value, pacePerKilometre: "" };
+  if (metric === "distance") return { ...value, distance: "" };
+  if (metric === "pace") return { ...value, pace: "" };
   return {
     ...value,
     durationHours: "",
@@ -97,16 +107,17 @@ export function metricLabel(metric: RunFieldMetric) {
 function metricValueInBaseUnits(
   metric: RunFieldMetric,
   value: RunFieldInputValue,
+  unit: RunFieldUnit,
 ): number | null {
   if (metric === "distance") {
-    if (!/^\d+(?:\.\d{1,3})?$/.test(value.distanceKilometres)) return null;
-    const metres = Number(value.distanceKilometres) * 1000;
+    if (!/^\d+(?:\.\d{1,3})?$/.test(value.distance)) return null;
+    const metres = distanceToMetres(value.distance, unit);
     return metres > 0 ? metres : null;
   }
 
   if (metric === "pace") {
-    if (!/^\d+:[0-5]\d$/.test(value.pacePerKilometre)) return null;
-    const [minutes, seconds] = value.pacePerKilometre.split(":").map(Number);
+    if (!/^\d+:[0-5]\d$/.test(value.pace)) return null;
+    const [minutes, seconds] = value.pace.split(":").map(Number);
     const total = minutes * 60 + seconds;
     return total > 0 ? total : null;
   }
@@ -121,10 +132,6 @@ function metricValueInBaseUnits(
   if (minutes > 59 || seconds > 59) return null;
   const total = hours * 3600 + minutes * 60 + seconds;
   return total > 0 ? total : null;
-}
-
-function formatPace(seconds: number) {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 function formatDuration(seconds: number) {

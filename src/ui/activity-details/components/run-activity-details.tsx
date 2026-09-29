@@ -9,17 +9,19 @@ import {
   resolveRunTargets,
 } from "../utils/run-targets";
 import { ActivityDetailsBody } from "./activity-details-body";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type RunActivityDetailsProps = {
   activity: RunTrainingSession;
 };
 
 export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
+  const measurementUnit = useDistanceDisplayUnit();
   const { distanceMetres, durationSeconds, paceSecondsPerKilometre } =
     resolveRunTargets(activity);
-  const targetDistance = formatDistance(distanceMetres);
+  const targetDistance = formatDistance(distanceMetres, measurementUnit);
   const targetDuration = formatDuration(durationSeconds);
-  const targetPace = formatPace(paceSecondsPerKilometre);
+  const targetPace = formatPace(paceSecondsPerKilometre, measurementUnit);
   const isCompleted = activity.status === "COMPLETED";
   const actualDistance = activity.actualDistanceMetres;
   const actualDuration = activity.actualDurationSeconds;
@@ -34,7 +36,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
             Actual distance
           </dt>
           <dd className="mt-1 text-2xl font-semibold text-zinc-950">
-            {formatDistance(actualDistance)}
+            {formatDistance(actualDistance, measurementUnit)}
           </dd>
           <p className="mt-2 text-sm text-zinc-600">Target: {targetDistance}</p>
         </div>
@@ -45,6 +47,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
           <dd className="mt-1 text-2xl font-semibold text-zinc-950">
             {formatPace(
               calculatePaceSecondsPerKilometre(actualDistance, actualDuration),
+              measurementUnit,
             )}
           </dd>
           <p className="mt-2 text-sm text-zinc-600">Target: {targetPace}</p>

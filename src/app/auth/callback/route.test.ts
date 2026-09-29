@@ -9,6 +9,7 @@ import {
   IdentityAlreadyExistsError,
   UserNotFoundError,
 } from "@/server/user/user-errors";
+import { createUser } from "@/test-support/fixtures/user";
 
 import { GET } from "./route";
 
@@ -82,21 +83,23 @@ const identity = {
   idToken: "id-token",
   refreshToken: "refresh-token",
 };
-const guest = {
+const guest = createUser({
   id: "guest-id",
   kind: "GUEST",
   expiresAt: new Date("2026-10-01"),
-};
-const registered = { id: "registered-id", kind: "REGISTERED", expiresAt: null };
+});
+const registered = createUser({ id: "registered-id" });
 
 test("promotes an existing guest and replaces its session for a new identity", async () => {
   exchangeAuthorizationCode.mockResolvedValue(identity);
   findBySessionKey.mockResolvedValue(guest);
-  promoteGuestUser.mockResolvedValue({
-    ...guest,
-    kind: "REGISTERED",
-    expiresAt: null,
-  });
+  promoteGuestUser.mockResolvedValue(
+    createUser({
+      ...guest,
+      kind: "REGISTERED",
+      expiresAt: null,
+    }),
+  );
   createSession.mockResolvedValue("new-session");
 
   const response = await GET(
@@ -149,7 +152,9 @@ test("deletes an existing guest when the IdP identity belongs to a user", async 
 test("replaces a registered session without changing its user", async () => {
   exchangeAuthorizationCode.mockResolvedValue(identity);
   findBySessionKey.mockResolvedValue(registered);
-  findByIdentity.mockResolvedValue({ ...registered, id: "other-user" });
+  findByIdentity.mockResolvedValue(
+    createUser({ ...registered, id: "other-user" }),
+  );
   createSession.mockResolvedValue("new-session");
 
   const response = await GET(
@@ -264,7 +269,7 @@ test.each(["deleteSession", "promoteGuestUser", "deleteGuestUser"])(
 
 test("creates a user session, clears old cookies, and redirects to the app root", async () => {
   exchangeAuthorizationCode.mockResolvedValue(identity);
-  create.mockResolvedValue({ id: "user-id" });
+  create.mockResolvedValue(createUser());
   createSession.mockResolvedValue("session-key");
 
   const response = await GET(callbackRequest());
@@ -377,7 +382,7 @@ test.each(["create", "createSession"])(
   "returns 500 without a session cookie when %s fails",
   async (operation) => {
     exchangeAuthorizationCode.mockResolvedValue(identity);
-    create.mockResolvedValue({ id: "user-id" });
+    create.mockResolvedValue(createUser());
     createSession.mockResolvedValue("session-key");
     (operation === "create" ? create : createSession).mockRejectedValue(
       new Error("database unavailable"),
@@ -399,7 +404,7 @@ test.each(["https://app.example.com", "https://app.example.com/"])(
   async (baseUrl) => {
     appEnv.APP_BASE_URL = baseUrl;
     exchangeAuthorizationCode.mockResolvedValue(identity);
-    create.mockResolvedValue({ id: "user-id" });
+    create.mockResolvedValue(createUser());
     createSession.mockResolvedValue("session-key");
 
     const response = await GET(callbackRequest());

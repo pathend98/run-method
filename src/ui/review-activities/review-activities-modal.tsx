@@ -5,6 +5,7 @@ import { format, parseISO, subDays } from "date-fns";
 import { useEffect } from "react";
 
 import type { TrainingSession } from "@/domain/training-sessions";
+import type { User } from "@/domain/user-types";
 import { Button } from "@/ui/components/button";
 import { Modal } from "@/ui/components/modal";
 import {
@@ -13,12 +14,14 @@ import {
 } from "@/ui/training-sessions/training-session-metric-formatters";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
   useTrainingPlannerStore,
   type TrainingActivity,
 } from "@/ui/training-planner/training-planner-store";
 
 export function ReviewActivitiesModal() {
+  const measurementUnit = useDistanceDisplayUnit();
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const openCompleteActivity = useTrainingPlannerStore(
@@ -93,7 +96,7 @@ export function ReviewActivitiesModal() {
                       {activity.title}
                     </p>
                     <p className="text-sm text-zinc-600">
-                      {formatPlannedMetrics(activity)}
+                      {formatPlannedMetrics(activity, measurementUnit)}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -137,10 +140,13 @@ function groupActivitiesByDate(activities: TrainingSession[]) {
   return [...grouped.entries()];
 }
 
-function formatPlannedMetrics(activity: TrainingSession) {
+function formatPlannedMetrics(
+  activity: TrainingSession,
+  measurementUnit: User["measurementUnit"],
+) {
   const metrics = [
     ...(activity.activityType === "RUN"
-      ? [formatDistance(activity.targetDistanceMetres)]
+      ? [formatDistance(activity.targetDistanceMetres, measurementUnit)]
       : []),
     formatCompactDuration(activity.targetDurationSeconds),
   ].filter((metric): metric is string => metric !== null);

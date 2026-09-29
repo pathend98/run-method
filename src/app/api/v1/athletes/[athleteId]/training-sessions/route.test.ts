@@ -7,6 +7,7 @@ import {
 } from "@/server/training-sessions/training-sessions-errors";
 import { UserNotFoundError } from "@/server/user/user-errors";
 import { trainingSessionsRequestValidator } from "@/server/server";
+import { createUser } from "@/test-support/fixtures/user";
 import { GET, POST } from "./route";
 
 const service = vi.hoisted(() => ({ find: vi.fn(), create: vi.fn() }));
@@ -26,7 +27,7 @@ const sessionKey = "session-key";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  findBySessionKey.mockResolvedValue({ id: athleteId });
+  findBySessionKey.mockResolvedValue(createUser({ id: athleteId }));
 });
 
 function request(id = athleteId, query = "", cookie = sessionKey) {

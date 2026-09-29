@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import {
   fireEvent,
   render as testingRender,
@@ -8,6 +9,7 @@ import {
 import { format, subDays } from "date-fns";
 
 import { QueryProvider } from "@/app/query-provider";
+import { createUser } from "@/test-support/fixtures/user";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
 import { TrainingPlanner } from "./training-planner";
 import { getCurrentWeekRange } from "./services/training-planner-service";
@@ -25,11 +27,11 @@ function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
     url === "/api/v1/me"
       ? Promise.resolve({
           ok: true,
-          json: vi.fn().mockResolvedValue({
-            id: athleteId,
-            kind: "REGISTERED",
-            expiresAt: null,
-          }),
+          json: vi.fn().mockResolvedValue(
+            createUser({
+              id: athleteId,
+            }),
+          ),
         })
       : options === undefined
         ? fetchMock(url)
@@ -80,24 +82,10 @@ test("TrainingPlanner renders loaded planner data", async () => {
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([
-        {
-          id: "11111111-1111-4111-8111-111111111111",
-          athleteId: "33333333-3333-4333-8333-333333333333",
+        createRunActivity({
           title: "Easy run",
-          activityType: "RUN",
-          status: "SCHEDULED",
           date: getCurrentWeekRange().from,
-          timeOfDay: "AM",
-          description: null,
-          sortOrder: 0,
-          skipReason: null,
-          createdAt: "2026-08-01T10:00:00.000Z",
-          updatedAt: "2026-08-01T10:00:00.000Z",
-          targetDistanceMetres: 8000,
-          targetDurationSeconds: 2700,
-          actualDistanceMetres: null,
-          actualDurationSeconds: null,
-        },
+        }),
       ]),
     }),
   );
@@ -121,24 +109,10 @@ test("TrainingPlanner renders loaded planner data", async () => {
 });
 
 test("TrainingPlanner opens the activity review modal from the attention panel", async () => {
-  const pastSession = {
-    id: "11111111-1111-4111-8111-111111111111",
-    athleteId: "33333333-3333-4333-8333-333333333333",
+  const pastSession = createRunActivity({
     title: "Easy run",
-    activityType: "RUN",
-    status: "SCHEDULED",
     date: format(subDays(new Date(), 1), "yyyy-MM-dd"),
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
-    targetDistanceMetres: 8000,
-    targetDurationSeconds: 2700,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
-  };
+  });
   stubFetch(
     vi.fn().mockResolvedValue({
       ok: true,
@@ -182,24 +156,12 @@ test("TrainingPlanner renders error state", async () => {
 });
 
 test("TrainingPlanner skips and completes activities through the API", async () => {
-  const session = {
-    id: "11111111-1111-4111-8111-111111111111",
-    athleteId: "33333333-3333-4333-8333-333333333333",
+  const session = createRunActivity({
     title: "Easy run",
-    activityType: "RUN",
-    status: "SCHEDULED",
     date: getCurrentWeekRange().from,
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
-  };
+  });
   const fetchMock = vi.fn().mockImplementation((url) => {
     if (url.endsWith("/skip"))
       return Promise.resolve({
@@ -292,24 +254,15 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
     if (options?.method === "POST") {
       return Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue({
-          id: "11111111-1111-4111-8111-111111111111",
-          athleteId: "33333333-3333-4333-8333-333333333333",
-          title: "Easy run",
-          activityType: "RUN",
-          status: "SCHEDULED",
-          date: range.from,
-          timeOfDay: null,
-          description: null,
-          sortOrder: 0,
-          skipReason: null,
-          createdAt: "2026-08-01T10:00:00.000Z",
-          updatedAt: "2026-08-01T10:00:00.000Z",
-          targetDistanceMetres: 5000,
-          targetDurationSeconds: 1800,
-          actualDistanceMetres: null,
-          actualDurationSeconds: null,
-        }),
+        json: vi.fn().mockResolvedValue(
+          createRunActivity({
+            title: "Easy run",
+            date: range.from,
+            timeOfDay: null,
+            targetDistanceMetres: 5000,
+            targetDurationSeconds: 1800,
+          }),
+        ),
       });
     }
     return Promise.resolve({
@@ -360,24 +313,12 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
 
 test("TrainingPlanner edits an activity and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = {
-    id: "11111111-1111-4111-8111-111111111111",
-    athleteId: "33333333-3333-4333-8333-333333333333",
+  const activity = createRunActivity({
     title: "Easy run",
-    activityType: "RUN",
-    status: "SCHEDULED",
     date: range.from,
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
-  };
+  });
   const updatedActivity = {
     ...activity,
     title: "Updated easy run",
@@ -443,24 +384,12 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
 
 test("TrainingPlanner deletes an activity and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = {
-    id: "11111111-1111-4111-8111-111111111111",
-    athleteId: "33333333-3333-4333-8333-333333333333",
+  const activity = createRunActivity({
     title: "Easy run",
-    activityType: "RUN",
-    status: "SCHEDULED",
     date: range.from,
-    timeOfDay: "AM",
-    description: null,
-    sortOrder: 0,
-    skipReason: null,
-    createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
-    actualDistanceMetres: null,
-    actualDurationSeconds: null,
-  };
+  });
   let deleted = false;
   const fetchMock = vi.fn().mockImplementation((_url, options) => {
     if (options?.method === "DELETE") {

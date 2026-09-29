@@ -5,6 +5,10 @@ import {
   skipTrainingSessionRequestSchema,
   trainingSessionSchema,
 } from "./training-sessions";
+import {
+  createRunActivity,
+  createStrengthActivity,
+} from "@/test-support/fixtures/activity";
 
 const baseSession = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -22,14 +26,7 @@ const baseSession = {
 
 test("trainingSessionSchema validates run read models", () => {
   expect(
-    trainingSessionSchema.parse({
-      ...baseSession,
-      activityType: "RUN",
-      targetDistanceMetres: 8000,
-      targetDurationSeconds: 2700,
-      actualDistanceMetres: null,
-      actualDurationSeconds: null,
-    }),
+    trainingSessionSchema.parse(createRunActivity({ title: "Easy run" })),
   ).toEqual({
     ...baseSession,
     activityType: "RUN",
@@ -59,16 +56,14 @@ test.each([undefined, null, "invalid"])(
 
 test("trainingSessionSchema validates strength read models", () => {
   expect(
-    trainingSessionSchema.parse({
-      ...baseSession,
-      id: "22222222-2222-4222-8222-222222222222",
-      athleteId: "33333333-3333-4333-8333-333333333333",
-      title: "Strength",
-      status: "COMPLETED",
-      activityType: "STRENGTH",
-      targetDurationSeconds: 2700,
-      actualDurationSeconds: 2400,
-    }),
+    trainingSessionSchema.parse(
+      createStrengthActivity({
+        id: "22222222-2222-4222-8222-222222222222",
+        status: "COMPLETED",
+        title: "Strength",
+        actualDurationSeconds: 2400,
+      }),
+    ),
   ).toEqual({
     ...baseSession,
     id: "22222222-2222-4222-8222-222222222222",
@@ -83,15 +78,14 @@ test("trainingSessionSchema validates strength read models", () => {
 
 test("trainingSessionSchema validates completed runs with required actuals", () => {
   expect(() =>
-    trainingSessionSchema.parse({
-      ...baseSession,
-      status: "COMPLETED",
-      activityType: "RUN",
-      targetDistanceMetres: 8000,
-      targetDurationSeconds: 2700,
-      actualDistanceMetres: 8050,
-      actualDurationSeconds: 2680,
-    }),
+    trainingSessionSchema.parse(
+      createRunActivity({
+        title: "Easy run",
+        status: "COMPLETED",
+        actualDistanceMetres: 8050,
+        actualDurationSeconds: 2680,
+      }),
+    ),
   ).not.toThrow();
 });
 
