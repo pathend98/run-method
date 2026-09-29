@@ -58,7 +58,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   constructor(
     private readonly repository: TrainingSessionsRepository,
     private readonly validator: TrainingSessionsValidator,
-    private readonly userService: UserService,
+    private readonly userService: Pick<UserService, "findById">,
   ) {}
 
   async find(query: TrainingSessionsQueryInput): Promise<TrainingSession[]> {
