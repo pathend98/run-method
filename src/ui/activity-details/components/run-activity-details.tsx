@@ -1,13 +1,10 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
+import { RunningMetrics } from "@/ui/running-metrics/running-metrics";
 import {
   formatDistance,
   formatDuration,
   formatPace,
 } from "@/ui/training-sessions/training-session-metric-formatters";
-import {
-  calculatePaceSecondsPerKilometre,
-  resolveRunTargets,
-} from "../utils/run-targets";
 import { ActivityDetailsBody } from "./activity-details-body";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
@@ -17,8 +14,13 @@ type RunActivityDetailsProps = {
 
 export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
   const measurementUnit = useDistanceDisplayUnit();
-  const { distanceMetres, durationSeconds, paceSecondsPerKilometre } =
-    resolveRunTargets(activity);
+  const runningMetrics = new RunningMetrics(measurementUnit);
+  const distanceMetres = activity.targetDistanceMetres;
+  const durationSeconds = activity.targetDurationSeconds;
+  const paceSecondsPerKilometre = runningMetrics.paceForRun(
+    distanceMetres,
+    durationSeconds,
+  );
   const targetDistance = formatDistance(distanceMetres, measurementUnit);
   const targetDuration = formatDuration(durationSeconds);
   const targetPace = formatPace(paceSecondsPerKilometre, measurementUnit);
@@ -46,7 +48,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
           </dt>
           <dd className="mt-1 text-2xl font-semibold text-zinc-950">
             {formatPace(
-              calculatePaceSecondsPerKilometre(actualDistance, actualDuration),
+              runningMetrics.paceForRun(actualDistance, actualDuration),
               measurementUnit,
             )}
           </dd>

@@ -5,14 +5,12 @@ import type {
   CompleteTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
+import {
+  RunningMetrics,
+  type RunningMetricUnit,
+} from "@/ui/running-metrics/running-metrics";
 import { DurationFormInput } from "@/ui/components/duration-form-input";
 import { RunFieldFormInput } from "@/ui/run-field-input/run-field-form-input";
-import {
-  formatDistanceInput,
-  formatPaceInput,
-  metresPerUnit,
-  type RunFieldUnit,
-} from "@/ui/run-field-input/run-field-units";
 import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
@@ -92,7 +90,7 @@ export function CompleteActivityForm({
 
 function defaultValues(
   activity: TrainingSession,
-  unit: RunFieldUnit,
+  unit: RunningMetricUnit,
 ): CompleteActivityFormValues {
   const duration = durationSecondsToFields(activity.targetDurationSeconds);
   if (activity.activityType !== "RUN") {
@@ -106,15 +104,9 @@ function defaultValues(
   return {
     ...duration,
     derivedMetric: "pace",
-    distance:
-      unit === "MILES"
-        ? formatDistanceInput(activity.targetDistanceMetres, unit)
-        : (activity.targetDistanceMetres / 1000).toFixed(1),
-    pace: formatPaceInput(
-      Math.round(
-        (activity.targetDurationSeconds * metresPerUnit(unit)) /
-          activity.targetDistanceMetres,
-      ),
+    ...new RunningMetrics(unit).prefill(
+      activity.targetDistanceMetres,
+      activity.targetDurationSeconds,
     ),
   };
 }

@@ -1,29 +1,16 @@
 import { z } from "zod";
 
 import type { TrainingSession } from "@/domain/training-sessions";
-import type { RunFieldUnit } from "@/ui/run-field-input/run-field-units";
+import {
+  RunningMetrics,
+  type RunningMetricUnit,
+} from "@/ui/running-metrics/running-metrics";
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/training-sessions/duration-fields";
-
-function positiveDistanceSchema(unit: RunFieldUnit) {
-  return z
-    .string()
-    .regex(
-      /^\d+(?:\.\d{1,3})?$/,
-      `Enter a distance in ${unit === "MILES" ? "miles" : "kilometres"}`,
-    )
-    .refine((value) => Number(value) > 0, "Distance must be greater than zero");
-}
-const paceSchema = z
-  .string()
-  .regex(/^\d+:[0-5]\d$/, "Enter pace as mm:ss")
-  .refine((value) => {
-    const [minutes, seconds] = value.split(":").map(Number);
-    return minutes * 60 + seconds > 0;
-  }, "Pace must be greater than zero");
+import { runFieldIssueMessage } from "@/ui/running-metrics/run-field-issues";
 
 const editActivityFormBaseSchema = z.object({
   title: z.string().trim().min(1, "Enter an activity title"),
@@ -42,7 +29,7 @@ export type EditActivityFormValues = z.infer<typeof editActivityFormBaseSchema>;
 
 export function createEditActivityFormSchema(
   activity: TrainingSession,
-  unit: RunFieldUnit,
+  unit: RunningMetricUnit,
 ) {
   return editActivityFormBaseSchema.superRefine((values, context) => {
     if (activity.status === "SKIPPED") {
@@ -58,31 +45,14 @@ export function createEditActivityFormSchema(
       return;
     }
 
-    validateField(
-      context,
-      "distance",
-      positiveDistanceSchema(unit),
-      values.distance,
-    );
-    validateDuration(context, values, true);
-    validateField(context, "pace", paceSchema, values.pace);
+    for (const issue of new RunningMetrics(unit).validate(values)) {
+      context.addIssue({
+        code: "custom",
+        path: [issue.field],
+        message: runFieldIssueMessage(issue, unit),
+      });
+    }
   });
-}
-
-function validateField(
-  context: z.RefinementCtx,
-  field: "distance" | "pace",
-  schema: z.ZodType<string>,
-  value: string,
-) {
-  const result = schema.safeParse(value);
-  if (!result.success) {
-    context.addIssue({
-      code: "custom",
-      path: [field],
-      message: result.error.issues[0].message,
-    });
-  }
 }
 
 function validateDuration(

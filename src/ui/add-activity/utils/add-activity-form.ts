@@ -5,32 +5,16 @@ import {
   type CreateTrainingSessionRequest,
 } from "@/domain/training-sessions";
 import {
+  RunningMetrics,
+  type RunningMetricUnit,
+} from "@/ui/running-metrics/running-metrics";
+import {
   defaultDurationFields,
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/training-sessions/duration-fields";
-import {
-  distanceToMetres,
-  type RunFieldUnit,
-} from "@/ui/run-field-input/run-field-units";
-
-function positiveDistanceSchema(unit: RunFieldUnit) {
-  return z
-    .string()
-    .regex(
-      /^\d+(?:\.\d{1,3})?$/,
-      `Enter a distance in ${unit === "MILES" ? "miles" : "kilometres"}`,
-    )
-    .refine((value) => Number(value) > 0, "Distance must be greater than zero");
-}
-const pace = z
-  .string()
-  .regex(/^\d+:[0-5]\d$/, "Enter pace as mm:ss")
-  .refine((value) => {
-    const [minutes, seconds] = value.split(":").map(Number);
-    return minutes * 60 + seconds > 0;
-  }, "Pace must be greater than zero");
+import { runFieldIssueMessage } from "@/ui/running-metrics/run-field-issues";
 
 const addActivityFormBaseSchema = z.object({
   title: z.string().trim().min(1, "Enter an activity title"),
@@ -45,23 +29,22 @@ const addActivityFormBaseSchema = z.object({
   pace: z.string(),
 });
 
-export function createAddActivityFormSchema(unit: RunFieldUnit) {
+export function createAddActivityFormSchema(unit: RunningMetricUnit) {
   return addActivityFormBaseSchema.superRefine((value, context) => {
     if (value.activityType === "STRENGTH") {
       if (!isZeroDuration(value)) {
-        validateDuration(context, value, false);
+        validateDuration(context, value);
       }
       return;
     }
 
-    validateField(
-      context,
-      "distance",
-      positiveDistanceSchema(unit),
-      value.distance,
-    );
-    validateDuration(context, value, true);
-    validateField(context, "pace", pace, value.pace);
+    for (const issue of new RunningMetrics(unit).validate(value)) {
+      context.addIssue({
+        code: "custom",
+        path: [issue.field],
+        message: runFieldIssueMessage(issue, unit),
+      });
+    }
   });
 }
 
@@ -81,7 +64,7 @@ export const defaultAddActivityFormValues: AddActivityFormValues = {
 export function toCreateTrainingSessionRequest(
   values: AddActivityFormValues,
   date: string,
-  unit: RunFieldUnit,
+  unit: RunningMetricUnit,
 ): CreateTrainingSessionRequest {
   const parsed = createAddActivityFormSchema(unit).parse(values);
   const base = {
@@ -102,7 +85,7 @@ export function toCreateTrainingSessionRequest(
     });
   }
 
-  const distance = distanceToMetres(parsed.distance, unit);
+  const distance = new RunningMetrics(unit).readDistanceInput(parsed.distance);
   const duration = durationFieldsToSeconds(parsed);
   return createTrainingSessionRequestSchema.parse({
     ...base,
@@ -112,28 +95,7 @@ export function toCreateTrainingSessionRequest(
   });
 }
 
-function validateField(
-  context: z.RefinementCtx,
-  field: "distance" | "pace",
-  schema: z.ZodType<string>,
-  value: string,
-) {
-  const result = schema.safeParse(value);
-  if (!result.success) {
-    const [issue] = result.error.issues;
-    context.addIssue({
-      code: "custom",
-      path: [field],
-      message: issue.message,
-    });
-  }
-}
-
-function validateDuration(
-  context: z.RefinementCtx,
-  values: DurationFields,
-  required: boolean,
-) {
+function validateDuration(context: z.RefinementCtx, values: DurationFields) {
   const result = durationFieldsSchema.safeParse(values);
   if (!result.success) {
     for (const issue of result.error.issues) {
@@ -143,13 +105,6 @@ function validateDuration(
         message: issue.message,
       });
     }
-  }
-  if (required && durationFieldsToSeconds(values) === 0) {
-    context.addIssue({
-      code: "custom",
-      path: ["durationHours"],
-      message: "Duration must be greater than zero",
-    });
   }
 }
 

@@ -1,12 +1,11 @@
 import { FormField } from "@/ui/components/form-field";
 import { Button } from "@/ui/components/button";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
+import type {
+  RunningMetric as RunFieldMetric,
+  RunningMetricInput as RunFieldInputValue,
+} from "@/ui/running-metrics/running-metrics";
 import { useRunFieldInputController } from "../hooks/use-run-field-input-controller";
-import {
-  metricLabel,
-  type RunFieldInputValue,
-  type RunFieldMetric,
-} from "../utils/run-field-calculations";
 import { RunDurationField } from "./run-duration-field";
 
 export type RunFieldInputErrors = Partial<
@@ -110,7 +109,7 @@ export function RunFieldInput({
 
       {controller.pendingMetric ? (
         <div
-          aria-label={`Choose a fixed value after changing ${metricLabel(controller.pendingMetric)}`}
+          aria-label={`Choose a fixed value after changing ${controller.pendingMetric}`}
           className="rounded-md border border-teal-200 bg-teal-50 p-3"
           role="group"
         >
@@ -127,7 +126,7 @@ export function RunFieldInput({
                 type="button"
                 variant="secondary"
               >
-                Keep {metricLabel(metric)}
+                Keep {metric}
               </Button>
             ))}
           </div>

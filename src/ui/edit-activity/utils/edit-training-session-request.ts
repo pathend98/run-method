@@ -3,12 +3,11 @@ import {
   type EditTrainingSessionRequest,
   type TrainingSession,
 } from "@/domain/training-sessions";
-import { durationFieldsToSeconds } from "@/ui/training-sessions/duration-fields";
 import {
-  distanceToMetres,
-  formatDistanceInput,
-  type RunFieldUnit,
-} from "@/ui/run-field-input/run-field-units";
+  RunningMetrics,
+  type RunningMetricUnit,
+} from "@/ui/running-metrics/running-metrics";
+import { durationFieldsToSeconds } from "@/ui/training-sessions/duration-fields";
 import {
   createEditActivityFormSchema,
   type EditActivityFormValues,
@@ -17,9 +16,10 @@ import {
 export function toEditTrainingSessionRequest(
   values: EditActivityFormValues,
   activity: TrainingSession,
-  unit: RunFieldUnit,
+  unit: RunningMetricUnit,
 ): EditTrainingSessionRequest {
   const parsed = createEditActivityFormSchema(activity, unit).parse(values);
+  const metrics = new RunningMetrics(unit);
   const base = {
     title: parsed.title,
     description: parsed.description.trim() || null,
@@ -54,10 +54,9 @@ export function toEditTrainingSessionRequest(
       activityType: activity.activityType,
       targetDistanceMetres: activity.targetDistanceMetres,
       targetDurationSeconds: activity.targetDurationSeconds,
-      actualDistanceMetres: requestDistance(
+      actualDistanceMetres: metrics.readDistanceInput(
         parsed.distance,
         activity.actualDistanceMetres ?? activity.targetDistanceMetres,
-        unit,
       ),
       actualDurationSeconds: durationFieldsToSeconds(parsed),
     });
@@ -72,10 +71,9 @@ export function toEditTrainingSessionRequest(
     });
   }
 
-  const distance = requestDistance(
+  const distance = metrics.readDistanceInput(
     parsed.distance,
     activity.targetDistanceMetres,
-    unit,
   );
   const duration = durationFieldsToSeconds(parsed);
   return editTrainingSessionRequestSchema.parse({
@@ -84,14 +82,4 @@ export function toEditTrainingSessionRequest(
     targetDistanceMetres: distance,
     targetDurationSeconds: duration,
   });
-}
-
-function requestDistance(
-  distance: string,
-  originalMetres: number,
-  unit: RunFieldUnit,
-) {
-  return distance === formatDistanceInput(originalMetres, unit)
-    ? originalMetres
-    : distanceToMetres(distance, unit);
 }

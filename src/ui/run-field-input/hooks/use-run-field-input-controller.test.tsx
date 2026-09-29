@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { useState } from "react";
 
-import type { RunFieldInputValue } from "../utils/run-field-calculations";
+import type { RunningMetricInput as RunFieldInputValue } from "@/ui/running-metrics/running-metrics";
 import { useRunFieldInputController } from "./use-run-field-input-controller";
 
 const emptyValue: RunFieldInputValue = {

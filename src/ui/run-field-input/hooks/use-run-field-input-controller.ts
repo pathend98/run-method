@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
-  calculateDerivedMetric,
-  clearMetric,
-  isValidRunMetric,
-  otherMetric,
-  type RunFieldInputValue,
-  type RunFieldMetric,
-} from "../utils/run-field-calculations";
-import type { RunFieldUnit } from "../run-field-units";
+  RunningMetrics,
+  type RunningMetricInput as RunFieldInputValue,
+  type RunningMetric as RunFieldMetric,
+  type RunningMetricUnit as RunFieldUnit,
+} from "@/ui/running-metrics/running-metrics";
 
 type UseRunFieldInputControllerOptions = {
   onChange: (value: RunFieldInputValue) => void;
@@ -25,8 +22,9 @@ export function useRunFieldInputController({
   unit,
   value,
 }: UseRunFieldInputControllerOptions) {
+  const runningMetrics = new RunningMetrics(unit);
   const [enteredMetrics, setEnteredMetrics] = useState<RunFieldMetric[]>(() =>
-    metricOrder.filter((metric) => isValidRunMetric(metric, value, unit)),
+    metricOrder.filter((metric) => runningMetrics.inspect(value)[metric]),
   );
   const [pendingMetric, setPendingMetric] = useState<RunFieldMetric | null>(
     null,
@@ -54,25 +52,28 @@ export function useRunFieldInputController({
     }
 
     if (value.derivedMetric !== null) {
-      if (!isValidRunMetric(metric, next, unit)) {
-        onChange(clearMetric(next, value.derivedMetric));
+      if (!runningMetrics.inspect(next)[metric]) {
+        onChange(runningMetrics.clear(next, value.derivedMetric));
         return;
       }
-      onChange(calculateDerivedMetric(next, value.derivedMetric, unit) ?? next);
+      onChange(runningMetrics.derive(next, value.derivedMetric) ?? next);
       return;
     }
 
-    let nextEntered = enteredMetrics.filter((entered) =>
-      isValidRunMetric(entered, next, unit),
+    let nextEntered = enteredMetrics.filter(
+      (entered) => runningMetrics.inspect(next)[entered],
     );
-    if (isValidRunMetric(metric, next, unit) && !nextEntered.includes(metric)) {
+    if (runningMetrics.inspect(next)[metric] && !nextEntered.includes(metric)) {
       nextEntered = [...nextEntered, metric];
     }
     setEnteredMetrics(nextEntered);
 
     if (nextEntered.length >= 2) {
-      const derivedMetric = otherMetric(nextEntered[0], nextEntered[1]);
-      onChange(calculateDerivedMetric(next, derivedMetric, unit)!);
+      const derivedMetric = runningMetrics.firstDerived(
+        nextEntered[0],
+        nextEntered[1],
+      );
+      onChange(runningMetrics.derive(next, derivedMetric)!);
       return;
     }
     onChange(next);
@@ -87,8 +88,8 @@ export function useRunFieldInputController({
       return;
     }
 
-    const calculated = calculateDerivedMetric(value, metric, unit);
-    if (!isValidRunMetric(metric, value, unit) || calculated === null) {
+    const calculated = runningMetrics.derive(value, metric);
+    if (!runningMetrics.inspect(value)[metric] || calculated === null) {
       autoValueOnFocus.current = null;
       return;
     }
@@ -105,8 +106,11 @@ export function useRunFieldInputController({
 
   function keepMetric(fixedMetric: RunFieldMetric) {
     const editedMetric = pendingMetric!;
-    const nextDerived = otherMetric(editedMetric, fixedMetric);
-    const calculated = calculateDerivedMetric(value, nextDerived, unit);
+    const calculated = runningMetrics.chooseFixed(
+      value,
+      editedMetric,
+      fixedMetric,
+    );
     if (calculated === null) return;
     onChange(calculated);
     setEnteredMetrics([fixedMetric, editedMetric]);
