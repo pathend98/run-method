@@ -13,6 +13,8 @@ export type CreateUserSession = UserIdentity & {
   refreshToken: string;
 };
 
+export type VerifiedUserIdentity = CreateUser & CreateUserSession;
+
 export type CreateUserSessionRecord = {
   userId: string;
   accessToken: string | null;

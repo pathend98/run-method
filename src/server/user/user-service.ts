@@ -2,9 +2,9 @@ import { createHash, randomBytes } from "node:crypto";
 
 import type { UpdateUserProfile, User } from "@/domain/user-types";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
-import { UserNotFoundError } from "./user-errors";
+import { IdentityAlreadyExistsError, UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
-import type { CreateUser, CreateUserSession, UserIdentity } from "./user-types";
+import type { VerifiedUserIdentity } from "./user-types";
 import {
   GUEST_USER_MAX_AGE_SECONDS,
   SESSION_MAX_AGE_SECONDS,
@@ -12,16 +12,14 @@ import {
 
 export interface UserService {
   findById(id: string): Promise<User>;
-  findByIdentity(identity: UserIdentity): Promise<User>;
   findBySessionKey(sessionKey: string): Promise<User>;
-  create(input: CreateUser): Promise<User>;
-  createGuestUser(): Promise<User>;
-  promoteGuestUser(userId: string, identity: CreateUser): Promise<User>;
   updateProfile(userId: string, input: UpdateUserProfile): Promise<User>;
-  deleteGuestUser(userId: string): Promise<void>;
-  createSession(input: CreateUserSession): Promise<string>;
-  createGuestUserSession(userId: string): Promise<string>;
   deleteSession(sessionKey: string): Promise<string | null>;
+  startGuestSession(): Promise<string>;
+  completeIdentitySignIn(
+    identity: VerifiedUserIdentity,
+    previousSessionKey?: string,
+  ): Promise<string>;
 }
 
 export class DefaultUserService implements UserService {
@@ -46,12 +44,6 @@ export class DefaultUserService implements UserService {
     return user;
   }
 
-  async findByIdentity(identity: UserIdentity): Promise<User> {
-    const user = await this.repository.findByIdentity(identity);
-    if (!user) throw new UserNotFoundError();
-    return user;
-  }
-
   async findBySessionKey(sessionKey: string): Promise<User> {
     if (!sessionKey) throw new UserNotFoundError();
 
@@ -66,41 +58,68 @@ export class DefaultUserService implements UserService {
     return user;
   }
 
-  create(input: CreateUser): Promise<User> {
-    return this.repository.create(input);
-  }
-
-  createGuestUser(): Promise<User> {
-    return this.repository.createGuestUser(
+  async startGuestSession(): Promise<string> {
+    const guest = await this.repository.createGuestUser(
       new Date(Date.now() + GUEST_USER_MAX_AGE_SECONDS * 1000),
     );
+    const activeGuest = await this.repository.findById(guest.id);
+    if (activeGuest?.kind !== "GUEST") throw new UserNotFoundError();
+    return this.persistSession(activeGuest.id, null, null, null);
   }
 
-  promoteGuestUser(userId: string, identity: CreateUser): Promise<User> {
-    return this.repository.promoteGuestUser(userId, identity);
-  }
-
-  deleteGuestUser(userId: string): Promise<void> {
-    return this.repository.deleteGuestUser(userId);
-  }
-
-  async createGuestUserSession(userId: string): Promise<string> {
-    const user = await this.repository.findById(userId);
-    if (user?.kind !== "GUEST") throw new UserNotFoundError();
-    return this.persistSession(user.id, null, null, null);
-  }
-
-  async createSession(input: CreateUserSession): Promise<string> {
-    const identity = await this.repository.findByIdentity(input);
-    if (identity?.kind !== "REGISTERED") {
-      throw new UserNotFoundError();
+  async completeIdentitySignIn(
+    identity: VerifiedUserIdentity,
+    previousSessionKey?: string,
+  ): Promise<string> {
+    let previousUser: User | null = null;
+    if (previousSessionKey) {
+      try {
+        previousUser = await this.findBySessionKey(previousSessionKey);
+      } catch (error) {
+        if (!(error instanceof UserNotFoundError)) throw error;
+      }
+      await this.deleteSession(previousSessionKey);
     }
 
+    const { issuer, subject, email } = identity;
+    const existingUser = await this.repository.findByIdentity({
+      issuer,
+      subject,
+    });
+    if (previousUser?.kind === "GUEST") {
+      if (existingUser) {
+        await this.repository.deleteGuestUser(previousUser.id);
+      } else {
+        try {
+          await this.repository.promoteGuestUser(previousUser.id, {
+            issuer,
+            subject,
+            email,
+          });
+        } catch (error) {
+          if (!(error instanceof IdentityAlreadyExistsError)) throw error;
+          const claimedUser = await this.repository.findByIdentity({
+            issuer,
+            subject,
+          });
+          if (!claimedUser) throw new UserNotFoundError();
+          await this.repository.deleteGuestUser(previousUser.id);
+        }
+      }
+    } else if (!existingUser) {
+      await this.repository.create({ issuer, subject, email });
+    }
+
+    const registeredUser = await this.repository.findByIdentity({
+      issuer,
+      subject,
+    });
+    if (registeredUser?.kind !== "REGISTERED") throw new UserNotFoundError();
     return this.persistSession(
-      identity.id,
-      input.accessToken,
-      input.idToken,
-      input.refreshToken,
+      registeredUser.id,
+      identity.accessToken,
+      identity.idToken,
+      identity.refreshToken,
     );
   }
 

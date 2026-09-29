@@ -10,9 +10,7 @@ import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-constants";
 
 export async function GET() {
   try {
-    const userService = getUserService();
-    const user = await userService.createGuestUser();
-    const sessionKey = await userService.createGuestUserSession(user.id);
+    const sessionKey = await getUserService().startGuestSession();
     const response = NextResponse.redirect(
       new URL("/", readAppEnv().APP_BASE_URL),
     );
