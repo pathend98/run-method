@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.8.0](https://github.com/pathend98/run-method/compare/v0.7.0...v0.8.0) (2026-09-29)
+
+### Features
+
+- allow activity distance and pace to be input using miles or kilometres ([44b5821](https://github.com/pathend98/run-method/commit/44b5821f1e746d6b6af77a9652fabb371fad4cbd))
+- ensure activity distances can be shown in miles or kilometres ([060be50](https://github.com/pathend98/run-method/commit/060be502a90a22cfa04032802baa87170a56bb7d))
+- introduce name and measurement unit fields for user ([458b7f0](https://github.com/pathend98/run-method/commit/458b7f018c215e5e611b729255dc14769fcd78d2))
+- provide page to allow user to alter their name and measurement unit ([7f90622](https://github.com/pathend98/run-method/commit/7f9062283faa4485756659601bd968a8a5bda90f))
+- show pace in either miles or kilometres depending on user preference ([4b30e10](https://github.com/pathend98/run-method/commit/4b30e10ffcc350e5703058cf92012f7fbd98d4a8))
+
 ## [0.7.0](https://github.com/pathend98/run-method/compare/v0.6.0...v0.7.0) (2026-09-28)
 
 ### Features
