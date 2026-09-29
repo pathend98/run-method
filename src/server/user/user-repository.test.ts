@@ -1,5 +1,6 @@
 import { userIdentities, userSessions, users } from "@db/schema";
 import { PgDialect } from "drizzle-orm/pg-core";
+import { createUser } from "@/test-support/fixtures/user";
 import { DrizzleUserRepository } from "./user-repository";
 import { IdentityAlreadyExistsError } from "./user-errors";
 import { UserNotFoundError } from "./user-errors";
@@ -48,21 +49,21 @@ const input = {
   subject: "subject-1",
   email: "runner@example.com",
 };
-const user = {
+const user = createUser({
   id: "11111111-1111-4111-8111-111111111111",
-  kind: "REGISTERED" as const,
-  expiresAt: null,
-  firstName: null,
-  measurementUnit: "KILOMETRES" as const,
-};
-const guestUser = {
-  ...user,
-  kind: "GUEST" as const,
+});
+const guestUser = createUser({
+  id: user.id,
+  kind: "GUEST",
   expiresAt: new Date("2026-10-01T12:00:00.000Z"),
-};
+});
 
 test("updates only a registered user's profile", async () => {
-  const updated = { ...user, firstName: "Ada", measurementUnit: "MILES" };
+  const updated = createUser({
+    ...user,
+    firstName: "Ada",
+    measurementUnit: "MILES",
+  });
   const returning = vi.fn().mockResolvedValue([updated]);
   const where = vi.fn().mockReturnValue({ returning });
   const set = vi.fn().mockReturnValue({ where });
@@ -322,11 +323,11 @@ test("inserts a guest user without an identity", async () => {
 });
 
 test("promotes a guest and links its identity in one transaction", async () => {
-  const promoted = {
+  const promoted = createUser({
     ...guestUser,
-    kind: "REGISTERED" as const,
+    kind: "REGISTERED",
     expiresAt: null,
-  };
+  });
   const updateReturning = vi.fn().mockResolvedValue([promoted]);
   const updateWhere = vi.fn().mockReturnValue({ returning: updateReturning });
   const set = vi.fn().mockReturnValue({ where: updateWhere });
@@ -361,7 +362,9 @@ test("promotes a guest and links its identity in one transaction", async () => {
 test("rolls back guest promotion if identity linking conflicts", async () => {
   const updateReturning = vi
     .fn()
-    .mockResolvedValue([{ ...guestUser, kind: "REGISTERED", expiresAt: null }]);
+    .mockResolvedValue([
+      createUser({ ...guestUser, kind: "REGISTERED", expiresAt: null }),
+    ]);
   const tx = {
     update: vi.fn().mockReturnValue({
       set: vi.fn().mockReturnValue({

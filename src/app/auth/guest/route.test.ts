@@ -1,3 +1,4 @@
+import { createUser } from "@/test-support/fixtures/user";
 import { GET } from "./route";
 
 const createGuestUser = vi.hoisted(() => vi.fn());
@@ -19,7 +20,9 @@ test.each(["https://app.example.com", "https://app.example.com/"])(
   "creates a guest session and redirects to the app root with the regular cookie (%s)",
   async (baseUrl) => {
     appEnv.APP_BASE_URL = baseUrl;
-    createGuestUser.mockResolvedValue({ id: "guest-id" });
+    createGuestUser.mockResolvedValue(
+      createUser({ id: "guest-id", kind: "GUEST" }),
+    );
     createGuestUserSession.mockResolvedValue("session-key");
 
     const response = await GET();
@@ -43,7 +46,9 @@ test.each(["https://app.example.com", "https://app.example.com/"])(
 test.each(["createGuestUser", "createGuestUserSession"])(
   "returns an error without a session cookie when %s fails",
   async (operation) => {
-    createGuestUser.mockResolvedValue({ id: "guest-id" });
+    createGuestUser.mockResolvedValue(
+      createUser({ id: "guest-id", kind: "GUEST" }),
+    );
     createGuestUserSession.mockResolvedValue("session-key");
     (operation === "createGuestUser"
       ? createGuestUser

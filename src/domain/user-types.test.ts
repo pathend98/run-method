@@ -1,20 +1,16 @@
+import { createUser } from "@/test-support/fixtures/user";
 import { updateUserProfileSchema, userSchema } from "./user-types";
 
-const registeredUser = {
-  id: "user-id",
-  kind: "REGISTERED",
-  expiresAt: null,
+const registeredUser = createUser({
   firstName: "Ada",
   measurementUnit: "MILES",
-};
+});
 
-const guestUser = {
+const guestUser = createUser({
   id: "guest-id",
   kind: "GUEST",
   expiresAt: new Date("2026-10-01T12:00:00.000Z"),
-  firstName: null,
-  measurementUnit: "KILOMETRES",
-};
+});
 
 test("userSchema accepts registered and guest users", () => {
   expect(userSchema.parse(registeredUser)).toEqual(registeredUser);
@@ -22,7 +18,7 @@ test("userSchema accepts registered and guest users", () => {
   expect(
     userSchema.parse({
       ...guestUser,
-      expiresAt: guestUser.expiresAt.toISOString(),
+      expiresAt: guestUser.expiresAt!.toISOString(),
     }),
   ).toEqual(guestUser);
 });

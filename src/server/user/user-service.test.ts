@@ -2,22 +2,19 @@ import { createHash } from "node:crypto";
 
 import type { User } from "@/domain/user-types";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
+import { createUser } from "@/test-support/fixtures/user";
 import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import { DefaultUserService } from "./user-service";
 
-const registeredUser: User = {
+const registeredUser = createUser({
   id: "11111111-1111-4111-8111-111111111111",
-  kind: "REGISTERED",
-  expiresAt: null,
-  firstName: null,
-  measurementUnit: "KILOMETRES",
-};
-const guestUser: User = {
-  ...registeredUser,
+});
+const guestUser = createUser({
+  id: registeredUser.id,
   kind: "GUEST",
   expiresAt: new Date("2026-10-01T12:00:00.000Z"),
-};
+});
 
 test.each(["id-token", null])(
   "deletes a session using its hash and returns %s",
@@ -116,11 +113,11 @@ function sessionService(identity: User | null = registeredUser) {
 
 test("updates only a registered user's profile", async () => {
   const { service, repository } = sessionService();
-  const updated = {
+  const updated = createUser({
     ...registeredUser,
     firstName: "Ada",
-    measurementUnit: "MILES" as const,
-  };
+    measurementUnit: "MILES",
+  });
   vi.mocked(repository.findById).mockResolvedValue(registeredUser);
   vi.mocked(repository.updateRegisteredProfile).mockResolvedValue(updated);
   const input = { firstName: "Ada", measurementUnit: "MILES" as const };
@@ -281,11 +278,11 @@ test("promotes a guest through the repository and preserves its ID", async () =>
     subject: "subject",
     email: "runner@example.com",
   };
-  const promoted = {
+  const promoted = createUser({
     ...guestUser,
-    kind: "REGISTERED" as const,
+    kind: "REGISTERED",
     expiresAt: null,
-  };
+  });
   vi.mocked(repository.promoteGuestUser).mockResolvedValue(promoted);
 
   await expect(

@@ -8,6 +8,7 @@ import {
 import { format, subDays } from "date-fns";
 
 import { QueryProvider } from "@/app/query-provider";
+import { createUser } from "@/test-support/fixtures/user";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
 import { TrainingPlanner } from "./training-planner";
 import { getCurrentWeekRange } from "./services/training-planner-service";
@@ -25,13 +26,11 @@ function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
     url === "/api/v1/me"
       ? Promise.resolve({
           ok: true,
-          json: vi.fn().mockResolvedValue({
-            id: athleteId,
-            kind: "REGISTERED",
-            expiresAt: null,
-            firstName: null,
-            measurementUnit: "KILOMETRES",
-          }),
+          json: vi.fn().mockResolvedValue(
+            createUser({
+              id: athleteId,
+            }),
+          ),
         })
       : options === undefined
         ? fetchMock(url)

@@ -6,6 +6,7 @@ import type {
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
 import type { TrainingActivity } from "./types/training-planner-types";
 import { QueryProvider } from "@/app/query-provider";
+import { createUser } from "@/test-support/fixtures/user";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
 
 const navigation = vi.hoisted(() => ({
@@ -71,13 +72,11 @@ test("persists a drag move through the existing edit mutation", async () => {
     if (_url === "/api/v1/me") {
       return Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue({
-          id: "33333333-3333-4333-8333-333333333333",
-          kind: "REGISTERED",
-          expiresAt: null,
-          firstName: null,
-          measurementUnit: "KILOMETRES",
-        }),
+        json: vi.fn().mockResolvedValue(
+          createUser({
+            id: "33333333-3333-4333-8333-333333333333",
+          }),
+        ),
       });
     }
     if (options?.method === "PATCH") {

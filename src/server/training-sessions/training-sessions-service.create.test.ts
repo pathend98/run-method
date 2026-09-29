@@ -4,6 +4,7 @@ import { UserNotFoundError } from "../user/user-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
+import { createUser } from "@/test-support/fixtures/user";
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
 const request: CreateTrainingSessionInput = {
@@ -44,13 +45,11 @@ test.each([undefined, null, "invalid"])(
 
 test("checks the athlete before creating a session", async () => {
   const { repository, service, userService } = createService();
-  vi.mocked(userService.findById).mockResolvedValue({
-    id: athleteId,
-    kind: "REGISTERED",
-    expiresAt: null,
-    firstName: null,
-    measurementUnit: "KILOMETRES",
-  });
+  vi.mocked(userService.findById).mockResolvedValue(
+    createUser({
+      id: athleteId,
+    }),
+  );
   vi.mocked(repository.create).mockResolvedValue({ id: "created" } as never);
 
   await service.create(request);

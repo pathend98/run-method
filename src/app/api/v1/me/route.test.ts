@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
+import { createUser } from "@/test-support/fixtures/user";
 
 import { GET, PATCH } from "./route";
 
@@ -29,20 +30,15 @@ function meRequest(sessionKey?: string) {
 }
 
 test.each([
-  {
-    id: "user-id",
-    kind: "REGISTERED",
-    expiresAt: null,
+  createUser({
     firstName: "Ada",
     measurementUnit: "MILES",
-  },
-  {
+  }),
+  createUser({
     id: "guest-id",
     kind: "GUEST",
     expiresAt: new Date("2026-10-01T12:00:00.000Z"),
-    firstName: null,
-    measurementUnit: "KILOMETRES",
-  },
+  }),
 ])("returns the full user with the active session (%s)", async (user) => {
   findBySessionKey.mockResolvedValue(user);
 
@@ -99,14 +95,8 @@ function patchRequest(body: string, sessionKey = "session-key") {
 }
 
 test("updates a registered user's profile and returns the full user", async () => {
-  const user = {
-    id: "user-id",
-    kind: "REGISTERED",
-    expiresAt: null,
-    firstName: null,
-    measurementUnit: "KILOMETRES",
-  };
-  const updated = { ...user, firstName: "Ada", measurementUnit: "MILES" };
+  const user = createUser();
+  const updated = createUser({ firstName: "Ada", measurementUnit: "MILES" });
   findBySessionKey.mockResolvedValue(user);
   validateUpdate.mockReturnValue({
     firstName: "Ada",
@@ -143,7 +133,7 @@ test("rejects unauthenticated profile updates", async () => {
 });
 
 test("rejects malformed JSON", async () => {
-  findBySessionKey.mockResolvedValue({ id: "user-id", kind: "REGISTERED" });
+  findBySessionKey.mockResolvedValue(createUser());
 
   const response = await PATCH(patchRequest("{"));
 
@@ -155,7 +145,7 @@ test("rejects malformed JSON", async () => {
 });
 
 test("returns 400 for an invalid profile update", async () => {
-  findBySessionKey.mockResolvedValue({ id: "user-id", kind: "REGISTERED" });
+  findBySessionKey.mockResolvedValue(createUser());
   validateUpdate.mockImplementation(() => {
     throw new BadRequestError("Invalid user profile");
   });
@@ -170,7 +160,9 @@ test("returns 400 for an invalid profile update", async () => {
 });
 
 test("rejects guest profile updates", async () => {
-  findBySessionKey.mockResolvedValue({ id: "guest-id", kind: "GUEST" });
+  findBySessionKey.mockResolvedValue(
+    createUser({ id: "guest-id", kind: "GUEST" }),
+  );
   validateUpdate.mockReturnValue({ measurementUnit: "MILES" });
   updateProfile.mockRejectedValue(new ForbiddenError());
 

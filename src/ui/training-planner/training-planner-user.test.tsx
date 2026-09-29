@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
+import { createUser } from "@/test-support/fixtures/user";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
 import { TrainingPlanner } from "./training-planner";
 
@@ -41,13 +42,11 @@ test("waits for the user ID before fetching sessions", async () => {
   });
   userResponse.resolve({
     ok: true,
-    json: vi.fn().mockResolvedValue({
-      id: athleteId,
-      kind: "REGISTERED",
-      expiresAt: null,
-      firstName: null,
-      measurementUnit: "KILOMETRES",
-    }),
+    json: vi.fn().mockResolvedValue(
+      createUser({
+        id: athleteId,
+      }),
+    ),
   });
   await screen.findByRole("list", { name: "Weekly training planner" });
   expect(fetchMock).toHaveBeenCalledWith(
@@ -63,17 +62,13 @@ test("retries a failed current-user lookup", async () => {
       return Promise.resolve({
         ok: userRequests > 1,
         status: userRequests > 1 ? 200 : 500,
-        json: vi.fn().mockResolvedValue(
-          userRequests > 1
-            ? {
-                id: athleteId,
-                kind: "REGISTERED",
-                expiresAt: null,
-                firstName: null,
-                measurementUnit: "KILOMETRES",
-              }
-            : { error: "Lookup failed" },
-        ),
+        json: vi
+          .fn()
+          .mockResolvedValue(
+            userRequests > 1
+              ? createUser({ id: athleteId })
+              : { error: "Lookup failed" },
+          ),
       });
     }
     return Promise.resolve({

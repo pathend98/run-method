@@ -2,15 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import type { User } from "@/domain/user-types";
+import { createUser } from "@/test-support/fixtures/user";
 import { SettingsForm } from "./settings-form";
 
-const registered: User = {
-  id: "user-id",
-  kind: "REGISTERED",
-  expiresAt: null,
+const registered = createUser({
   firstName: "Ada",
-  measurementUnit: "KILOMETRES",
-};
+});
 
 function renderForm(user: User = registered) {
   const fetchMock = vi.fn();
@@ -38,7 +35,7 @@ test("initializes from the user and does not submit unchanged values", async () 
 });
 
 test("initializes a missing first name as blank", () => {
-  renderForm({ ...registered, firstName: null });
+  renderForm(createUser({ firstName: null }));
   expect(screen.getByLabelText("First name")).toHaveProperty("value", "");
 });
 
@@ -52,11 +49,12 @@ test("saves trimmed values, updates the form, and clears its changed state", asy
   });
   fetchMock.mockResolvedValueOnce({
     ok: true,
-    json: vi.fn().mockResolvedValue({
-      ...registered,
-      firstName: "Grace",
-      measurementUnit: "MILES",
-    }),
+    json: vi.fn().mockResolvedValue(
+      createUser({
+        firstName: "Grace",
+        measurementUnit: "MILES",
+      }),
+    ),
   });
 
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
@@ -93,7 +91,7 @@ test("clears a saved name by sending null", async () => {
   });
   fetchMock.mockResolvedValueOnce({
     ok: true,
-    json: vi.fn().mockResolvedValue({ ...registered, firstName: null }),
+    json: vi.fn().mockResolvedValue(createUser({ firstName: null })),
   });
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 

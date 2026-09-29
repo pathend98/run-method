@@ -2,15 +2,12 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import type { User } from "@/domain/user-types";
+import { createUser } from "@/test-support/fixtures/user";
 import { Settings } from "./settings";
 
-const registered: User = {
-  id: "user-id",
-  kind: "REGISTERED",
-  expiresAt: null,
+const registered = createUser({
   firstName: "Ada",
-  measurementUnit: "KILOMETRES",
-};
+});
 
 function renderSettings(user: User = registered) {
   const fetchMock = vi.fn().mockResolvedValue({
@@ -38,7 +35,7 @@ test("shows the registered profile and read-only account details", async () => {
 });
 
 test("guests see a registration prompt and cannot edit settings", async () => {
-  renderSettings({ ...registered, kind: "GUEST", firstName: null });
+  renderSettings(createUser({ kind: "GUEST", firstName: null }));
 
   expect(await screen.findByText(/need to register/i)).toBeDefined();
   expect(

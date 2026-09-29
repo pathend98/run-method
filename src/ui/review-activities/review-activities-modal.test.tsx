@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import type { TrainingSession } from "@/domain/training-sessions";
+import { createUser } from "@/test-support/fixtures/user";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
@@ -57,17 +58,11 @@ function renderModal(response: TrainingSession[] = sessions) {
     vi.fn((url: string) =>
       Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue(
-          url === "/api/v1/me"
-            ? {
-                id: athleteId,
-                kind: "REGISTERED",
-                expiresAt: null,
-                firstName: null,
-                measurementUnit: "KILOMETRES",
-              }
-            : response,
-        ),
+        json: vi
+          .fn()
+          .mockResolvedValue(
+            url === "/api/v1/me" ? createUser({ id: athleteId }) : response,
+          ),
       }),
     ),
   );
