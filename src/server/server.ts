@@ -19,10 +19,13 @@ import { DefaultTrainingSessionsService } from "./training-sessions/training-ses
 import { DefaultTrainingSessionsTransformer } from "./training-sessions/training-sessions-transformer";
 import { DefaultTrainingSessionsValidator } from "./training-sessions/training-sessions-validator";
 import { DrizzleUserRepository } from "./user/user-repository";
+import { DefaultUserProfileRequestValidator } from "./user/user-profile-request-validator";
 import { DefaultUserService } from "./user/user-service";
 
 export const trainingSessionsRequestValidator =
   new DefaultTrainingSessionsRequestValidator();
+export const userProfileRequestValidator =
+  new DefaultUserProfileRequestValidator();
 
 let trainingSessionsService: DefaultTrainingSessionsService | undefined;
 let authenticationService: DefaultAuthenticationService | undefined;

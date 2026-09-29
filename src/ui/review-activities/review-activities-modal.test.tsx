@@ -57,13 +57,17 @@ function renderModal(response: TrainingSession[] = sessions) {
     vi.fn((url: string) =>
       Promise.resolve({
         ok: true,
-        json: vi
-          .fn()
-          .mockResolvedValue(
-            url === "/api/v1/me"
-              ? { id: athleteId, kind: "REGISTERED", expiresAt: null }
-              : response,
-          ),
+        json: vi.fn().mockResolvedValue(
+          url === "/api/v1/me"
+            ? {
+                id: athleteId,
+                kind: "REGISTERED",
+                expiresAt: null,
+                firstName: null,
+                measurementUnit: "KILOMETRES",
+              }
+            : response,
+        ),
       }),
     ),
   );

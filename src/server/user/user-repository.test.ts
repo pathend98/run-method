@@ -52,12 +52,54 @@ const user = {
   id: "11111111-1111-4111-8111-111111111111",
   kind: "REGISTERED" as const,
   expiresAt: null,
+  firstName: null,
+  measurementUnit: "KILOMETRES" as const,
 };
 const guestUser = {
   ...user,
   kind: "GUEST" as const,
   expiresAt: new Date("2026-10-01T12:00:00.000Z"),
 };
+
+test("updates only a registered user's profile", async () => {
+  const updated = { ...user, firstName: "Ada", measurementUnit: "MILES" };
+  const returning = vi.fn().mockResolvedValue([updated]);
+  const where = vi.fn().mockReturnValue({ returning });
+  const set = vi.fn().mockReturnValue({ where });
+  const update = vi.fn().mockReturnValue({ set });
+  const repository = new DrizzleUserRepository({ update } as never);
+  const input = { firstName: "Ada", measurementUnit: "MILES" as const };
+
+  await expect(
+    repository.updateRegisteredProfile(user.id, input),
+  ).resolves.toBe(updated);
+  expect(update).toHaveBeenCalledExactlyOnceWith(users);
+  expect(set).toHaveBeenCalledExactlyOnceWith(input);
+  const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
+  expect(query.sql).toContain('"user"."id" = $1');
+  expect(query.sql).toContain('"user"."kind" = $2');
+  expect(query.params).toEqual([user.id, "REGISTERED"]);
+  expect(returning).toHaveBeenCalledExactlyOnceWith({
+    id: users.id,
+    kind: users.kind,
+    expiresAt: users.expiresAt,
+    firstName: users.firstName,
+    measurementUnit: users.measurementUnit,
+  });
+});
+
+test("does not update a guest profile", async () => {
+  const returning = vi.fn().mockResolvedValue([]);
+  const where = vi.fn().mockReturnValue({ returning });
+  const set = vi.fn().mockReturnValue({ where });
+  const repository = new DrizzleUserRepository({
+    update: vi.fn().mockReturnValue({ set }),
+  } as never);
+
+  await expect(
+    repository.updateRegisteredProfile(guestUser.id, { firstName: "Ada" }),
+  ).rejects.toBeInstanceOf(UserNotFoundError);
+});
 
 function lookupRepository(rows: (typeof user)[]) {
   const limit = vi.fn().mockResolvedValue(rows);
@@ -92,6 +134,8 @@ test.each([{ rows: [user] }, { rows: [] }])(
       id: users.id,
       kind: users.kind,
       expiresAt: users.expiresAt,
+      firstName: users.firstName,
+      measurementUnit: users.measurementUnit,
     });
     const query = new PgDialect().sqlToQuery(where.mock.calls[0][0]);
     expect(query.sql).toContain('"user"."expires_at" is null');
@@ -111,6 +155,8 @@ test("finds the user joined to an identity", async () => {
     id: users.id,
     kind: users.kind,
     expiresAt: users.expiresAt,
+    firstName: users.firstName,
+    measurementUnit: users.measurementUnit,
   });
   expect(from).toHaveBeenCalledWith(userIdentities);
   expect(innerJoin).toHaveBeenCalledWith(users, expect.anything());
@@ -139,6 +185,8 @@ test("finds a user joined to an unexpired session", async () => {
     id: users.id,
     kind: users.kind,
     expiresAt: users.expiresAt,
+    firstName: users.firstName,
+    measurementUnit: users.measurementUnit,
   });
   expect(innerJoin).toHaveBeenCalledExactlyOnceWith(users, expect.anything());
   expect(new PgDialect().sqlToQuery(innerJoin.mock.calls[0][1]).sql).toBe(
@@ -211,6 +259,8 @@ test("creates the user and identity in one transaction", async () => {
     id: users.id,
     kind: users.kind,
     expiresAt: users.expiresAt,
+    firstName: users.firstName,
+    measurementUnit: users.measurementUnit,
   });
   expect(identityValues).toHaveBeenCalledWith({
     userId: user.id,
@@ -266,6 +316,8 @@ test("inserts a guest user without an identity", async () => {
     id: users.id,
     kind: users.kind,
     expiresAt: users.expiresAt,
+    firstName: users.firstName,
+    measurementUnit: users.measurementUnit,
   });
 });
 

@@ -22,9 +22,23 @@ export const users = pgTable(
       .notNull()
       .default("REGISTERED"),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
+    firstName: text("first_name"),
+    measurementUnit: text("measurement_unit", {
+      enum: ["KILOMETRES", "MILES"],
+    })
+      .notNull()
+      .default("KILOMETRES"),
   },
   (table) => [
     check("user_kind_valid", sql`${table.kind} in ('REGISTERED', 'GUEST')`),
+    check(
+      "user_first_name_valid",
+      sql`${table.firstName} is null or (length(trim(${table.firstName})) > 0 and length(${table.firstName}) <= 100)`,
+    ),
+    check(
+      "user_measurement_unit_valid",
+      sql`${table.measurementUnit} in ('KILOMETRES', 'MILES')`,
+    ),
     unique("user_id_kind_unique").on(table.id, table.kind),
   ],
 );

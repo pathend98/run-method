@@ -45,6 +45,8 @@ test("waits for the user ID before fetching sessions", async () => {
       id: athleteId,
       kind: "REGISTERED",
       expiresAt: null,
+      firstName: null,
+      measurementUnit: "KILOMETRES",
     }),
   });
   await screen.findByRole("list", { name: "Weekly training planner" });
@@ -61,13 +63,17 @@ test("retries a failed current-user lookup", async () => {
       return Promise.resolve({
         ok: userRequests > 1,
         status: userRequests > 1 ? 200 : 500,
-        json: vi
-          .fn()
-          .mockResolvedValue(
-            userRequests > 1
-              ? { id: athleteId, kind: "REGISTERED", expiresAt: null }
-              : { error: "Lookup failed" },
-          ),
+        json: vi.fn().mockResolvedValue(
+          userRequests > 1
+            ? {
+                id: athleteId,
+                kind: "REGISTERED",
+                expiresAt: null,
+                firstName: null,
+                measurementUnit: "KILOMETRES",
+              }
+            : { error: "Lookup failed" },
+        ),
       });
     }
     return Promise.resolve({

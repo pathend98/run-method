@@ -38,6 +38,8 @@ function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
             id: athleteId,
             kind: "REGISTERED",
             expiresAt: null,
+            firstName: null,
+            measurementUnit: "KILOMETRES",
           }),
         })
       : options === undefined

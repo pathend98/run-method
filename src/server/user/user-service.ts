@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
-import type { User } from "@/domain/user-types";
+import type { UpdateUserProfile, User } from "@/domain/user-types";
+import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import type { CreateUser, CreateUserSession, UserIdentity } from "./user-types";
@@ -16,6 +17,7 @@ export interface UserService {
   create(input: CreateUser): Promise<User>;
   createGuestUser(): Promise<User>;
   promoteGuestUser(userId: string, identity: CreateUser): Promise<User>;
+  updateProfile(userId: string, input: UpdateUserProfile): Promise<User>;
   deleteGuestUser(userId: string): Promise<void>;
   createSession(input: CreateUserSession): Promise<string>;
   createGuestUserSession(userId: string): Promise<string>;
@@ -24,6 +26,12 @@ export interface UserService {
 
 export class DefaultUserService implements UserService {
   constructor(private readonly repository: UserRepository) {}
+
+  async updateProfile(userId: string, input: UpdateUserProfile): Promise<User> {
+    const user = await this.findById(userId);
+    if (user.kind !== "REGISTERED") throw new ForbiddenError();
+    return this.repository.updateRegisteredProfile(userId, input);
+  }
 
   async deleteSession(sessionKey: string): Promise<string | null> {
     const sessionKeyHash = createHash("sha256")

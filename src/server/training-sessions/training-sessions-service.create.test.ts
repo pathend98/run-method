@@ -48,6 +48,8 @@ test("checks the athlete before creating a session", async () => {
     id: athleteId,
     kind: "REGISTERED",
     expiresAt: null,
+    firstName: null,
+    measurementUnit: "KILOMETRES",
   });
   vi.mocked(repository.create).mockResolvedValue({ id: "created" } as never);
 

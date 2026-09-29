@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { User } from "@/domain/user-types";
+import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { UserNotFoundError } from "./user-errors";
 import type { UserRepository } from "./user-repository";
 import { DefaultUserService } from "./user-service";
@@ -9,6 +10,8 @@ const registeredUser: User = {
   id: "11111111-1111-4111-8111-111111111111",
   kind: "REGISTERED",
   expiresAt: null,
+  firstName: null,
+  measurementUnit: "KILOMETRES",
 };
 const guestUser: User = {
   ...registeredUser,
@@ -51,6 +54,7 @@ test("finds a user by issuer and subject", async () => {
     create: vi.fn(),
     createGuestUser: vi.fn(),
     promoteGuestUser: vi.fn(),
+    updateRegisteredProfile: vi.fn(),
     deleteGuestUser: vi.fn(),
     createSession: vi.fn(),
   };
@@ -71,6 +75,7 @@ test("creates a user from an identity and email", async () => {
     create: vi.fn().mockResolvedValue(user),
     createGuestUser: vi.fn(),
     promoteGuestUser: vi.fn(),
+    updateRegisteredProfile: vi.fn(),
     deleteGuestUser: vi.fn(),
     createSession: vi.fn(),
   };
@@ -102,11 +107,42 @@ function sessionService(identity: User | null = registeredUser) {
     create: vi.fn(),
     createGuestUser: vi.fn(),
     promoteGuestUser: vi.fn(),
+    updateRegisteredProfile: vi.fn(),
     deleteGuestUser: vi.fn(),
     createSession: vi.fn().mockResolvedValue(undefined),
   };
   return { service: new DefaultUserService(repository), repository };
 }
+
+test("updates only a registered user's profile", async () => {
+  const { service, repository } = sessionService();
+  const updated = {
+    ...registeredUser,
+    firstName: "Ada",
+    measurementUnit: "MILES" as const,
+  };
+  vi.mocked(repository.findById).mockResolvedValue(registeredUser);
+  vi.mocked(repository.updateRegisteredProfile).mockResolvedValue(updated);
+  const input = { firstName: "Ada", measurementUnit: "MILES" as const };
+
+  await expect(service.updateProfile(registeredUser.id, input)).resolves.toBe(
+    updated,
+  );
+  expect(repository.updateRegisteredProfile).toHaveBeenCalledExactlyOnceWith(
+    registeredUser.id,
+    input,
+  );
+});
+
+test("refuses guest profile updates", async () => {
+  const { service, repository } = sessionService();
+  vi.mocked(repository.findById).mockResolvedValue(guestUser);
+
+  await expect(
+    service.updateProfile(guestUser.id, { measurementUnit: "MILES" }),
+  ).rejects.toBeInstanceOf(ForbiddenError);
+  expect(repository.updateRegisteredProfile).not.toHaveBeenCalled();
+});
 
 test("findById returns a matching user", async () => {
   const { service, repository } = sessionService();

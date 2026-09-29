@@ -2,7 +2,7 @@ import { and, eq, gt, isNull, or } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { userIdentities, userSessions, users } from "@db/schema";
-import type { User } from "@/domain/user-types";
+import type { UpdateUserProfile, User } from "@/domain/user-types";
 import { IdentityAlreadyExistsError, UserNotFoundError } from "./user-errors";
 import type {
   CreateUser,
@@ -14,6 +14,8 @@ const userSelection = {
   id: users.id,
   kind: users.kind,
   expiresAt: users.expiresAt,
+  firstName: users.firstName,
+  measurementUnit: users.measurementUnit,
 };
 
 export interface UserRepository {
@@ -23,6 +25,10 @@ export interface UserRepository {
   create(input: CreateUser): Promise<User>;
   createGuestUser(expiresAt: Date): Promise<User>;
   promoteGuestUser(userId: string, identity: CreateUser): Promise<User>;
+  updateRegisteredProfile(
+    userId: string,
+    input: UpdateUserProfile,
+  ): Promise<User>;
   deleteGuestUser(userId: string): Promise<void>;
   createSession(input: CreateUserSessionRecord): Promise<void>;
   deleteSessionBySessionKeyHash(sessionKeyHash: string): Promise<string | null>;
@@ -30,6 +36,19 @@ export interface UserRepository {
 
 export class DrizzleUserRepository implements UserRepository {
   constructor(private readonly db: NodePgDatabase) {}
+
+  async updateRegisteredProfile(
+    userId: string,
+    input: UpdateUserProfile,
+  ): Promise<User> {
+    const [user] = await this.db
+      .update(users)
+      .set(input)
+      .where(and(eq(users.id, userId), eq(users.kind, "REGISTERED")))
+      .returning(userSelection);
+    if (!user) throw new UserNotFoundError();
+    return user;
+  }
 
   async promoteGuestUser(userId: string, identity: CreateUser): Promise<User> {
     return this.db.transaction(async (tx) => {

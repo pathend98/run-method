@@ -1,5 +1,5 @@
 import { UserApiError } from "./errors/user-api-error";
-import { fetchCurrentUser } from "./user-api-client";
+import { fetchCurrentUser, updateCurrentUser } from "./user-api-client";
 
 test("fetchCurrentUser returns a validated registered user", async () => {
   vi.stubGlobal(
@@ -10,6 +10,8 @@ test("fetchCurrentUser returns a validated registered user", async () => {
         id: "user-id",
         kind: "REGISTERED",
         expiresAt: null,
+        firstName: "Ada",
+        measurementUnit: "MILES",
       }),
     }),
   );
@@ -18,6 +20,8 @@ test("fetchCurrentUser returns a validated registered user", async () => {
     id: "user-id",
     kind: "REGISTERED",
     expiresAt: null,
+    firstName: "Ada",
+    measurementUnit: "MILES",
   });
   expect(fetch).toHaveBeenCalledWith("/api/v1/me", { cache: "no-store" });
 });
@@ -31,6 +35,8 @@ test("fetchCurrentUser parses a guest expiry into a Date", async () => {
         id: "guest-id",
         kind: "GUEST",
         expiresAt: "2026-10-01T12:00:00.000Z",
+        firstName: null,
+        measurementUnit: "KILOMETRES",
       }),
     }),
   );
@@ -39,6 +45,8 @@ test("fetchCurrentUser parses a guest expiry into a Date", async () => {
     id: "guest-id",
     kind: "GUEST",
     expiresAt: new Date("2026-10-01T12:00:00.000Z"),
+    firstName: null,
+    measurementUnit: "KILOMETRES",
   });
 });
 
@@ -88,4 +96,29 @@ test("fetchCurrentUser rejects a malformed response", async () => {
   );
 
   await expect(fetchCurrentUser()).rejects.toThrow();
+});
+
+test("updateCurrentUser patches the profile and returns the updated user", async () => {
+  const updatedUser = {
+    id: "user-id",
+    kind: "REGISTERED",
+    expiresAt: null,
+    firstName: "Ada",
+    measurementUnit: "MILES",
+  };
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    json: vi.fn().mockResolvedValue(updatedUser),
+  });
+  vi.stubGlobal("fetch", fetchMock);
+
+  await expect(
+    updateCurrentUser({ firstName: "Ada", measurementUnit: "MILES" }),
+  ).resolves.toEqual(updatedUser);
+  expect(fetchMock).toHaveBeenCalledWith("/api/v1/me", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: '{"firstName":"Ada","measurementUnit":"MILES"}',
+    cache: "no-store",
+  });
 });

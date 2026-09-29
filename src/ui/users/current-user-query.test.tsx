@@ -15,6 +15,8 @@ test("current-user query shares one request across consumers", async () => {
       id: "user-id",
       kind: "REGISTERED",
       expiresAt: null,
+      firstName: null,
+      measurementUnit: "KILOMETRES",
     }),
   });
   vi.stubGlobal("fetch", fetchMock);
