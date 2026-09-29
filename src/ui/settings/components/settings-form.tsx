@@ -92,8 +92,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
         </select>
       </FormField>
       <p className="text-sm text-zinc-600">
-        Read-only distances and paces use your selected unit. Distance fields
-        use kilometres, and pace fields use minutes per kilometre.
+        Distance and pace displays and entry fields use your selected unit.
       </p>
       <div className="flex items-center gap-3">
         <Button

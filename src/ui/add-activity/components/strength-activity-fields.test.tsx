@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import {
-  addActivityFormSchema,
+  createAddActivityFormSchema,
   defaultAddActivityFormValues,
   type AddActivityFormValues,
 } from "../utils/add-activity-form";
@@ -16,7 +16,7 @@ function StrengthActivityFieldsHarness({ children }: { children: ReactNode }) {
       ...defaultAddActivityFormValues,
       activityType: "STRENGTH",
     },
-    resolver: zodResolver(addActivityFormSchema),
+    resolver: zodResolver(createAddActivityFormSchema("KILOMETRES")),
   });
 
   return (

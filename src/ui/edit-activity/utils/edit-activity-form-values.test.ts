@@ -26,17 +26,17 @@ function strength(
 }
 
 test("initializes common and run target values", () => {
-  expect(getEditActivityFormValues(run())).toEqual({
+  expect(getEditActivityFormValues(run(), "KILOMETRES")).toEqual({
     title: "Tempo run",
     date: "2026-08-17",
     timeOfDay: "AM",
     description: "Controlled effort",
     derivedMetric: "pace",
-    distanceKilometres: "8",
+    distance: "8",
     durationHours: "00",
     durationMinutes: "45",
     durationSeconds: "00",
-    pacePerKilometre: "5:38",
+    pace: "5:38",
   });
 });
 
@@ -47,6 +47,7 @@ test("maps nullable common values and derives pace", () => {
         timeOfDay: null,
         description: null,
       }),
+      "KILOMETRES",
     ),
   ).toEqual({
     title: "Tempo run",
@@ -54,26 +55,29 @@ test("maps nullable common values and derives pace", () => {
     timeOfDay: "ANY",
     description: "",
     derivedMetric: "pace",
-    distanceKilometres: "8",
+    distance: "8",
     durationHours: "00",
     durationMinutes: "45",
     durationSeconds: "00",
-    pacePerKilometre: "5:38",
+    pace: "5:38",
   });
 });
 
 test("initializes the optional duration for strength activities", () => {
-  expect(getEditActivityFormValues(strength())).toMatchObject({
-    distanceKilometres: "",
+  expect(getEditActivityFormValues(strength(), "KILOMETRES")).toMatchObject({
+    distance: "",
     durationMinutes: "40",
-    pacePerKilometre: "",
+    pace: "",
   });
 
   expect(
-    getEditActivityFormValues({
-      ...strength(),
-      targetDurationSeconds: null,
-    }).durationMinutes,
+    getEditActivityFormValues(
+      {
+        ...strength(),
+        targetDurationSeconds: null,
+      },
+      "KILOMETRES",
+    ).durationMinutes,
   ).toBe("00");
 });
 
@@ -85,15 +89,17 @@ test("initializes completed actual metrics instead of targets", () => {
         actualDistanceMetres: 7500,
         actualDurationSeconds: 2400,
       }),
+      "KILOMETRES",
     ),
   ).toMatchObject({
-    distanceKilometres: "7.5",
+    distance: "7.5",
     durationMinutes: "40",
-    pacePerKilometre: "5:20",
+    pace: "5:20",
   });
   expect(
     getEditActivityFormValues(
       strength({ status: "COMPLETED", actualDurationSeconds: 2100 }),
+      "KILOMETRES",
     ),
   ).toMatchObject({ durationMinutes: "35" });
 });

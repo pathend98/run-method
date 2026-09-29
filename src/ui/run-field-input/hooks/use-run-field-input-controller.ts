@@ -8,10 +8,12 @@ import {
   type RunFieldInputValue,
   type RunFieldMetric,
 } from "../utils/run-field-calculations";
+import type { RunFieldUnit } from "../run-field-units";
 
 type UseRunFieldInputControllerOptions = {
   onChange: (value: RunFieldInputValue) => void;
   onPendingChange: (pending: boolean) => void;
+  unit: RunFieldUnit;
   value: RunFieldInputValue;
 };
 
@@ -20,10 +22,11 @@ const metricOrder: RunFieldMetric[] = ["distance", "duration", "pace"];
 export function useRunFieldInputController({
   onChange,
   onPendingChange,
+  unit,
   value,
 }: UseRunFieldInputControllerOptions) {
   const [enteredMetrics, setEnteredMetrics] = useState<RunFieldMetric[]>(() =>
-    metricOrder.filter((metric) => isValidRunMetric(metric, value)),
+    metricOrder.filter((metric) => isValidRunMetric(metric, value, unit)),
   );
   const [pendingMetric, setPendingMetric] = useState<RunFieldMetric | null>(
     null,
@@ -51,25 +54,25 @@ export function useRunFieldInputController({
     }
 
     if (value.derivedMetric !== null) {
-      if (!isValidRunMetric(metric, next)) {
+      if (!isValidRunMetric(metric, next, unit)) {
         onChange(clearMetric(next, value.derivedMetric));
         return;
       }
-      onChange(calculateDerivedMetric(next, value.derivedMetric) ?? next);
+      onChange(calculateDerivedMetric(next, value.derivedMetric, unit) ?? next);
       return;
     }
 
     let nextEntered = enteredMetrics.filter((entered) =>
-      isValidRunMetric(entered, next),
+      isValidRunMetric(entered, next, unit),
     );
-    if (isValidRunMetric(metric, next) && !nextEntered.includes(metric)) {
+    if (isValidRunMetric(metric, next, unit) && !nextEntered.includes(metric)) {
       nextEntered = [...nextEntered, metric];
     }
     setEnteredMetrics(nextEntered);
 
     if (nextEntered.length >= 2) {
       const derivedMetric = otherMetric(nextEntered[0], nextEntered[1]);
-      onChange(calculateDerivedMetric(next, derivedMetric)!);
+      onChange(calculateDerivedMetric(next, derivedMetric, unit)!);
       return;
     }
     onChange(next);
@@ -84,8 +87,8 @@ export function useRunFieldInputController({
       return;
     }
 
-    const calculated = calculateDerivedMetric(value, metric);
-    if (!isValidRunMetric(metric, value) || calculated === null) {
+    const calculated = calculateDerivedMetric(value, metric, unit);
+    if (!isValidRunMetric(metric, value, unit) || calculated === null) {
       autoValueOnFocus.current = null;
       return;
     }
@@ -103,7 +106,7 @@ export function useRunFieldInputController({
   function keepMetric(fixedMetric: RunFieldMetric) {
     const editedMetric = pendingMetric!;
     const nextDerived = otherMetric(editedMetric, fixedMetric);
-    const calculated = calculateDerivedMetric(value, nextDerived);
+    const calculated = calculateDerivedMetric(value, nextDerived, unit);
     if (calculated === null) return;
     onChange(calculated);
     setEnteredMetrics([fixedMetric, editedMetric]);
@@ -128,10 +131,10 @@ function metricHasSameValue(
   second: RunFieldInputValue,
 ) {
   if (metric === "distance") {
-    return first.distanceKilometres === second.distanceKilometres;
+    return first.distance === second.distance;
   }
   if (metric === "pace") {
-    return first.pacePerKilometre === second.pacePerKilometre;
+    return first.pace === second.pace;
   }
   return (
     first.durationHours === second.durationHours &&

@@ -69,15 +69,18 @@ test("shows the focused completion dialog and returns to details when cancelled"
   expect(store.getState().activeModal).toMatchObject({ kind: "details" });
 });
 
-test("shows planned miles and mile pace while completion inputs stay kilometre based", () => {
+test("shows planned miles and mile pace with mile completion inputs", () => {
   renderModal("MILES");
   expect(
     screen.getByText("Planned: 3.7 mi · 25m 30s · 6:50 / mi"),
   ).toBeDefined();
-  expect(screen.getByLabelText("Distance (km)")).toHaveProperty("value", "6.0");
-  expect(screen.getByLabelText("Pace (mm:ss / km) · Auto")).toHaveProperty(
+  expect(screen.getByLabelText("Distance (mi)")).toHaveProperty(
     "value",
-    "4:15",
+    "3.728",
+  );
+  expect(screen.getByLabelText("Pace (mm:ss / mi) · Auto")).toHaveProperty(
+    "value",
+    "6:50",
   );
 });
 

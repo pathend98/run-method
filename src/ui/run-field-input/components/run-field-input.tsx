@@ -1,5 +1,6 @@
 import { FormField } from "@/ui/components/form-field";
 import { Button } from "@/ui/components/button";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import { useRunFieldInputController } from "../hooks/use-run-field-input-controller";
 import {
   metricLabel,
@@ -31,9 +32,11 @@ export function RunFieldInput({
   onPendingChange = doNothing,
   value,
 }: RunFieldInputProps) {
+  const unit = useDistanceDisplayUnit();
   const controller = useRunFieldInputController({
     onChange,
     onPendingChange,
+    unit,
     value,
   });
 
@@ -43,7 +46,7 @@ export function RunFieldInput({
         <FormField
           error={errors.distance}
           label={fieldLabel(
-            "Distance (km)",
+            `Distance (${unit === "MILES" ? "mi" : "km"})`,
             value.derivedMetric === "distance",
           )}
         >
@@ -57,12 +60,12 @@ export function RunFieldInput({
             onChange={(event) =>
               controller.changeMetric("distance", {
                 ...value,
-                distanceKilometres: event.target.value,
+                distance: event.target.value,
               })
             }
             onFocus={() => controller.beginAutoEdit("distance")}
             placeholder="8"
-            value={value.distanceKilometres}
+            value={value.distance}
           />
         </FormField>
 
@@ -82,7 +85,7 @@ export function RunFieldInput({
         <FormField
           error={errors.pace}
           label={fieldLabel(
-            "Pace (mm:ss / km)",
+            `Pace (mm:ss / ${unit === "MILES" ? "mi" : "km"})`,
             value.derivedMetric === "pace",
           )}
         >
@@ -95,12 +98,12 @@ export function RunFieldInput({
             onChange={(event) =>
               controller.changeMetric("pace", {
                 ...value,
-                pacePerKilometre: event.target.value,
+                pace: event.target.value,
               })
             }
             onFocus={() => controller.beginAutoEdit("pace")}
-            placeholder="5:30"
-            value={value.pacePerKilometre}
+            placeholder={unit === "MILES" ? "8:51" : "5:30"}
+            value={value.pace}
           />
         </FormField>
       </div>

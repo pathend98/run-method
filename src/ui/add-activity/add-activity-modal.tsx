@@ -9,14 +9,16 @@ import { RunActivityFields } from "./components/run-activity-fields";
 import { StrengthActivityFields } from "./components/strength-activity-fields";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useCreateTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
-  addActivityFormSchema,
+  createAddActivityFormSchema,
   defaultAddActivityFormValues,
   toCreateTrainingSessionRequest,
   type AddActivityFormValues,
 } from "./utils/add-activity-form";
 
 export function AddActivityModal({ athleteId }: { athleteId: string }) {
+  const unit = useDistanceDisplayUnit();
   const [runFieldsPending, setRunFieldsPending] = useState(false);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
@@ -25,7 +27,7 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
     defaultValues: defaultAddActivityFormValues,
     mode: "onBlur",
     reValidateMode: "onBlur",
-    resolver: zodResolver(addActivityFormSchema),
+    resolver: zodResolver(createAddActivityFormSchema(unit)),
   });
   const {
     control,
@@ -48,7 +50,7 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
     try {
       await createMutation.mutateAsync({
         athleteId,
-        request: toCreateTrainingSessionRequest(values, date),
+        request: toCreateTrainingSessionRequest(values, date, unit),
       });
       closeModal();
     } catch {

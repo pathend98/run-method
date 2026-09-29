@@ -1,16 +1,22 @@
 import { z } from "zod";
 
 import type { TrainingSession } from "@/domain/training-sessions";
+import type { RunFieldUnit } from "@/ui/run-field-input/run-field-units";
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/training-sessions/duration-fields";
 
-const positiveDistanceSchema = z
-  .string()
-  .regex(/^\d+(?:\.\d{1,3})?$/, "Enter a distance in kilometres")
-  .refine((value) => Number(value) > 0, "Distance must be greater than zero");
+function positiveDistanceSchema(unit: RunFieldUnit) {
+  return z
+    .string()
+    .regex(
+      /^\d+(?:\.\d{1,3})?$/,
+      `Enter a distance in ${unit === "MILES" ? "miles" : "kilometres"}`,
+    )
+    .refine((value) => Number(value) > 0, "Distance must be greater than zero");
+}
 const paceSchema = z
   .string()
   .regex(/^\d+:[0-5]\d$/, "Enter pace as mm:ss")
@@ -25,16 +31,19 @@ const editActivityFormBaseSchema = z.object({
   timeOfDay: z.enum(["AM", "ANY", "PM"]),
   description: z.string(),
   derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
-  distanceKilometres: z.string(),
+  distance: z.string(),
   durationHours: z.string(),
   durationMinutes: z.string(),
   durationSeconds: z.string(),
-  pacePerKilometre: z.string(),
+  pace: z.string(),
 });
 
 export type EditActivityFormValues = z.infer<typeof editActivityFormBaseSchema>;
 
-export function createEditActivityFormSchema(activity: TrainingSession) {
+export function createEditActivityFormSchema(
+  activity: TrainingSession,
+  unit: RunFieldUnit,
+) {
   return editActivityFormBaseSchema.superRefine((values, context) => {
     if (activity.status === "SKIPPED") {
       return;
@@ -51,23 +60,18 @@ export function createEditActivityFormSchema(activity: TrainingSession) {
 
     validateField(
       context,
-      "distanceKilometres",
-      positiveDistanceSchema,
-      values.distanceKilometres,
+      "distance",
+      positiveDistanceSchema(unit),
+      values.distance,
     );
     validateDuration(context, values, true);
-    validateField(
-      context,
-      "pacePerKilometre",
-      paceSchema,
-      values.pacePerKilometre,
-    );
+    validateField(context, "pace", paceSchema, values.pace);
   });
 }
 
 function validateField(
   context: z.RefinementCtx,
-  field: "distanceKilometres" | "pacePerKilometre",
+  field: "distance" | "pace",
   schema: z.ZodType<string>,
   value: string,
 ) {

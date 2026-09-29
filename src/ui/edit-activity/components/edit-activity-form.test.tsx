@@ -6,6 +6,7 @@ import {
   createStrengthActivity,
 } from "@/test-support/fixtures/activity";
 import { EditActivityForm } from "./edit-activity-form";
+import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const runActivity = createRunActivity({
   description: "Controlled effort",
@@ -65,6 +66,36 @@ test("renders pre-populated editable fields for a scheduled run", () => {
   expect(screen.getByLabelText("Duration (hh:mm:ss) seconds")).toHaveProperty(
     "value",
     "30",
+  );
+});
+
+test("prefills mile values and preserves exact metres on a title edit", async () => {
+  const onEdit = vi.fn().mockResolvedValue(undefined);
+  render(
+    <DistanceDisplayProvider measurementUnit="MILES">
+      <EditActivityForm
+        activity={{ ...runActivity, targetDistanceMetres: 8001 }}
+        onClose={vi.fn()}
+        onEdit={onEdit}
+      />
+    </DistanceDisplayProvider>,
+  );
+  expect(screen.getByLabelText("Distance (mi)")).toHaveProperty(
+    "value",
+    "4.972",
+  );
+  expect(screen.getByLabelText("Pace (mm:ss / mi) · Auto")).toHaveProperty(
+    "value",
+    "5:08",
+  );
+  fireEvent.change(screen.getByLabelText("Title"), {
+    target: { value: "Updated tempo" },
+  });
+  fireEvent.submit(screen.getByLabelText("Title").closest("form")!);
+  await waitFor(() =>
+    expect(onEdit).toHaveBeenCalledWith(
+      expect.objectContaining({ targetDistanceMetres: 8001 }),
+    ),
   );
 });
 

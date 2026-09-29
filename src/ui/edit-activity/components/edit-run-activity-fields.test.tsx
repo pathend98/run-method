@@ -11,11 +11,11 @@ const defaultValues: EditActivityFormValues = {
   timeOfDay: "AM",
   description: "",
   derivedMetric: "pace",
-  distanceKilometres: "5",
+  distance: "5",
   durationHours: "00",
   durationMinutes: "30",
   durationSeconds: "00",
-  pacePerKilometre: "5:00",
+  pace: "5:00",
 };
 
 function Harness({ children }: { children: ReactNode }) {
@@ -64,10 +64,10 @@ test("recalculates the derived metric and tracks changed fields", () => {
     "3:00",
   );
   expect(screen.getByTestId("dirty-fields").textContent).toContain(
-    '"distanceKilometres":true',
+    '"distance":true',
   );
   expect(screen.getByTestId("dirty-fields").textContent).toContain(
-    '"pacePerKilometre":true',
+    '"pace":true',
   );
 });
 
@@ -79,9 +79,9 @@ test("renders field errors from the form after submission", async () => {
         <EditRunActivityFields onPendingChange={vi.fn()} />
         <button
           onClick={() => {
-            form.setError("distanceKilometres", { message: "Bad distance" });
+            form.setError("distance", { message: "Bad distance" });
             form.setError("durationMinutes", { message: "Bad duration" });
-            form.setError("pacePerKilometre", { message: "Bad pace" });
+            form.setError("pace", { message: "Bad pace" });
           }}
           type="button"
         >
