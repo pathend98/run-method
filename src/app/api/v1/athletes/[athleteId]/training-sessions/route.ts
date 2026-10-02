@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 
 import {
   authenticateActor,
-  authorizeAthlete,
   privateResponseHeaders as responseHeaders,
 } from "@/app/api/v1/athlete-authorization";
 import { readRequestBody } from "@/app/api/v1/training-sessions/read-request-body";
@@ -21,9 +20,8 @@ export const GET = withApiHandler(
   async (request: NextRequest, context: RouteContext) => {
     const { athleteId } = await context.params;
     const actorId = await authenticateActor(request);
-    authorizeAthlete(actorId, athleteId);
     const { searchParams } = request.nextUrl;
-    const sessions = await getTrainingSessionsService().find({
+    const sessions = await getTrainingSessionsService().find(actorId, {
       athleteId,
       from: searchParams.get("from") ?? undefined,
       to: searchParams.get("to") ?? undefined,
@@ -38,13 +36,14 @@ export const POST = withApiHandler(
   async (request: NextRequest, context: RouteContext) => {
     const { athleteId } = await context.params;
     const actorId = await authenticateActor(request);
-    authorizeAthlete(actorId, athleteId);
-    const body = await readRequestBody(request);
-    const createRequest = trainingSessionsRequestValidator.validateCreate(body);
-    const session = await getTrainingSessionsService().create({
-      ...createRequest,
+    const session = await getTrainingSessionsService().create(
+      actorId,
       athleteId,
-    });
+      async () =>
+        trainingSessionsRequestValidator.validateCreate(
+          await readRequestBody(request),
+        ),
+    );
     return NextResponse.json(session, {
       status: 201,
       headers: responseHeaders,

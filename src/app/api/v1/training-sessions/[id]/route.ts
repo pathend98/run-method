@@ -11,7 +11,6 @@ import {
   getTrainingSessionsService,
   trainingSessionsRequestValidator,
 } from "@/server/server";
-import { authorizeTrainingSession } from "./authorize-training-session";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -21,8 +20,7 @@ export const DELETE = withApiHandler(
   async (request: NextRequest, context: RouteContext) => {
     const { id } = await context.params;
     const actorId = await authenticateActor(request);
-    await authorizeTrainingSession(actorId, id);
-    await getTrainingSessionsService().delete(id);
+    await getTrainingSessionsService().delete(actorId, id);
     return new Response(null, { status: 204, headers: responseHeaders });
   },
   "Unable to delete training session",
@@ -32,10 +30,14 @@ export const PATCH = withApiHandler(
   async (request: NextRequest, context: RouteContext) => {
     const { id } = await context.params;
     const actorId = await authenticateActor(request);
-    await authorizeTrainingSession(actorId, id);
-    const body = await readRequestBody(request);
-    const editRequest = trainingSessionsRequestValidator.validateEdit(body);
-    const session = await getTrainingSessionsService().edit(id, editRequest);
+    const session = await getTrainingSessionsService().edit(
+      actorId,
+      id,
+      async () =>
+        trainingSessionsRequestValidator.validateEdit(
+          await readRequestBody(request),
+        ),
+    );
     return NextResponse.json(session, { headers: responseHeaders });
   },
   "Unable to edit training session",

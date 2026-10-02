@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
@@ -11,29 +12,46 @@ import {
 } from "@/server/training-sessions/training-sessions-errors";
 import { DELETE, PATCH } from "./route";
 
-const service = vi.hoisted(() => ({
+const repository = vi.hoisted(() => ({
+  find: vi.fn(),
   findById: vi.fn(),
-  delete: vi.fn(),
+  create: vi.fn(),
+  deleteById: vi.fn(),
+  skip: vi.fn(),
+  complete: vi.fn(),
   edit: vi.fn(),
 }));
 
+const domainValidator = vi.hoisted(() => ({
+  validateEdit: vi.fn(),
+  validateSkip: vi.fn(),
+  validateComplete: vi.fn(),
+}));
 const findBySessionKey = vi.hoisted(() => vi.fn());
 
-vi.mock("@/server/server", () => ({
-  getTrainingSessionsService: () => service,
-  getUserService: () => ({ findBySessionKey }),
-  trainingSessionsRequestValidator: {
-    validateEdit: vi.fn(),
-  },
-}));
+vi.mock("@/server/server", async () => {
+  const { DefaultTrainingSessionsService } =
+    await import("@/server/training-sessions/training-sessions-service");
+  return {
+    getTrainingSessionsService: () =>
+      new DefaultTrainingSessionsService(repository, domainValidator, {
+        findById: vi.fn(),
+      }),
+
+    getUserService: () => ({ findBySessionKey }),
+    trainingSessionsRequestValidator: {
+      validateEdit: vi.fn(),
+    },
+  };
+});
 
 const id = "11111111-1111-4111-8111-111111111111";
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   findBySessionKey.mockResolvedValue(createUser({ id: athleteId }));
-  service.findById.mockResolvedValue({ id, athleteId });
+  repository.findById.mockResolvedValue(createRunActivity({ id, athleteId }));
 });
 const editRequest = {
   title: "Long easy run",
@@ -82,33 +100,28 @@ function deleteRequest(sessionId = id) {
 }
 
 test("deletes a training session with 204 status", async () => {
-  service.delete.mockResolvedValue(undefined);
+  repository.deleteById.mockResolvedValue(true);
 
   const response = await DELETE(deleteRequest(), context());
 
   expect(response.status).toBe(204);
   await expect(response.text()).resolves.toBe("");
-  expect(service.delete).toHaveBeenCalledWith(id);
+  expect(repository.deleteById).toHaveBeenCalledWith(id);
 });
 
 test("returns invalid delete ids with 400 status", async () => {
-  service.delete.mockRejectedValue(
-    new TrainingSessionsValidationError(
-      "training session id must be a valid UUID",
-    ),
-  );
-
   const response = await DELETE(deleteRequest("invalid"), context("invalid"));
 
   expect(response.status).toBe(400);
   await expect(response.json()).resolves.toEqual({
     error: "training session id must be a valid UUID",
   });
-  expect(service.delete).toHaveBeenCalledWith("invalid");
+  expect(repository.findById).not.toHaveBeenCalled();
+  expect(repository.deleteById).not.toHaveBeenCalled();
 });
 
 test("returns missing delete targets with 404 status", async () => {
-  service.delete.mockRejectedValue(new TrainingSessionNotFoundError());
+  repository.deleteById.mockRejectedValue(new TrainingSessionNotFoundError());
 
   const response = await DELETE(deleteRequest(), context());
 
@@ -119,7 +132,7 @@ test("returns missing delete targets with 404 status", async () => {
 });
 
 test("returns stable deletion errors with 500 status", async () => {
-  service.delete.mockRejectedValue(new Error("database down"));
+  repository.deleteById.mockRejectedValue(new Error("database down"));
 
   const response = await DELETE(deleteRequest(), context());
 
@@ -131,14 +144,17 @@ test("returns stable deletion errors with 500 status", async () => {
 
 test("edits and returns a complete training session", async () => {
   validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockResolvedValue(editedSession);
+  repository.edit.mockResolvedValue(editedSession);
 
   const response = await PATCH(patchRequest(), context());
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(editedSession);
   expect(validator.validateEdit).toHaveBeenCalledWith(editRequest);
-  expect(service.edit).toHaveBeenCalledWith(id, editRequest);
+  expect(repository.edit).toHaveBeenCalledWith(
+    expect.objectContaining({ id, athleteId }),
+    editRequest,
+  );
 });
 
 test("returns malformed JSON errors with 400 status", async () => {
@@ -169,7 +185,7 @@ test("returns edit field errors with 400 status", async () => {
 
 test("returns business validation errors with 400 status", async () => {
   validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(
+  repository.edit.mockRejectedValue(
     new BadRequestError("activityType cannot be changed"),
   );
 
@@ -182,25 +198,20 @@ test("returns business validation errors with 400 status", async () => {
 });
 
 test("returns invalid session ids with 400 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(
-    new TrainingSessionsValidationError(
-      "training session id must be a valid UUID",
-    ),
-  );
-
   const response = await PATCH(patchRequest(), context("invalid"));
 
   expect(response.status).toBe(400);
   await expect(response.json()).resolves.toEqual({
     error: "training session id must be a valid UUID",
   });
-  expect(service.edit).toHaveBeenCalledWith("invalid", editRequest);
+  expect(repository.findById).not.toHaveBeenCalled();
+  expect(validator.validateEdit).not.toHaveBeenCalled();
+  expect(repository.edit).not.toHaveBeenCalled();
 });
 
 test("returns missing sessions with 404 status", async () => {
   validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(new TrainingSessionNotFoundError());
+  repository.edit.mockRejectedValue(new TrainingSessionNotFoundError());
 
   const response = await PATCH(patchRequest(), context());
 
@@ -212,7 +223,7 @@ test("returns missing sessions with 404 status", async () => {
 
 test("returns stable edit errors with 500 status", async () => {
   validator.validateEdit.mockReturnValue(editRequest);
-  service.edit.mockRejectedValue(new Error("database down"));
+  repository.edit.mockRejectedValue(new Error("database down"));
 
   const response = await PATCH(patchRequest(), context());
 
@@ -233,14 +244,15 @@ test.each([
   if (kind === "invalid")
     findBySessionKey.mockRejectedValue(new UserNotFoundError());
   if (kind === "foreign")
-    service.findById.mockResolvedValue({ id, athleteId: "other-id" });
-  if (kind === "absent")
-    service.findById.mockRejectedValue(new TrainingSessionNotFoundError());
+    repository.findById.mockResolvedValue(
+      createRunActivity({ id, athleteId: "other-id" }),
+    );
+  if (kind === "absent") repository.findById.mockResolvedValue(null);
 
   const response = await DELETE(request, context());
   expect(response.status).toBe(status);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
-  expect(service.delete).not.toHaveBeenCalled();
+  expect(repository.deleteById).not.toHaveBeenCalled();
 });
 
 test.each([
@@ -256,15 +268,16 @@ test.each([
     if (kind === "invalid")
       findBySessionKey.mockRejectedValue(new UserNotFoundError());
     if (kind === "foreign")
-      service.findById.mockResolvedValue({ id, athleteId: "other-id" });
-    if (kind === "absent")
-      service.findById.mockRejectedValue(new TrainingSessionNotFoundError());
+      repository.findById.mockResolvedValue(
+        createRunActivity({ id, athleteId: "other-id" }),
+      );
+    if (kind === "absent") repository.findById.mockResolvedValue(null);
 
     const response = await PATCH(request, context());
     expect(response.status).toBe(status);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(validator.validateEdit).not.toHaveBeenCalled();
-    expect(service.edit).not.toHaveBeenCalled();
+    expect(repository.edit).not.toHaveBeenCalled();
   },
 );
 
@@ -276,18 +289,18 @@ test.each([
   if (kind === "actor")
     findBySessionKey.mockRejectedValue(new Error("database down"));
   if (kind === "invalid")
-    service.findById.mockRejectedValue(
+    repository.findById.mockRejectedValue(
       new TrainingSessionsValidationError(
         "training session id must be a valid UUID",
       ),
     );
   if (kind === "lookup")
-    service.findById.mockRejectedValue(new Error("database down"));
+    repository.findById.mockRejectedValue(new Error("database down"));
 
   const response = await DELETE(deleteRequest(), context());
   expect(response.status).toBe(status);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
-  expect(service.delete).not.toHaveBeenCalled();
+  expect(repository.deleteById).not.toHaveBeenCalled();
 });
 
 test.each([
@@ -298,17 +311,17 @@ test.each([
   if (kind === "actor")
     findBySessionKey.mockRejectedValue(new Error("database down"));
   if (kind === "invalid")
-    service.findById.mockRejectedValue(
+    repository.findById.mockRejectedValue(
       new TrainingSessionsValidationError(
         "training session id must be a valid UUID",
       ),
     );
   if (kind === "lookup")
-    service.findById.mockRejectedValue(new Error("database down"));
+    repository.findById.mockRejectedValue(new Error("database down"));
 
   const response = await PATCH(patchRequest("{"), context());
   expect(response.status).toBe(status);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   expect(validator.validateEdit).not.toHaveBeenCalled();
-  expect(service.edit).not.toHaveBeenCalled();
+  expect(repository.edit).not.toHaveBeenCalled();
 });
