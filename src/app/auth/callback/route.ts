@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+import {
+  apiHandler,
+  getAuthenticationService,
+  getUserService,
+} from "@/server/server";
 import {
   COOKIE_OPTIONS,
   OIDC_TRANSACTION_COOKIE_NAME,
@@ -7,11 +13,9 @@ import {
 } from "@/server/authentication/authentication-constants";
 import { AuthenticationCallbackError } from "@/server/authentication/authentication-errors";
 import { readAppEnv } from "@/server/env/app-env";
-import { withApiHandler } from "@/server/http/with-api-handler";
-import { getAuthenticationService, getUserService } from "@/server/server";
 import { SESSION_MAX_AGE_SECONDS } from "@/server/user/user-constants";
 
-const handleCallback = withApiHandler(async (request: NextRequest) => {
+const handleCallback = apiHandler.wrap(async (request: NextRequest) => {
   const code = request.nextUrl.searchParams.get("code") ?? "";
   const state = request.nextUrl.searchParams.get("state") ?? "";
   const transactionCookieValue =

@@ -1,3 +1,4 @@
+import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
@@ -10,7 +11,11 @@ const findBySessionKey = vi.hoisted(() => vi.fn());
 const updateProfile = vi.hoisted(() => vi.fn());
 const validateUpdate = vi.hoisted(() => vi.fn());
 
-vi.mock("@/server/server", () => ({
+vi.mock("@/server/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof ServerModule>()),
+  requestAuthenticationService: new (
+    await import("@/server/http/request-authentication-service")
+  ).DefaultRequestAuthenticationService(() => ({ findBySessionKey })),
   getUserService: () => ({ findBySessionKey, updateProfile }),
   userProfileRequestValidator: { validateUpdate },
 }));
@@ -139,7 +144,8 @@ test("rejects malformed JSON", async () => {
 
   expect(response.status).toBe(400);
   await expect(response.json()).resolves.toEqual({
-    error: "Request body must be valid JSON",
+    error: "Invalid request body",
+    fieldErrors: { body: ["Request body must be valid JSON"] },
   });
   expect(updateProfile).not.toHaveBeenCalled();
 });

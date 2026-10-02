@@ -1,3 +1,4 @@
+import { RequestValidationError } from "@/server/errors/request-validation-error";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { NotFoundError } from "@/server/errors/not-found-error";
 
@@ -8,9 +9,9 @@ export class TrainingSessionsValidationError extends BadRequestError {
   }
 }
 
-export class TrainingSessionsRequestValidationError extends BadRequestError {
-  constructor(readonly fieldErrors: Record<string, string[]>) {
-    super("Invalid request body");
+export class TrainingSessionsRequestValidationError extends RequestValidationError {
+  constructor(fieldErrors: Record<string, string[]>) {
+    super(fieldErrors);
     this.name = "TrainingSessionsRequestValidationError";
   }
 }

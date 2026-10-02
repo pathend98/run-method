@@ -1,3 +1,4 @@
+import type * as ServerModule from "@/server/server";
 import { createRunActivity } from "@/test-support/fixtures/activity";
 import { NextRequest } from "next/server";
 
@@ -29,10 +30,17 @@ const domainValidator = vi.hoisted(() => ({
 }));
 const findBySessionKey = vi.hoisted(() => vi.fn());
 
-vi.mock("@/server/server", async () => {
+vi.mock("@/server/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof ServerModule>();
+  const { DefaultRequestAuthenticationService } =
+    await import("@/server/http/request-authentication-service");
   const { DefaultTrainingSessionsService } =
     await import("@/server/training-sessions/training-sessions-service");
   return {
+    ...actual,
+    requestAuthenticationService: new DefaultRequestAuthenticationService(
+      () => ({ findBySessionKey }),
+    ),
     getTrainingSessionsService: () =>
       new DefaultTrainingSessionsService(repository, domainValidator, {
         findById: vi.fn(),

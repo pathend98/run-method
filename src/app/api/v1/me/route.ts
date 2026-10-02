@@ -2,26 +2,24 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import {
-  authenticateUser,
-  privateResponseHeaders,
-} from "@/app/api/v1/athlete-authorization";
-import { BadRequestError } from "@/server/errors/bad-request-error";
-import { withApiHandler } from "@/server/http/with-api-handler";
-import { getUserService, userProfileRequestValidator } from "@/server/server";
+  apiHandler,
+  requestAuthenticationService,
+  requestBodyReader,
+  getUserService,
+  userProfileRequestValidator,
+} from "@/server/server";
+import { privateResponseHeaders } from "@/server/http/api-handler";
 
-export const GET = withApiHandler(async (request: NextRequest) => {
-  const user = await authenticateUser(request);
+export const GET = apiHandler.wrap(async (request: NextRequest) => {
+  const user = await requestAuthenticationService.authenticateUser(request);
   return NextResponse.json(user, { headers: privateResponseHeaders });
 }, "Unable to determine user session");
 
-export const PATCH = withApiHandler(async (request: NextRequest) => {
-  const user = await authenticateUser(request);
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    throw new BadRequestError("Request body must be valid JSON");
-  }
+export const PATCH = apiHandler.wrap(async (request: NextRequest) => {
+  const user = await requestAuthenticationService.authenticateUser(request);
+
+  const body = await requestBodyReader.readRequestBody(request);
+
   const input = userProfileRequestValidator.validateUpdate(body);
   const updatedUser = await getUserService().updateProfile(user.id, input);
   return NextResponse.json(updatedUser, { headers: privateResponseHeaders });

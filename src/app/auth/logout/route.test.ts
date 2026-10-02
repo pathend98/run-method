@@ -1,3 +1,4 @@
+import type * as ServerModule from "@/server/server";
 import {
   KeycloakLogoutProvider,
   CognitoLogoutProvider,
@@ -14,7 +15,11 @@ const { deleteSession, getUserService, getLogoutUrlStrategy } = vi.hoisted(
   }),
 );
 
-vi.mock("@/server/server", () => ({ getUserService, getLogoutUrlStrategy }));
+vi.mock("@/server/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof ServerModule>()),
+  getUserService,
+  getLogoutUrlStrategy,
+}));
 
 const configuration = {
   endpoint: "https://identity.example.com/logout",
@@ -112,4 +117,17 @@ test.each([
     strategy.createLogoutUrl("session-id-token").href,
   );
   expect(response.cookies.get("__Host-user-session")?.maxAge).toBe(0);
+});
+
+test("returns a safe no-store error and clears the cookie when the logout provider fails", async () => {
+  getLogoutUrlStrategy.mockImplementation(() => {
+    throw new Error("private configuration");
+  });
+  const response = await GET(logoutRequest("session-key"));
+  expect(response.status).toBe(500);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(response.cookies.get("__Host-user-session")?.maxAge).toBe(0);
+  await expect(response.json()).resolves.toEqual({
+    error: "Unable to complete logout",
+  });
 });
