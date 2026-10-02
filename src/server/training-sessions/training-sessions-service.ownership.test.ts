@@ -40,11 +40,11 @@ function createService() {
   };
 }
 
-test("rejects another athlete's list before validating filters or querying", async () => {
+test("rejects another athlete's list before querying", async () => {
   const { service, repository } = createService();
 
   await expect(
-    service.find("other-actor", { athleteId: actorId, from: "invalid" }),
+    service.find("other-actor", { athleteId: actorId, from: "2026-08-17" }),
   ).rejects.toThrow(ForbiddenError);
   expect(repository.find).not.toHaveBeenCalled();
 });

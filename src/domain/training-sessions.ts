@@ -213,6 +213,10 @@ export const trainingSessionsQuerySchema = z
     { message: "from must be before or equal to to", path: ["from"] },
   );
 
+export type TrainingSessionsQueryInput = z.infer<
+  typeof trainingSessionsQuerySchema
+>;
+
 export type TrainingSessionsQuery = {
   from?: string;
   to?: string;

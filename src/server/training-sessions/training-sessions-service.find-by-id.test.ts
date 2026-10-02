@@ -1,8 +1,5 @@
 import { createRunActivity } from "@/test-support/fixtures/activity";
-import {
-  TrainingSessionNotFoundError,
-  TrainingSessionsValidationError,
-} from "./training-sessions-errors";
+import { TrainingSessionNotFoundError } from "./training-sessions-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
@@ -33,12 +30,12 @@ test("finds a training session by a valid id", async () => {
   expect(repository.findById).toHaveBeenCalledExactlyOnceWith(id);
 });
 
-test("rejects invalid and missing training session ids during lookup", async () => {
+test("propagates lookup failures and reports missing sessions", async () => {
   const { repository, service } = createService();
-  await expect(service.findById(actorId, "invalid")).rejects.toThrow(
-    TrainingSessionsValidationError,
-  );
-  expect(repository.findById).not.toHaveBeenCalled();
+  const failure = new Error("Invalid database identifier");
+  vi.mocked(repository.findById).mockRejectedValue(failure);
+  await expect(service.findById(actorId, "invalid")).rejects.toBe(failure);
+  expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
 
   vi.mocked(repository.findById).mockResolvedValue(null);
   await expect(service.findById(actorId, id)).rejects.toThrow(
