@@ -1,6 +1,8 @@
 import { parseDateFromString } from "@/core/date/date-parsing";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import type {
+  CompleteTrainingSessionRequest,
+  SkipTrainingSessionRequest,
   CreateTrainingSessionRequest,
   EditTrainingSessionRequest,
   RunTrainingSession,
@@ -18,7 +20,6 @@ import type {
   TrainingSessionsFindQuery,
   TrainingSessionsRepository,
 } from "./training-sessions-repository";
-import type { TrainingSessionsRequestValidator } from "./training-sessions-request-validator";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
 
@@ -31,22 +32,26 @@ export interface TrainingSessionsService {
   create(
     actorId: string,
     athleteId: string,
-    body: unknown,
+    request: CreateTrainingSessionRequest,
   ): Promise<TrainingSession>;
   delete(actorId: string, id: string): Promise<void>;
   skip(
     actorId: string,
     id: string,
-    body: unknown,
+    request: SkipTrainingSessionRequest,
     timeZone: string | null,
   ): Promise<TrainingSession>;
   complete(
     actorId: string,
     id: string,
-    body: unknown,
+    request: CompleteTrainingSessionRequest,
     timeZone: string | null,
   ): Promise<TrainingSession>;
-  edit(actorId: string, id: string, body: unknown): Promise<TrainingSession>;
+  edit(
+    actorId: string,
+    id: string,
+    request: EditTrainingSessionRequest,
+  ): Promise<TrainingSession>;
 }
 
 export type CreateTrainingSessionInput = CreateTrainingSessionRequest & {
@@ -65,7 +70,6 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     private readonly repository: TrainingSessionsRepository,
     private readonly validator: TrainingSessionsValidator,
     private readonly userService: Pick<UserService, "findById">,
-    private readonly requestValidator: TrainingSessionsRequestValidator,
   ) {}
 
   async find(
@@ -116,10 +120,9 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   async create(
     actorId: string,
     athleteId: string,
-    body: unknown,
+    request: CreateTrainingSessionRequest,
   ): Promise<TrainingSession> {
     this.authorizeAthlete(actorId, athleteId);
-    const request = this.requestValidator.validateCreate(body);
     if (!trainingSessionIdSchema.safeParse(athleteId).success) {
       throw new TrainingSessionsValidationError(
         "athlete id must be a valid UUID",
@@ -151,11 +154,10 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   async skip(
     actorId: string,
     id: string,
-    body: unknown,
+    request: SkipTrainingSessionRequest,
     timeZone: string | null,
   ): Promise<TrainingSession> {
     const current = await this.findById(actorId, id);
-    const request = this.requestValidator.validateSkip(body);
     this.validator.validateSkip(current, timeZone);
 
     const skipped = await this.repository.skip(current, request);
@@ -170,11 +172,10 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   async complete(
     actorId: string,
     id: string,
-    body: unknown,
+    request: CompleteTrainingSessionRequest,
     timeZone: string | null,
   ): Promise<TrainingSession> {
     const current = await this.findById(actorId, id);
-    const request = this.requestValidator.validateComplete(body);
     this.validator.validateComplete(current, request, timeZone);
 
     const completed = await this.repository.complete(current, request);
@@ -189,10 +190,9 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
   async edit(
     actorId: string,
     id: string,
-    body: unknown,
+    request: EditTrainingSessionRequest,
   ): Promise<TrainingSession> {
     const current = await this.findById(actorId, id);
-    const request = this.requestValidator.validateEdit(body);
 
     this.validator.validateEdit(current, request);
     if (this.isUnchanged(current, request)) return current;

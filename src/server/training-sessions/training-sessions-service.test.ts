@@ -1,4 +1,3 @@
-import { DefaultTrainingSessionsRequestValidator } from "./training-sessions-request-validator";
 import {
   createRunActivity,
   createStrengthActivity,
@@ -47,7 +46,6 @@ function createService() {
       repository,
       validator,
       userService,
-      new DefaultTrainingSessionsRequestValidator(),
     ),
   };
 }

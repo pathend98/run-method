@@ -18,7 +18,6 @@ import { readDatabaseEnv } from "./env/database-env";
 import { readDatabaseTlsOptions } from "./env/database-tls";
 import { DefaultJwtService } from "./jwt/jwt-service";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
-import { DefaultTrainingSessionsRequestValidator } from "./training-sessions/training-sessions-request-validator";
 import { DefaultTrainingSessionsService } from "./training-sessions/training-sessions-service";
 import { DefaultTrainingSessionsTransformer } from "./training-sessions/training-sessions-transformer";
 import { DefaultTrainingSessionsValidator } from "./training-sessions/training-sessions-validator";
@@ -78,7 +77,6 @@ export function getTrainingSessionsService(): DefaultTrainingSessionsService {
     trainingSessionsRepository,
     trainingSessionsValidator,
     getUserService(),
-    new DefaultTrainingSessionsRequestValidator(),
   );
 
   return trainingSessionsService;

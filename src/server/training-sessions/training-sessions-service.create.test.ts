@@ -1,4 +1,3 @@
-import { DefaultTrainingSessionsRequestValidator } from "./training-sessions-request-validator";
 import { createStrengthActivity } from "@/test-support/fixtures/activity";
 import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
@@ -27,7 +26,6 @@ function createService() {
     repository,
     {} as TrainingSessionsValidator,
     userService,
-    new DefaultTrainingSessionsRequestValidator(),
   );
   return { repository, userService, service };
 }

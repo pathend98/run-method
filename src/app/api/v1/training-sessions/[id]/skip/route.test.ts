@@ -7,7 +7,6 @@ import { UserNotFoundError } from "@/server/user/user-errors";
 import { createUser } from "@/test-support/fixtures/user";
 import {
   TrainingSessionNotFoundError,
-  TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
 import { POST } from "./route";
@@ -22,12 +21,7 @@ const repository = vi.hoisted(() => ({
   edit: vi.fn(),
 }));
 
-const validator = vi.hoisted(() => ({
-  validateCreate: vi.fn(),
-  validateEdit: vi.fn(),
-  validateSkip: vi.fn(),
-  validateComplete: vi.fn(),
-}));
+const serviceCalls = vi.hoisted(() => vi.fn());
 
 const domainValidator = vi.hoisted(() => ({
   validateEdit: vi.fn(),
@@ -47,15 +41,12 @@ vi.mock("@/server/server", async (importOriginal) => {
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey }),
     ),
-    getTrainingSessionsService: () =>
-      new DefaultTrainingSessionsService(
-        repository,
-        domainValidator,
-        {
-          findById: vi.fn(),
-        },
-        validator,
-      ),
+    getTrainingSessionsService: () => {
+      serviceCalls();
+      return new DefaultTrainingSessionsService(repository, domainValidator, {
+        findById: vi.fn(),
+      });
+    },
 
     getUserService: () => ({ findBySessionKey }),
   };
@@ -110,10 +101,12 @@ function context(sessionId = id) {
 }
 
 test("skips and returns a complete training session", async () => {
-  validator.validateSkip.mockReturnValue(skipRequest);
   repository.skip.mockResolvedValue(skippedSession);
 
-  const response = await POST(request(), context());
+  const response = await POST(
+    request(JSON.stringify({ skipReason: "  Recovery  " })),
+    context(),
+  );
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(skippedSession);
@@ -128,7 +121,6 @@ test("skips and returns a complete training session", async () => {
 });
 
 test("validates a missing timezone header before writing", async () => {
-  validator.validateSkip.mockReturnValue(skipRequest);
   domainValidator.validateSkip.mockImplementation(() => {
     throw new TrainingSessionsValidationError("Time-Zone header is required");
   });
@@ -154,22 +146,21 @@ test("returns malformed skip JSON with 400 status", async () => {
     error: "Invalid request body",
     fieldErrors: { body: ["Request body must be valid JSON"] },
   });
+  expect(serviceCalls).not.toHaveBeenCalled();
 });
 
 test("returns skip field errors with 400 status", async () => {
-  validator.validateSkip.mockImplementation(() => {
-    throw new TrainingSessionsRequestValidationError({
-      skipReason: ["Required"],
-    });
-  });
-
-  const response = await POST(request(), context());
-
+  const response = await POST(
+    request(JSON.stringify({ skipReason: "" })),
+    context(),
+  );
   expect(response.status).toBe(400);
-  await expect(response.json()).resolves.toEqual({
+  await expect(response.json()).resolves.toMatchObject({
     error: "Invalid request body",
-    fieldErrors: { skipReason: ["Required"] },
+    fieldErrors: { skipReason: [expect.any(String)] },
   });
+  expect(serviceCalls).not.toHaveBeenCalled();
+  expect(repository.skip).not.toHaveBeenCalled();
 });
 
 test.each([
@@ -187,7 +178,6 @@ test.each([
     "future training sessions cannot be skipped",
   ],
 ] as const)("maps expected skip errors", async (error, status, message) => {
-  validator.validateSkip.mockReturnValue(skipRequest);
   repository.skip.mockRejectedValue(error);
 
   const response = await POST(request(), context());
@@ -197,7 +187,6 @@ test.each([
 });
 
 test("returns stable unexpected skip errors", async () => {
-  validator.validateSkip.mockReturnValue(skipRequest);
   repository.skip.mockRejectedValue(new Error("database down"));
 
   const response = await POST(request(), context());
@@ -213,52 +202,46 @@ test.each([
   ["invalid cookie", 401, "invalid"],
   ["other athlete", 403, "foreign"],
   ["missing session", 404, "absent"],
-])(
-  "POST denies %s before body validation or mutation",
-  async (_label, status, kind) => {
-    const postRequest = request("{}");
-    if (kind === "missing") postRequest.cookies.delete("__Host-user-session");
-    if (kind === "invalid")
-      findBySessionKey.mockRejectedValue(new UserNotFoundError());
-    if (kind === "foreign")
-      repository.findById.mockResolvedValue(
-        createRunActivity({ id, athleteId: "other-id" }),
-      );
-    if (kind === "absent") repository.findById.mockResolvedValue(null);
+])("POST denies %s before mutation", async (_label, status, kind) => {
+  const postRequest = request();
+  if (kind === "missing") postRequest.cookies.delete("__Host-user-session");
+  if (kind === "invalid")
+    findBySessionKey.mockRejectedValue(new UserNotFoundError());
+  if (kind === "foreign")
+    repository.findById.mockResolvedValue(
+      createRunActivity({ id, athleteId: "other-id" }),
+    );
+  if (kind === "absent") repository.findById.mockResolvedValue(null);
 
-    const response = await POST(postRequest, context());
-    expect(response.status).toBe(status);
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(validator.validateSkip).not.toHaveBeenCalled();
-    expect(repository.skip).not.toHaveBeenCalled();
-  },
-);
+  const response = await POST(postRequest, context());
+  expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+
+  expect(repository.skip).not.toHaveBeenCalled();
+});
 
 test.each([
   ["actor lookup failure", 500, "actor"],
   ["invalid id", 400, "invalid"],
   ["session lookup failure", 500, "lookup"],
-])(
-  "POST maps %s before body validation or mutation",
-  async (_label, status, kind) => {
-    if (kind === "actor")
-      findBySessionKey.mockRejectedValue(new Error("database down"));
-    if (kind === "invalid")
-      repository.findById.mockRejectedValue(
-        new TrainingSessionsValidationError(
-          "training session id must be a valid UUID",
-        ),
-      );
-    if (kind === "lookup")
-      repository.findById.mockRejectedValue(new Error("database down"));
+])("POST maps %s before mutation", async (_label, status, kind) => {
+  if (kind === "actor")
+    findBySessionKey.mockRejectedValue(new Error("database down"));
+  if (kind === "invalid")
+    repository.findById.mockRejectedValue(
+      new TrainingSessionsValidationError(
+        "training session id must be a valid UUID",
+      ),
+    );
+  if (kind === "lookup")
+    repository.findById.mockRejectedValue(new Error("database down"));
 
-    const response = await POST(request("{}"), context());
-    expect(response.status).toBe(status);
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(validator.validateSkip).not.toHaveBeenCalled();
-    expect(repository.skip).not.toHaveBeenCalled();
-  },
-);
+  const response = await POST(request(), context());
+  expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+
+  expect(repository.skip).not.toHaveBeenCalled();
+});
 
 test.each(["foreign", "absent", "lookup failure"])(
   "malformed JSON takes precedence over %s session lookup",
@@ -277,7 +260,8 @@ test.each(["foreign", "absent", "lookup failure"])(
       fieldErrors: { body: ["Request body must be valid JSON"] },
     });
     expect(repository.findById).not.toHaveBeenCalled();
-    expect(validator.validateSkip).not.toHaveBeenCalled();
+    expect(serviceCalls).not.toHaveBeenCalled();
+
     expect(repository.skip).not.toHaveBeenCalled();
   },
 );
@@ -294,7 +278,65 @@ test.each(["missing", "invalid"])(
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
     expect(repository.findById).not.toHaveBeenCalled();
-    expect(validator.validateSkip).not.toHaveBeenCalled();
+    expect(serviceCalls).not.toHaveBeenCalled();
+
+    expect(repository.skip).not.toHaveBeenCalled();
+  },
+);
+
+test.each(["foreign", "absent", "invalid id", "lookup failure"])(
+  "schema errors take precedence over %s",
+  async (kind) => {
+    if (kind === "foreign")
+      repository.findById.mockResolvedValue(
+        createRunActivity({ athleteId: "other-id" }),
+      );
+    if (kind === "absent") repository.findById.mockResolvedValue(null);
+    if (kind === "lookup failure")
+      repository.findById.mockRejectedValue(new Error("database down"));
+    const response = await POST(
+      request("{}"),
+      context(kind === "invalid id" ? "invalid" : id),
+    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Invalid request body",
+      fieldErrors: expect.any(Object),
+    });
+    expect(serviceCalls).not.toHaveBeenCalled();
+    expect(repository.findById).not.toHaveBeenCalled();
+    expect(repository.skip).not.toHaveBeenCalled();
+  },
+);
+
+test("rejects unexpected keys before invoking the service", async () => {
+  const response = await POST(
+    request(JSON.stringify({ ...skipRequest, extra: true })),
+    context(),
+  );
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toMatchObject({
+    error: "Invalid request body",
+    fieldErrors: {
+      extra: expect.arrayContaining(['Unrecognized key: "extra"']),
+    },
+  });
+  expect(serviceCalls).not.toHaveBeenCalled();
+  expect(repository.skip).not.toHaveBeenCalled();
+});
+
+test.each(["missing", "invalid"])(
+  "schema-invalid bodies still reject %s authentication first",
+  async (kind) => {
+    const invalidRequest = request("{}");
+    if (kind === "missing")
+      invalidRequest.cookies.delete("__Host-user-session");
+    if (kind === "invalid")
+      findBySessionKey.mockRejectedValue(new UserNotFoundError());
+    const response = await POST(invalidRequest, context());
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(serviceCalls).not.toHaveBeenCalled();
     expect(repository.skip).not.toHaveBeenCalled();
   },
 );

@@ -1,3 +1,4 @@
+import { createTrainingSessionRequestSchema } from "@/domain/training-sessions";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -40,10 +41,15 @@ export const POST = apiHandler.wrap(
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
 
+    const body = await requestBodyReader.readRequestBody(
+      request,
+      createTrainingSessionRequestSchema,
+    );
+
     const session = await getTrainingSessionsService().create(
       actorId,
       athleteId,
-      await requestBodyReader.readRequestBody(request),
+      body,
     );
 
     return NextResponse.json(session, {
