@@ -13,6 +13,7 @@ import { UnauthorizedError } from "@/server/errors/unauthorized-error";
 import { TrainingSessionsRequestValidationError } from "@/server/training-sessions/training-sessions-errors";
 import { DefaultApiHandler, noStoreResponseHeaders } from "./api-handler";
 import { RequestValidationError } from "@/server/errors/request-validation-error";
+import { RequestBodyValidationError } from "@/server/errors/request-body-validation-error";
 
 const apiHandler = new DefaultApiHandler();
 
@@ -39,6 +40,14 @@ test.each([
     { error: "Invalid request body", fieldErrors: { body: ["Invalid JSON"] } },
   ],
   [new Error("private details"), 500, { error: "Unable to process request" }],
+  [
+    new RequestBodyValidationError({ "items.0.title": ["Required"] }),
+    400,
+    {
+      error: "Invalid request body",
+      fieldErrors: { "items.0.title": ["Required"] },
+    },
+  ],
 ] as const)("maps %s to an API response", async (error, status, body) => {
   const handler = apiHandler.wrap(async (receivedRequest: NextRequest) => {
     expect(receivedRequest).toBe(request);

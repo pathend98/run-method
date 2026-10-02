@@ -1,5 +1,5 @@
 import { createStrengthActivity } from "@/test-support/fixtures/activity";
-import type { CreateTrainingSessionInput } from "./training-sessions-service";
+import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import { UserNotFoundError } from "../user/user-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
@@ -8,14 +8,13 @@ import type { UserService } from "../user/user-service";
 import { createUser } from "@/test-support/fixtures/user";
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
-const request: CreateTrainingSessionInput = {
+const request: CreateTrainingSessionRequest = {
   title: "Strength",
   activityType: "STRENGTH",
   date: "2026-08-26",
   timeOfDay: null,
   description: null,
   targetDurationSeconds: null,
-  athleteId,
 };
 
 function createService() {
@@ -37,7 +36,7 @@ test.each([undefined, null, "invalid"])(
     const { repository, service, userService } = createService();
 
     await expect(
-      service.create(athleteId as string, athleteId as string, () => request),
+      service.create(athleteId as string, athleteId as string, request),
     ).rejects.toThrow("athlete id must be a valid UUID");
     expect(userService.findById).not.toHaveBeenCalled();
     expect(repository.create).not.toHaveBeenCalled();
@@ -53,10 +52,13 @@ test("checks the athlete before creating a session", async () => {
   );
   vi.mocked(repository.create).mockResolvedValue({ id: "created" } as never);
 
-  await service.create(athleteId, athleteId, () => request);
+  await service.create(athleteId, athleteId, request);
 
   expect(userService.findById).toHaveBeenCalledExactlyOnceWith(athleteId);
-  expect(repository.create).toHaveBeenCalledExactlyOnceWith(request);
+  expect(repository.create).toHaveBeenCalledExactlyOnceWith({
+    ...request,
+    athleteId,
+  });
   expect(
     vi.mocked(userService.findById).mock.invocationCallOrder[0],
   ).toBeLessThan(vi.mocked(repository.create).mock.invocationCallOrder[0]);
@@ -66,16 +68,15 @@ test("does not create a session when the athlete is missing", async () => {
   const { repository, service, userService } = createService();
   vi.mocked(userService.findById).mockRejectedValue(new UserNotFoundError());
 
-  await expect(
-    service.create(athleteId, athleteId, () => request),
-  ).rejects.toThrow(UserNotFoundError);
+  await expect(service.create(athleteId, athleteId, request)).rejects.toThrow(
+    UserNotFoundError,
+  );
   expect(repository.create).not.toHaveBeenCalled();
 });
 
 test("delegates creation to the repository", async () => {
   const { repository, service, userService } = createService();
   const request = {
-    athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
     activityType: "STRENGTH" as const,
     date: "2026-08-26",
@@ -91,9 +92,9 @@ test("delegates creation to the repository", async () => {
   });
   vi.mocked(repository.create).mockResolvedValue(created);
 
-  await expect(
-    service.create(athleteId, request.athleteId, () => request),
-  ).resolves.toEqual(created);
-  expect(userService.findById).toHaveBeenCalledWith(request.athleteId);
-  expect(repository.create).toHaveBeenCalledWith(request);
+  await expect(service.create(athleteId, athleteId, request)).resolves.toEqual(
+    created,
+  );
+  expect(userService.findById).toHaveBeenCalledWith(athleteId);
+  expect(repository.create).toHaveBeenCalledWith({ ...request, athleteId });
 });

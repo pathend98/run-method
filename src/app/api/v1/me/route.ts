@@ -6,8 +6,8 @@ import {
   requestAuthenticationService,
   requestBodyReader,
   getUserService,
-  userProfileRequestValidator,
 } from "@/server/server";
+import { updateUserProfileSchema } from "@/domain/user-types";
 import { privateResponseHeaders } from "@/server/http/api-handler";
 
 export const GET = apiHandler.wrap(async (request: NextRequest) => {
@@ -18,9 +18,12 @@ export const GET = apiHandler.wrap(async (request: NextRequest) => {
 export const PATCH = apiHandler.wrap(async (request: NextRequest) => {
   const user = await requestAuthenticationService.authenticateUser(request);
 
-  const body = await requestBodyReader.readRequestBody(request);
+  const input = await requestBodyReader.readRequestBody(
+    request,
+    updateUserProfileSchema,
+  );
 
-  const input = userProfileRequestValidator.validateUpdate(body);
   const updatedUser = await getUserService().updateProfile(user.id, input);
+
   return NextResponse.json(updatedUser, { headers: privateResponseHeaders });
 }, "Unable to update user profile");

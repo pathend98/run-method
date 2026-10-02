@@ -1,7 +1,6 @@
 import { createRunActivity } from "@/test-support/fixtures/activity";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
-import { TrainingSessionsValidationError } from "./training-sessions-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
@@ -59,41 +58,63 @@ test("rejects an unscoped list without querying the repository", async () => {
   expect(repository.find).not.toHaveBeenCalled();
 });
 
-test("rejects creation for another athlete before reading input or looking up users", async () => {
+test("rejects creation for another athlete before looking up users or writing", async () => {
   const { service, repository, userService } = createService();
-  const readRequest = vi.fn(() => {
-    throw new Error("invalid input");
-  });
+  const body = {
+    activityType: "RUN" as const,
+    title: runSession.title,
+    description: runSession.description,
+    timeOfDay: runSession.timeOfDay,
+    date: runSession.date,
+    targetDistanceMetres: runSession.targetDistanceMetres,
+    targetDurationSeconds: runSession.targetDurationSeconds,
+  };
 
-  await expect(
-    service.create("other-actor", actorId, readRequest),
-  ).rejects.toThrow(ForbiddenError);
-  expect(readRequest).not.toHaveBeenCalled();
+  await expect(service.create("other-actor", actorId, body)).rejects.toThrow(
+    ForbiddenError,
+  );
+
   expect(userService.findById).not.toHaveBeenCalled();
   expect(repository.create).not.toHaveBeenCalled();
 });
 
 test.each(["findById", "delete", "edit", "complete", "skip"] as const)(
-  "%s rejects another athlete before reading input, validating or writing",
+  "%s rejects another athlete before domain validation or writing",
   async (operation) => {
     const { service, repository, validator } = createService();
-    const readRequest = vi.fn(() => {
-      throw new Error("invalid input");
-    });
+    const body = {
+      activityType: "RUN" as const,
+      title: runSession.title,
+      description: runSession.description,
+      timeOfDay: runSession.timeOfDay,
+      date: runSession.date,
+      targetDistanceMetres: runSession.targetDistanceMetres,
+      targetDurationSeconds: runSession.targetDurationSeconds,
+    };
     const foreignActor = "other-actor";
     const operations = {
       findById: () => service.findById(foreignActor, runSession.id),
       delete: () => service.delete(foreignActor, runSession.id),
-      edit: () => service.edit(foreignActor, runSession.id, readRequest),
+      edit: () => service.edit(foreignActor, runSession.id, body),
       complete: () =>
-        service.complete(foreignActor, runSession.id, readRequest, timeZone),
+        service.complete(
+          foreignActor,
+          runSession.id,
+          { actualDurationSeconds: 1500, actualDistanceMetres: 5000 },
+          timeZone,
+        ),
       skip: () =>
-        service.skip(foreignActor, runSession.id, readRequest, timeZone),
+        service.skip(
+          foreignActor,
+          runSession.id,
+          { skipReason: "Recovery" },
+          timeZone,
+        ),
     };
 
     await expect(operations[operation]()).rejects.toThrow(ForbiddenError);
     expect(repository.findById).toHaveBeenCalledExactlyOnceWith(runSession.id);
-    expect(readRequest).not.toHaveBeenCalled();
+
     expect(validator.validateEdit).not.toHaveBeenCalled();
     expect(validator.validateComplete).not.toHaveBeenCalled();
     expect(validator.validateSkip).not.toHaveBeenCalled();
@@ -101,28 +122,5 @@ test.each(["findById", "delete", "edit", "complete", "skip"] as const)(
     expect(repository.complete).not.toHaveBeenCalled();
     expect(repository.skip).not.toHaveBeenCalled();
     expect(repository.deleteById).not.toHaveBeenCalled();
-  },
-);
-
-test.each(["create", "edit", "complete", "skip"] as const)(
-  "%s propagates deferred input failure without writing",
-  async (operation) => {
-    const { service, repository } = createService();
-    const failure = new TrainingSessionsValidationError("input rejected");
-    const readRequest = vi.fn().mockRejectedValue(failure);
-    const operations = {
-      create: () => service.create(actorId, actorId, readRequest),
-      edit: () => service.edit(actorId, runSession.id, readRequest),
-      complete: () =>
-        service.complete(actorId, runSession.id, readRequest, timeZone),
-      skip: () => service.skip(actorId, runSession.id, readRequest, timeZone),
-    };
-
-    await expect(operations[operation]()).rejects.toBe(failure);
-    expect(readRequest).toHaveBeenCalledExactlyOnceWith();
-    expect(repository.create).not.toHaveBeenCalled();
-    expect(repository.edit).not.toHaveBeenCalled();
-    expect(repository.complete).not.toHaveBeenCalled();
-    expect(repository.skip).not.toHaveBeenCalled();
   },
 );

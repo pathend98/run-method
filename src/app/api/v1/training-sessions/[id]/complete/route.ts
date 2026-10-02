@@ -1,3 +1,4 @@
+import { completeTrainingSessionRequestSchema } from "@/domain/training-sessions";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -6,7 +7,6 @@ import {
   requestAuthenticationService,
   requestBodyReader,
   getTrainingSessionsService,
-  trainingSessionsRequestValidator,
 } from "@/server/server";
 import { privateResponseHeaders as responseHeaders } from "@/server/http/api-handler";
 
@@ -20,13 +20,15 @@ export const POST = apiHandler.wrap(
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
 
+    const body = await requestBodyReader.readRequestBody(
+      request,
+      completeTrainingSessionRequestSchema,
+    );
+
     const session = await getTrainingSessionsService().complete(
       actorId,
       id,
-      async () =>
-        trainingSessionsRequestValidator.validateComplete(
-          await requestBodyReader.readRequestBody(request),
-        ),
+      body,
       request.headers.get("Time-Zone"),
     );
 

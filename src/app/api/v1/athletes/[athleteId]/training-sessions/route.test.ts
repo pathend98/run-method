@@ -2,9 +2,7 @@ import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
-import { TrainingSessionsRequestValidationError } from "@/server/training-sessions/training-sessions-errors";
 import { UserNotFoundError } from "@/server/user/user-errors";
-import { trainingSessionsRequestValidator } from "@/server/server";
 import { createUser } from "@/test-support/fixtures/user";
 import { GET, POST } from "./route";
 
@@ -17,6 +15,8 @@ const repository = vi.hoisted(() => ({
   complete: vi.fn(),
   edit: vi.fn(),
 }));
+const serviceCalls = vi.hoisted(() => vi.fn());
+
 const domainValidator = vi.hoisted(() => ({
   validateEdit: vi.fn(),
   validateSkip: vi.fn(),
@@ -36,20 +36,27 @@ vi.mock("@/server/server", async (importOriginal) => {
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey }),
     ),
-    getTrainingSessionsService: () =>
-      new DefaultTrainingSessionsService(repository, domainValidator, {
+    getTrainingSessionsService: () => {
+      serviceCalls();
+      return new DefaultTrainingSessionsService(repository, domainValidator, {
         findById: findUserById,
-      }),
+      });
+    },
 
     getUserService: () => ({ findBySessionKey }),
-    trainingSessionsRequestValidator: { validateCreate: vi.fn() },
   };
 });
 
-const requestValidator = vi.mocked(trainingSessionsRequestValidator);
-
 const athleteId = "33333333-3333-4333-8333-333333333333";
 const otherAthleteId = "44444444-4444-4444-8444-444444444444";
+const createBody = {
+  activityType: "STRENGTH" as const,
+  title: "Strength",
+  date: "2026-08-26",
+  timeOfDay: null,
+  description: null,
+  targetDurationSeconds: null,
+};
 const sessionKey = "session-key";
 
 beforeEach(() => {
@@ -132,7 +139,6 @@ test.each([
     expect(findBySessionKey).not.toHaveBeenCalled();
     expect(repository.find).not.toHaveBeenCalled();
     expect(repository.create).not.toHaveBeenCalled();
-    expect(requestValidator.validateCreate).not.toHaveBeenCalled();
   },
 );
 
@@ -149,14 +155,13 @@ test.each([
   await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
   expect(repository.find).not.toHaveBeenCalled();
   expect(repository.create).not.toHaveBeenCalled();
-  expect(requestValidator.validateCreate).not.toHaveBeenCalled();
 });
 
 test.each([
   ["GET", () => GET(request(otherAthleteId), context(otherAthleteId))],
   [
     "POST",
-    () => POST(postRequest("{", otherAthleteId), context(otherAthleteId)),
+    () => POST(postRequest(undefined, otherAthleteId), context(otherAthleteId)),
   ],
 ])("%s forbids another athlete's session", async (_method, call) => {
   const response = await call();
@@ -166,7 +171,6 @@ test.each([
   await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
   expect(repository.find).not.toHaveBeenCalled();
   expect(repository.create).not.toHaveBeenCalled();
-  expect(requestValidator.validateCreate).not.toHaveBeenCalled();
 });
 
 test.each([
@@ -184,7 +188,6 @@ test.each([
   });
   expect(repository.find).not.toHaveBeenCalled();
   expect(repository.create).not.toHaveBeenCalled();
-  expect(requestValidator.validateCreate).not.toHaveBeenCalled();
 });
 
 test("returns 500 for unexpected failures", async () => {
@@ -198,7 +201,11 @@ test("returns 500 for unexpected failures", async () => {
   });
 });
 
-function postRequest(body: string, id = athleteId, cookie = sessionKey) {
+function postRequest(
+  body: string = JSON.stringify(createBody),
+  id = athleteId,
+  cookie = sessionKey,
+) {
   return new NextRequest(
     `http://localhost/api/v1/athletes/${id}/training-sessions`,
     {
@@ -233,16 +240,17 @@ test.each([
     athleteId,
     ...body,
   };
-  requestValidator.validateCreate.mockReturnValue(body as never);
   repository.create.mockResolvedValue(session);
 
-  const response = await POST(postRequest(JSON.stringify(body)), context());
+  const response = await POST(
+    postRequest(JSON.stringify({ ...body, title: `  ${body.title}  ` })),
+    context(),
+  );
 
   expect(response.status).toBe(201);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   await expect(response.json()).resolves.toEqual(session);
   expect(findBySessionKey).toHaveBeenCalledExactlyOnceWith(sessionKey);
-  expect(requestValidator.validateCreate).toHaveBeenCalledWith(body);
   expect(repository.create).toHaveBeenCalledWith({ ...body, athleteId });
 });
 
@@ -255,28 +263,27 @@ test("returns 400 for malformed JSON", async () => {
     fieldErrors: { body: ["Request body must be valid JSON"] },
   });
   expect(repository.create).not.toHaveBeenCalled();
+  expect(serviceCalls).not.toHaveBeenCalled();
 });
 
 test("returns field errors for invalid session fields", async () => {
-  requestValidator.validateCreate.mockImplementation(() => {
-    throw new TrainingSessionsRequestValidationError({ title: ["Required"] });
-  });
-
-  const response = await POST(postRequest("{}"), context());
-
+  const response = await POST(
+    postRequest(JSON.stringify({ ...createBody, title: "" })),
+    context(),
+  );
   expect(response.status).toBe(400);
-  await expect(response.json()).resolves.toEqual({
+  await expect(response.json()).resolves.toMatchObject({
     error: "Invalid request body",
-    fieldErrors: { title: ["Required"] },
+    fieldErrors: { title: [expect.any(String)] },
   });
+  expect(serviceCalls).not.toHaveBeenCalled();
   expect(repository.create).not.toHaveBeenCalled();
 });
 
 test("returns 404 when the athlete does not exist", async () => {
-  requestValidator.validateCreate.mockReturnValue({} as never);
   findUserById.mockRejectedValue(new UserNotFoundError());
 
-  const response = await POST(postRequest("{}"), context());
+  const response = await POST(postRequest(), context());
 
   expect(response.status).toBe(404);
   await expect(response.json()).resolves.toEqual({
@@ -286,12 +293,11 @@ test("returns 404 when the athlete does not exist", async () => {
 });
 
 test("returns 400 for an invalid creation request", async () => {
-  requestValidator.validateCreate.mockReturnValue({} as never);
   repository.create.mockRejectedValue(
     new BadRequestError("Invalid training session"),
   );
 
-  const response = await POST(postRequest("{}"), context());
+  const response = await POST(postRequest(), context());
 
   expect(response.status).toBe(400);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
@@ -301,13 +307,94 @@ test("returns 400 for an invalid creation request", async () => {
 });
 
 test("returns 500 for unexpected creation failures", async () => {
-  requestValidator.validateCreate.mockReturnValue({} as never);
   repository.create.mockRejectedValue(new Error("database down"));
 
-  const response = await POST(postRequest("{}"), context());
+  const response = await POST(postRequest(), context());
 
   expect(response.status).toBe(500);
   await expect(response.json()).resolves.toEqual({
     error: "Unable to create training session",
   });
 });
+
+test("malformed JSON takes precedence over another athlete's ownership", async () => {
+  const response = await POST(
+    postRequest("{", otherAthleteId),
+    context(otherAthleteId),
+  );
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({
+    error: "Invalid request body",
+    fieldErrors: { body: ["Request body must be valid JSON"] },
+  });
+
+  expect(findUserById).not.toHaveBeenCalled();
+  expect(repository.create).not.toHaveBeenCalled();
+});
+
+test("applies creation defaults before passing the body to the service", async () => {
+  repository.create.mockResolvedValue({ id: "created" });
+  const response = await POST(
+    postRequest(
+      JSON.stringify({
+        activityType: "STRENGTH",
+        title: "  Strength  ",
+        date: createBody.date,
+      }),
+    ),
+    context(),
+  );
+  expect(response.status).toBe(201);
+  expect(repository.create).toHaveBeenCalledExactlyOnceWith({
+    ...createBody,
+    athleteId,
+  });
+});
+
+test.each([athleteId, otherAthleteId])(
+  "schema errors take precedence over athlete lookup for %s",
+  async (id) => {
+    findUserById.mockRejectedValue(new UserNotFoundError());
+    const response = await POST(postRequest("{}", id), context(id));
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Invalid request body",
+      fieldErrors: expect.any(Object),
+    });
+    expect(serviceCalls).not.toHaveBeenCalled();
+    expect(findUserById).not.toHaveBeenCalled();
+    expect(repository.create).not.toHaveBeenCalled();
+  },
+);
+
+test("rejects unexpected keys before invoking the service", async () => {
+  const response = await POST(
+    postRequest(JSON.stringify({ ...createBody, extra: true })),
+    context(),
+  );
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toMatchObject({
+    error: "Invalid request body",
+    fieldErrors: {
+      extra: expect.arrayContaining(['Unrecognized key: "extra"']),
+    },
+  });
+  expect(serviceCalls).not.toHaveBeenCalled();
+  expect(repository.create).not.toHaveBeenCalled();
+});
+
+test.each(["missing", "invalid"])(
+  "schema-invalid bodies still reject %s authentication first",
+  async (kind) => {
+    const invalidRequest = postRequest("{}");
+    if (kind === "missing")
+      invalidRequest.cookies.delete("__Host-user-session");
+    if (kind === "invalid")
+      findBySessionKey.mockRejectedValue(new UserNotFoundError());
+    const response = await POST(invalidRequest, context());
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(serviceCalls).not.toHaveBeenCalled();
+    expect(repository.create).not.toHaveBeenCalled();
+  },
+);

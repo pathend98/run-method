@@ -18,23 +18,16 @@ import { readDatabaseEnv } from "./env/database-env";
 import { readDatabaseTlsOptions } from "./env/database-tls";
 import { DefaultJwtService } from "./jwt/jwt-service";
 import { DrizzleTrainingSessionsRepository } from "./training-sessions/training-sessions-repository";
-import { DefaultTrainingSessionsRequestValidator } from "./training-sessions/training-sessions-request-validator";
 import { DefaultTrainingSessionsService } from "./training-sessions/training-sessions-service";
 import { DefaultTrainingSessionsTransformer } from "./training-sessions/training-sessions-transformer";
 import { DefaultTrainingSessionsValidator } from "./training-sessions/training-sessions-validator";
 import { DrizzleUserRepository } from "./user/user-repository";
-import { DefaultUserProfileRequestValidator } from "./user/user-profile-request-validator";
 import { DefaultUserService } from "./user/user-service";
 
 export const apiHandler = new DefaultApiHandler();
 export const requestBodyReader = new DefaultRequestBodyReader();
 export const requestAuthenticationService =
   new DefaultRequestAuthenticationService(getUserService);
-
-export const trainingSessionsRequestValidator =
-  new DefaultTrainingSessionsRequestValidator();
-export const userProfileRequestValidator =
-  new DefaultUserProfileRequestValidator();
 
 let trainingSessionsService: DefaultTrainingSessionsService | undefined;
 let authenticationService: DefaultAuthenticationService | undefined;

@@ -4,11 +4,9 @@ import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
-import { trainingSessionsRequestValidator } from "@/server/server";
 import { createUser } from "@/test-support/fixtures/user";
 import {
   TrainingSessionNotFoundError,
-  TrainingSessionsRequestValidationError,
   TrainingSessionsValidationError,
 } from "@/server/training-sessions/training-sessions-errors";
 import { DELETE, PATCH } from "./route";
@@ -22,6 +20,8 @@ const repository = vi.hoisted(() => ({
   complete: vi.fn(),
   edit: vi.fn(),
 }));
+
+const serviceCalls = vi.hoisted(() => vi.fn());
 
 const domainValidator = vi.hoisted(() => ({
   validateEdit: vi.fn(),
@@ -41,15 +41,14 @@ vi.mock("@/server/server", async (importOriginal) => {
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey }),
     ),
-    getTrainingSessionsService: () =>
-      new DefaultTrainingSessionsService(repository, domainValidator, {
+    getTrainingSessionsService: () => {
+      serviceCalls();
+      return new DefaultTrainingSessionsService(repository, domainValidator, {
         findById: vi.fn(),
-      }),
+      });
+    },
 
     getUserService: () => ({ findBySessionKey }),
-    trainingSessionsRequestValidator: {
-      validateEdit: vi.fn(),
-    },
   };
 });
 
@@ -82,8 +81,6 @@ const editedSession = {
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 };
-
-const validator = vi.mocked(trainingSessionsRequestValidator);
 
 function patchRequest(body: string = JSON.stringify(editRequest)) {
   return new NextRequest(`http://localhost/api/v1/training-sessions/${id}`, {
@@ -151,14 +148,21 @@ test("returns stable deletion errors with 500 status", async () => {
 });
 
 test("edits and returns a complete training session", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
   repository.edit.mockResolvedValue(editedSession);
 
-  const response = await PATCH(patchRequest(), context());
+  const response = await PATCH(
+    patchRequest(
+      JSON.stringify({
+        ...editRequest,
+        title: `  ${editRequest.title}  `,
+        description: `  ${editRequest.description}  `,
+      }),
+    ),
+    context(),
+  );
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(editedSession);
-  expect(validator.validateEdit).toHaveBeenCalledWith(editRequest);
   expect(repository.edit).toHaveBeenCalledWith(
     expect.objectContaining({ id, athleteId }),
     editRequest,
@@ -173,26 +177,24 @@ test("returns malformed JSON errors with 400 status", async () => {
     error: "Invalid request body",
     fieldErrors: { body: ["Request body must be valid JSON"] },
   });
+  expect(serviceCalls).not.toHaveBeenCalled();
 });
 
 test("returns edit field errors with 400 status", async () => {
-  validator.validateEdit.mockImplementation(() => {
-    throw new TrainingSessionsRequestValidationError({
-      title: ["Required"],
-    });
-  });
-
-  const response = await PATCH(patchRequest(), context());
-
+  const response = await PATCH(
+    patchRequest(JSON.stringify({ ...editRequest, title: "" })),
+    context(),
+  );
   expect(response.status).toBe(400);
-  await expect(response.json()).resolves.toEqual({
+  await expect(response.json()).resolves.toMatchObject({
     error: "Invalid request body",
-    fieldErrors: { title: ["Required"] },
+    fieldErrors: { title: [expect.any(String)] },
   });
+  expect(serviceCalls).not.toHaveBeenCalled();
+  expect(repository.edit).not.toHaveBeenCalled();
 });
 
 test("returns business validation errors with 400 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
   repository.edit.mockRejectedValue(
     new BadRequestError("activityType cannot be changed"),
   );
@@ -213,12 +215,11 @@ test("returns invalid session ids with 400 status", async () => {
     error: "training session id must be a valid UUID",
   });
   expect(repository.findById).not.toHaveBeenCalled();
-  expect(validator.validateEdit).not.toHaveBeenCalled();
+
   expect(repository.edit).not.toHaveBeenCalled();
 });
 
 test("returns missing sessions with 404 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
   repository.edit.mockRejectedValue(new TrainingSessionNotFoundError());
 
   const response = await PATCH(patchRequest(), context());
@@ -230,7 +231,6 @@ test("returns missing sessions with 404 status", async () => {
 });
 
 test("returns stable edit errors with 500 status", async () => {
-  validator.validateEdit.mockReturnValue(editRequest);
   repository.edit.mockRejectedValue(new Error("database down"));
 
   const response = await PATCH(patchRequest(), context());
@@ -268,26 +268,23 @@ test.each([
   ["invalid cookie", 401, "invalid"],
   ["other athlete", 403, "foreign"],
   ["missing session", 404, "absent"],
-])(
-  "PATCH denies %s before body validation or mutation",
-  async (_label, status, kind) => {
-    const request = patchRequest("{");
-    if (kind === "missing") request.cookies.delete("__Host-user-session");
-    if (kind === "invalid")
-      findBySessionKey.mockRejectedValue(new UserNotFoundError());
-    if (kind === "foreign")
-      repository.findById.mockResolvedValue(
-        createRunActivity({ id, athleteId: "other-id" }),
-      );
-    if (kind === "absent") repository.findById.mockResolvedValue(null);
+])("PATCH denies %s before mutation", async (_label, status, kind) => {
+  const request = patchRequest();
+  if (kind === "missing") request.cookies.delete("__Host-user-session");
+  if (kind === "invalid")
+    findBySessionKey.mockRejectedValue(new UserNotFoundError());
+  if (kind === "foreign")
+    repository.findById.mockResolvedValue(
+      createRunActivity({ id, athleteId: "other-id" }),
+    );
+  if (kind === "absent") repository.findById.mockResolvedValue(null);
 
-    const response = await PATCH(request, context());
-    expect(response.status).toBe(status);
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(validator.validateEdit).not.toHaveBeenCalled();
-    expect(repository.edit).not.toHaveBeenCalled();
-  },
-);
+  const response = await PATCH(request, context());
+  expect(response.status).toBe(status);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+
+  expect(repository.edit).not.toHaveBeenCalled();
+});
 
 test.each([
   ["actor lookup failure", 500, "actor"],
@@ -327,9 +324,107 @@ test.each([
   if (kind === "lookup")
     repository.findById.mockRejectedValue(new Error("database down"));
 
-  const response = await PATCH(patchRequest("{"), context());
+  const response = await PATCH(patchRequest(), context());
   expect(response.status).toBe(status);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
-  expect(validator.validateEdit).not.toHaveBeenCalled();
+
   expect(repository.edit).not.toHaveBeenCalled();
 });
+
+test.each(["foreign", "absent", "lookup failure"])(
+  "malformed JSON takes precedence over %s session lookup",
+  async (kind) => {
+    if (kind === "foreign")
+      repository.findById.mockResolvedValue(
+        createRunActivity({ athleteId: "other-id" }),
+      );
+    if (kind === "absent") repository.findById.mockResolvedValue(null);
+    if (kind === "lookup failure")
+      repository.findById.mockRejectedValue(new Error("database down"));
+    const response = await PATCH(patchRequest("{"), context());
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid request body",
+      fieldErrors: { body: ["Request body must be valid JSON"] },
+    });
+    expect(repository.findById).not.toHaveBeenCalled();
+    expect(serviceCalls).not.toHaveBeenCalled();
+
+    expect(repository.edit).not.toHaveBeenCalled();
+  },
+);
+
+test.each(["missing", "invalid"])(
+  "malformed JSON still rejects %s authentication first",
+  async (kind) => {
+    const malformedRequest = patchRequest("{");
+    if (kind === "missing")
+      malformedRequest.cookies.delete("__Host-user-session");
+    if (kind === "invalid")
+      findBySessionKey.mockRejectedValue(new UserNotFoundError());
+    const response = await PATCH(malformedRequest, context());
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(repository.findById).not.toHaveBeenCalled();
+    expect(serviceCalls).not.toHaveBeenCalled();
+
+    expect(repository.edit).not.toHaveBeenCalled();
+  },
+);
+
+test.each(["foreign", "absent", "invalid id", "lookup failure"])(
+  "schema errors take precedence over %s",
+  async (kind) => {
+    if (kind === "foreign")
+      repository.findById.mockResolvedValue(
+        createRunActivity({ athleteId: "other-id" }),
+      );
+    if (kind === "absent") repository.findById.mockResolvedValue(null);
+    if (kind === "lookup failure")
+      repository.findById.mockRejectedValue(new Error("database down"));
+    const response = await PATCH(
+      patchRequest("{}"),
+      context(kind === "invalid id" ? "invalid" : id),
+    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "Invalid request body",
+      fieldErrors: expect.any(Object),
+    });
+    expect(serviceCalls).not.toHaveBeenCalled();
+    expect(repository.findById).not.toHaveBeenCalled();
+    expect(repository.edit).not.toHaveBeenCalled();
+  },
+);
+
+test("rejects unexpected keys before invoking the service", async () => {
+  const response = await PATCH(
+    patchRequest(JSON.stringify({ ...editRequest, extra: true })),
+    context(),
+  );
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toMatchObject({
+    error: "Invalid request body",
+    fieldErrors: {
+      extra: expect.arrayContaining(['Unrecognized key: "extra"']),
+    },
+  });
+  expect(serviceCalls).not.toHaveBeenCalled();
+  expect(repository.edit).not.toHaveBeenCalled();
+});
+
+test.each(["missing", "invalid"])(
+  "schema-invalid bodies still reject %s authentication first",
+  async (kind) => {
+    const invalidRequest = patchRequest("{}");
+    if (kind === "missing")
+      invalidRequest.cookies.delete("__Host-user-session");
+    if (kind === "invalid")
+      findBySessionKey.mockRejectedValue(new UserNotFoundError());
+    const response = await PATCH(invalidRequest, context());
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(serviceCalls).not.toHaveBeenCalled();
+    expect(repository.edit).not.toHaveBeenCalled();
+  },
+);
