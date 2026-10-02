@@ -12,6 +12,7 @@ import { NotFoundError } from "@/server/errors/not-found-error";
 import { UnauthorizedError } from "@/server/errors/unauthorized-error";
 import { TrainingSessionsRequestValidationError } from "@/server/training-sessions/training-sessions-errors";
 import { DefaultApiHandler, noStoreResponseHeaders } from "./api-handler";
+import { UnmarshalError } from "@/server/errors/unmarshal-error";
 import { RequestValidationError } from "@/server/errors/request-validation-error";
 import { RequestBodyValidationError } from "@/server/errors/request-body-validation-error";
 
@@ -20,6 +21,11 @@ const apiHandler = new DefaultApiHandler();
 const request = new NextRequest("https://app.example.com/api/v1/test");
 
 test.each([
+  [
+    new UnmarshalError({ from: ["Invalid date"] }),
+    400,
+    { error: "Invalid input", fieldErrors: { from: ["Invalid date"] } },
+  ],
   [new BadRequestError("Bad input"), 400, { error: "Bad input" }],
   [new UnauthorizedError(), 401, { error: "Unauthorized" }],
   [new ForbiddenError(), 403, { error: "Forbidden" }],

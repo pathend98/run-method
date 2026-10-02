@@ -3,7 +3,7 @@ import { DefaultTrainingGoalsService } from "./training-goals/training-goals-ser
 import { DrizzleTrainingGoalsRepository } from "./training-goals/training-goals-repository";
 import { DefaultApiHandler } from "./http/api-handler";
 import { DefaultRequestAuthenticationService } from "./http/request-authentication-service";
-import { DefaultUnmarshaler } from "./unmarshaler";
+import { DefaultUnmarshaler } from "./unmarshaler/unmarshaler";
 
 import {
   CognitoLogoutProvider,

@@ -201,6 +201,18 @@ export type TrainingSessionDateRange = {
   to: string;
 };
 
+export const trainingSessionsQuerySchema = z
+  .object({
+    athleteId: z.uuid(),
+    from: z.iso.date().optional(),
+    to: z.iso.date().optional(),
+    status: trainingSessionStatusSchema.optional(),
+  })
+  .refine(
+    ({ from, to }) => from === undefined || to === undefined || from <= to,
+    { message: "from must be before or equal to to", path: ["from"] },
+  );
+
 export type TrainingSessionsQuery = {
   from?: string;
   to?: string;

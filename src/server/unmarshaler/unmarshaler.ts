@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import { UnmarshalError } from "./errors/unmarshal-error";
+import { UnmarshalError } from "@/server/errors/unmarshal-error";
 
 import { RequestBodyValidationError } from "@/server/errors/request-body-validation-error";
 

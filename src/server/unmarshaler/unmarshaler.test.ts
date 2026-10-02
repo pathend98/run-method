@@ -1,4 +1,4 @@
-import { UnmarshalError } from "./errors/unmarshal-error";
+import { UnmarshalError } from "@/server/errors/unmarshal-error";
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
