@@ -11,7 +11,6 @@ import {
   getTrainingSessionsService,
   trainingSessionsRequestValidator,
 } from "@/server/server";
-import { authorizeTrainingSession } from "../authorize-training-session";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -21,13 +20,13 @@ export const POST = withApiHandler(
   async (request: NextRequest, context: RouteContext) => {
     const { id } = await context.params;
     const actorId = await authenticateActor(request);
-    await authorizeTrainingSession(actorId, id);
-    const body = await readRequestBody(request);
-    const completeRequest =
-      trainingSessionsRequestValidator.validateComplete(body);
     const session = await getTrainingSessionsService().complete(
+      actorId,
       id,
-      completeRequest,
+      async () =>
+        trainingSessionsRequestValidator.validateComplete(
+          await readRequestBody(request),
+        ),
       request.headers.get("Time-Zone"),
     );
     return NextResponse.json(session, { headers: responseHeaders });

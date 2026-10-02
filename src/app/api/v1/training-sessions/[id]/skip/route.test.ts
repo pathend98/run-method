@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
@@ -11,23 +12,44 @@ import {
 } from "@/server/training-sessions/training-sessions-errors";
 import { POST } from "./route";
 
-const service = vi.hoisted(() => ({ findById: vi.fn(), skip: vi.fn() }));
+const repository = vi.hoisted(() => ({
+  find: vi.fn(),
+  findById: vi.fn(),
+  create: vi.fn(),
+  deleteById: vi.fn(),
+  skip: vi.fn(),
+  complete: vi.fn(),
+  edit: vi.fn(),
+}));
 
+const domainValidator = vi.hoisted(() => ({
+  validateEdit: vi.fn(),
+  validateSkip: vi.fn(),
+  validateComplete: vi.fn(),
+}));
 const findBySessionKey = vi.hoisted(() => vi.fn());
 
-vi.mock("@/server/server", () => ({
-  getTrainingSessionsService: () => service,
-  getUserService: () => ({ findBySessionKey }),
-  trainingSessionsRequestValidator: { validateSkip: vi.fn() },
-}));
+vi.mock("@/server/server", async () => {
+  const { DefaultTrainingSessionsService } =
+    await import("@/server/training-sessions/training-sessions-service");
+  return {
+    getTrainingSessionsService: () =>
+      new DefaultTrainingSessionsService(repository, domainValidator, {
+        findById: vi.fn(),
+      }),
+
+    getUserService: () => ({ findBySessionKey }),
+    trainingSessionsRequestValidator: { validateSkip: vi.fn() },
+  };
+});
 
 const id = "11111111-1111-4111-8111-111111111111";
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   findBySessionKey.mockResolvedValue(createUser({ id: athleteId }));
-  service.findById.mockResolvedValue({ id, athleteId });
+  repository.findById.mockResolvedValue(createRunActivity({ id, athleteId }));
 });
 const skipRequest = { skipReason: "Recovery" };
 const skippedSession = {
@@ -73,28 +95,35 @@ function context(sessionId = id) {
 
 test("skips and returns a complete training session", async () => {
   validator.validateSkip.mockReturnValue(skipRequest);
-  service.skip.mockResolvedValue(skippedSession);
+  repository.skip.mockResolvedValue(skippedSession);
 
   const response = await POST(request(), context());
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(skippedSession);
-  expect(service.skip).toHaveBeenCalledWith(
-    id,
+  expect(repository.skip).toHaveBeenCalledWith(
+    expect.objectContaining({ id, athleteId }),
     skipRequest,
+  );
+  expect(domainValidator.validateSkip).toHaveBeenCalledWith(
+    expect.objectContaining({ id, athleteId }),
     "Pacific/Auckland",
   );
 });
 
-test("passes a missing timezone header to the service", async () => {
+test("validates a missing timezone header before writing", async () => {
   validator.validateSkip.mockReturnValue(skipRequest);
-  service.skip.mockRejectedValue(
-    new TrainingSessionsValidationError("Time-Zone header is required"),
-  );
+  domainValidator.validateSkip.mockImplementation(() => {
+    throw new TrainingSessionsValidationError("Time-Zone header is required");
+  });
 
   const response = await POST(request(undefined, null), context());
 
-  expect(service.skip).toHaveBeenCalledWith(id, skipRequest, null);
+  expect(domainValidator.validateSkip).toHaveBeenCalledWith(
+    expect.objectContaining({ id, athleteId }),
+    null,
+  );
+  expect(repository.skip).not.toHaveBeenCalled();
   expect(response.status).toBe(400);
   await expect(response.json()).resolves.toEqual({
     error: "Time-Zone header is required",
@@ -143,7 +172,7 @@ test.each([
   ],
 ] as const)("maps expected skip errors", async (error, status, message) => {
   validator.validateSkip.mockReturnValue(skipRequest);
-  service.skip.mockRejectedValue(error);
+  repository.skip.mockRejectedValue(error);
 
   const response = await POST(request(), context());
 
@@ -153,7 +182,7 @@ test.each([
 
 test("returns stable unexpected skip errors", async () => {
   validator.validateSkip.mockReturnValue(skipRequest);
-  service.skip.mockRejectedValue(new Error("database down"));
+  repository.skip.mockRejectedValue(new Error("database down"));
 
   const response = await POST(request(), context());
 
@@ -176,15 +205,16 @@ test.each([
     if (kind === "invalid")
       findBySessionKey.mockRejectedValue(new UserNotFoundError());
     if (kind === "foreign")
-      service.findById.mockResolvedValue({ id, athleteId: "other-id" });
-    if (kind === "absent")
-      service.findById.mockRejectedValue(new TrainingSessionNotFoundError());
+      repository.findById.mockResolvedValue(
+        createRunActivity({ id, athleteId: "other-id" }),
+      );
+    if (kind === "absent") repository.findById.mockResolvedValue(null);
 
     const response = await POST(postRequest, context());
     expect(response.status).toBe(status);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(validator.validateSkip).not.toHaveBeenCalled();
-    expect(service.skip).not.toHaveBeenCalled();
+    expect(repository.skip).not.toHaveBeenCalled();
   },
 );
 
@@ -198,18 +228,18 @@ test.each([
     if (kind === "actor")
       findBySessionKey.mockRejectedValue(new Error("database down"));
     if (kind === "invalid")
-      service.findById.mockRejectedValue(
+      repository.findById.mockRejectedValue(
         new TrainingSessionsValidationError(
           "training session id must be a valid UUID",
         ),
       );
     if (kind === "lookup")
-      service.findById.mockRejectedValue(new Error("database down"));
+      repository.findById.mockRejectedValue(new Error("database down"));
 
     const response = await POST(request("{"), context());
     expect(response.status).toBe(status);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(validator.validateSkip).not.toHaveBeenCalled();
-    expect(service.skip).not.toHaveBeenCalled();
+    expect(repository.skip).not.toHaveBeenCalled();
   },
 );

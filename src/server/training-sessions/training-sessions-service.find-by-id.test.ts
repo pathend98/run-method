@@ -1,4 +1,4 @@
-import type { TrainingSession } from "@/domain/training-sessions";
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsValidationError,
@@ -7,6 +7,8 @@ import type { TrainingSessionsRepository } from "./training-sessions-repository"
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
+
+const actorId = createRunActivity().athleteId;
 
 const id = "11111111-1111-4111-8111-111111111111";
 
@@ -24,25 +26,22 @@ function createService() {
 
 test("finds a training session by a valid id", async () => {
   const { repository, service } = createService();
-  const session = {
-    id,
-    athleteId: "33333333-3333-4333-8333-333333333333",
-  } as TrainingSession;
+  const session = createRunActivity({ id });
   vi.mocked(repository.findById).mockResolvedValue(session);
 
-  await expect(service.findById(id)).resolves.toBe(session);
+  await expect(service.findById(actorId, id)).resolves.toBe(session);
   expect(repository.findById).toHaveBeenCalledExactlyOnceWith(id);
 });
 
 test("rejects invalid and missing training session ids during lookup", async () => {
   const { repository, service } = createService();
-  await expect(service.findById("invalid")).rejects.toThrow(
+  await expect(service.findById(actorId, "invalid")).rejects.toThrow(
     TrainingSessionsValidationError,
   );
   expect(repository.findById).not.toHaveBeenCalled();
 
   vi.mocked(repository.findById).mockResolvedValue(null);
-  await expect(service.findById(id)).rejects.toThrow(
+  await expect(service.findById(actorId, id)).rejects.toThrow(
     TrainingSessionNotFoundError,
   );
 });

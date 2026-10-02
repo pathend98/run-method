@@ -1,3 +1,4 @@
+import { createRunActivity } from "@/test-support/fixtures/activity";
 import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
@@ -11,23 +12,44 @@ import {
 } from "@/server/training-sessions/training-sessions-errors";
 import { POST } from "./route";
 
-const service = vi.hoisted(() => ({ findById: vi.fn(), complete: vi.fn() }));
+const repository = vi.hoisted(() => ({
+  find: vi.fn(),
+  findById: vi.fn(),
+  create: vi.fn(),
+  deleteById: vi.fn(),
+  skip: vi.fn(),
+  complete: vi.fn(),
+  edit: vi.fn(),
+}));
 
+const domainValidator = vi.hoisted(() => ({
+  validateEdit: vi.fn(),
+  validateSkip: vi.fn(),
+  validateComplete: vi.fn(),
+}));
 const findBySessionKey = vi.hoisted(() => vi.fn());
 
-vi.mock("@/server/server", () => ({
-  getTrainingSessionsService: () => service,
-  getUserService: () => ({ findBySessionKey }),
-  trainingSessionsRequestValidator: { validateComplete: vi.fn() },
-}));
+vi.mock("@/server/server", async () => {
+  const { DefaultTrainingSessionsService } =
+    await import("@/server/training-sessions/training-sessions-service");
+  return {
+    getTrainingSessionsService: () =>
+      new DefaultTrainingSessionsService(repository, domainValidator, {
+        findById: vi.fn(),
+      }),
+
+    getUserService: () => ({ findBySessionKey }),
+    trainingSessionsRequestValidator: { validateComplete: vi.fn() },
+  };
+});
 
 const id = "11111111-1111-4111-8111-111111111111";
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   findBySessionKey.mockResolvedValue(createUser({ id: athleteId }));
-  service.findById.mockResolvedValue({ id, athleteId });
+  repository.findById.mockResolvedValue(createRunActivity({ id, athleteId }));
 });
 const completeRequest = {
   actualDurationSeconds: 1500,
@@ -76,34 +98,39 @@ function context(sessionId = id) {
 
 test("completes and returns a complete training session", async () => {
   validator.validateComplete.mockReturnValue(completeRequest);
-  service.complete.mockResolvedValue(completedSession);
+  repository.complete.mockResolvedValue(completedSession);
 
   const response = await POST(request(), context());
 
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual(completedSession);
-  expect(service.complete).toHaveBeenCalledWith(
-    id,
+  expect(repository.complete).toHaveBeenCalledWith(
+    expect.objectContaining({ id, athleteId }),
+    completeRequest,
+  );
+  expect(domainValidator.validateComplete).toHaveBeenCalledWith(
+    expect.objectContaining({ id, athleteId }),
     completeRequest,
     "Pacific/Auckland",
   );
 });
 
-test("passes an invalid timezone header to the service", async () => {
+test("validates an invalid timezone header before writing", async () => {
   validator.validateComplete.mockReturnValue(completeRequest);
-  service.complete.mockRejectedValue(
-    new TrainingSessionsValidationError(
+  domainValidator.validateComplete.mockImplementation(() => {
+    throw new TrainingSessionsValidationError(
       "Time-Zone header must be a valid IANA timezone",
-    ),
-  );
+    );
+  });
 
   const response = await POST(request(undefined, "Not/AZone"), context());
 
-  expect(service.complete).toHaveBeenCalledWith(
-    id,
+  expect(domainValidator.validateComplete).toHaveBeenCalledWith(
+    expect.objectContaining({ id, athleteId }),
     completeRequest,
     "Not/AZone",
   );
+  expect(repository.complete).not.toHaveBeenCalled();
   expect(response.status).toBe(400);
   await expect(response.json()).resolves.toEqual({
     error: "Time-Zone header must be a valid IANA timezone",
@@ -154,7 +181,7 @@ test.each([
   "maps expected completion errors",
   async (error, status, message) => {
     validator.validateComplete.mockReturnValue(completeRequest);
-    service.complete.mockRejectedValue(error);
+    repository.complete.mockRejectedValue(error);
 
     const response = await POST(request(), context());
 
@@ -165,7 +192,7 @@ test.each([
 
 test("returns stable unexpected completion errors", async () => {
   validator.validateComplete.mockReturnValue(completeRequest);
-  service.complete.mockRejectedValue(new Error("database down"));
+  repository.complete.mockRejectedValue(new Error("database down"));
 
   const response = await POST(request(), context());
 
@@ -188,15 +215,16 @@ test.each([
     if (kind === "invalid")
       findBySessionKey.mockRejectedValue(new UserNotFoundError());
     if (kind === "foreign")
-      service.findById.mockResolvedValue({ id, athleteId: "other-id" });
-    if (kind === "absent")
-      service.findById.mockRejectedValue(new TrainingSessionNotFoundError());
+      repository.findById.mockResolvedValue(
+        createRunActivity({ id, athleteId: "other-id" }),
+      );
+    if (kind === "absent") repository.findById.mockResolvedValue(null);
 
     const response = await POST(postRequest, context());
     expect(response.status).toBe(status);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(validator.validateComplete).not.toHaveBeenCalled();
-    expect(service.complete).not.toHaveBeenCalled();
+    expect(repository.complete).not.toHaveBeenCalled();
   },
 );
 
@@ -210,18 +238,18 @@ test.each([
     if (kind === "actor")
       findBySessionKey.mockRejectedValue(new Error("database down"));
     if (kind === "invalid")
-      service.findById.mockRejectedValue(
+      repository.findById.mockRejectedValue(
         new TrainingSessionsValidationError(
           "training session id must be a valid UUID",
         ),
       );
     if (kind === "lookup")
-      service.findById.mockRejectedValue(new Error("database down"));
+      repository.findById.mockRejectedValue(new Error("database down"));
 
     const response = await POST(request("{"), context());
     expect(response.status).toBe(status);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(validator.validateComplete).not.toHaveBeenCalled();
-    expect(service.complete).not.toHaveBeenCalled();
+    expect(repository.complete).not.toHaveBeenCalled();
   },
 );
