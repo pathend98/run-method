@@ -1,3 +1,6 @@
+import { DefaultTrainingGoalsTransformer } from "./training-goals/training-goals-transformer";
+import { DefaultTrainingGoalsService } from "./training-goals/training-goals-service";
+import { DrizzleTrainingGoalsRepository } from "./training-goals/training-goals-repository";
 import { DefaultApiHandler } from "./http/api-handler";
 import { DefaultRequestAuthenticationService } from "./http/request-authentication-service";
 import { DefaultRequestBodyReader } from "./http/request-body-reader";
@@ -29,6 +32,7 @@ export const requestBodyReader = new DefaultRequestBodyReader();
 export const requestAuthenticationService =
   new DefaultRequestAuthenticationService(getUserService);
 
+let trainingGoalsService: DefaultTrainingGoalsService | undefined;
 let trainingSessionsService: DefaultTrainingSessionsService | undefined;
 let authenticationService: DefaultAuthenticationService | undefined;
 let userService: DefaultUserService | undefined;
@@ -115,4 +119,15 @@ export function getLogoutUrlStrategy(): LogoutProvider {
   return env.OIDC_PROVIDER === "keycloak"
     ? new KeycloakLogoutProvider(configuration)
     : new CognitoLogoutProvider(configuration);
+}
+
+export function getTrainingGoalsService(): DefaultTrainingGoalsService {
+  if (trainingGoalsService) return trainingGoalsService;
+  trainingGoalsService = new DefaultTrainingGoalsService(
+    new DrizzleTrainingGoalsRepository(
+      getDatabase(),
+      new DefaultTrainingGoalsTransformer(),
+    ),
+  );
+  return trainingGoalsService;
 }

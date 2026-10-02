@@ -196,3 +196,24 @@ export const strengthDetails = pgTable(
     ),
   ],
 );
+
+export const trainingGoals = pgTable("training_goals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  athleteId: uuid("athlete_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  type: text("type", {
+    enum: ["RACE", "DISTANCE", "CONSISTENCY", "OPEN"],
+  }).notNull(),
+  targetDistanceMetres: integer("target_distance_metres"),
+  targetDate: date("target_date"),
+  targetTimeSeconds: integer("target_time_seconds"),
+  description: text("description"),
+  status: text("status", { enum: ["ACTIVE", "COMPLETED", "DISCARDED"] })
+    .notNull()
+    .default("ACTIVE"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
