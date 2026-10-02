@@ -1,15 +1,21 @@
 import type { z } from "zod";
 
+import { UnmarshalError } from "@/server/errors/unmarshal-error";
+
 import { RequestBodyValidationError } from "@/server/errors/request-body-validation-error";
 
-export interface RequestBodyReader {
+export interface Unmarshaler {
+  unmarshal<TSchema extends z.ZodType>(
+    value: unknown,
+    schema: TSchema,
+  ): z.output<TSchema>;
   readRequestBody<TSchema extends z.ZodType>(
     request: Request,
     schema: TSchema,
   ): Promise<z.output<TSchema>>;
 }
 
-export class DefaultRequestBodyReader implements RequestBodyReader {
+export class DefaultUnmarshaler implements Unmarshaler {
   async readRequestBody<TSchema extends z.ZodType>(
     request: Request,
     schema: TSchema,
@@ -23,10 +29,24 @@ export class DefaultRequestBodyReader implements RequestBodyReader {
       });
     }
 
-    const result = schema.safeParse(body);
+    try {
+      return this.unmarshal(body, schema);
+    } catch (error) {
+      if (error instanceof UnmarshalError) {
+        throw new RequestBodyValidationError(error.fieldErrors);
+      }
+      throw error;
+    }
+  }
+
+  unmarshal<TSchema extends z.ZodType>(
+    value: unknown,
+    schema: TSchema,
+  ): z.output<TSchema> {
+    const result = schema.safeParse(value);
     if (result.success) return result.data;
 
-    throw new RequestBodyValidationError(this.fieldErrors(result.error));
+    throw new UnmarshalError(this.fieldErrors(result.error));
   }
 
   private fieldErrors(error: z.ZodError): Record<string, string[]> {

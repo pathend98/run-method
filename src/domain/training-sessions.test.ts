@@ -4,6 +4,7 @@ import {
   editTrainingSessionRequestSchema,
   skipTrainingSessionRequestSchema,
   trainingSessionSchema,
+  trainingSessionsQuerySchema,
 } from "./training-sessions";
 import {
   createRunActivity,
@@ -274,4 +275,106 @@ test("run write schemas reject legacy target fields", () => {
       targetPaceSecondsPerKilometre: 300,
     }),
   ).toThrow();
+});
+
+test("creation applies null defaults while editing requires explicit nullable fields", () => {
+  const request = { title: " Strength ", activityType: "STRENGTH" };
+  expect(
+    createTrainingSessionRequestSchema.parse({
+      ...request,
+      date: "2026-10-02",
+    }),
+  ).toEqual({
+    title: "Strength",
+    activityType: "STRENGTH",
+    date: "2026-10-02",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: null,
+  });
+  expect(editTrainingSessionRequestSchema.safeParse(request).success).toBe(
+    false,
+  );
+  expect(
+    editTrainingSessionRequestSchema.parse({
+      ...request,
+      timeOfDay: null,
+      description: null,
+      targetDurationSeconds: null,
+    }),
+  ).toEqual({
+    title: "Strength",
+    activityType: "STRENGTH",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: null,
+  });
+});
+
+test("session response text preserves surrounding whitespace", () => {
+  const session = createRunActivity({
+    title: " Easy run ",
+    description: " Details ",
+  });
+  expect(trainingSessionSchema.parse(session)).toEqual(session);
+});
+
+describe("trainingSessionsQuerySchema", () => {
+  const athleteId = baseSession.athleteId;
+
+  test.each([
+    {},
+    { from: "2026-08-17" },
+    { to: "2026-08-23" },
+    { from: "2026-08-17", to: "2026-08-23" },
+    { from: "2026-08-17", to: "2026-08-17" },
+    { from: "2028-02-29" },
+    { status: "SCHEDULED" },
+    { status: "COMPLETED" },
+    { status: "SKIPPED" },
+  ])("accepts valid filters %j", (filters) => {
+    const query = { athleteId, ...filters };
+    expect(trainingSessionsQuerySchema.parse(query)).toEqual(query);
+  });
+
+  test.each([
+    ["athleteId", "not-a-uuid"],
+    ["athleteId", ""],
+    ["athleteId", undefined],
+    ["from", "2026-02-30"],
+    ["from", "17/08/2026"],
+    ["from", ""],
+    ["to", "2026-02-29"],
+    ["to", "2026-08-23T00:00:00Z"],
+    ["to", ""],
+    ["status", "DUE"],
+    ["status", "scheduled"],
+    ["status", ""],
+  ])("rejects invalid %s: %s", (field, value) => {
+    const result = trainingSessionsQuerySchema.safeParse({
+      athleteId,
+      [field]: value,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success)
+      expect(result.error.issues).toEqual(
+        expect.arrayContaining([expect.objectContaining({ path: [field] })]),
+      );
+  });
+
+  test("assigns inverted date range errors to from", () => {
+    const result = trainingSessionsQuerySchema.safeParse({
+      athleteId,
+      from: "2026-08-24",
+      to: "2026-08-23",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success)
+      expect(result.error.issues).toEqual([
+        expect.objectContaining({
+          path: ["from"],
+          message: "from must be before or equal to to",
+        }),
+      ]);
+  });
 });

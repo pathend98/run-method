@@ -7,7 +7,9 @@ import type {
   EditTrainingSessionRequest,
   StrengthTrainingSession,
   TrainingSession,
+  TrainingSessionsQueryInput,
 } from "@/domain/training-sessions";
+import { trainingSessionsQuerySchema } from "@/domain/training-sessions";
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsValidationError,
@@ -50,28 +52,6 @@ function createService() {
   };
 }
 
-test("rejects invalid date strings", async () => {
-  const { service } = createService();
-
-  await expect(
-    service.find(actorId, { athleteId: actorId, from: "2026-02-30" }),
-  ).rejects.toThrow(
-    "from and to must be valid dates in YYYY-MM-DD format when provided",
-  );
-});
-
-test("rejects inverted date ranges", async () => {
-  const { service } = createService();
-
-  await expect(
-    service.find(actorId, {
-      athleteId: actorId,
-      from: "2026-08-24",
-      to: "2026-08-23",
-    }),
-  ).rejects.toThrow("from must be before or equal to to");
-});
-
 test("scopes bounded, unbounded, and status queries to the athlete", async () => {
   const { repository, service } = createService();
 
@@ -107,35 +87,13 @@ test("scopes bounded, unbounded, and status queries to the athlete", async () =>
   expect(repository.find).toHaveBeenNthCalledWith(5, { athleteId: actorId });
 });
 
-test("rejects invalid statuses", async () => {
-  const { service } = createService();
-
-  await expect(
-    service.find(actorId, { athleteId: actorId, status: "DUE" }),
-  ).rejects.toThrow("status must be SCHEDULED, COMPLETED, or SKIPPED");
-});
-
-test("validates athlete ids and forwards valid athlete filters", async () => {
-  const { repository, service } = createService();
-  await expect(
-    service.find("invalid", { athleteId: "invalid" }),
-  ).rejects.toThrow("athlete id must be a valid UUID");
-  expect(repository.find).not.toHaveBeenCalled();
-
-  const athleteId = "33333333-3333-4333-8333-333333333333";
-  await service.find(actorId, { status: "SCHEDULED", athleteId });
-  expect(repository.find).toHaveBeenCalledWith({
-    status: "SCHEDULED",
-    athleteId,
-  });
-});
-
-test("rejects invalid delete ids before deleting from the repository", async () => {
+test("propagates lookup failures during deletion", async () => {
   const { repository, service } = createService();
 
-  await expect(service.delete(actorId, "invalid")).rejects.toThrow(
-    "training session id must be a valid UUID",
-  );
+  const failure = new Error("Invalid database identifier");
+  vi.mocked(repository.findById).mockRejectedValue(failure);
+
+  await expect(service.delete(actorId, "invalid")).rejects.toBe(failure);
   expect(repository.deleteById).not.toHaveBeenCalled();
 });
 
@@ -207,9 +165,12 @@ test("completes a scheduled training session", async () => {
 });
 
 test.each(["skip", "complete"] as const)(
-  "validates %s ids before loading a session",
+  "propagates lookup failures during %s",
   async (operation) => {
     const { repository, service } = createService();
+
+    const failure = new Error("Invalid database identifier");
+    vi.mocked(repository.findById).mockRejectedValue(failure);
 
     const result =
       operation === "skip"
@@ -221,10 +182,8 @@ test.each(["skip", "complete"] as const)(
             timeZone,
           );
 
-    await expect(result).rejects.toThrow(
-      "training session id must be a valid UUID",
-    );
-    expect(repository.findById).not.toHaveBeenCalled();
+    await expect(result).rejects.toBe(failure);
+    expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
   },
 );
 
@@ -300,13 +259,14 @@ const runEdit: EditTrainingSessionRequest = {
   targetDurationSeconds: 2700,
 };
 
-test("rejects invalid edit ids before querying the repository", async () => {
+test("propagates lookup failures during editing", async () => {
   const { repository, service, validator } = createService();
 
-  await expect(service.edit(actorId, "invalid", runEdit)).rejects.toThrow(
-    "training session id must be a valid UUID",
-  );
-  expect(repository.findById).not.toHaveBeenCalled();
+  const failure = new Error("Invalid database identifier");
+  vi.mocked(repository.findById).mockRejectedValue(failure);
+
+  await expect(service.edit(actorId, "invalid", runEdit)).rejects.toBe(failure);
+  expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
   expect(validator.validateEdit).not.toHaveBeenCalled();
 });
 
@@ -642,4 +602,28 @@ test("writes changed canonical targets after validation", async () => {
     currentDuration,
     distanceEdit,
   );
+});
+
+test.each([
+  {},
+  { from: "2026-08-17", to: "2026-08-23", status: "COMPLETED" },
+  { from: undefined, to: undefined, status: undefined },
+])("forwards pre-validated query unchanged: %j", async (filters) => {
+  const { service, repository } = createService();
+  const query: TrainingSessionsQueryInput = trainingSessionsQuerySchema.parse({
+    athleteId: actorId,
+    ...filters,
+  });
+  await service.find(actorId, query);
+  expect(repository.find).toHaveBeenCalledExactlyOnceWith(query);
+  expect(vi.mocked(repository.find).mock.calls[0][0]).toBe(query);
+});
+
+test("looks up session identifiers without UUID validation", async () => {
+  const { service, repository } = createService();
+  vi.mocked(repository.findById).mockResolvedValue(null);
+  await expect(service.findById(actorId, "invalid")).rejects.toBeInstanceOf(
+    TrainingSessionNotFoundError,
+  );
+  expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
 });

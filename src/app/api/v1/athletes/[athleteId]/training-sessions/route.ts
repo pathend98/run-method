@@ -1,11 +1,14 @@
-import { createTrainingSessionRequestSchema } from "@/domain/training-sessions";
+import {
+  createTrainingSessionRequestSchema,
+  trainingSessionsQuerySchema,
+} from "@/domain/training-sessions";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import {
   apiHandler,
   requestAuthenticationService,
-  requestBodyReader,
+  unmarshaler,
   getTrainingSessionsService,
 } from "@/server/server";
 import { privateResponseHeaders as responseHeaders } from "@/server/http/api-handler";
@@ -22,12 +25,17 @@ export const GET = apiHandler.wrap(
 
     const { searchParams } = request.nextUrl;
 
-    const sessions = await getTrainingSessionsService().find(actorId, {
-      athleteId,
-      from: searchParams.get("from") ?? undefined,
-      to: searchParams.get("to") ?? undefined,
-      status: searchParams.get("status") ?? undefined,
-    });
+    const query = unmarshaler.unmarshal(
+      {
+        athleteId,
+        from: searchParams.get("from") ?? undefined,
+        to: searchParams.get("to") ?? undefined,
+        status: searchParams.get("status") ?? undefined,
+      },
+      trainingSessionsQuerySchema,
+    );
+
+    const sessions = await getTrainingSessionsService().find(actorId, query);
 
     return NextResponse.json(sessions, { headers: responseHeaders });
   },
@@ -41,7 +49,7 @@ export const POST = apiHandler.wrap(
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
 
-    const body = await requestBodyReader.readRequestBody(
+    const body = await unmarshaler.readRequestBody(
       request,
       createTrainingSessionRequestSchema,
     );

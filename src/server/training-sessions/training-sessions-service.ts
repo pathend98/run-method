@@ -1,4 +1,3 @@
-import { parseDateFromString } from "@/core/date/date-parsing";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import type {
   CompleteTrainingSessionRequest,
@@ -7,19 +6,13 @@ import type {
   EditTrainingSessionRequest,
   RunTrainingSession,
   TrainingSession,
-} from "@/domain/training-sessions";
-import {
-  trainingSessionIdSchema,
-  trainingSessionStatusSchema,
+  TrainingSessionsQueryInput,
 } from "@/domain/training-sessions";
 import {
   TrainingSessionNotFoundError,
   TrainingSessionsValidationError,
 } from "./training-sessions-errors";
-import type {
-  TrainingSessionsFindQuery,
-  TrainingSessionsRepository,
-} from "./training-sessions-repository";
+import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
 
@@ -58,13 +51,6 @@ export type CreateTrainingSessionInput = CreateTrainingSessionRequest & {
   athleteId: string;
 };
 
-export type TrainingSessionsQueryInput = {
-  athleteId: string;
-  from?: string;
-  to?: string;
-  status?: string;
-};
-
 export class DefaultTrainingSessionsService implements TrainingSessionsService {
   constructor(
     private readonly repository: TrainingSessionsRepository,
@@ -76,45 +62,8 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     actorId: string,
     query: TrainingSessionsQueryInput,
   ): Promise<TrainingSession[]> {
-    const { athleteId, from, to, status } = query;
-    this.authorizeAthlete(actorId, athleteId);
-    if (!trainingSessionIdSchema.safeParse(athleteId).success) {
-      throw new TrainingSessionsValidationError(
-        "athlete id must be a valid UUID",
-      );
-    }
-    const fromDate = from === undefined ? null : parseDateFromString(from);
-    const toDate = to === undefined ? null : parseDateFromString(to);
-
-    if ((from !== undefined && !fromDate) || (to !== undefined && !toDate)) {
-      throw new TrainingSessionsValidationError(
-        "from and to must be valid dates in YYYY-MM-DD format when provided",
-      );
-    }
-
-    if (fromDate && toDate && fromDate > toDate) {
-      throw new TrainingSessionsValidationError(
-        "from must be before or equal to to",
-      );
-    }
-
-    const statusResult =
-      status === undefined
-        ? null
-        : trainingSessionStatusSchema.safeParse(status);
-    if (status !== undefined && !statusResult?.success) {
-      throw new TrainingSessionsValidationError(
-        "status must be SCHEDULED, COMPLETED, or SKIPPED",
-      );
-    }
-
-    const validQuery: TrainingSessionsFindQuery = {
-      athleteId,
-      ...(from !== undefined ? { from } : {}),
-      ...(to !== undefined ? { to } : {}),
-      ...(statusResult?.success ? { status: statusResult.data } : {}),
-    };
-    return this.repository.find(validQuery);
+    this.authorizeAthlete(actorId, query.athleteId);
+    return this.repository.find(query);
   }
 
   async create(
@@ -123,22 +72,11 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
     request: CreateTrainingSessionRequest,
   ): Promise<TrainingSession> {
     this.authorizeAthlete(actorId, athleteId);
-    if (!trainingSessionIdSchema.safeParse(athleteId).success) {
-      throw new TrainingSessionsValidationError(
-        "athlete id must be a valid UUID",
-      );
-    }
     await this.userService.findById(athleteId);
     return this.repository.create({ ...request, athleteId });
   }
 
   async findById(actorId: string, id: string): Promise<TrainingSession> {
-    if (!trainingSessionIdSchema.safeParse(id).success) {
-      throw new TrainingSessionsValidationError(
-        "training session id must be a valid UUID",
-      );
-    }
-
     const session = await this.repository.findById(id);
     if (!session) throw new TrainingSessionNotFoundError();
     this.authorizeAthlete(actorId, session.athleteId);

@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  positiveIntegerSchema,
+  trimmedNonEmptyStringSchema,
+} from "./field-schemas";
 
 export const timeOfDaySchema = z.union([
   z.literal("AM"),
@@ -17,7 +21,6 @@ export const trainingSessionStatusSchema = z.union([
   z.literal("SKIPPED"),
 ]);
 
-const positiveIntegerSchema = z.number().int().positive();
 export const trainingSessionIdSchema = z.uuid();
 const runActualsSchema = z.object({
   actualDistanceMetres: positiveIntegerSchema.nullable(),
@@ -116,12 +119,17 @@ export const trainingSessionSchema = rawTrainingSessionSchema.superRefine(
 
 export const trainingSessionsResponseSchema = z.array(trainingSessionSchema);
 
+const sessionRequestFields = {
+  title: trimmedNonEmptyStringSchema,
+  description: trimmedNonEmptyStringSchema.nullable(),
+};
+
 const createBaseSchema = z
   .object({
-    title: z.string().trim().min(1),
+    ...sessionRequestFields,
     date: z.iso.date(),
     timeOfDay: timeOfDaySchema.optional().default(null),
-    description: z.string().trim().min(1).nullable().optional().default(null),
+    description: sessionRequestFields.description.optional().default(null),
   })
   .strict();
 
@@ -144,10 +152,9 @@ export const createTrainingSessionRequestSchema = z.union([
 
 const editBaseSchema = z
   .object({
-    title: z.string().trim().min(1),
+    ...sessionRequestFields,
     date: z.iso.date().optional(),
     timeOfDay: timeOfDaySchema,
-    description: z.string().trim().min(1).nullable(),
   })
   .strict();
 
@@ -170,7 +177,7 @@ export const editTrainingSessionRequestSchema = z.union([
 
 export const skipTrainingSessionRequestSchema = z
   .object({
-    skipReason: z.string().trim().min(1),
+    skipReason: trimmedNonEmptyStringSchema,
   })
   .strict();
 
@@ -193,6 +200,22 @@ export type TrainingSessionDateRange = {
   from: string;
   to: string;
 };
+
+export const trainingSessionsQuerySchema = z
+  .object({
+    athleteId: z.uuid(),
+    from: z.iso.date().optional(),
+    to: z.iso.date().optional(),
+    status: trainingSessionStatusSchema.optional(),
+  })
+  .refine(
+    ({ from, to }) => from === undefined || to === undefined || from <= to,
+    { message: "from must be before or equal to to", path: ["from"] },
+  );
+
+export type TrainingSessionsQueryInput = z.infer<
+  typeof trainingSessionsQuerySchema
+>;
 
 export type TrainingSessionsQuery = {
   from?: string;

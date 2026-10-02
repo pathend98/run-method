@@ -112,13 +112,48 @@ test("returns an empty list when an athlete has no sessions", async () => {
   });
 });
 
-test("returns 400 for an invalid query", async () => {
-  const message = "status must be SCHEDULED, COMPLETED, or SKIPPED";
-
-  const response = await GET(request(athleteId, "?status=DUE"), context());
-
+test.each([
+  ["athleteId", "", "not-a-uuid"],
+  ["from", "?from=2026-02-30", athleteId],
+  ["to", "?to=2026-02-29", athleteId],
+  ["status", "?status=DUE", athleteId],
+  ["from", "?from=", athleteId],
+  ["to", "?to=", athleteId],
+  ["status", "?status=", athleteId],
+  ["from", "?from=2026-08-24&to=2026-08-23", athleteId],
+])("returns field errors for invalid %s (%s)", async (field, query, id) => {
+  const response = await GET(request(id, query), context(id));
   expect(response.status).toBe(400);
-  await expect(response.json()).resolves.toEqual({ error: message });
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  await expect(response.json()).resolves.toMatchObject({
+    error: "Invalid input",
+    fieldErrors: { [field]: expect.arrayContaining([expect.any(String)]) },
+  });
+  expect(serviceCalls).not.toHaveBeenCalled();
+  expect(repository.find).not.toHaveBeenCalled();
+});
+
+test.each(["", "invalid"])(
+  "authentication precedes query validation for session %s",
+  async (cookie) => {
+    if (cookie) findBySessionKey.mockRejectedValue(new UserNotFoundError());
+    const response = await GET(
+      request(athleteId, "?status=DUE", cookie),
+      context(),
+    );
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(serviceCalls).not.toHaveBeenCalled();
+  },
+);
+
+test("invalid filters precede ownership checks", async () => {
+  const response = await GET(
+    request(otherAthleteId, "?status=DUE"),
+    context(otherAthleteId),
+  );
+  expect(response.status).toBe(400);
+  expect(serviceCalls).not.toHaveBeenCalled();
   expect(repository.find).not.toHaveBeenCalled();
 });
 

@@ -114,14 +114,17 @@ test("deletes a training session with 204 status", async () => {
   expect(repository.deleteById).toHaveBeenCalledWith(id);
 });
 
-test("returns invalid delete ids with 400 status", async () => {
+test("returns a stable 500 response when DELETE identifier lookup fails", async () => {
+  repository.findById.mockRejectedValue(
+    new Error("Invalid database identifier"),
+  );
   const response = await DELETE(deleteRequest("invalid"), context("invalid"));
 
-  expect(response.status).toBe(400);
+  expect(response.status).toBe(500);
   await expect(response.json()).resolves.toEqual({
-    error: "training session id must be a valid UUID",
+    error: "Unable to delete training session",
   });
-  expect(repository.findById).not.toHaveBeenCalled();
+  expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
   expect(repository.deleteById).not.toHaveBeenCalled();
 });
 
@@ -207,14 +210,17 @@ test("returns business validation errors with 400 status", async () => {
   });
 });
 
-test("returns invalid session ids with 400 status", async () => {
+test("returns a stable 500 response when PATCH identifier lookup fails", async () => {
+  repository.findById.mockRejectedValue(
+    new Error("Invalid database identifier"),
+  );
   const response = await PATCH(patchRequest(), context("invalid"));
 
-  expect(response.status).toBe(400);
+  expect(response.status).toBe(500);
   await expect(response.json()).resolves.toEqual({
-    error: "training session id must be a valid UUID",
+    error: "Unable to edit training session",
   });
-  expect(repository.findById).not.toHaveBeenCalled();
+  expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
 
   expect(repository.edit).not.toHaveBeenCalled();
 });

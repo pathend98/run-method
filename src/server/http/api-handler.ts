@@ -10,6 +10,7 @@ import { BadRequestError } from "@/server/errors/bad-request-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { NotFoundError } from "@/server/errors/not-found-error";
 import { UnauthorizedError } from "@/server/errors/unauthorized-error";
+import { UnmarshalError } from "@/server/errors/unmarshal-error";
 import { RequestValidationError } from "@/server/errors/request-validation-error";
 
 export const privateResponseHeaders = { "Cache-Control": "private, no-store" };
@@ -73,7 +74,10 @@ export class DefaultApiHandler implements ApiHandler {
         { status: 502, headers: responseHeaders },
       );
     }
-    if (error instanceof RequestValidationError) {
+    if (
+      error instanceof RequestValidationError ||
+      error instanceof UnmarshalError
+    ) {
       return NextResponse.json(
         { error: error.message, fieldErrors: error.fieldErrors },
         { status: 400, headers: responseHeaders },

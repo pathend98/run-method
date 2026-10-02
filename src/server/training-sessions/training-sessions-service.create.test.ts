@@ -30,18 +30,16 @@ function createService() {
   return { repository, userService, service };
 }
 
-test.each([undefined, null, "invalid"])(
-  "validates athlete id %s before looking up users",
-  async (athleteId) => {
-    const { repository, service, userService } = createService();
-
-    await expect(
-      service.create(athleteId as string, athleteId as string, request),
-    ).rejects.toThrow("athlete id must be a valid UUID");
-    expect(userService.findById).not.toHaveBeenCalled();
-    expect(repository.create).not.toHaveBeenCalled();
-  },
-);
+test("passes athlete identifiers to lookup and propagates lookup failures", async () => {
+  const { repository, service, userService } = createService();
+  const failure = new Error("Invalid database identifier");
+  vi.mocked(userService.findById).mockRejectedValue(failure);
+  await expect(service.create("invalid", "invalid", request)).rejects.toBe(
+    failure,
+  );
+  expect(userService.findById).toHaveBeenCalledExactlyOnceWith("invalid");
+  expect(repository.create).not.toHaveBeenCalled();
+});
 
 test("checks the athlete before creating a session", async () => {
   const { repository, service, userService } = createService();
