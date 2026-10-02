@@ -1,3 +1,4 @@
+import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 
 import {
@@ -12,7 +13,8 @@ const completeIdentitySignIn = vi.hoisted(() => vi.fn());
 const appEnv = vi.hoisted(() => ({ APP_BASE_URL: "https://app.example.com/" }));
 
 vi.mock("@/server/env/app-env", () => ({ readAppEnv: () => appEnv }));
-vi.mock("@/server/server", () => ({
+vi.mock("@/server/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof ServerModule>()),
   getAuthenticationService: () => ({ exchangeAuthorizationCode }),
   getUserService: () => ({ completeIdentitySignIn }),
 }));

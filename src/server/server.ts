@@ -1,3 +1,7 @@
+import { DefaultApiHandler } from "./http/api-handler";
+import { DefaultRequestAuthenticationService } from "./http/request-authentication-service";
+import { DefaultRequestBodyReader } from "./http/request-body-reader";
+
 import {
   CognitoLogoutProvider,
   KeycloakLogoutProvider,
@@ -21,6 +25,11 @@ import { DefaultTrainingSessionsValidator } from "./training-sessions/training-s
 import { DrizzleUserRepository } from "./user/user-repository";
 import { DefaultUserProfileRequestValidator } from "./user/user-profile-request-validator";
 import { DefaultUserService } from "./user/user-service";
+
+export const apiHandler = new DefaultApiHandler();
+export const requestBodyReader = new DefaultRequestBodyReader();
+export const requestAuthenticationService =
+  new DefaultRequestAuthenticationService(getUserService);
 
 export const trainingSessionsRequestValidator =
   new DefaultTrainingSessionsRequestValidator();

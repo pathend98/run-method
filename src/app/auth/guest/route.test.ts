@@ -1,9 +1,12 @@
+import type * as ServerModule from "@/server/server";
+import { UserNotFoundError } from "@/server/user/user-errors";
 import { GET } from "./route";
 
 const startGuestSession = vi.hoisted(() => vi.fn());
 const appEnv = vi.hoisted(() => ({ APP_BASE_URL: "https://app.example.com/" }));
 
-vi.mock("@/server/server", () => ({
+vi.mock("@/server/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof ServerModule>()),
   getUserService: () => ({ startGuestSession }),
 }));
 vi.mock("@/server/env/app-env", () => ({ readAppEnv: () => appEnv }));
@@ -42,8 +45,18 @@ test("returns an error without a session cookie when User entry fails", async ()
   const response = await GET();
 
   expect(response.status).toBe(500);
+  expect(response.headers.get("cache-control")).toBe("no-store");
   await expect(response.json()).resolves.toEqual({
     error: "Unable to complete authentication",
   });
   expect(response.cookies.get("__Host-user-session")).toBeUndefined();
+});
+
+test("uses shared typed-error mapping when a guest user cannot be found", async () => {
+  startGuestSession.mockRejectedValue(new UserNotFoundError());
+  const response = await GET();
+  expect(response.status).toBe(404);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(response.cookies.get("__Host-user-session")).toBeUndefined();
+  await expect(response.json()).resolves.toEqual({ error: "User not found" });
 });
