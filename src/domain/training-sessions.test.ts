@@ -275,3 +275,45 @@ test("run write schemas reject legacy target fields", () => {
     }),
   ).toThrow();
 });
+
+test("creation applies null defaults while editing requires explicit nullable fields", () => {
+  const request = { title: " Strength ", activityType: "STRENGTH" };
+  expect(
+    createTrainingSessionRequestSchema.parse({
+      ...request,
+      date: "2026-10-02",
+    }),
+  ).toEqual({
+    title: "Strength",
+    activityType: "STRENGTH",
+    date: "2026-10-02",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: null,
+  });
+  expect(editTrainingSessionRequestSchema.safeParse(request).success).toBe(
+    false,
+  );
+  expect(
+    editTrainingSessionRequestSchema.parse({
+      ...request,
+      timeOfDay: null,
+      description: null,
+      targetDurationSeconds: null,
+    }),
+  ).toEqual({
+    title: "Strength",
+    activityType: "STRENGTH",
+    timeOfDay: null,
+    description: null,
+    targetDurationSeconds: null,
+  });
+});
+
+test("session response text preserves surrounding whitespace", () => {
+  const session = createRunActivity({
+    title: " Easy run ",
+    description: " Details ",
+  });
+  expect(trainingSessionSchema.parse(session)).toEqual(session);
+});

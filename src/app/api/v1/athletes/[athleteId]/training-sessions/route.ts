@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import {
   apiHandler,
   requestAuthenticationService,
-  requestBodyReader,
+  unmarshaler,
   getTrainingSessionsService,
 } from "@/server/server";
 import { privateResponseHeaders as responseHeaders } from "@/server/http/api-handler";
@@ -41,7 +41,7 @@ export const POST = apiHandler.wrap(
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
 
-    const body = await requestBodyReader.readRequestBody(
+    const body = await unmarshaler.readRequestBody(
       request,
       createTrainingSessionRequestSchema,
     );

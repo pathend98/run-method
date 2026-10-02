@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  positiveIntegerSchema,
+  trimmedNonEmptyStringSchema,
+} from "./field-schemas";
 
 export const trainingGoalTypeSchema = z.enum([
   "RACE",
@@ -14,12 +18,12 @@ export const trainingGoalStatusSchema = z.enum([
 
 export const createTrainingGoalRequestSchema = z
   .object({
-    title: z.string().trim().min(1),
+    title: trimmedNonEmptyStringSchema,
     type: trainingGoalTypeSchema,
-    targetDistanceMetres: z.number().int().positive().optional(),
+    targetDistanceMetres: positiveIntegerSchema.optional(),
     targetDate: z.iso.date().optional(),
-    targetTimeSeconds: z.number().int().positive().optional(),
-    description: z.string().trim().min(1).optional(),
+    targetTimeSeconds: positiveIntegerSchema.optional(),
+    description: trimmedNonEmptyStringSchema.optional(),
   })
   .strict();
 

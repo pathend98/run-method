@@ -3,7 +3,7 @@ import { DefaultTrainingGoalsService } from "./training-goals/training-goals-ser
 import { DrizzleTrainingGoalsRepository } from "./training-goals/training-goals-repository";
 import { DefaultApiHandler } from "./http/api-handler";
 import { DefaultRequestAuthenticationService } from "./http/request-authentication-service";
-import { DefaultRequestBodyReader } from "./http/request-body-reader";
+import { DefaultUnmarshaler } from "./unmarshaler";
 
 import {
   CognitoLogoutProvider,
@@ -28,7 +28,7 @@ import { DrizzleUserRepository } from "./user/user-repository";
 import { DefaultUserService } from "./user/user-service";
 
 export const apiHandler = new DefaultApiHandler();
-export const requestBodyReader = new DefaultRequestBodyReader();
+export const unmarshaler = new DefaultUnmarshaler();
 export const requestAuthenticationService =
   new DefaultRequestAuthenticationService(getUserService);
 

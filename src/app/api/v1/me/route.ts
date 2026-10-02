@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import {
   apiHandler,
   requestAuthenticationService,
-  requestBodyReader,
+  unmarshaler,
   getUserService,
 } from "@/server/server";
 import { updateUserProfileSchema } from "@/domain/user-types";
@@ -18,7 +18,7 @@ export const GET = apiHandler.wrap(async (request: NextRequest) => {
 export const PATCH = apiHandler.wrap(async (request: NextRequest) => {
   const user = await requestAuthenticationService.authenticateUser(request);
 
-  const input = await requestBodyReader.readRequestBody(
+  const input = await unmarshaler.readRequestBody(
     request,
     updateUserProfileSchema,
   );

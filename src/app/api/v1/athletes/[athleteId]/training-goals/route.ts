@@ -5,7 +5,7 @@ import { privateResponseHeaders } from "@/server/http/api-handler";
 import {
   apiHandler,
   requestAuthenticationService,
-  requestBodyReader,
+  unmarshaler,
   getTrainingGoalsService,
 } from "@/server/server";
 
@@ -17,7 +17,7 @@ export const POST = apiHandler.wrap(
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
 
-    const body = await requestBodyReader.readRequestBody(
+    const body = await unmarshaler.readRequestBody(
       request,
       createTrainingGoalRequestSchema,
     );
