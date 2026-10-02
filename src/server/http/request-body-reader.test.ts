@@ -14,7 +14,9 @@ test("reads a JSON request body", async () => {
     method: "POST",
     body: '{"title":"Easy run"}',
   });
-  await expect(reader.readRequestBody(request)).resolves.toEqual({
+  await expect(
+    reader.readRequestBody(request, z.object({ title: z.string() })),
+  ).resolves.toEqual({
     title: "Easy run",
   });
 });
@@ -29,7 +31,9 @@ test.each(["{", ""])(
         body,
       },
     );
-    await expect(reader.readRequestBody(request)).rejects.toMatchObject({
+    await expect(
+      reader.readRequestBody(request, z.object({ title: z.string() })),
+    ).rejects.toMatchObject({
       name: "RequestBodyValidationError",
       fieldErrors: { body: ["Request body must be valid JSON"] },
     } satisfies Partial<RequestBodyValidationError>);
@@ -65,10 +69,10 @@ test("returns schema output with transformations and defaults, reading JSON once
 });
 
 test.each([true, false])(
-  "supports async refinement returning %s",
+  "supports synchronous refinement returning %s",
   async (valid) => {
     const schema = z.object({
-      title: z.string().refine(async () => valid, "Title rejected"),
+      title: z.string().refine(() => valid, "Title rejected"),
     });
     const request = new NextRequest(
       "http://localhost/api/v1/training-sessions",
@@ -142,7 +146,7 @@ test.each(["{", ""])(
   "rejects malformed JSON %s before schema validation",
   async (body) => {
     const schema = z.object({ title: z.string() });
-    const validate = vi.spyOn(schema, "safeParseAsync");
+    const validate = vi.spyOn(schema, "safeParse");
     const request = new NextRequest(
       "http://localhost/api/v1/training-sessions",
       {

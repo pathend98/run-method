@@ -3,7 +3,6 @@ import type { z } from "zod";
 import { RequestBodyValidationError } from "@/server/errors/request-body-validation-error";
 
 export interface RequestBodyReader {
-  readRequestBody(request: Request): Promise<unknown>;
   readRequestBody<TSchema extends z.ZodType>(
     request: Request,
     schema: TSchema,
@@ -11,15 +10,10 @@ export interface RequestBodyReader {
 }
 
 export class DefaultRequestBodyReader implements RequestBodyReader {
-  readRequestBody(request: Request): Promise<unknown>;
-  readRequestBody<TSchema extends z.ZodType>(
+  async readRequestBody<TSchema extends z.ZodType>(
     request: Request,
     schema: TSchema,
-  ): Promise<z.output<TSchema>>;
-  async readRequestBody(
-    request: Request,
-    schema?: z.ZodType,
-  ): Promise<unknown> {
+  ): Promise<z.output<TSchema>> {
     let body: unknown;
     try {
       body = await request.json();
@@ -29,9 +23,7 @@ export class DefaultRequestBodyReader implements RequestBodyReader {
       });
     }
 
-    if (!schema) return body;
-
-    const result = await schema.safeParseAsync(body);
+    const result = schema.safeParse(body);
     if (result.success) return result.data;
 
     throw new RequestBodyValidationError(this.fieldErrors(result.error));

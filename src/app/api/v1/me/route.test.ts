@@ -1,6 +1,5 @@
 import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
-import { BadRequestError } from "@/server/errors/bad-request-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
 import { createUser } from "@/test-support/fixtures/user";
@@ -9,7 +8,6 @@ import { GET, PATCH } from "./route";
 
 const findBySessionKey = vi.hoisted(() => vi.fn());
 const updateProfile = vi.hoisted(() => vi.fn());
-const validateUpdate = vi.hoisted(() => vi.fn());
 
 vi.mock("@/server/server", async (importOriginal) => ({
   ...(await importOriginal<typeof ServerModule>()),
@@ -17,13 +15,11 @@ vi.mock("@/server/server", async (importOriginal) => ({
     await import("@/server/http/request-authentication-service")
   ).DefaultRequestAuthenticationService(() => ({ findBySessionKey })),
   getUserService: () => ({ findBySessionKey, updateProfile }),
-  userProfileRequestValidator: { validateUpdate },
 }));
 
 afterEach(() => {
   findBySessionKey.mockReset();
   updateProfile.mockReset();
-  validateUpdate.mockReset();
 });
 
 function meRequest(sessionKey?: string) {
@@ -103,10 +99,6 @@ test("updates a registered user's profile and returns the full user", async () =
   const user = createUser();
   const updated = createUser({ firstName: "Ada", measurementUnit: "MILES" });
   findBySessionKey.mockResolvedValue(user);
-  validateUpdate.mockReturnValue({
-    firstName: "Ada",
-    measurementUnit: "MILES",
-  });
   updateProfile.mockResolvedValue(updated);
 
   const response = await PATCH(
@@ -116,10 +108,6 @@ test("updates a registered user's profile and returns the full user", async () =
   expect(response.status).toBe(200);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   await expect(response.json()).resolves.toEqual(updated);
-  expect(validateUpdate).toHaveBeenCalledExactlyOnceWith({
-    firstName: "Ada",
-    measurementUnit: "MILES",
-  });
   expect(updateProfile).toHaveBeenCalledExactlyOnceWith(user.id, {
     firstName: "Ada",
     measurementUnit: "MILES",
@@ -133,7 +121,6 @@ test("rejects unauthenticated profile updates", async () => {
   const response = await PATCH(request);
 
   expect(response.status).toBe(401);
-  expect(validateUpdate).not.toHaveBeenCalled();
   expect(updateProfile).not.toHaveBeenCalled();
 });
 
@@ -152,15 +139,13 @@ test("rejects malformed JSON", async () => {
 
 test("returns 400 for an invalid profile update", async () => {
   findBySessionKey.mockResolvedValue(createUser());
-  validateUpdate.mockImplementation(() => {
-    throw new BadRequestError("Invalid user profile");
-  });
 
   const response = await PATCH(patchRequest('{"measurementUnit":"INVALID"}'));
 
   expect(response.status).toBe(400);
   await expect(response.json()).resolves.toEqual({
-    error: "Invalid user profile",
+    error: "Invalid request body",
+    fieldErrors: { measurementUnit: [expect.any(String)] },
   });
   expect(updateProfile).not.toHaveBeenCalled();
 });
@@ -169,11 +154,47 @@ test("rejects guest profile updates", async () => {
   findBySessionKey.mockResolvedValue(
     createUser({ id: "guest-id", kind: "GUEST" }),
   );
-  validateUpdate.mockReturnValue({ measurementUnit: "MILES" });
   updateProfile.mockRejectedValue(new ForbiddenError());
 
   const response = await PATCH(patchRequest('{"measurementUnit":"MILES"}'));
 
   expect(response.status).toBe(403);
   await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+});
+
+test.each([
+  [{ firstName: "  Ada  " }, { firstName: "Ada" }],
+  [{ firstName: null }, { firstName: null }],
+  [{ measurementUnit: "MILES" }, { measurementUnit: "MILES" }],
+])(
+  "passes parsed partial profile update %j to the service",
+  async (body, input) => {
+    const user = createUser();
+    findBySessionKey.mockResolvedValue(user);
+    updateProfile.mockResolvedValue(user);
+
+    const response = await PATCH(patchRequest(JSON.stringify(body)));
+
+    expect(response.status).toBe(200);
+    expect(updateProfile).toHaveBeenCalledExactlyOnceWith(user.id, input);
+  },
+);
+
+test.each([
+  [{}, "body"],
+  [{ firstName: " " }, "firstName"],
+  [null, "body"],
+  [{ firstName: "Ada", extra: true }, "extra"],
+])("rejects invalid profile body %j with field errors", async (body, field) => {
+  findBySessionKey.mockResolvedValue(createUser());
+
+  const response = await PATCH(patchRequest(JSON.stringify(body)));
+
+  expect(response.status).toBe(400);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  await expect(response.json()).resolves.toEqual({
+    error: "Invalid request body",
+    fieldErrors: { [field as string]: [expect.any(String)] },
+  });
+  expect(updateProfile).not.toHaveBeenCalled();
 });
