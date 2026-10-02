@@ -6,7 +6,6 @@ import {
   requestAuthenticationService,
   requestBodyReader,
   getTrainingSessionsService,
-  trainingSessionsRequestValidator,
 } from "@/server/server";
 import { privateResponseHeaders as responseHeaders } from "@/server/http/api-handler";
 
@@ -23,10 +22,7 @@ export const POST = apiHandler.wrap(
     const session = await getTrainingSessionsService().complete(
       actorId,
       id,
-      async () =>
-        trainingSessionsRequestValidator.validateComplete(
-          await requestBodyReader.readRequestBody(request),
-        ),
+      await requestBodyReader.readRequestBody(request),
       request.headers.get("Time-Zone"),
     );
 

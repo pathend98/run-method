@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { TrainingSessionsRequestValidationError } from "@/server/training-sessions/training-sessions-errors";
 import { UserNotFoundError } from "@/server/user/user-errors";
-import { trainingSessionsRequestValidator } from "@/server/server";
 import { createUser } from "@/test-support/fixtures/user";
 import { GET, POST } from "./route";
 
@@ -17,6 +16,13 @@ const repository = vi.hoisted(() => ({
   complete: vi.fn(),
   edit: vi.fn(),
 }));
+const requestValidator = vi.hoisted(() => ({
+  validateCreate: vi.fn(),
+  validateEdit: vi.fn(),
+  validateSkip: vi.fn(),
+  validateComplete: vi.fn(),
+}));
+
 const domainValidator = vi.hoisted(() => ({
   validateEdit: vi.fn(),
   validateSkip: vi.fn(),
@@ -37,16 +43,18 @@ vi.mock("@/server/server", async (importOriginal) => {
       () => ({ findBySessionKey }),
     ),
     getTrainingSessionsService: () =>
-      new DefaultTrainingSessionsService(repository, domainValidator, {
-        findById: findUserById,
-      }),
+      new DefaultTrainingSessionsService(
+        repository,
+        domainValidator,
+        {
+          findById: findUserById,
+        },
+        requestValidator,
+      ),
 
     getUserService: () => ({ findBySessionKey }),
-    trainingSessionsRequestValidator: { validateCreate: vi.fn() },
   };
 });
-
-const requestValidator = vi.mocked(trainingSessionsRequestValidator);
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
 const otherAthleteId = "44444444-4444-4444-8444-444444444444";
@@ -156,7 +164,7 @@ test.each([
   ["GET", () => GET(request(otherAthleteId), context(otherAthleteId))],
   [
     "POST",
-    () => POST(postRequest("{", otherAthleteId), context(otherAthleteId)),
+    () => POST(postRequest("{}", otherAthleteId), context(otherAthleteId)),
   ],
 ])("%s forbids another athlete's session", async (_method, call) => {
   const response = await call();
@@ -310,4 +318,19 @@ test("returns 500 for unexpected creation failures", async () => {
   await expect(response.json()).resolves.toEqual({
     error: "Unable to create training session",
   });
+});
+
+test("malformed JSON takes precedence over another athlete's ownership", async () => {
+  const response = await POST(
+    postRequest("{", otherAthleteId),
+    context(otherAthleteId),
+  );
+  expect(response.status).toBe(400);
+  await expect(response.json()).resolves.toEqual({
+    error: "Invalid request body",
+    fieldErrors: { body: ["Request body must be valid JSON"] },
+  });
+  expect(requestValidator.validateCreate).not.toHaveBeenCalled();
+  expect(findUserById).not.toHaveBeenCalled();
+  expect(repository.create).not.toHaveBeenCalled();
 });

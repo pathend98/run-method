@@ -31,8 +31,6 @@ export const requestBodyReader = new DefaultRequestBodyReader();
 export const requestAuthenticationService =
   new DefaultRequestAuthenticationService(getUserService);
 
-export const trainingSessionsRequestValidator =
-  new DefaultTrainingSessionsRequestValidator();
 export const userProfileRequestValidator =
   new DefaultUserProfileRequestValidator();
 
@@ -80,6 +78,7 @@ export function getTrainingSessionsService(): DefaultTrainingSessionsService {
     trainingSessionsRepository,
     trainingSessionsValidator,
     getUserService(),
+    new DefaultTrainingSessionsRequestValidator(),
   );
 
   return trainingSessionsService;

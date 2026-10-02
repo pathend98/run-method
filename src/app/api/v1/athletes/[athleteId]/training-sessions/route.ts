@@ -6,7 +6,6 @@ import {
   requestAuthenticationService,
   requestBodyReader,
   getTrainingSessionsService,
-  trainingSessionsRequestValidator,
 } from "@/server/server";
 import { privateResponseHeaders as responseHeaders } from "@/server/http/api-handler";
 
@@ -44,10 +43,7 @@ export const POST = apiHandler.wrap(
     const session = await getTrainingSessionsService().create(
       actorId,
       athleteId,
-      async () =>
-        trainingSessionsRequestValidator.validateCreate(
-          await requestBodyReader.readRequestBody(request),
-        ),
+      await requestBodyReader.readRequestBody(request),
     );
 
     return NextResponse.json(session, {

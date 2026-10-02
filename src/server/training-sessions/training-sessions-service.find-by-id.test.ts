@@ -1,3 +1,4 @@
+import { DefaultTrainingSessionsRequestValidator } from "./training-sessions-request-validator";
 import { createRunActivity } from "@/test-support/fixtures/activity";
 import {
   TrainingSessionNotFoundError,
@@ -20,6 +21,7 @@ function createService() {
     repository,
     {} as TrainingSessionsValidator,
     {} as UserService,
+    new DefaultTrainingSessionsRequestValidator(),
   );
   return { repository, service };
 }

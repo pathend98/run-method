@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
-import { trainingSessionsRequestValidator } from "@/server/server";
 import { createUser } from "@/test-support/fixtures/user";
 import {
   TrainingSessionNotFoundError,
@@ -21,6 +20,13 @@ const repository = vi.hoisted(() => ({
   skip: vi.fn(),
   complete: vi.fn(),
   edit: vi.fn(),
+}));
+
+const validator = vi.hoisted(() => ({
+  validateCreate: vi.fn(),
+  validateEdit: vi.fn(),
+  validateSkip: vi.fn(),
+  validateComplete: vi.fn(),
 }));
 
 const domainValidator = vi.hoisted(() => ({
@@ -42,12 +48,16 @@ vi.mock("@/server/server", async (importOriginal) => {
       () => ({ findBySessionKey }),
     ),
     getTrainingSessionsService: () =>
-      new DefaultTrainingSessionsService(repository, domainValidator, {
-        findById: vi.fn(),
-      }),
+      new DefaultTrainingSessionsService(
+        repository,
+        domainValidator,
+        {
+          findById: vi.fn(),
+        },
+        validator,
+      ),
 
     getUserService: () => ({ findBySessionKey }),
-    trainingSessionsRequestValidator: { validateSkip: vi.fn() },
   };
 });
 
@@ -77,8 +87,6 @@ const skippedSession = {
   actualDistanceMetres: null,
   actualDurationSeconds: null,
 };
-
-const validator = vi.mocked(trainingSessionsRequestValidator);
 
 function request(
   body = JSON.stringify(skipRequest),
@@ -208,7 +216,7 @@ test.each([
 ])(
   "POST denies %s before body validation or mutation",
   async (_label, status, kind) => {
-    const postRequest = request("{");
+    const postRequest = request("{}");
     if (kind === "missing") postRequest.cookies.delete("__Host-user-session");
     if (kind === "invalid")
       findBySessionKey.mockRejectedValue(new UserNotFoundError());
@@ -244,9 +252,48 @@ test.each([
     if (kind === "lookup")
       repository.findById.mockRejectedValue(new Error("database down"));
 
-    const response = await POST(request("{"), context());
+    const response = await POST(request("{}"), context());
     expect(response.status).toBe(status);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(validator.validateSkip).not.toHaveBeenCalled();
+    expect(repository.skip).not.toHaveBeenCalled();
+  },
+);
+
+test.each(["foreign", "absent", "lookup failure"])(
+  "malformed JSON takes precedence over %s session lookup",
+  async (kind) => {
+    if (kind === "foreign")
+      repository.findById.mockResolvedValue(
+        createRunActivity({ athleteId: "other-id" }),
+      );
+    if (kind === "absent") repository.findById.mockResolvedValue(null);
+    if (kind === "lookup failure")
+      repository.findById.mockRejectedValue(new Error("database down"));
+    const response = await POST(request("{"), context());
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid request body",
+      fieldErrors: { body: ["Request body must be valid JSON"] },
+    });
+    expect(repository.findById).not.toHaveBeenCalled();
+    expect(validator.validateSkip).not.toHaveBeenCalled();
+    expect(repository.skip).not.toHaveBeenCalled();
+  },
+);
+
+test.each(["missing", "invalid"])(
+  "malformed JSON still rejects %s authentication first",
+  async (kind) => {
+    const malformedRequest = request("{");
+    if (kind === "missing")
+      malformedRequest.cookies.delete("__Host-user-session");
+    if (kind === "invalid")
+      findBySessionKey.mockRejectedValue(new UserNotFoundError());
+    const response = await POST(malformedRequest, context());
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(repository.findById).not.toHaveBeenCalled();
     expect(validator.validateSkip).not.toHaveBeenCalled();
     expect(repository.skip).not.toHaveBeenCalled();
   },

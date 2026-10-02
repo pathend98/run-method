@@ -6,7 +6,6 @@ import {
   requestAuthenticationService,
   requestBodyReader,
   getTrainingSessionsService,
-  trainingSessionsRequestValidator,
 } from "@/server/server";
 import { privateResponseHeaders as responseHeaders } from "@/server/http/api-handler";
 
@@ -36,10 +35,7 @@ export const PATCH = apiHandler.wrap(
     const session = await getTrainingSessionsService().edit(
       actorId,
       id,
-      async () =>
-        trainingSessionsRequestValidator.validateEdit(
-          await requestBodyReader.readRequestBody(request),
-        ),
+      await requestBodyReader.readRequestBody(request),
     );
 
     return NextResponse.json(session, { headers: responseHeaders });
