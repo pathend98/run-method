@@ -7,6 +7,7 @@ import {
 } from "@/server/authentication/authentication-errors";
 import { AuthenticationLookupError } from "@/server/errors/authentication-lookup-error";
 import { BadRequestError } from "@/server/errors/bad-request-error";
+import { ConflictError } from "@/server/errors/conflict-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { NotFoundError } from "@/server/errors/not-found-error";
 import { UnauthorizedError } from "@/server/errors/unauthorized-error";
@@ -27,6 +28,7 @@ test.each([
     { error: "Invalid input", fieldErrors: { from: ["Invalid date"] } },
   ],
   [new BadRequestError("Bad input"), 400, { error: "Bad input" }],
+  [new ConflictError("Already exists"), 409, { error: "Already exists" }],
   [new UnauthorizedError(), 401, { error: "Unauthorized" }],
   [new ForbiddenError(), 403, { error: "Forbidden" }],
   [new NotFoundError("Missing"), 404, { error: "Missing" }],

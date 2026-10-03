@@ -1,3 +1,4 @@
+import { ConflictError } from "@/server/errors/conflict-error";
 import { RequestValidationError } from "@/server/errors/request-validation-error";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { NotFoundError } from "@/server/errors/not-found-error";
@@ -27,5 +28,12 @@ export class TrainingSessionNotFoundError extends NotFoundError {
   constructor() {
     super("Training session not found");
     this.name = "TrainingSessionNotFoundError";
+  }
+}
+
+export class TrainingSessionsTransitionConflictError extends ConflictError {
+  constructor(message: string) {
+    super(message);
+    this.name = "TrainingSessionsTransitionConflictError";
   }
 }

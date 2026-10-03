@@ -1,3 +1,4 @@
+import { athleteRouteParamsSchema } from "@/domain/route-params";
 import {
   createTrainingSessionRequestSchema,
   trainingSessionsQuerySchema,
@@ -19,9 +20,13 @@ type RouteContext = {
 
 export const GET = apiHandler.wrap(
   async (request: NextRequest, context: RouteContext) => {
-    const { athleteId } = await context.params;
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
+
+    const { athleteId } = unmarshaler.unmarshal(
+      await context.params,
+      athleteRouteParamsSchema,
+    );
 
     const { searchParams } = request.nextUrl;
 
@@ -45,9 +50,13 @@ export const GET = apiHandler.wrap(
 
 export const POST = apiHandler.wrap(
   async (request: NextRequest, context: RouteContext) => {
-    const { athleteId } = await context.params;
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
+
+    const { athleteId } = unmarshaler.unmarshal(
+      await context.params,
+      athleteRouteParamsSchema,
+    );
 
     const body = await unmarshaler.readRequestBody(
       request,

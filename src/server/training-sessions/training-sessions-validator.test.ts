@@ -1,3 +1,4 @@
+import { TrainingSessionsTransitionConflictError } from "./training-sessions-errors";
 import {
   createRunActivity,
   createStrengthActivity,
@@ -146,7 +147,11 @@ test.each(["COMPLETED", "SKIPPED"] as const)(
         },
         timeZone,
       ),
-    ).toThrow("only scheduled training sessions can be skipped");
+    ).toThrow(
+      new TrainingSessionsTransitionConflictError(
+        "only scheduled training sessions can be skipped",
+      ),
+    );
   },
 );
 
@@ -173,7 +178,9 @@ test.each([
     const validator = new DefaultTrainingSessionsValidator(() => today);
 
     expect(() => validate(validator)).toThrow(
-      `future training sessions cannot be ${transition}`,
+      new TrainingSessionsTransitionConflictError(
+        `future training sessions cannot be ${transition}`,
+      ),
     );
   },
 );
@@ -335,6 +342,23 @@ test.each([
       }),
     ).toThrow(
       "strength target duration cannot be changed for completed or skipped sessions",
+    );
+  },
+);
+
+test.each(["COMPLETED", "SKIPPED"] as const)(
+  "completion rejects %s with a conflict",
+  (status) => {
+    expect(() =>
+      validator.validateComplete(
+        { ...runSession, status },
+        { actualDistanceMetres: 5000, actualDurationSeconds: 1500 },
+        timeZone,
+      ),
+    ).toThrow(
+      new TrainingSessionsTransitionConflictError(
+        "only scheduled training sessions can be completed",
+      ),
     );
   },
 );

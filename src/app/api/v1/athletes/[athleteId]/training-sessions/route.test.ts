@@ -433,3 +433,37 @@ test.each(["missing", "invalid"])(
     expect(repository.create).not.toHaveBeenCalled();
   },
 );
+
+test.each([GET, POST])(
+  "validates athlete UUID before reading a body or invoking services",
+  async (handler) => {
+    const response = await handler(
+      new NextRequest(
+        "http://localhost/api/v1/athletes/invalid/training-sessions",
+        {
+          method: "POST",
+          body: "{",
+          headers: { cookie: "__Host-user-session=session-key" },
+        },
+      ),
+      context("invalid"),
+    );
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect((await response.json()).fieldErrors.athleteId).toEqual(
+      expect.any(Array),
+    );
+    expect(serviceCalls).not.toHaveBeenCalled();
+  },
+);
+test.each([GET, POST])(
+  "authenticates before validating athlete UUID",
+  async (handler) => {
+    const response = await handler(
+      request("invalid", "", ""),
+      context("invalid"),
+    );
+    expect(response.status).toBe(401);
+    expect(serviceCalls).not.toHaveBeenCalled();
+  },
+);

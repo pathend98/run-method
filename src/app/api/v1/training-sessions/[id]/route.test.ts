@@ -115,16 +115,14 @@ test("deletes a training session with 204 status", async () => {
 });
 
 test("returns a stable 500 response when DELETE identifier lookup fails", async () => {
-  repository.findById.mockRejectedValue(
-    new Error("Invalid database identifier"),
-  );
-  const response = await DELETE(deleteRequest("invalid"), context("invalid"));
+  repository.findById.mockRejectedValue(new Error("Database unavailable"));
+  const response = await DELETE(deleteRequest(), context());
 
   expect(response.status).toBe(500);
   await expect(response.json()).resolves.toEqual({
     error: "Unable to delete training session",
   });
-  expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
+  expect(repository.findById).toHaveBeenCalledExactlyOnceWith(id);
   expect(repository.deleteById).not.toHaveBeenCalled();
 });
 
@@ -211,16 +209,14 @@ test("returns business validation errors with 400 status", async () => {
 });
 
 test("returns a stable 500 response when PATCH identifier lookup fails", async () => {
-  repository.findById.mockRejectedValue(
-    new Error("Invalid database identifier"),
-  );
-  const response = await PATCH(patchRequest(), context("invalid"));
+  repository.findById.mockRejectedValue(new Error("Database unavailable"));
+  const response = await PATCH(patchRequest(), context());
 
   expect(response.status).toBe(500);
   await expect(response.json()).resolves.toEqual({
     error: "Unable to edit training session",
   });
-  expect(repository.findById).toHaveBeenCalledExactlyOnceWith("invalid");
+  expect(repository.findById).toHaveBeenCalledExactlyOnceWith(id);
 
   expect(repository.edit).not.toHaveBeenCalled();
 });
@@ -378,7 +374,7 @@ test.each(["missing", "invalid"])(
   },
 );
 
-test.each(["foreign", "absent", "invalid id", "lookup failure"])(
+test.each(["foreign", "absent", "lookup failure"])(
   "schema errors take precedence over %s",
   async (kind) => {
     if (kind === "foreign")
@@ -388,10 +384,7 @@ test.each(["foreign", "absent", "invalid id", "lookup failure"])(
     if (kind === "absent") repository.findById.mockResolvedValue(null);
     if (kind === "lookup failure")
       repository.findById.mockRejectedValue(new Error("database down"));
-    const response = await PATCH(
-      patchRequest("{}"),
-      context(kind === "invalid id" ? "invalid" : id),
-    );
+    const response = await PATCH(patchRequest("{}"), context());
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
       error: "Invalid request body",
@@ -432,5 +425,28 @@ test.each(["missing", "invalid"])(
     await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
     expect(serviceCalls).not.toHaveBeenCalled();
     expect(repository.edit).not.toHaveBeenCalled();
+  },
+);
+
+test.each([DELETE, PATCH])(
+  "validates UUID before reading a body or invoking services",
+  async (handler) => {
+    const response = await handler(patchRequest("{"), context("invalid"));
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect((await response.json()).fieldErrors.id).toEqual(expect.any(Array));
+    expect(serviceCalls).not.toHaveBeenCalled();
+  },
+);
+
+test.each([DELETE, PATCH])(
+  "authenticates before validating UUID",
+  async (handler) => {
+    const response = await handler(
+      new NextRequest("http://localhost/api/v1/training-sessions/invalid"),
+      context("invalid"),
+    );
+    expect(response.status).toBe(401);
+    expect(serviceCalls).not.toHaveBeenCalled();
   },
 );

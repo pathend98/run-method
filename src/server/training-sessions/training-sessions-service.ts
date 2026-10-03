@@ -10,7 +10,7 @@ import type {
 } from "@/domain/training-sessions";
 import {
   TrainingSessionNotFoundError,
-  TrainingSessionsValidationError,
+  TrainingSessionsTransitionConflictError,
 } from "./training-sessions-errors";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
@@ -100,7 +100,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
 
     const skipped = await this.repository.skip(current, request);
     if (!skipped) {
-      throw new TrainingSessionsValidationError(
+      throw new TrainingSessionsTransitionConflictError(
         "training session is no longer scheduled",
       );
     }
@@ -118,7 +118,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
 
     const completed = await this.repository.complete(current, request);
     if (!completed) {
-      throw new TrainingSessionsValidationError(
+      throw new TrainingSessionsTransitionConflictError(
         "training session is no longer scheduled",
       );
     }
@@ -141,7 +141,7 @@ export class DefaultTrainingSessionsService implements TrainingSessionsService {
 
     const edited = await this.repository.edit(current, request);
     if (!edited) {
-      throw new TrainingSessionsValidationError(
+      throw new TrainingSessionsTransitionConflictError(
         "training session is no longer scheduled",
       );
     }

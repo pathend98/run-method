@@ -7,6 +7,7 @@ import {
 } from "@/server/authentication/authentication-errors";
 import { AuthenticationLookupError } from "@/server/errors/authentication-lookup-error";
 import { BadRequestError } from "@/server/errors/bad-request-error";
+import { ConflictError } from "@/server/errors/conflict-error";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { NotFoundError } from "@/server/errors/not-found-error";
 import { UnauthorizedError } from "@/server/errors/unauthorized-error";
@@ -86,6 +87,7 @@ export class DefaultApiHandler implements ApiHandler {
 
     let status: number;
     if (error instanceof BadRequestError) status = 400;
+    else if (error instanceof ConflictError) status = 409;
     else if (error instanceof UnauthorizedError) status = 401;
     else if (error instanceof ForbiddenError) status = 403;
     else if (error instanceof NotFoundError) status = 404;

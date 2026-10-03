@@ -1,3 +1,4 @@
+import { TrainingSessionsTransitionConflictError } from "./training-sessions-errors";
 import {
   createRunActivity,
   createStrengthActivity,
@@ -238,7 +239,9 @@ test.each(["skip", "complete"] as const)(
           );
 
     await expect(result).rejects.toThrow(
-      "training session is no longer scheduled",
+      new TrainingSessionsTransitionConflictError(
+        "training session is no longer scheduled",
+      ),
     );
   },
 );
@@ -394,7 +397,11 @@ test("reports a concurrent transition during a scheduled date change", async () 
       ...runEdit,
       date: "2026-08-27",
     }),
-  ).rejects.toThrow("training session is no longer scheduled");
+  ).rejects.toThrow(
+    new TrainingSessionsTransitionConflictError(
+      "training session is no longer scheduled",
+    ),
+  );
 });
 
 test("writes changed completed run actuals", async () => {

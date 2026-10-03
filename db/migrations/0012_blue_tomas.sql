@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "training_goals_active_athlete_idx" ON "training_goals" USING btree ("athlete_id") WHERE "training_goals"."status" = 'ACTIVE';
