@@ -11,6 +11,18 @@ import {
 
 type RouteContext = { params: Promise<{ athleteId: string }> };
 
+export const GET = apiHandler.wrap(
+  async (request: NextRequest, context: RouteContext) => {
+    const { athleteId } = await context.params;
+    const actorId =
+      await requestAuthenticationService.authenticateActor(request);
+    const goals = await getTrainingGoalsService().find(actorId, athleteId);
+
+    return NextResponse.json(goals, { headers: privateResponseHeaders });
+  },
+  "Unable to fetch training goals",
+);
+
 export const POST = apiHandler.wrap(
   async (request: NextRequest, context: RouteContext) => {
     const { athleteId } = await context.params;

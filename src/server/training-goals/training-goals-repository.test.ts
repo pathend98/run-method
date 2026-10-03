@@ -1,3 +1,4 @@
+import { PgDialect } from "drizzle-orm/pg-core";
 import { trainingGoals } from "@db/schema";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 import { DrizzleTrainingGoalsRepository } from "./training-goals-repository";
@@ -87,4 +88,80 @@ test("propagates transformer failure", async () => {
       type: goal.type,
     }),
   ).rejects.toBe(error);
+});
+
+function setupFind(rows: (typeof trainingGoals.$inferSelect)[] = [row]) {
+  const orderBy = vi.fn().mockResolvedValue(rows);
+  const where = vi.fn().mockReturnValue({ orderBy });
+  const from = vi.fn().mockReturnValue({ where });
+  const select = vi.fn().mockReturnValue({ from });
+  const transform = vi.fn().mockImplementation((row) => ({
+    ...goal,
+    id: row.id,
+    createdAt: row.createdAt.toISOString(),
+  }));
+  return {
+    repository: new DrizzleTrainingGoalsRepository({ select } as never, {
+      transform,
+    }),
+    select,
+    from,
+    where,
+    orderBy,
+    transform,
+  };
+}
+
+test("filters by athlete and orders by descending creation date then ascending id", async () => {
+  const { repository, select, from, where, orderBy } = setupFind();
+  await repository.find(goal.athleteId);
+  expect(select).toHaveBeenCalledExactlyOnceWith();
+  expect(from).toHaveBeenCalledExactlyOnceWith(trainingGoals);
+  const dialect = new PgDialect();
+  const predicate = dialect.sqlToQuery(where.mock.calls[0][0]);
+  expect(predicate.sql).toBe('"training_goals"."athlete_id" = $1');
+  expect(predicate.params).toEqual([goal.athleteId]);
+  const ordering = orderBy.mock.calls[0].map(
+    (expression) => dialect.sqlToQuery(expression).sql,
+  );
+  expect(ordering).toEqual([
+    '"training_goals"."created_at" desc',
+    '"training_goals"."id" asc',
+  ]);
+});
+
+test("transforms every returned goal and preserves database order", async () => {
+  const rows = [
+    { ...row, createdAt: new Date("2026-10-03T12:00:00.000Z") },
+    {
+      ...row,
+      id: "22222222-2222-4222-8222-222222222222",
+      createdAt: new Date("2026-10-02T12:00:00.000Z"),
+    },
+  ];
+  const { repository, transform } = setupFind(rows);
+  await expect(repository.find(goal.athleteId)).resolves.toEqual(
+    rows.map((row) => ({
+      ...goal,
+      id: row.id,
+      createdAt: row.createdAt.toISOString(),
+    })),
+  );
+  expect(transform).toHaveBeenCalledTimes(2);
+  expect(transform).toHaveBeenNthCalledWith(1, rows[0]);
+  expect(transform).toHaveBeenNthCalledWith(2, rows[1]);
+});
+
+test("returns no goals without invoking the transformer for empty results", async () => {
+  const { repository, transform } = setupFind([]);
+  await expect(repository.find(goal.athleteId)).resolves.toEqual([]);
+  expect(transform).not.toHaveBeenCalled();
+});
+
+test("propagates query failures without transforming rows", async () => {
+  const { repository, orderBy, transform } = setupFind();
+  const error = new Error("Database unavailable");
+  orderBy.mockRejectedValue(error);
+  await expect(repository.find(goal.athleteId)).rejects.toBe(error);
+  expect(transform).not.toHaveBeenCalled();
 });

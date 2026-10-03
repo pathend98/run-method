@@ -1,3 +1,4 @@
+import { asc, desc, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { trainingGoals } from "@db/schema";
 import type {
@@ -12,6 +13,7 @@ export type CreateTrainingGoalInput = CreateTrainingGoalRequest & {
 };
 
 export interface TrainingGoalsRepository {
+  find(athleteId: string): Promise<TrainingGoal[]>;
   create(request: CreateTrainingGoalInput): Promise<TrainingGoal>;
 }
 
@@ -20,6 +22,15 @@ export class DrizzleTrainingGoalsRepository implements TrainingGoalsRepository {
     private readonly db: NodePgDatabase,
     private readonly transformer: TrainingGoalsTransformer,
   ) {}
+
+  async find(athleteId: string): Promise<TrainingGoal[]> {
+    const rows = await this.db
+      .select()
+      .from(trainingGoals)
+      .where(eq(trainingGoals.athleteId, athleteId))
+      .orderBy(desc(trainingGoals.createdAt), asc(trainingGoals.id));
+    return rows.map((row) => this.transformer.transform(row));
+  }
 
   async create(request: CreateTrainingGoalInput): Promise<TrainingGoal> {
     const [row] = await this.db

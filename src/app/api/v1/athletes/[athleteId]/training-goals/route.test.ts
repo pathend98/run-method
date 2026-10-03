@@ -3,8 +3,9 @@ import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 import { createUser } from "@/test-support/fixtures/user";
 import { UserNotFoundError } from "@/server/user/user-errors";
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
+const find = vi.hoisted(() => vi.fn());
 const create = vi.hoisted(() => vi.fn());
 const findBySessionKey = vi.hoisted(() => vi.fn());
 
@@ -19,7 +20,8 @@ vi.mock("@/server/server", async (importOriginal) => {
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey }),
     ),
-    getTrainingGoalsService: () => new DefaultTrainingGoalsService({ create }),
+    getTrainingGoalsService: () =>
+      new DefaultTrainingGoalsService({ create, find }),
   };
 });
 
@@ -30,6 +32,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   findBySessionKey.mockResolvedValue(createUser({ id: goal.athleteId }));
   create.mockResolvedValue(goal);
+  find.mockResolvedValue([goal]);
 });
 
 function post(
@@ -149,6 +152,84 @@ test("handles persistence failures", async () => {
   expect(response.status).toBe(500);
   await expect(response.json()).resolves.toEqual({
     error: "Unable to create training goal",
+  });
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+});
+
+function get(athleteId = goal.athleteId, cookie = "session-key") {
+  const request = new NextRequest(
+    `http://localhost/api/v1/athletes/${athleteId}/training-goals`,
+    { headers: cookie ? { cookie: `__Host-user-session=${cookie}` } : {} },
+  );
+  return GET(request, { params: Promise.resolve({ athleteId }) });
+}
+
+test("returns all goals in repository order with 200 and private headers", async () => {
+  const goals = [
+    createTrainingGoal({ createdAt: "2026-10-03T12:00:00.000Z" }),
+    createTrainingGoal({
+      status: "COMPLETED",
+      createdAt: "2026-10-02T12:00:00.000Z",
+    }),
+    createTrainingGoal({
+      status: "DISCARDED",
+      createdAt: "2026-10-01T12:00:00.000Z",
+    }),
+  ];
+  find.mockResolvedValue(goals);
+  const response = await get();
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  await expect(response.json()).resolves.toEqual(goals);
+  expect(findBySessionKey).toHaveBeenCalledExactlyOnceWith("session-key");
+  expect(find).toHaveBeenCalledExactlyOnceWith(goal.athleteId);
+});
+
+test("returns an empty array when the athlete has no goals", async () => {
+  find.mockResolvedValue([]);
+  const response = await get();
+  expect(response.status).toBe(200);
+  await expect(response.json()).resolves.toEqual([]);
+});
+
+test("rejects GET without authentication before querying", async () => {
+  const response = await get(goal.athleteId, "");
+  expect(response.status).toBe(401);
+  await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+  expect(findBySessionKey).not.toHaveBeenCalled();
+  expect(find).not.toHaveBeenCalled();
+});
+
+test("rejects GET with an invalid session", async () => {
+  findBySessionKey.mockRejectedValue(new UserNotFoundError());
+  const response = await get();
+  expect(response.status).toBe(401);
+  expect(find).not.toHaveBeenCalled();
+});
+
+test("forbids reading another athlete's goals", async () => {
+  const response = await get("44444444-4444-4444-8444-444444444444");
+  expect(response.status).toBe(403);
+  await expect(response.json()).resolves.toEqual({ error: "Forbidden" });
+  expect(find).not.toHaveBeenCalled();
+});
+
+test("handles GET authentication lookup failures", async () => {
+  findBySessionKey.mockRejectedValue(new Error("Database unavailable"));
+  const response = await get();
+  expect(response.status).toBe(500);
+  await expect(response.json()).resolves.toEqual({
+    error: "Unable to determine user session",
+  });
+  expect(find).not.toHaveBeenCalled();
+});
+
+test("handles goal lookup failures with private headers", async () => {
+  find.mockRejectedValue(new Error("Database unavailable"));
+  const response = await get();
+  expect(response.status).toBe(500);
+  await expect(response.json()).resolves.toEqual({
+    error: "Unable to fetch training goals",
   });
   expect(response.headers.get("cache-control")).toBe("private, no-store");
 });
