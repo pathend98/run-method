@@ -1,4 +1,4 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { trainingGoals } from "@db/schema";
 import type {
@@ -6,6 +6,7 @@ import type {
   TrainingGoal,
 } from "@/domain/training-goals";
 
+import { ActiveTrainingGoalAlreadyExistsError } from "./training-goals-errors";
 import type { TrainingGoalsTransformer } from "./training-goals-transformer";
 
 export type CreateTrainingGoalInput = CreateTrainingGoalRequest & {
@@ -36,7 +37,12 @@ export class DrizzleTrainingGoalsRepository implements TrainingGoalsRepository {
     const [row] = await this.db
       .insert(trainingGoals)
       .values(request)
+      .onConflictDoNothing({
+        target: trainingGoals.athleteId,
+        where: sql`${trainingGoals.status} = 'ACTIVE'`,
+      })
       .returning();
+    if (!row) throw new ActiveTrainingGoalAlreadyExistsError();
     return this.transformer.transform(row);
   }
 }

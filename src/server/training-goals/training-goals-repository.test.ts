@@ -1,3 +1,4 @@
+import { ActiveTrainingGoalAlreadyExistsError } from "./training-goals-errors";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { trainingGoals } from "@db/schema";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
@@ -5,7 +6,8 @@ import { DrizzleTrainingGoalsRepository } from "./training-goals-repository";
 
 function setup(row: typeof trainingGoals.$inferSelect) {
   const returning = vi.fn().mockResolvedValue([row]);
-  const values = vi.fn().mockReturnValue({ returning });
+  const onConflictDoNothing = vi.fn().mockReturnValue({ returning });
+  const values = vi.fn().mockReturnValue({ onConflictDoNothing });
   const insert = vi.fn().mockReturnValue({ values });
   const transform = vi.fn().mockReturnValue(goal);
   return {
@@ -13,6 +15,7 @@ function setup(row: typeof trainingGoals.$inferSelect) {
       transform,
     }),
     transform,
+    onConflictDoNothing,
     returning,
     values,
     insert,
@@ -163,5 +166,34 @@ test("propagates query failures without transforming rows", async () => {
   const error = new Error("Database unavailable");
   orderBy.mockRejectedValue(error);
   await expect(repository.find(goal.athleteId)).rejects.toBe(error);
+  expect(transform).not.toHaveBeenCalled();
+});
+
+test("targets only the partial active goal uniqueness constraint", async () => {
+  const { repository, onConflictDoNothing } = setup(row);
+  await repository.create({
+    athleteId: goal.athleteId,
+    title: goal.title,
+    type: goal.type,
+  });
+  expect(onConflictDoNothing).toHaveBeenCalledTimes(1);
+  const config = onConflictDoNothing.mock.calls[0][0];
+  expect(config.target).toBe(trainingGoals.athleteId);
+  expect(new PgDialect().sqlToQuery(config.where)).toMatchObject({
+    sql: '"training_goals"."status" = \'ACTIVE\'',
+    params: [],
+  });
+});
+
+test("rejects an existing active goal without transforming a missing row", async () => {
+  const { repository, returning, transform } = setup(row);
+  returning.mockResolvedValue([]);
+  await expect(
+    repository.create({
+      athleteId: goal.athleteId,
+      title: goal.title,
+      type: goal.type,
+    }),
+  ).rejects.toThrow(ActiveTrainingGoalAlreadyExistsError);
   expect(transform).not.toHaveBeenCalled();
 });

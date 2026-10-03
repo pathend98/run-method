@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 import { createUser } from "@/test-support/fixtures/user";
 import { UserNotFoundError } from "@/server/user/user-errors";
+import { ActiveTrainingGoalAlreadyExistsError } from "@/server/training-goals/training-goals-errors";
 import { GET, POST } from "./route";
 
 const find = vi.hoisted(() => vi.fn());
@@ -232,4 +233,14 @@ test("handles goal lookup failures with private headers", async () => {
     error: "Unable to fetch training goals",
   });
   expect(response.headers.get("cache-control")).toBe("private, no-store");
+});
+
+test("returns 409 when the athlete already has an active goal", async () => {
+  create.mockRejectedValue(new ActiveTrainingGoalAlreadyExistsError());
+  const response = await post();
+  expect(response.status).toBe(409);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  await expect(response.json()).resolves.toEqual({
+    error: "Athlete already has an active training goal",
+  });
 });
