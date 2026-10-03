@@ -15,6 +15,7 @@ export type CreateTrainingGoalInput = CreateTrainingGoalRequest & {
 };
 
 export interface TrainingGoalsRepository {
+  discard(actorId: string, id: string): Promise<TrainingGoal | null>;
   complete(actorId: string, id: string): Promise<TrainingGoal | null>;
   findById(id: string): Promise<TrainingGoal | null>;
   edit(
@@ -31,6 +32,21 @@ export class DrizzleTrainingGoalsRepository implements TrainingGoalsRepository {
     private readonly db: NodePgDatabase,
     private readonly transformer: TrainingGoalsTransformer,
   ) {}
+
+  async discard(actorId: string, id: string): Promise<TrainingGoal | null> {
+    const [row] = await this.db
+      .update(trainingGoals)
+      .set({ status: "DISCARDED" })
+      .where(
+        and(
+          eq(trainingGoals.id, id),
+          eq(trainingGoals.athleteId, actorId),
+          eq(trainingGoals.status, "ACTIVE"),
+        ),
+      )
+      .returning();
+    return row ? this.transformer.transform(row) : null;
+  }
 
   async complete(actorId: string, id: string): Promise<TrainingGoal | null> {
     const [row] = await this.db

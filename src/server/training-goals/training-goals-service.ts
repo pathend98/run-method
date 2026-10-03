@@ -6,12 +6,14 @@ import type {
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import {
   TrainingGoalCannotCompleteError,
+  TrainingGoalCannotDiscardError,
   TrainingGoalNotFoundError,
   TrainingGoalNotActiveError,
 } from "./training-goals-errors";
 import type { TrainingGoalsRepository } from "./training-goals-repository";
 
 export interface TrainingGoalsService {
+  discard(actorId: string, id: string): Promise<TrainingGoal>;
   complete(actorId: string, id: string): Promise<TrainingGoal>;
   edit(
     actorId: string,
@@ -28,6 +30,20 @@ export interface TrainingGoalsService {
 
 export class DefaultTrainingGoalsService implements TrainingGoalsService {
   constructor(private readonly repository: TrainingGoalsRepository) {}
+
+  async discard(actorId: string, id: string): Promise<TrainingGoal> {
+    const current = await this.repository.findById(id);
+    if (!current) throw new TrainingGoalNotFoundError();
+
+    if (actorId !== current.athleteId) throw new ForbiddenError();
+
+    if (current.status !== "ACTIVE") throw new TrainingGoalCannotDiscardError();
+
+    const discarded = await this.repository.discard(actorId, id);
+    if (!discarded) throw new TrainingGoalCannotDiscardError();
+
+    return discarded;
+  }
 
   async complete(actorId: string, id: string): Promise<TrainingGoal> {
     const current = await this.repository.findById(id);

@@ -28,3 +28,10 @@ export class TrainingGoalCannotCompleteError extends ConflictError {
     this.name = "TrainingGoalCannotCompleteError";
   }
 }
+
+export class TrainingGoalCannotDiscardError extends ConflictError {
+  constructor() {
+    super("Only active training goals can be discarded");
+    this.name = "TrainingGoalCannotDiscardError";
+  }
+}

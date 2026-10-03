@@ -350,3 +350,34 @@ test("propagates completion persistence failures", async () => {
     error,
   );
 });
+
+test("atomically discards only the owned active goal and transforms the returned row", async () => {
+  const { repository, set, where, returning, transform, update } =
+    setupUpdate();
+  const discardedRow = { ...row, status: "DISCARDED" as const };
+  const discarded = { ...goal, status: "DISCARDED" as const };
+  returning.mockResolvedValue([discardedRow]);
+  transform.mockReturnValue(discarded);
+  await expect(repository.discard(goal.athleteId, goal.id)).resolves.toBe(
+    discarded,
+  );
+  expect(update).toHaveBeenCalledExactlyOnceWith(trainingGoals);
+  expect(set).toHaveBeenCalledExactlyOnceWith({ status: "DISCARDED" });
+  expect(new PgDialect().sqlToQuery(where.mock.calls[0][0])).toMatchObject({
+    sql: '("training_goals"."id" = $1 and "training_goals"."athlete_id" = $2 and "training_goals"."status" = $3)',
+    params: [goal.id, goal.athleteId, "ACTIVE"],
+  });
+  expect(transform).toHaveBeenCalledExactlyOnceWith(discardedRow);
+});
+test("returns null for an unmatched discarding without transformation", async () => {
+  const { repository, returning, transform } = setupUpdate();
+  returning.mockResolvedValue([]);
+  await expect(repository.discard(goal.athleteId, goal.id)).resolves.toBeNull();
+  expect(transform).not.toHaveBeenCalled();
+});
+test("propagates discarding persistence failures", async () => {
+  const { repository, returning } = setupUpdate();
+  const error = new Error("Database unavailable");
+  returning.mockRejectedValue(error);
+  await expect(repository.discard(goal.athleteId, goal.id)).rejects.toBe(error);
+});

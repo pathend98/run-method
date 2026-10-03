@@ -23,6 +23,7 @@ vi.mock("@/server/server", async (importOriginal) => {
     ),
     getTrainingGoalsService: () =>
       new DefaultTrainingGoalsService({
+        discard: vi.fn(),
         complete: vi.fn(),
         create,
         find,

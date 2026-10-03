@@ -1,3 +1,4 @@
+import { TrainingGoalCannotDiscardError } from "./training-goals-errors";
 import { TrainingGoalCannotCompleteError } from "./training-goals-errors";
 import { NotFoundError } from "@/server/errors/not-found-error";
 import {
@@ -32,4 +33,11 @@ test("exposes a completion conflict", () => {
   expect(error).toBeInstanceOf(ConflictError);
   expect(error.name).toBe("TrainingGoalCannotCompleteError");
   expect(error.message).toBe("Only active training goals can be completed");
+});
+
+test("exposes a discard conflict", () => {
+  const error = new TrainingGoalCannotDiscardError();
+  expect(error).toBeInstanceOf(ConflictError);
+  expect(error.name).toBe("TrainingGoalCannotDiscardError");
+  expect(error.message).toBe("Only active training goals can be discarded");
 });

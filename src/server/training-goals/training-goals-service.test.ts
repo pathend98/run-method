@@ -8,6 +8,7 @@ test("delegates creation without additional validation", async () => {
   const goal = createTrainingGoal();
   const create = vi.fn().mockResolvedValue(goal);
   const service = new DefaultTrainingGoalsService({
+    discard: vi.fn(),
     complete: vi.fn(),
     create,
     find: vi.fn(),
@@ -26,6 +27,7 @@ test("delegates creation without additional validation", async () => {
 test("forbids another athlete before persistence", async () => {
   const create = vi.fn();
   const service = new DefaultTrainingGoalsService({
+    discard: vi.fn(),
     complete: vi.fn(),
     create,
     find: vi.fn(),
@@ -41,6 +43,7 @@ test("forbids another athlete before persistence", async () => {
 test("propagates repository failure", async () => {
   const error = new Error("Database unavailable");
   const service = new DefaultTrainingGoalsService({
+    discard: vi.fn(),
     complete: vi.fn(),
     create: vi.fn().mockRejectedValue(error),
     find: vi.fn(),
@@ -54,6 +57,7 @@ test("delegates finding all goals for the authenticated athlete", async () => {
   const goals = [createTrainingGoal()];
   const find = vi.fn().mockResolvedValue(goals);
   const service = new DefaultTrainingGoalsService({
+    discard: vi.fn(),
     complete: vi.fn(),
     create: vi.fn(),
     find,
@@ -67,6 +71,7 @@ test("delegates finding all goals for the authenticated athlete", async () => {
 test("forbids finding another athlete's goals before querying", async () => {
   const find = vi.fn();
   const service = new DefaultTrainingGoalsService({
+    discard: vi.fn(),
     complete: vi.fn(),
     create: vi.fn(),
     find,
@@ -80,6 +85,7 @@ test("forbids finding another athlete's goals before querying", async () => {
 test("propagates goal lookup failure", async () => {
   const error = new Error("Database unavailable");
   const service = new DefaultTrainingGoalsService({
+    discard: vi.fn(),
     complete: vi.fn(),
     create: vi.fn(),
     findById: vi.fn(),
@@ -94,6 +100,7 @@ function setupEdit(goal = createTrainingGoal()) {
   const edit = vi.fn().mockResolvedValue(goal);
   return {
     service: new DefaultTrainingGoalsService({
+      discard: vi.fn(),
       complete: vi.fn(),
       findById,
       edit,
@@ -173,6 +180,7 @@ function setupComplete(goal = createTrainingGoal()) {
   const complete = vi.fn().mockResolvedValue(completed);
   return {
     service: new DefaultTrainingGoalsService({
+      discard: vi.fn(),
       findById,
       complete,
       edit: vi.fn(),
@@ -237,5 +245,79 @@ test.each(["lookup", "update"])(
     const error = new Error("Database unavailable");
     (stage === "lookup" ? findById : complete).mockRejectedValue(error);
     await expect(service.complete(goal.athleteId, goal.id)).rejects.toBe(error);
+  },
+);
+
+function setupDiscard(goal = createTrainingGoal()) {
+  const findById = vi.fn().mockResolvedValue(goal);
+  const discarded = { ...goal, status: "DISCARDED" as const };
+  const discard = vi.fn().mockResolvedValue(discarded);
+  return {
+    service: new DefaultTrainingGoalsService({
+      complete: vi.fn(),
+      findById,
+      discard,
+      edit: vi.fn(),
+      create: vi.fn(),
+      find: vi.fn(),
+    }),
+    findById,
+    discard,
+    goal,
+    discarded,
+  };
+}
+
+test("discards an owned active goal", async () => {
+  const { service, goal, discarded, discard, findById } = setupDiscard();
+  await expect(service.discard(goal.athleteId, goal.id)).resolves.toBe(
+    discarded,
+  );
+  expect(findById).toHaveBeenCalledExactlyOnceWith(goal.id);
+  expect(discard).toHaveBeenCalledExactlyOnceWith(goal.athleteId, goal.id);
+});
+test("rejects a missing goal before discarding", async () => {
+  const { service, goal, discard, findById } = setupDiscard();
+  findById.mockResolvedValue(null);
+  await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
+    "Training goal not found",
+  );
+  expect(discard).not.toHaveBeenCalled();
+});
+test("checks discarding ownership before status", async () => {
+  const { service, goal, discard } = setupDiscard(
+    createTrainingGoal({ status: "DISCARDED" }),
+  );
+  await expect(service.discard("other", goal.id)).rejects.toThrow(
+    ForbiddenError,
+  );
+  expect(discard).not.toHaveBeenCalled();
+});
+test.each(["COMPLETED", "DISCARDED"] as const)(
+  "rejects discarding of %s goals",
+  async (status) => {
+    const { service, goal, discard } = setupDiscard(
+      createTrainingGoal({ status }),
+    );
+    await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
+      "Only active training goals can be discarded",
+    );
+    expect(discard).not.toHaveBeenCalled();
+  },
+);
+test("rejects concurrent discarding transitions", async () => {
+  const { service, goal, discard } = setupDiscard();
+  discard.mockResolvedValue(null);
+  await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
+    "Only active training goals can be discarded",
+  );
+});
+test.each(["lookup", "update"])(
+  "propagates discarding %s failures",
+  async (stage) => {
+    const { service, goal, discard, findById } = setupDiscard();
+    const error = new Error("Database unavailable");
+    (stage === "lookup" ? findById : discard).mockRejectedValue(error);
+    await expect(service.discard(goal.athleteId, goal.id)).rejects.toBe(error);
   },
 );
