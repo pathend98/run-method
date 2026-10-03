@@ -22,7 +22,13 @@ vi.mock("@/server/server", async (importOriginal) => {
       () => ({ findBySessionKey }),
     ),
     getTrainingGoalsService: () =>
-      new DefaultTrainingGoalsService({ create, find }),
+      new DefaultTrainingGoalsService({
+        complete: vi.fn(),
+        create,
+        find,
+        findById: vi.fn(),
+        edit: vi.fn(),
+      }),
   };
 });
 

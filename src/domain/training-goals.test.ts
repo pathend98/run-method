@@ -1,3 +1,4 @@
+import { editTrainingGoalRequestSchema } from "./training-goals";
 import {
   createTrainingGoalRequestSchema,
   trainingGoalSchema,
@@ -87,4 +88,60 @@ test.each([
     trainingGoalSchema.safeParse({ ...createTrainingGoal(), ...fields })
       .success,
   ).toBe(false);
+});
+
+describe("editTrainingGoalRequestSchema", () => {
+  test.each([
+    { title: " Updated " },
+    { type: "OPEN" },
+    { description: " Details " },
+    { targetDistanceMetres: 5000 },
+    { targetTimeSeconds: 1800 },
+    { targetDate: "2027-01-01" },
+    {
+      description: null,
+      targetDistanceMetres: null,
+      targetTimeSeconds: null,
+      targetDate: null,
+    },
+    {
+      title: "Goal",
+      type: "RACE",
+      description: "Details",
+      targetDistanceMetres: 5000,
+      targetTimeSeconds: 1800,
+      targetDate: "2000-01-01",
+    },
+  ])("accepts partial updates %j", (input) => {
+    expect(editTrainingGoalRequestSchema.safeParse(input).success).toBe(true);
+  });
+  test("trims supplied strings and preserves omitted fields", () => {
+    expect(
+      editTrainingGoalRequestSchema.parse({
+        title: " Goal ",
+        description: " Details ",
+      }),
+    ).toEqual({ title: "Goal", description: "Details" });
+  });
+  test.each([
+    {},
+    { title: undefined },
+    { title: null },
+    { title: " " },
+    { type: null },
+    { type: "INVALID" },
+    { description: " " },
+    { targetDistanceMetres: 0 },
+    { targetDistanceMetres: 1.5 },
+    { targetTimeSeconds: -1 },
+    { targetTimeSeconds: "1800" },
+    { targetDate: "2027-02-30" },
+    { status: "ACTIVE", title: "Goal" },
+    { athleteId: "id", title: "Goal" },
+    { id: "id", title: "Goal" },
+    { createdAt: "2026-01-01", title: "Goal" },
+    { unknown: true, title: "Goal" },
+  ])("rejects invalid updates %j", (input) => {
+    expect(editTrainingGoalRequestSchema.safeParse(input).success).toBe(false);
+  });
 });

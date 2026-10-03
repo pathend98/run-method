@@ -38,3 +38,25 @@ export type TrainingGoal = z.infer<typeof trainingGoalSchema>;
 export type CreateTrainingGoalRequest = z.infer<
   typeof createTrainingGoalRequestSchema
 >;
+
+export const editTrainingGoalRequestSchema = z
+  .object({
+    title: trimmedNonEmptyStringSchema.optional(),
+    type: trainingGoalTypeSchema.optional(),
+    description: trimmedNonEmptyStringSchema.nullable().optional(),
+    targetDistanceMetres: positiveIntegerSchema.nullable().optional(),
+    targetTimeSeconds: positiveIntegerSchema.nullable().optional(),
+    targetDate: z.iso.date().nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (request) => Object.values(request).some((value) => value !== undefined),
+    {
+      message: "At least one editable field is required",
+      path: ["body"],
+    },
+  );
+
+export type EditTrainingGoalRequest = z.infer<
+  typeof editTrainingGoalRequestSchema
+>;

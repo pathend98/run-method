@@ -197,3 +197,156 @@ test("rejects an existing active goal without transforming a missing row", async
   ).rejects.toThrow(ActiveTrainingGoalAlreadyExistsError);
   expect(transform).not.toHaveBeenCalled();
 });
+
+function setupById() {
+  const limit = vi.fn().mockResolvedValue([row]);
+  const where = vi.fn().mockReturnValue({ limit });
+  const from = vi.fn().mockReturnValue({ where });
+  const select = vi.fn().mockReturnValue({ from });
+  const transform = vi.fn().mockReturnValue(goal);
+  return {
+    repository: new DrizzleTrainingGoalsRepository({ select } as never, {
+      transform,
+    }),
+    limit,
+    where,
+    from,
+    transform,
+  };
+}
+
+test("finds and transforms a goal by id", async () => {
+  const { repository, limit, where, from, transform } = setupById();
+  await expect(repository.findById(goal.id)).resolves.toBe(goal);
+  expect(from).toHaveBeenCalledExactlyOnceWith(trainingGoals);
+  expect(limit).toHaveBeenCalledExactlyOnceWith(1);
+  expect(new PgDialect().sqlToQuery(where.mock.calls[0][0])).toMatchObject({
+    sql: '"training_goals"."id" = $1',
+    params: [goal.id],
+  });
+  expect(transform).toHaveBeenCalledExactlyOnceWith(row);
+});
+
+test("returns null for a missing goal", async () => {
+  const { repository, limit, transform } = setupById();
+  limit.mockResolvedValue([]);
+  await expect(repository.findById(goal.id)).resolves.toBeNull();
+  expect(transform).not.toHaveBeenCalled();
+});
+
+test("propagates lookup database errors", async () => {
+  const { repository, limit } = setupById();
+  const error = new Error("Database unavailable");
+  limit.mockRejectedValue(error);
+  await expect(repository.findById(goal.id)).rejects.toBe(error);
+});
+
+function setupUpdate() {
+  const returning = vi.fn().mockResolvedValue([row]);
+  const where = vi.fn().mockReturnValue({ returning });
+  const set = vi.fn().mockReturnValue({ where });
+  const update = vi.fn().mockReturnValue({ set });
+  const transform = vi.fn().mockReturnValue(goal);
+  return {
+    repository: new DrizzleTrainingGoalsRepository({ update } as never, {
+      transform,
+    }),
+    returning,
+    where,
+    set,
+    update,
+    transform,
+  };
+}
+
+test("updates only editable fields and atomically checks ownership and active status", async () => {
+  const { repository, update, where, set, transform } = setupUpdate();
+  const request = {
+    title: "New",
+    description: null,
+    targetDistanceMetres: null,
+    targetTimeSeconds: null,
+    targetDate: null,
+    type: "OPEN" as const,
+  };
+  await expect(
+    repository.edit(goal.athleteId, goal.id, {
+      ...request,
+      status: "DISCARDED",
+      createdAt: "ignored",
+    } as never),
+  ).resolves.toBe(goal);
+  expect(update).toHaveBeenCalledExactlyOnceWith(trainingGoals);
+  expect(set).toHaveBeenCalledExactlyOnceWith(request);
+  expect(new PgDialect().sqlToQuery(where.mock.calls[0][0])).toMatchObject({
+    sql: '("training_goals"."id" = $1 and "training_goals"."athlete_id" = $2 and "training_goals"."status" = $3)',
+    params: [goal.id, goal.athleteId, "ACTIVE"],
+  });
+  expect(transform).toHaveBeenCalledExactlyOnceWith(row);
+});
+
+test("leaves omitted fields undefined for Drizzle to preserve", async () => {
+  const { repository, set } = setupUpdate();
+  await repository.edit(goal.athleteId, goal.id, { title: "New" });
+  expect(set).toHaveBeenCalledExactlyOnceWith({
+    title: "New",
+    description: undefined,
+    type: undefined,
+    targetDistanceMetres: undefined,
+    targetTimeSeconds: undefined,
+    targetDate: undefined,
+  });
+});
+
+test("returns null when the conditional update no longer matches", async () => {
+  const { repository, returning, transform } = setupUpdate();
+  returning.mockResolvedValue([]);
+  await expect(
+    repository.edit(goal.athleteId, goal.id, { title: "New" }),
+  ).resolves.toBeNull();
+  expect(transform).not.toHaveBeenCalled();
+});
+
+test("propagates update database failures", async () => {
+  const { repository, returning } = setupUpdate();
+  const error = new Error("Database unavailable");
+  returning.mockRejectedValue(error);
+  await expect(
+    repository.edit(goal.athleteId, goal.id, { title: "New" }),
+  ).rejects.toBe(error);
+});
+
+test("atomically completes only the owned active goal and transforms the returned row", async () => {
+  const { repository, set, where, returning, transform, update } =
+    setupUpdate();
+  const completedRow = { ...row, status: "COMPLETED" as const };
+  const completed = { ...goal, status: "COMPLETED" as const };
+  returning.mockResolvedValue([completedRow]);
+  transform.mockReturnValue(completed);
+  await expect(repository.complete(goal.athleteId, goal.id)).resolves.toBe(
+    completed,
+  );
+  expect(update).toHaveBeenCalledExactlyOnceWith(trainingGoals);
+  expect(set).toHaveBeenCalledExactlyOnceWith({ status: "COMPLETED" });
+  expect(new PgDialect().sqlToQuery(where.mock.calls[0][0])).toMatchObject({
+    sql: '("training_goals"."id" = $1 and "training_goals"."athlete_id" = $2 and "training_goals"."status" = $3)',
+    params: [goal.id, goal.athleteId, "ACTIVE"],
+  });
+  expect(transform).toHaveBeenCalledExactlyOnceWith(completedRow);
+});
+test("returns null for an unmatched completion without transformation", async () => {
+  const { repository, returning, transform } = setupUpdate();
+  returning.mockResolvedValue([]);
+  await expect(
+    repository.complete(goal.athleteId, goal.id),
+  ).resolves.toBeNull();
+  expect(transform).not.toHaveBeenCalled();
+});
+test("propagates completion persistence failures", async () => {
+  const { repository, returning } = setupUpdate();
+  const error = new Error("Database unavailable");
+  returning.mockRejectedValue(error);
+  await expect(repository.complete(goal.athleteId, goal.id)).rejects.toBe(
+    error,
+  );
+});
