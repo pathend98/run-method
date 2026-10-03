@@ -1,8 +1,8 @@
+import { TrainingSessionsTransitionConflictError } from "@/server/training-sessions/training-sessions-errors";
 import type * as ServerModule from "@/server/server";
 import { createRunActivity } from "@/test-support/fixtures/activity";
 import { NextRequest } from "next/server";
 
-import { BadRequestError } from "@/server/errors/bad-request-error";
 import { UserNotFoundError } from "@/server/user/user-errors";
 import { createUser } from "@/test-support/fixtures/user";
 import {
@@ -170,15 +170,17 @@ test("returns completion field errors with 400 status", async () => {
 test.each([
   [new TrainingSessionNotFoundError(), 404, "Training session not found"],
   [
-    new BadRequestError("only scheduled sessions can be completed"),
-    400,
+    new TrainingSessionsTransitionConflictError(
+      "only scheduled sessions can be completed",
+    ),
+    409,
     "only scheduled sessions can be completed",
   ],
   [
-    new TrainingSessionsValidationError(
+    new TrainingSessionsTransitionConflictError(
       "future training sessions cannot be completed",
     ),
-    400,
+    409,
     "future training sessions cannot be completed",
   ],
 ] as const)(
@@ -360,3 +362,28 @@ test("authenticates before validating UUID", async () => {
   expect(response.status).toBe(401);
   expect(serviceCalls).not.toHaveBeenCalled();
 });
+
+test("returns 409 when a transition loses a concurrent update", async () => {
+  repository.complete.mockResolvedValue(null);
+  const response = await POST(request(), context());
+  expect(response.status).toBe(409);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  await expect(response.json()).resolves.toEqual({
+    error: "training session is no longer scheduled",
+  });
+});
+
+test.each(["COMPLETED", "SKIPPED"] as const)(
+  "returns 409 for %s session transition",
+  async (status) => {
+    domainValidator.validateComplete.mockImplementation(() => {
+      throw new TrainingSessionsTransitionConflictError(
+        `only scheduled training sessions can be completed`,
+      );
+    });
+    repository.findById.mockResolvedValue(createRunActivity({ status }));
+    const response = await POST(request(), context());
+    expect(response.status).toBe(409);
+    expect(repository.complete).not.toHaveBeenCalled();
+  },
+);

@@ -4,7 +4,10 @@ import type {
   RunTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
-import { TrainingSessionsValidationError } from "./training-sessions-errors";
+import {
+  TrainingSessionsValidationError,
+  TrainingSessionsTransitionConflictError,
+} from "./training-sessions-errors";
 
 export interface TrainingSessionsValidator {
   validateEdit(
@@ -114,13 +117,13 @@ export class DefaultTrainingSessionsValidator implements TrainingSessionsValidat
     timeZone: string | null,
   ): void {
     if (current.status !== "SCHEDULED") {
-      throw new TrainingSessionsValidationError(
+      throw new TrainingSessionsTransitionConflictError(
         `only scheduled training sessions can be ${transition}`,
       );
     }
 
     if (current.date > this.currentDate(timeZone)) {
-      throw new TrainingSessionsValidationError(
+      throw new TrainingSessionsTransitionConflictError(
         `future training sessions cannot be ${transition}`,
       );
     }

@@ -1,3 +1,5 @@
+import { ConflictError } from "@/server/errors/conflict-error";
+import { TrainingSessionsTransitionConflictError } from "./training-sessions-errors";
 import { BadRequestError } from "@/server/errors/bad-request-error";
 import { NotFoundError } from "@/server/errors/not-found-error";
 import {
@@ -41,4 +43,13 @@ test("TrainingSessionNotFoundError exposes a stable message", () => {
   expect(error).toBeInstanceOf(Error);
   expect(error.name).toBe("TrainingSessionNotFoundError");
   expect(error.message).toBe("Training session not found");
+});
+
+test("transition conflicts extend ConflictError and preserve their message", () => {
+  const error = new TrainingSessionsTransitionConflictError(
+    "Session is no longer scheduled",
+  );
+  expect(error).toBeInstanceOf(ConflictError);
+  expect(error.name).toBe("TrainingSessionsTransitionConflictError");
+  expect(error.message).toBe("Session is no longer scheduled");
 });
