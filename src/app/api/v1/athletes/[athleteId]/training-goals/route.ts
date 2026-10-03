@@ -1,3 +1,4 @@
+import { athleteRouteParamsSchema } from "@/domain/route-params";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createTrainingGoalRequestSchema } from "@/domain/training-goals";
@@ -13,9 +14,13 @@ type RouteContext = { params: Promise<{ athleteId: string }> };
 
 export const GET = apiHandler.wrap(
   async (request: NextRequest, context: RouteContext) => {
-    const { athleteId } = await context.params;
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
+
+    const { athleteId } = unmarshaler.unmarshal(
+      await context.params,
+      athleteRouteParamsSchema,
+    );
     const goals = await getTrainingGoalsService().find(actorId, athleteId);
 
     return NextResponse.json(goals, { headers: privateResponseHeaders });
@@ -25,9 +30,13 @@ export const GET = apiHandler.wrap(
 
 export const POST = apiHandler.wrap(
   async (request: NextRequest, context: RouteContext) => {
-    const { athleteId } = await context.params;
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
+
+    const { athleteId } = unmarshaler.unmarshal(
+      await context.params,
+      athleteRouteParamsSchema,
+    );
 
     const body = await unmarshaler.readRequestBody(
       request,

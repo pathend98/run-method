@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { idRouteParamsSchema } from "@/domain/route-params";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { editTrainingGoalRequestSchema } from "@/domain/training-goals";
@@ -10,7 +10,6 @@ import {
   getTrainingGoalsService,
 } from "@/server/server";
 
-const routeParamsSchema = z.object({ id: z.uuid() });
 type RouteContext = { params: Promise<{ id: string }> };
 
 export const PATCH = apiHandler.wrap(
@@ -20,7 +19,7 @@ export const PATCH = apiHandler.wrap(
 
     const { id } = unmarshaler.unmarshal(
       await context.params,
-      routeParamsSchema,
+      idRouteParamsSchema,
     );
     const body = await unmarshaler.readRequestBody(
       request,

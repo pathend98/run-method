@@ -1,3 +1,4 @@
+import { idRouteParamsSchema } from "@/domain/route-params";
 import { editTrainingSessionRequestSchema } from "@/domain/training-sessions";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -16,9 +17,13 @@ type RouteContext = {
 
 export const DELETE = apiHandler.wrap(
   async (request: NextRequest, context: RouteContext) => {
-    const { id } = await context.params;
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
+
+    const { id } = unmarshaler.unmarshal(
+      await context.params,
+      idRouteParamsSchema,
+    );
 
     await getTrainingSessionsService().delete(actorId, id);
 
@@ -29,9 +34,13 @@ export const DELETE = apiHandler.wrap(
 
 export const PATCH = apiHandler.wrap(
   async (request: NextRequest, context: RouteContext) => {
-    const { id } = await context.params;
     const actorId =
       await requestAuthenticationService.authenticateActor(request);
+
+    const { id } = unmarshaler.unmarshal(
+      await context.params,
+      idRouteParamsSchema,
+    );
 
     const body = await unmarshaler.readRequestBody(
       request,

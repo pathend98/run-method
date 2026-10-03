@@ -250,3 +250,30 @@ test("returns 409 when the athlete already has an active goal", async () => {
     error: "Athlete already has an active training goal",
   });
 });
+
+test.each(["GET", "POST"])(
+  "validates %s athlete UUID before reading the body or querying",
+  async (method) => {
+    const response = await (method === "GET"
+      ? get("invalid")
+      : post("{", "invalid"));
+    expect(response.status).toBe(400);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect((await response.json()).fieldErrors.athleteId).toEqual(
+      expect.any(Array),
+    );
+    expect(find).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  },
+);
+test.each(["GET", "POST"])(
+  "authenticates %s before validating athlete UUID",
+  async (method) => {
+    const response = await (method === "GET"
+      ? get("invalid", "")
+      : post("{", "invalid", ""));
+    expect(response.status).toBe(401);
+    expect(find).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  },
+);

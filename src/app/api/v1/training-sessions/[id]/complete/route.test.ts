@@ -291,7 +291,7 @@ test.each(["missing", "invalid"])(
   },
 );
 
-test.each(["foreign", "absent", "invalid id", "lookup failure"])(
+test.each(["foreign", "absent", "lookup failure"])(
   "schema errors take precedence over %s",
   async (kind) => {
     if (kind === "foreign")
@@ -301,10 +301,7 @@ test.each(["foreign", "absent", "invalid id", "lookup failure"])(
     if (kind === "absent") repository.findById.mockResolvedValue(null);
     if (kind === "lookup failure")
       repository.findById.mockRejectedValue(new Error("database down"));
-    const response = await POST(
-      request("{}"),
-      context(kind === "invalid id" ? "invalid" : id),
-    );
+    const response = await POST(request("{}"), context());
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
       error: "Invalid request body",
@@ -347,3 +344,19 @@ test.each(["missing", "invalid"])(
     expect(repository.complete).not.toHaveBeenCalled();
   },
 );
+
+test("validates UUID before reading the body or invoking services", async () => {
+  const response = await POST(request("{"), context("invalid"));
+  expect(response.status).toBe(400);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect((await response.json()).fieldErrors.id).toEqual(expect.any(Array));
+  expect(serviceCalls).not.toHaveBeenCalled();
+});
+test("authenticates before validating UUID", async () => {
+  const response = await POST(
+    new NextRequest("http://localhost/api/v1/training-sessions/invalid"),
+    context("invalid"),
+  );
+  expect(response.status).toBe(401);
+  expect(serviceCalls).not.toHaveBeenCalled();
+});
