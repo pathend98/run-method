@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Navbar } from "@/ui/navbar/navbar";
+import { Navbar } from "@/ui/shell/navbar/navbar";
 import { QueryProvider } from "./query-provider";
 import "./globals.css";
 

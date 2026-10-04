@@ -6,7 +6,7 @@ import {
 import {
   RunningMetrics,
   type RunningMetricUnit,
-} from "@/ui/running-metrics/running-metrics";
+} from "@/ui/activities/running-metrics";
 import {
   defaultDurationFields,
   durationFieldsSchema,

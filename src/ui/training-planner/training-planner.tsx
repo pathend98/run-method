@@ -9,14 +9,14 @@ import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { Button } from "@/ui/shared/button/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
-import { ActivityDetailsModal } from "@/ui/activities/components/activity-details/activity-details-modal";
-import { AddActivityModal } from "@/ui/activities/components/add-activity/add-activity-modal";
-import { EditActivityModal } from "@/ui/activities/components/edit-activity/edit-activity-modal";
-import { CompleteActivityModal } from "@/ui/activities/components/complete-activity/complete-activity-modal";
-import { SkipActivityModal } from "@/ui/activities/components/skip-activity/skip-activity-modal";
-import { DeleteActivityModal } from "@/ui/activities/components/delete-activity/delete-activity-modal";
-import { ReviewActivitiesModal } from "@/ui/review-activities/review-activities-modal";
-import { MoveActivityModal } from "@/ui/activities/components/move-activity/move-activity-modal";
+import { ActivityDetailsModal } from "@/ui/activities/activity-details/activity-details-modal";
+import { AddActivityModal } from "@/ui/activities/add-activity/add-activity-modal";
+import { EditActivityModal } from "@/ui/activities/edit-activity/edit-activity-modal";
+import { CompleteActivityModal } from "@/ui/activities/complete-activity/complete-activity-modal";
+import { SkipActivityModal } from "@/ui/activities/skip-activity/skip-activity-modal";
+import { DeleteActivityModal } from "@/ui/activities/delete-activity/delete-activity-modal";
+import { ReviewActivitiesModal } from "@/ui/activities/review-activities/review-activities-modal";
+import { MoveActivityModal } from "@/ui/activities/move-activity/move-activity-modal";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
