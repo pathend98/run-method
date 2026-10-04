@@ -53,14 +53,25 @@ test.each([
   );
 });
 
-test("renders nothing if any goal is active", async () => {
+test("shows only the active goal details and hides the form", async () => {
   fetchMock
     .mockResolvedValueOnce(json(user))
     .mockResolvedValueOnce(
-      json([createTrainingGoal({ status: "COMPLETED" }), createTrainingGoal()]),
+      json([
+        createTrainingGoal({ status: "COMPLETED", title: "Previous goal" }),
+        createTrainingGoal({ status: "DISCARDED", title: "Discarded goal" }),
+        createTrainingGoal(),
+      ]),
     );
-  const { container } = renderGoals();
-  await waitFor(() => expect(container.innerHTML).toBe(""));
+  renderGoals();
+  expect(
+    await screen.findByRole("heading", { name: "Run a marathon" }),
+  ).toBeDefined();
+  expect(screen.queryByText("Previous goal")).toBeNull();
+  expect(screen.queryByText("Discarded goal")).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Create training goal" }),
+  ).toBeNull();
 });
 
 test("waits for the current user before fetching goals", () => {
@@ -97,14 +108,14 @@ test.each(["user", "goals"])("retries a failed %s request", async (failure) => {
   expect(await screen.findByLabelText("Title")).toBeDefined();
 });
 
-test("creates a goal, hides the form immediately and refetches the list", async () => {
+test("creates a goal, shows its details immediately and refetches the list", async () => {
   const goal = createTrainingGoal({ athleteId: user.id });
   fetchMock
     .mockResolvedValueOnce(json(user))
     .mockResolvedValueOnce(json([]))
     .mockResolvedValueOnce(json(goal))
     .mockReturnValueOnce(new Promise(() => {}));
-  const { client, container } = renderGoals();
+  const { client } = renderGoals();
   fireEvent.change(await screen.findByLabelText("Title"), {
     target: { value: "My goal" },
   });
@@ -120,5 +131,10 @@ test("creates a goal, hides the form immediately and refetches the list", async 
     },
   );
   expect(client.getQueryData(["training-goals", user.id])).toEqual([goal]);
-  await waitFor(() => expect(container.innerHTML).toBe(""));
+  expect(
+    await screen.findByRole("heading", { name: goal.title }),
+  ).toBeDefined();
+  expect(
+    screen.queryByRole("button", { name: "Create training goal" }),
+  ).toBeNull();
 });

@@ -8,6 +8,7 @@ import type {
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { Button } from "@/ui/components/button";
 import { TrainingGoalForm } from "./components/training-goal-form";
+import { TrainingGoalDetails } from "./components/training-goal-details";
 import {
   createTrainingGoal,
   fetchTrainingGoals,
@@ -44,7 +45,7 @@ export function TrainingGoals() {
       </p>
     );
   }
-  if (goals.data.some((goal) => goal.status === "ACTIVE")) return null;
+  const activeGoal = goals.data.find((goal) => goal.status === "ACTIVE");
   const user = currentUser.data;
   const currentGoals = goals.data;
 
@@ -59,11 +60,15 @@ export function TrainingGoals() {
       <h1 className="text-2xl font-semibold text-zinc-950 sm:text-4xl">
         Training goals
       </h1>
-      <TrainingGoalForm
-        key={athleteId}
-        unit={currentUser.data.measurementUnit}
-        onSubmit={submit}
-      />
+      {activeGoal ? (
+        <TrainingGoalDetails goal={activeGoal} unit={user.measurementUnit} />
+      ) : (
+        <TrainingGoalForm
+          key={athleteId}
+          unit={user.measurementUnit}
+          onSubmit={submit}
+        />
+      )}
     </section>
   );
 }

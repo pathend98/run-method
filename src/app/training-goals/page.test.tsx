@@ -1,4 +1,4 @@
-import { render, screen, within, waitFor } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
@@ -27,7 +27,7 @@ test("renders training goals inside the main landmark", async () => {
   ).toBeDefined();
 });
 
-test("keeps the main landmark empty when there is an active goal", async () => {
+test("renders active goal details inside the main landmark", async () => {
   vi.stubGlobal(
     "fetch",
     vi
@@ -42,5 +42,12 @@ test("keeps the main landmark empty when there is an active goal", async () => {
       <TrainingGoalsPage />
     </QueryProvider>,
   );
-  await waitFor(() => expect(screen.getByRole("main").innerHTML).toBe(""));
+  expect(
+    await within(screen.getByRole("main")).findByRole("heading", {
+      name: "Run a marathon",
+    }),
+  ).toBeDefined();
+  expect(
+    screen.queryByRole("button", { name: "Create training goal" }),
+  ).toBeNull();
 });
