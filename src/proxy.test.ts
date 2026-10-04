@@ -29,8 +29,38 @@ function plannerRequest(sessionKey?: string) {
   });
 }
 
-test("matches the home, training planner, and settings routes", () => {
-  expect(config.matcher).toEqual(["/", "/training-planner", "/settings"]);
+test("matches the home, training planner, training goals, and settings routes", () => {
+  expect(config.matcher).toEqual([
+    "/",
+    "/training-planner",
+    "/training-goals",
+    "/settings",
+  ]);
+});
+
+test.each(["GUEST", "REGISTERED"] as const)(
+  "allows a %s session to open training goals",
+  async (kind) => {
+    findBySessionKey.mockResolvedValue(createUser({ kind }));
+
+    const response = await proxy(
+      new NextRequest("https://app.example.com/training-goals", {
+        headers: { cookie: "__Host-user-session=session-key" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  },
+);
+
+test("redirects a visitor without a session away from training goals", async () => {
+  const response = await proxy(
+    new NextRequest("https://app.example.com/training-goals"),
+  );
+
+  expect(response.status).toBe(307);
+  expect(response.headers.get("location")).toBe("https://app.example.com/auth");
 });
 
 test("allows a guest session to open settings for the registration message", async () => {
