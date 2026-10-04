@@ -1,4 +1,4 @@
-import { LoginChoice } from "@/ui/login-choice";
+import { LoginChoice } from "@/ui/auth/login-choice/login-choice";
 
 export default function HomePage() {
   return (
