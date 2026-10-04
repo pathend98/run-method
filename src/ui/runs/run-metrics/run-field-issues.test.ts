@@ -1,4 +1,4 @@
-import { RunningMetrics } from "./running-metrics";
+import { RunningMetrics } from "./run-metrics";
 import { runFieldIssueMessage } from "./run-field-issues";
 
 test("turns shared validation codes into web form messages", () => {

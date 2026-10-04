@@ -1,4 +1,4 @@
-import { RunningMetrics, type RunningMetricInput } from "./running-metrics";
+import { RunningMetrics, type RunningMetricInput } from "./run-metrics";
 
 const input: RunningMetricInput = {
   distance: "8",

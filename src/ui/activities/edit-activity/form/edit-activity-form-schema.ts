@@ -1,16 +1,13 @@
 import { z } from "zod";
 
 import type { TrainingSession } from "@/domain/training-sessions";
-import {
-  RunningMetrics,
-  type RunningMetricUnit,
-} from "@/ui/activities/running-metrics";
+import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/training-sessions/duration-fields";
-import { runFieldIssueMessage } from "@/ui/activities/running-metrics";
+import { runFieldIssueMessage } from "@/ui/runs/run-metrics";
 
 const editActivityFormBaseSchema = z.object({
   title: z.string().trim().min(1, "Enter an activity title"),

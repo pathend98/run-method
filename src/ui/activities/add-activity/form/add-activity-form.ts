@@ -8,7 +8,7 @@ import {
   RunningMetrics,
   runFieldIssueMessage,
   type RunningMetricUnit,
-} from "@/ui/activities/running-metrics";
+} from "@/ui/runs/run-metrics";
 import {
   defaultDurationFields,
   durationFieldsSchema,

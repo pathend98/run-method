@@ -1,5 +1,5 @@
 import type { User } from "@/domain/user-types";
-import { RunningMetrics } from "@/ui/activities/running-metrics";
+import { RunningMetrics } from "@/ui/runs/run-metrics";
 
 export function formatDistance(
   metres: number | null,

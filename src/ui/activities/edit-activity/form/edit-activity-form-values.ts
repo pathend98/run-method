@@ -1,8 +1,5 @@
 import type { TrainingSession } from "@/domain/training-sessions";
-import {
-  RunningMetrics,
-  type RunningMetricUnit,
-} from "@/ui/activities/running-metrics";
+import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
 import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
 import type { EditActivityFormValues } from "./edit-activity-form-schema";
 

@@ -1,4 +1,4 @@
-import type { RunningMetricIssue, RunningMetricUnit } from "./running-metrics";
+import type { RunningMetricIssue, RunningMetricUnit } from "./run-metrics";
 
 const messages = {
   "distance-positive": "Distance must be greater than zero",

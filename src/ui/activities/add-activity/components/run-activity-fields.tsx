@@ -1,4 +1,4 @@
-import { RunFieldFormInput } from "@/ui/activities/run-field-form-input/run-field-form-input";
+import { RunFieldFormInput } from "@/ui/runs/run-field-form-input/run-field-form-input";
 
 type RunActivityFieldsProps = {
   onPendingChange: (pending: boolean) => void;

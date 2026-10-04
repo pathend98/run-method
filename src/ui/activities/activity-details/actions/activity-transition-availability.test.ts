@@ -6,7 +6,7 @@ import type {
   RunTrainingSession,
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
-import { canTransitionActivity } from "../actions/activity-transition-availability";
+import { canTransitionActivity } from "./activity-transition-availability";
 
 const now = new Date("2026-08-26T12:00:00");
 

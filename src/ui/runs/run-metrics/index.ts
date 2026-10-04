@@ -4,5 +4,5 @@ export {
   type RunningMetricInput,
   type RunningMetric,
   type RunningMetricIssue,
-} from "./running-metrics";
+} from "./run-metrics";
 export { runFieldIssueMessage } from "./run-field-issues";

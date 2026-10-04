@@ -1,5 +1,5 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
-import { RunningMetrics } from "@/ui/activities/running-metrics";
+import { RunningMetrics } from "@/ui/runs/run-metrics";
 import {
   formatDistance,
   formatDuration,

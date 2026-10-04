@@ -3,10 +3,7 @@ import {
   createTrainingGoalRequestSchema,
   trainingGoalTypeSchema,
 } from "@/domain/training-goals";
-import {
-  RunningMetrics,
-  type RunningMetricUnit,
-} from "@/ui/activities/running-metrics";
+import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
 import {
   defaultDurationFields,
   durationFieldsSchema,
