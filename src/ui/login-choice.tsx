@@ -1,4 +1,4 @@
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 
 export function LoginChoice() {
   return (

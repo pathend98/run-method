@@ -2,7 +2,7 @@ import { format, parseISO } from "date-fns";
 import { useState } from "react";
 
 import type { EditTrainingSessionRequest } from "@/domain/training-sessions";
-import { Modal } from "@/ui/components/modal";
+import { Modal } from "@/ui/shared/modal/modal";
 import { EditActivityForm } from "./components/edit-activity-form";
 import { EditActivitySummary } from "./components/edit-activity-summary";
 import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";

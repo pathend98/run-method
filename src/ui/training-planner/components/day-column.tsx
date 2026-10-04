@@ -1,6 +1,6 @@
 import { TimeOfDaySection } from "./time-of-day-section";
 import { TimeOfDayDropZone } from "./time-of-day-drop-zone";
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { formatDayDate } from "../services/training-planner-service";
 import type {
   TimeOfDay,

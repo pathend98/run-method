@@ -1,4 +1,4 @@
-import { Modal, type ModalAction } from "@/ui/components/modal";
+import { Modal, type ModalAction } from "@/ui/shared/modal/modal";
 import {
   formatActivityType,
   formatStatus,

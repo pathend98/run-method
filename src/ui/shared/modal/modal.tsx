@@ -9,7 +9,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { Button } from "./button";
+import { Button } from "../button/button";
 
 export type ModalAction = {
   ariaLabel?: string;

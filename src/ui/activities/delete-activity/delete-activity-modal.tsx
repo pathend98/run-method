@@ -1,4 +1,4 @@
-import { Modal } from "@/ui/components/modal";
+import { Modal } from "@/ui/shared/modal/modal";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useDeleteTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
 

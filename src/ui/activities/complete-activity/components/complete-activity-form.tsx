@@ -9,7 +9,7 @@ import {
   RunningMetrics,
   type RunningMetricUnit,
 } from "@/ui/running-metrics/running-metrics";
-import { DurationFormInput } from "@/ui/components/duration-form-input";
+import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form-input";
 import { RunFieldFormInput } from "@/ui/run-field-input/run-field-form-input";
 import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";

@@ -3,7 +3,7 @@ import { useState, type FocusEvent } from "react";
 import {
   DurationInput,
   type DurationInputValue,
-} from "@/ui/components/duration-input";
+} from "@/ui/shared/duration-form-input/duration-input";
 import type { RunningMetricInput as RunFieldInputValue } from "@/ui/running-metrics/running-metrics";
 
 type RunDurationFieldProps = {

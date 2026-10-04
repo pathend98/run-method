@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 
 import type { SkipTrainingSessionRequest } from "@/domain/training-sessions";
-import { FormField } from "@/ui/components/form-field";
+import { FormField } from "@/ui/shared/form-field/form-field";
 import {
   skipActivityFormSchema,
   toSkipTrainingSessionRequest,

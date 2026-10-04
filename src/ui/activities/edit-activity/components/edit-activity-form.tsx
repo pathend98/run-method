@@ -6,9 +6,9 @@ import type {
   EditTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
-import { DurationFormInput } from "@/ui/components/duration-form-input";
+import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form-input";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
-import { FormField } from "@/ui/components/form-field";
+import { FormField } from "@/ui/shared/form-field/form-field";
 import {
   createEditActivityFormSchema,
   type EditActivityFormValues,

@@ -3,8 +3,8 @@ import { format, parseISO } from "date-fns";
 import { useState } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
-import { FormField } from "@/ui/components/form-field";
-import { Modal } from "@/ui/components/modal";
+import { FormField } from "@/ui/shared/form-field/form-field";
+import { Modal } from "@/ui/shared/modal/modal";
 import { RunActivityFields } from "./components/run-activity-fields";
 import { StrengthActivityFields } from "./components/strength-activity-fields";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";

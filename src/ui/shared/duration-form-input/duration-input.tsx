@@ -1,6 +1,6 @@
 import type { FocusEventHandler } from "react";
 
-import { FormField } from "./form-field";
+import { FormField } from "../form-field/form-field";
 import styles from "./duration-input.module.css";
 
 export type DurationInputValue = {

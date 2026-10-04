@@ -4,7 +4,7 @@ import { CalendarDays, Target, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 
 export function Navbar() {

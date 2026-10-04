@@ -1,7 +1,7 @@
 "use client";
 
 import type { TrainingSessionDateRange } from "@/domain/training-sessions";
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { PastActivitiesAttentionPanel } from "@/ui/activities/past-activities-attention/past-activities-attention-panel";
 import type { TrainingSession } from "@/domain/training-sessions";
 import { WeekGrid } from "./week-grid";

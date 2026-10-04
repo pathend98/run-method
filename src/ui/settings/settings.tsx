@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { SettingsForm } from "./components/settings-form";
 

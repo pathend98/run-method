@@ -1,5 +1,5 @@
 import type { SkipTrainingSessionRequest } from "@/domain/training-sessions";
-import { Modal } from "@/ui/components/modal";
+import { Modal } from "@/ui/shared/modal/modal";
 import {
   formatActivityType,
   formatStatus,

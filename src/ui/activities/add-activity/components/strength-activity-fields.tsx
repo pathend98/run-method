@@ -1,4 +1,4 @@
-import { DurationFormInput } from "@/ui/components/duration-form-input";
+import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form-input";
 
 export function StrengthActivityFields() {
   return (

@@ -6,8 +6,8 @@ import { useEffect } from "react";
 
 import type { TrainingSession } from "@/domain/training-sessions";
 import type { User } from "@/domain/user-types";
-import { Button } from "@/ui/components/button";
-import { Modal } from "@/ui/components/modal";
+import { Button } from "@/ui/shared/button/button";
+import { Modal } from "@/ui/shared/modal/modal";
 import {
   formatCompactDuration,
   formatDistance,

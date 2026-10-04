@@ -3,7 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
 
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { TrainingActivityCard } from "./training-activity-card";
 import type {
   TimeOfDay,

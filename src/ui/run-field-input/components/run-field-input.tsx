@@ -1,5 +1,5 @@
-import { FormField } from "@/ui/components/form-field";
-import { Button } from "@/ui/components/button";
+import { FormField } from "@/ui/shared/form-field/form-field";
+import { Button } from "@/ui/shared/button/button";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import type {
   RunningMetric as RunFieldMetric,

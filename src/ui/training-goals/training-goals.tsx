@@ -6,7 +6,7 @@ import type {
   TrainingGoal,
 } from "@/domain/training-goals";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { TrainingGoalForm } from "./components/training-goal-form";
 import { TrainingGoalDetails } from "./components/training-goal-details";
 import {

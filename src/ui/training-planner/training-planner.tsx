@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
 import { ActivityDetailsModal } from "@/ui/activities/activity-details/activity-details-modal";
