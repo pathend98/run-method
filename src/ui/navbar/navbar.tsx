@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, UserRound } from "lucide-react";
+import { CalendarDays, Target, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -17,7 +17,9 @@ export function Navbar() {
   const actionRef = useRef<HTMLAnchorElement>(null);
   const pathname = usePathname();
   const currentUser = useCurrentUserQuery(
-    pathname === "/training-planner" || pathname === "/settings",
+    pathname === "/training-planner" ||
+      pathname === "/training-goals" ||
+      pathname === "/settings",
   );
   const kind = currentUser.isSuccess ? currentUser.data.kind : null;
   const userLabel = currentUser.isSuccess
@@ -50,13 +52,22 @@ export function Navbar() {
         aria-label="Main navigation"
         className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
       >
-        <Link
-          aria-label="Training planner"
-          className="inline-flex size-11 items-center justify-center rounded-md text-teal-700 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
-          href="/training-planner"
-        >
-          <CalendarDays aria-hidden="true" className="size-5" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            aria-label="Training planner"
+            className="inline-flex size-11 items-center justify-center rounded-md text-teal-700 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+            href="/training-planner"
+          >
+            <CalendarDays aria-hidden="true" className="size-5" />
+          </Link>
+          <Link
+            aria-label="Training goals"
+            className="inline-flex size-11 items-center justify-center rounded-md text-teal-700 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+            href="/training-goals"
+          >
+            <Target aria-hidden="true" className="size-5" />
+          </Link>
+        </div>
         <div
           className="relative"
           ref={containerRef}

@@ -48,6 +48,35 @@ test("shows You when a registered user has no first name", () => {
   expect(trigger().textContent).toContain("You");
 });
 
+test.each(["GUEST", "REGISTERED"] as const)(
+  "links to training goals for a %s user",
+  (kind) => {
+    account.kind = kind;
+    render(<Navbar />);
+
+    expect(
+      screen.getByRole("link", { name: "Training goals" }).getAttribute("href"),
+    ).toBe("/training-goals");
+  },
+);
+
+test.each(["GUEST", "REGISTERED"] as const)(
+  "loads the %s user menu on the training goals route",
+  (kind) => {
+    account.kind = kind;
+    account.pathname = "/training-goals";
+    render(<Navbar />);
+
+    expect(trigger().textContent).toContain(kind === "GUEST" ? "Guest" : "Ada");
+    fireEvent.click(trigger());
+    expect(
+      screen.getByRole("menuitem", {
+        name: kind === "GUEST" ? "Register" : "Log out",
+      }),
+    ).toBeDefined();
+  },
+);
+
 test("updates the label when the current user data changes", () => {
   const view = render(<Navbar />);
   account.firstName = "Grace";
