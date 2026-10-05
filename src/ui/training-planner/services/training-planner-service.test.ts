@@ -70,15 +70,15 @@ test("groupSessionsByWeekday groups API sessions into planner days", () => {
   );
 
   expect(week).toEqual([
-    { day: "Monday", date: "2026-08-17", activities: [] },
-    { day: "Tuesday", date: "2026-08-18", activities: [] },
-    { day: "Wednesday", date: "2026-08-19", activities: [] },
-    { day: "Thursday", date: "2026-08-20", activities: [] },
-    { day: "Friday", date: "2026-08-21", activities: [] },
+    { day: "Monday", date: "2026-08-17", trainingSessions: [] },
+    { day: "Tuesday", date: "2026-08-18", trainingSessions: [] },
+    { day: "Wednesday", date: "2026-08-19", trainingSessions: [] },
+    { day: "Thursday", date: "2026-08-20", trainingSessions: [] },
+    { day: "Friday", date: "2026-08-21", trainingSessions: [] },
     {
       day: "Saturday",
       date: "2026-08-22",
-      activities: [
+      trainingSessions: [
         {
           id: "11111111-1111-4111-8111-111111111111",
           athleteId: "33333333-3333-4333-8333-333333333333",
@@ -117,6 +117,6 @@ test("groupSessionsByWeekday groups API sessions into planner days", () => {
         },
       ],
     },
-    { day: "Sunday", date: "2026-08-23", activities: [] },
+    { day: "Sunday", date: "2026-08-23", trainingSessions: [] },
   ]);
 });

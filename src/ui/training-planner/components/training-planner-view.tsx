@@ -8,7 +8,7 @@ import { WeekGrid } from "./week-grid";
 import { WeeklySummary } from "@/ui/weekly-summary/weekly-summary";
 import { formatWeekRange } from "../services/training-planner-service";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
@@ -17,13 +17,13 @@ type TrainingPlannerViewProps = {
   isCurrentWeek: boolean;
   onAddTrainingSession?: (day: TrainingDay) => void;
   onCurrentWeek: () => void;
-  onMoveActivity: (
-    activity: TrainingActivity,
+  onMoveTrainingSession: (
+    trainingSession: PlannerTrainingSession,
     destination: TrainingSessionMoveDestination,
   ) => Promise<void>;
   onNextWeek: () => void;
   onPreviousWeek: () => void;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
   sessions: TrainingSession[];
   week: TrainingDay[];
   weekRange: TrainingSessionDateRange;
@@ -33,10 +33,10 @@ export function TrainingPlannerView({
   isCurrentWeek,
   onAddTrainingSession,
   onCurrentWeek,
-  onMoveActivity,
+  onMoveTrainingSession,
   onNextWeek,
   onPreviousWeek,
-  onSelectActivity,
+  onSelectTrainingSession,
   sessions,
   week,
   weekRange,
@@ -102,8 +102,8 @@ export function TrainingPlannerView({
         <PastTrainingSessionsAttentionPanel className="mb-8" />
         <WeekGrid
           onAddTrainingSession={onAddTrainingSession}
-          onMoveActivity={onMoveActivity}
-          onSelectActivity={onSelectActivity}
+          onMoveTrainingSession={onMoveTrainingSession}
+          onSelectTrainingSession={onSelectTrainingSession}
           week={week}
         />
       </div>

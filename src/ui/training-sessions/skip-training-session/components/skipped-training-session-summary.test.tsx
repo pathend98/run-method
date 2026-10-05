@@ -43,7 +43,7 @@ test("shows strength duration without run metrics", () => {
   expect(screen.queryByText(/km/)).toBeNull();
 });
 
-test("omits metrics for strength activities without a target duration", () => {
+test("omits metrics for strength training sessions without a target duration", () => {
   const { container } = render(
     <SkippedTrainingSessionSummary
       trainingSession={createStrengthTrainingSession({

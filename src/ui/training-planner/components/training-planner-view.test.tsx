@@ -5,27 +5,27 @@ import { QueryProvider } from "@/app/query-provider";
 import { TrainingPlannerStoreProvider } from "@/ui/training-planner/training-planner-store";
 import { TrainingPlannerView } from "./training-planner-view";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
-const activity = {
+const trainingSession = {
   ...createRunTrainingSession({
-    id: "activity",
+    id: "training-session",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
   }),
   day: "Monday",
-} satisfies TrainingActivity;
+} satisfies PlannerTrainingSession;
 
 const week: TrainingDay[] = [
-  { day: "Monday", date: "2026-08-17", activities: [activity] },
-  { day: "Tuesday", date: "2026-08-18", activities: [] },
-  { day: "Wednesday", date: "2026-08-19", activities: [] },
-  { day: "Thursday", date: "2026-08-20", activities: [] },
-  { day: "Friday", date: "2026-08-21", activities: [] },
-  { day: "Saturday", date: "2026-08-22", activities: [] },
-  { day: "Sunday", date: "2026-08-23", activities: [] },
+  { day: "Monday", date: "2026-08-17", trainingSessions: [trainingSession] },
+  { day: "Tuesday", date: "2026-08-18", trainingSessions: [] },
+  { day: "Wednesday", date: "2026-08-19", trainingSessions: [] },
+  { day: "Thursday", date: "2026-08-20", trainingSessions: [] },
+  { day: "Friday", date: "2026-08-21", trainingSessions: [] },
+  { day: "Saturday", date: "2026-08-22", trainingSessions: [] },
+  { day: "Sunday", date: "2026-08-23", trainingSessions: [] },
 ];
 
 beforeEach(() => {
@@ -41,7 +41,7 @@ function renderView(
   overrides: Partial<React.ComponentProps<typeof TrainingPlannerView>> = {},
 ) {
   const onAddTrainingSession = vi.fn();
-  const onSelectActivity = vi.fn();
+  const onSelectTrainingSession = vi.fn();
   render(
     <TrainingPlannerStoreProvider>
       <QueryProvider>
@@ -49,11 +49,11 @@ function renderView(
           isCurrentWeek
           onAddTrainingSession={onAddTrainingSession}
           onCurrentWeek={vi.fn()}
-          onMoveActivity={vi.fn().mockResolvedValue(undefined)}
+          onMoveTrainingSession={vi.fn().mockResolvedValue(undefined)}
           onNextWeek={vi.fn()}
           onPreviousWeek={vi.fn()}
-          onSelectActivity={onSelectActivity}
-          sessions={week.flatMap((day) => day.activities)}
+          onSelectTrainingSession={onSelectTrainingSession}
+          sessions={week.flatMap((day) => day.trainingSessions)}
           week={week}
           weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
           {...overrides}
@@ -61,7 +61,7 @@ function renderView(
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
-  return { onAddTrainingSession, onSelectActivity };
+  return { onAddTrainingSession, onSelectTrainingSession };
 }
 
 test("renders the weekly grid without modal UI", () => {
@@ -111,7 +111,7 @@ test("renders the weekly grid without modal UI", () => {
 });
 
 test("forwards training session selections and add actions through its private grid", () => {
-  const { onAddTrainingSession, onSelectActivity } = renderView();
+  const { onAddTrainingSession, onSelectTrainingSession } = renderView();
   const mobilePlanner = screen.getByRole("region", {
     name: "Mobile weekly training planner",
   });
@@ -125,7 +125,7 @@ test("forwards training session selections and add actions through its private g
       name: "Add training session to Monday",
     }),
   );
-  expect(onSelectActivity).toHaveBeenCalledWith(activity);
+  expect(onSelectTrainingSession).toHaveBeenCalledWith(trainingSession);
   expect(onAddTrainingSession).toHaveBeenCalledWith(week[0]);
 });
 

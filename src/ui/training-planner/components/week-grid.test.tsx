@@ -116,7 +116,7 @@ vi.mock("@dnd-kit/react", () => ({
 }));
 import { WeekGrid } from "./week-grid";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
@@ -127,11 +127,11 @@ const trainingSession = {
     targetDurationSeconds: 1530,
   }),
   day: "Monday",
-} satisfies TrainingActivity;
+} satisfies PlannerTrainingSession;
 
 const week = [
-  { day: "Monday", date: "2026-08-17", activities: [trainingSession] },
-  { day: "Tuesday", date: "2026-08-18", activities: [] },
+  { day: "Monday", date: "2026-08-17", trainingSessions: [trainingSession] },
+  { day: "Tuesday", date: "2026-08-18", trainingSessions: [] },
 ] satisfies TrainingDay[];
 
 afterEach(() => {
@@ -139,7 +139,7 @@ afterEach(() => {
 });
 
 test("renders a labelled weekly planner list with day columns", () => {
-  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+  render(<WeekGrid onSelectTrainingSession={vi.fn()} week={week} />);
 
   const mobilePlanner = screen.getByRole("region", {
     name: "Mobile weekly training planner",
@@ -165,8 +165,8 @@ test("renders a labelled weekly planner list with day columns", () => {
 test("supports a mobile week fixture without dates", () => {
   render(
     <WeekGrid
-      onSelectActivity={vi.fn()}
-      week={[{ day: "Monday", activities: [] }]}
+      onSelectTrainingSession={vi.fn()}
+      week={[{ day: "Monday", trainingSessions: [] }]}
     />,
   );
 
@@ -175,16 +175,16 @@ test("supports a mobile week fixture without dates", () => {
 
 test("resets the mobile selection when the displayed week changes", () => {
   const { rerender } = render(
-    <WeekGrid onSelectActivity={vi.fn()} week={week} />,
+    <WeekGrid onSelectTrainingSession={vi.fn()} week={week} />,
   );
   fireEvent.click(screen.getByRole("tab", { name: "Tuesday 18 August" }));
 
   rerender(
     <WeekGrid
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
       week={[
-        { day: "Monday", date: "2026-08-24", activities: [] },
-        { day: "Tuesday", date: "2026-08-25", activities: [] },
+        { day: "Monday", date: "2026-08-24", trainingSessions: [] },
+        { day: "Tuesday", date: "2026-08-25", trainingSessions: [] },
       ]}
     />,
   );
@@ -197,25 +197,27 @@ test("resets the mobile selection when the displayed week changes", () => {
 });
 
 test("passes training session selection through from day columns", () => {
-  const onSelectActivity = vi.fn();
+  const onSelectTrainingSession = vi.fn();
 
-  render(<WeekGrid onSelectActivity={onSelectActivity} week={week} />);
+  render(
+    <WeekGrid onSelectTrainingSession={onSelectTrainingSession} week={week} />,
+  );
   fireEvent.click(
     within(
       screen.getByRole("list", { name: "Weekly training planner" }),
     ).getByRole("button", { name: "View Tempo run details" }),
   );
 
-  expect(onSelectActivity).toHaveBeenCalledWith(trainingSession);
+  expect(onSelectTrainingSession).toHaveBeenCalledWith(trainingSession);
 });
 
 test("moves a scheduled training session to a different drop zone", () => {
-  const onMoveActivity = vi.fn().mockResolvedValue(undefined);
+  const onMoveTrainingSession = vi.fn().mockResolvedValue(undefined);
 
   render(
     <WeekGrid
-      onMoveActivity={onMoveActivity}
-      onSelectActivity={vi.fn()}
+      onMoveTrainingSession={onMoveTrainingSession}
+      onSelectTrainingSession={vi.fn()}
       week={week}
     />,
   );
@@ -225,19 +227,19 @@ test("moves a scheduled training session to a different drop zone", () => {
     }),
   );
 
-  expect(onMoveActivity).toHaveBeenCalledWith(trainingSession, {
+  expect(onMoveTrainingSession).toHaveBeenCalledWith(trainingSession, {
     date: "2026-08-18",
     timeOfDay: "PM",
   });
 });
 
 test("does not move cancelled, outside, unchanged, or non-scheduled drops", () => {
-  const onMoveActivity = vi.fn().mockResolvedValue(undefined);
+  const onMoveTrainingSession = vi.fn().mockResolvedValue(undefined);
 
   render(
     <WeekGrid
-      onMoveActivity={onMoveActivity}
-      onSelectActivity={vi.fn()}
+      onMoveTrainingSession={onMoveTrainingSession}
+      onSelectTrainingSession={vi.fn()}
       week={week}
     />,
   );
@@ -259,16 +261,16 @@ test("does not move cancelled, outside, unchanged, or non-scheduled drops", () =
     }),
   );
 
-  expect(onMoveActivity).not.toHaveBeenCalled();
+  expect(onMoveTrainingSession).not.toHaveBeenCalled();
 });
 
 test("silently ignores a failed training session move", async () => {
-  const onMoveActivity = vi.fn().mockRejectedValue(new Error("nope"));
+  const onMoveTrainingSession = vi.fn().mockRejectedValue(new Error("nope"));
 
   render(
     <WeekGrid
-      onMoveActivity={onMoveActivity}
-      onSelectActivity={vi.fn()}
+      onMoveTrainingSession={onMoveTrainingSession}
+      onSelectTrainingSession={vi.fn()}
       week={week}
     />,
   );
@@ -278,11 +280,11 @@ test("silently ignores a failed training session move", async () => {
     }),
   );
 
-  await waitFor(() => expect(onMoveActivity).toHaveBeenCalledOnce());
+  await waitFor(() => expect(onMoveTrainingSession).toHaveBeenCalledOnce());
 });
 
 test("shows dashed morning, evening, and anytime zones during a mouse drag", () => {
-  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+  render(<WeekGrid onSelectTrainingSession={vi.fn()} week={week} />);
 
   fireEvent.click(screen.getByRole("button", { name: "Start drag" }));
 
@@ -310,7 +312,7 @@ test("shows dashed morning, evening, and anytime zones during a mouse drag", () 
 });
 
 test("configures a mouse-only sensor with an eight-pixel activation distance", () => {
-  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+  render(<WeekGrid onSelectTrainingSession={vi.fn()} week={week} />);
 
   const sensorOptions = dndMocks.sensorOptions;
 
@@ -326,7 +328,7 @@ test("tints only today's column when the displayed week includes it", () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-08-17T12:00:00"));
 
-  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+  render(<WeekGrid onSelectTrainingSession={vi.fn()} week={week} />);
 
   const monday = screen.getByRole("listitem", { name: "Monday" });
   const tuesday = screen.getByRole("listitem", { name: "Tuesday" });
@@ -344,7 +346,7 @@ test("does not mark a date outside the displayed week as today", () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-08-20T12:00:00"));
 
-  render(<WeekGrid onSelectActivity={vi.fn()} week={week} />);
+  render(<WeekGrid onSelectTrainingSession={vi.fn()} week={week} />);
 
   expect(document.querySelector('time[aria-current="date"]')).toBeNull();
   expect(document.querySelector('[class~="bg-teal-100/60"]')).toBeNull();

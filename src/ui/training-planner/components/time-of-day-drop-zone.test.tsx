@@ -17,21 +17,21 @@ vi.mock("@dnd-kit/react", () => ({
 
 import { TimeOfDayDropZone } from "./time-of-day-drop-zone";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
-const activity = {
+const trainingSession = {
   ...createRunTrainingSession({
-    id: "activity",
+    id: "training-session",
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
   }),
   day: "Monday",
-} satisfies TrainingActivity;
+} satisfies PlannerTrainingSession;
 
 const day = {
-  activities: [activity],
+  trainingSessions: [trainingSession],
   date: "2026-08-17",
   day: "Monday",
 } satisfies TrainingDay;
@@ -41,12 +41,12 @@ test("renders a highlighted dashed drop zone while a training session is over it
 
   render(
     <TimeOfDayDropZone
-      activities={day.activities}
+      trainingSessions={day.trainingSessions}
       day={day}
       hasLeadingDay
       isDragActive
       label="Morning"
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
       timeOfDay="AM"
     />,
   );
@@ -68,12 +68,12 @@ test("does not render an empty inactive drop zone", () => {
 
   render(
     <TimeOfDayDropZone
-      activities={[]}
-      day={{ ...day, activities: [], date: undefined }}
+      trainingSessions={[]}
+      day={{ ...day, trainingSessions: [], date: undefined }}
       hasLeadingDay={false}
       isDragActive={false}
       label="Morning"
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
       timeOfDay="AM"
     />,
   );

@@ -36,7 +36,7 @@ test("supports compact and icon sizes", () => {
 
 test("forwards native button behavior and disabled state", () => {
   render(
-    <Button disabled form="activity-form" type="submit">
+    <Button disabled form="training-session-form" type="submit">
       Save
     </Button>,
   );
@@ -44,7 +44,7 @@ test("forwards native button behavior and disabled state", () => {
   const button = screen.getByRole("button", { name: "Save" });
   expect(button).toHaveProperty("disabled", true);
   expect(button).toHaveProperty("type", "submit");
-  expect(button.getAttribute("form")).toBe("activity-form");
+  expect(button.getAttribute("form")).toBe("training-session-form");
   expect(button.classList).toContain("disabled:cursor-not-allowed");
 });
 

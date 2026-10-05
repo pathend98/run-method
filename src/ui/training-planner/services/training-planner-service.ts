@@ -6,7 +6,7 @@ import type {
   TrainingSessionDateRange,
 } from "@/domain/training-sessions";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
   Weekday,
 } from "../types/training-planner-types";
@@ -66,17 +66,17 @@ export function groupSessionsByWeekday(
   sessions: TrainingSession[],
   weekRange: TrainingSessionDateRange,
 ): TrainingDay[] {
-  const activitiesByDate = new Map<string, TrainingActivity[]>();
+  const trainingSessionsByDate = new Map<string, PlannerTrainingSession[]>();
 
   for (const session of sessions) {
     const date = new Date(`${session.date}T00:00:00`);
     const day = format(date, "EEEE") as Weekday;
-    const activities = activitiesByDate.get(session.date) ?? [];
-    activities.push({
+    const trainingSessions = trainingSessionsByDate.get(session.date) ?? [];
+    trainingSessions.push({
       ...session,
       day,
     });
-    activitiesByDate.set(session.date, activities);
+    trainingSessionsByDate.set(session.date, trainingSessions);
   }
 
   const monday = parseISO(weekRange.from);
@@ -86,7 +86,7 @@ export function groupSessionsByWeekday(
     return {
       day,
       date,
-      activities: activitiesByDate.get(date) ?? [],
+      trainingSessions: trainingSessionsByDate.get(date) ?? [],
     };
   });
 }

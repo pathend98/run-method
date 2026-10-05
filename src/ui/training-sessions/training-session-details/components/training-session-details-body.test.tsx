@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import type { StrengthTrainingSession } from "@/domain/training-sessions";
 import { TrainingSessionDetailsBody } from "./training-session-details-body";
 
-const activity = createStrengthTrainingSession({
+const trainingSession = createStrengthTrainingSession({
   id: "strength",
   status: "SKIPPED",
   timeOfDay: "PM",
@@ -16,7 +16,7 @@ const activity = createStrengthTrainingSession({
 test("renders the skip reason before planned metrics and description", () => {
   render(
     <TrainingSessionDetailsBody
-      trainingSession={activity}
+      trainingSession={trainingSession}
       plannedMetrics={<p>Planned metrics</p>}
     />,
   );
@@ -44,7 +44,7 @@ test("omits the description section and absent skip metadata when unavailable", 
   render(
     <TrainingSessionDetailsBody
       trainingSession={{
-        ...activity,
+        ...trainingSession,
         description: null,
         skipReason: null,
         status: "SCHEDULED",

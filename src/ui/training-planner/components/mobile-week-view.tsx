@@ -7,13 +7,13 @@ import { Button } from "@/ui/shared/button/button";
 import { TrainingSessionCard } from "./training-session-card";
 import type {
   TimeOfDay,
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
 type MobileWeekViewProps = {
   onAddTrainingSession?: (day: TrainingDay) => void;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
   week: TrainingDay[];
 };
 
@@ -25,7 +25,7 @@ const timeSections: { label: string; value: TimeOfDay }[] = [
 
 export function MobileWeekView({
   onAddTrainingSession,
-  onSelectActivity,
+  onSelectTrainingSession,
   week,
 }: MobileWeekViewProps) {
   const today = format(new Date(), "yyyy-MM-dd");
@@ -43,11 +43,11 @@ export function MobileWeekView({
   const populatedTimeSections = timeSections
     .map((section) => ({
       ...section,
-      activities: selectedDay.activities.filter(
-        (activity) => activity.timeOfDay === section.value,
+      trainingSessions: selectedDay.trainingSessions.filter(
+        (trainingSession) => trainingSession.timeOfDay === section.value,
       ),
     }))
-    .filter((section) => section.activities.length > 0);
+    .filter((section) => section.trainingSessions.length > 0);
 
   return (
     <section
@@ -115,11 +115,13 @@ export function MobileWeekView({
                   {section.label}
                 </h3>
                 <ul className="flex flex-col gap-2">
-                  {section.activities.map((activity) => (
-                    <li key={activity.id}>
+                  {section.trainingSessions.map((trainingSession) => (
+                    <li key={trainingSession.id}>
                       <TrainingSessionCard
-                        trainingSession={activity}
-                        onSelect={() => onSelectActivity(activity)}
+                        trainingSession={trainingSession}
+                        onSelect={() =>
+                          onSelectTrainingSession(trainingSession)
+                        }
                       />
                     </li>
                   ))}

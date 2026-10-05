@@ -2,17 +2,17 @@ import { useDroppable } from "@dnd-kit/react";
 import { DraggableTrainingSessionCard } from "./draggable-training-session-card";
 import type {
   TimeOfDay,
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
 type TimeOfDayDropZoneProps = {
-  activities: TrainingActivity[];
+  trainingSessions: PlannerTrainingSession[];
   day: TrainingDay;
   hasLeadingDay: boolean;
   isDragActive: boolean;
   label: string;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
   timeOfDay: TimeOfDay;
 };
 
@@ -22,12 +22,12 @@ function createDropZoneId(day: TrainingDay, timeOfDay: TimeOfDay) {
 }
 
 export function TimeOfDayDropZone({
-  activities,
+  trainingSessions,
   day,
   hasLeadingDay,
   isDragActive,
   label,
-  onSelectActivity,
+  onSelectTrainingSession,
   timeOfDay,
 }: TimeOfDayDropZoneProps) {
   const headingId = `${day.day.toLowerCase()}-${label.toLowerCase()}`;
@@ -38,7 +38,7 @@ export function TimeOfDayDropZone({
     accept: "training-session",
   });
 
-  if (!isDragActive && activities.length === 0) return null;
+  if (!isDragActive && trainingSessions.length === 0) return null;
 
   const zoneClassName = isDragActive
     ? `flex min-h-28 flex-1 flex-col gap-2 border-t border-dashed border-zinc-300 p-3 ${
@@ -60,11 +60,11 @@ export function TimeOfDayDropZone({
       </h3>
 
       <ul className="flex flex-col gap-2">
-        {activities.map((activity) => (
-          <li key={activity.id}>
+        {trainingSessions.map((trainingSession) => (
+          <li key={trainingSession.id}>
             <DraggableTrainingSessionCard
-              trainingSession={activity}
-              onSelect={() => onSelectActivity(activity)}
+              trainingSession={trainingSession}
+              onSelect={() => onSelectTrainingSession(trainingSession)}
             />
           </li>
         ))}

@@ -1,21 +1,21 @@
 import { TrainingSessionCard } from "./training-session-card";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
 type TimeOfDaySectionProps = {
-  activities: TrainingActivity[];
+  trainingSessions: PlannerTrainingSession[];
   day: TrainingDay["day"];
   label: string;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
 };
 
 export function TimeOfDaySection({
-  activities,
+  trainingSessions,
   day,
   label,
-  onSelectActivity,
+  onSelectTrainingSession,
 }: TimeOfDaySectionProps) {
   const headingId = `${day.toLowerCase()}-${label.toLowerCase().replace(" ", "-")}`;
 
@@ -29,11 +29,11 @@ export function TimeOfDaySection({
       </h3>
 
       <ul className="flex flex-col gap-2">
-        {activities.map((activity) => (
-          <li key={activity.id}>
+        {trainingSessions.map((trainingSession) => (
+          <li key={trainingSession.id}>
             <TrainingSessionCard
-              trainingSession={activity}
-              onSelect={() => onSelectActivity(activity)}
+              trainingSession={trainingSession}
+              onSelect={() => onSelectTrainingSession(trainingSession)}
             />
           </li>
         ))}

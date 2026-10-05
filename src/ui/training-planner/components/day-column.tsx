@@ -4,7 +4,7 @@ import { Button } from "@/ui/shared/button/button";
 import { formatDayDate } from "../services/training-planner-service";
 import type {
   TimeOfDay,
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
@@ -15,7 +15,7 @@ type DayColumnProps = {
   isDragActive?: boolean;
   isToday?: boolean;
   onAddTrainingSession?: (day: TrainingDay) => void;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
 };
 
 const timeSections: { label: string; value: TimeOfDay }[] = [
@@ -31,16 +31,16 @@ export function DayColumn({
   isDragActive = false,
   isToday = false,
   onAddTrainingSession,
-  onSelectActivity,
+  onSelectTrainingSession,
 }: DayColumnProps) {
   const sections = timeSections.map((section) => ({
     ...section,
-    activities: day.activities.filter(
-      (activity) => activity.timeOfDay === section.value,
+    trainingSessions: day.trainingSessions.filter(
+      (trainingSession) => trainingSession.timeOfDay === section.value,
     ),
   }));
   const populatedTimeSections = sections.filter(
-    (section) => section.activities.length > 0,
+    (section) => section.trainingSessions.length > 0,
   );
 
   return (
@@ -80,12 +80,12 @@ export function DayColumn({
           sections.map((section) => (
             <TimeOfDayDropZone
               key={section.label}
-              activities={section.activities}
+              trainingSessions={section.trainingSessions}
               day={day}
               hasLeadingDay={hasLeadingDay}
               isDragActive={isDragActive}
               label={section.label}
-              onSelectActivity={onSelectActivity}
+              onSelectTrainingSession={onSelectTrainingSession}
               timeOfDay={section.value}
             />
           ))
@@ -93,10 +93,10 @@ export function DayColumn({
           populatedTimeSections.map((section) => (
             <TimeOfDaySection
               key={section.label}
-              activities={section.activities}
+              trainingSessions={section.trainingSessions}
               day={day.day}
               label={section.label}
-              onSelectActivity={onSelectActivity}
+              onSelectTrainingSession={onSelectTrainingSession}
             />
           ))
         )}

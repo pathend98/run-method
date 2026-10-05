@@ -392,9 +392,9 @@ test("TrainingPlanner edits a training session and refreshes its week", async ()
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
-test("TrainingPlanner deletes an activity and refreshes its week", async () => {
+test("TrainingPlanner deletes a training session and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = createRunTrainingSession({
+  const trainingSession = createRunTrainingSession({
     title: "Easy run",
     date: range.from,
     targetDistanceMetres: 5000,
@@ -408,7 +408,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     }
     return Promise.resolve({
       ok: true,
-      json: vi.fn().mockResolvedValue(deleted ? [] : [activity]),
+      json: vi.fn().mockResolvedValue(deleted ? [] : [trainingSession]),
     });
   });
   stubFetch(fetchMock);
@@ -437,7 +437,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     ).toHaveLength(1),
   );
   expect(fetchMock).toHaveBeenCalledWith(
-    `/api/v1/training-sessions/${activity.id}`,
+    `/api/v1/training-sessions/${trainingSession.id}`,
     { method: "DELETE" },
   );
   await waitFor(() =>

@@ -15,7 +15,11 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
   createTrainingSession: api.createTrainingSession,
 }));
 
-const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
+const day = {
+  day: "Monday" as const,
+  date: "2026-08-17",
+  trainingSessions: [],
+};
 
 type AddTrainingSessionModalTestProps = {
   onCreate?: (request: unknown) => Promise<unknown>;

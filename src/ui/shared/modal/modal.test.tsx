@@ -63,7 +63,7 @@ test("renders and wires primary, secondary, and footer actions", () => {
     <Modal
       dismissLabel="Dismiss actions"
       closeLabel="Close actions"
-      eyebrow="Activity · Today"
+      eyebrow="Training session · Today"
       footerActions={[
         {
           disabled: true,
@@ -105,7 +105,7 @@ test("renders and wires primary, secondary, and footer actions", () => {
 
   const dialog = screen.getByRole("dialog", { name: "Actions" });
   expect(dialog.classList.contains("sm:max-w-4xl")).toBe(true);
-  expect(within(dialog).getByText("Activity · Today")).toBeDefined();
+  expect(within(dialog).getByText("Training session · Today")).toBeDefined();
   const title = within(dialog).getByRole("heading", { name: "Actions" });
   const subtitle = within(dialog).getByText("Run · Scheduled · Morning");
   expect(title.compareDocumentPosition(subtitle)).toBe(
@@ -156,14 +156,14 @@ test("keeps header controls on one row beside a long wrapping title", () => {
       secondaryHeaderActions={[
         { label: "Archive", onClick: vi.fn(), variant: "secondary" },
       ]}
-      title="Averylongtrainingactivitytitlethatmustwrapwithoutmovingtheheadercontrols"
+      title="Averylongtrainingsessiontitlethatmustwrapwithoutmovingtheheadercontrols"
     >
       <p>Modal content</p>
     </Modal>,
   );
 
   const title = screen.getByRole("heading", {
-    name: "Averylongtrainingactivitytitlethatmustwrapwithoutmovingtheheadercontrols",
+    name: "Averylongtrainingsessiontitlethatmustwrapwithoutmovingtheheadercontrols",
   });
   const titleRegion = title.parentElement;
   const header = titleRegion?.parentElement;

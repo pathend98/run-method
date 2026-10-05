@@ -88,7 +88,7 @@ test("retries a failed current-user lookup", async () => {
 });
 
 test("uses the loaded user's miles preference for planner distances", async () => {
-  const activity = createRunTrainingSession({
+  const trainingSession = createRunTrainingSession({
     date: getCurrentWeekRange().from,
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
@@ -103,7 +103,7 @@ test("uses the loaded user's miles preference for planner distances", async () =
           .mockResolvedValue(
             url === "/api/v1/me"
               ? createUser({ id: athleteId, measurementUnit: "MILES" })
-              : [activity],
+              : [trainingSession],
           ),
       }),
     ),

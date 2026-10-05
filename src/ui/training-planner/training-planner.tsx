@@ -27,7 +27,7 @@ import { useTrainingPlannerStore } from "./training-planner-store";
 import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations/training-session-mutations";
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
-import type { TrainingActivity } from "./types/training-planner-types";
+import type { PlannerTrainingSession } from "./types/training-planner-types";
 
 export function TrainingPlanner() {
   const openAddTrainingSession = useTrainingPlannerStore(
@@ -75,13 +75,13 @@ export function TrainingPlanner() {
     });
   }
 
-  async function moveActivity(
-    activity: TrainingActivity,
+  async function moveTrainingSession(
+    trainingSession: PlannerTrainingSession,
     destination: TrainingSessionMoveDestination,
   ) {
     await editMutation.mutateAsync({
-      id: activity.id,
-      request: createMoveTrainingSessionRequest(activity, destination),
+      id: trainingSession.id,
+      request: createMoveTrainingSessionRequest(trainingSession, destination),
     });
   }
   if (currentUser.isError || query.isError) {
@@ -115,13 +115,13 @@ export function TrainingPlanner() {
       <TrainingPlannerView
         isCurrentWeek={weekRange.from === currentWeekRange.from}
         onCurrentWeek={() => navigateToWeek(null)}
-        onMoveActivity={moveActivity}
+        onMoveTrainingSession={moveTrainingSession}
         onNextWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, 1))}
         onPreviousWeek={() =>
           navigateToWeek(getAdjacentWeekStart(weekRange, -1))
         }
         onAddTrainingSession={openAddTrainingSession}
-        onSelectActivity={openTrainingSessionDetails}
+        onSelectTrainingSession={openTrainingSessionDetails}
         sessions={query.data}
         week={week}
         weekRange={weekRange}

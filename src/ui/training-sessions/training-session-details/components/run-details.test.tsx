@@ -7,7 +7,7 @@ import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 type RunOverride = Partial<RunTrainingSession>;
 
-function runActivity(override: RunOverride = {}): RunTrainingSession {
+function runTrainingSession(override: RunOverride = {}): RunTrainingSession {
   return createRunTrainingSession({
     id: "run",
     description: "Controlled effort",
@@ -21,7 +21,7 @@ function runActivity(override: RunOverride = {}): RunTrainingSession {
 }
 
 test("renders scheduled run targets without recorded actual values", () => {
-  render(<RunDetails trainingSession={runActivity()} />);
+  render(<RunDetails trainingSession={runTrainingSession()} />);
   const plannedMetrics = screen.getByLabelText(
     "Planned training session metrics",
   );
@@ -40,7 +40,7 @@ test("renders scheduled run targets without recorded actual values", () => {
 });
 
 test("renders run targets as spacious responsive metric groups", () => {
-  render(<RunDetails trainingSession={runActivity()} />);
+  render(<RunDetails trainingSession={runTrainingSession()} />);
   const plannedMetrics = screen.getByLabelText(
     "Planned training session metrics",
   );
@@ -75,7 +75,7 @@ test("renders run targets as spacious responsive metric groups", () => {
 test("prioritizes completed run actuals and shows their targets as supporting text", () => {
   render(
     <RunDetails
-      trainingSession={runActivity({
+      trainingSession={runTrainingSession({
         status: "COMPLETED",
         actualDurationSeconds: 1500,
       })}
@@ -121,7 +121,9 @@ test("prioritizes completed run actuals and shows their targets as supporting te
 test("shows target and actual distances and paces in miles", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
-      <RunDetails trainingSession={runActivity({ status: "COMPLETED" })} />
+      <RunDetails
+        trainingSession={runTrainingSession({ status: "COMPLETED" })}
+      />
     </DistanceDisplayProvider>,
   );
 
@@ -157,7 +159,7 @@ test.each([
 }>)(
   "derives $expectedDerivedTarget",
   ({ expectedDerivedTarget, expectedDuration, override }) => {
-    render(<RunDetails trainingSession={runActivity(override)} />);
+    render(<RunDetails trainingSession={runTrainingSession(override)} />);
     expect(screen.getByText(expectedDuration)).toBeDefined();
     expect(screen.getByText(expectedDerivedTarget)).toBeDefined();
   },
@@ -166,7 +168,7 @@ test.each([
 test("renders derived pace and no actual metrics", () => {
   render(
     <RunDetails
-      trainingSession={runActivity({
+      trainingSession={runTrainingSession({
         actualDistanceMetres: null,
         actualDurationSeconds: null,
         targetDistanceMetres: 5000,
@@ -192,7 +194,7 @@ test.each([
 ] satisfies Array<[string, RunOverride, string]>)(
   "omits non-completed actual %s",
   (_name, override, expectedLabel) => {
-    render(<RunDetails trainingSession={runActivity(override)} />);
+    render(<RunDetails trainingSession={runTrainingSession(override)} />);
     expect(screen.queryByText(expectedLabel)).toBeNull();
   },
 );

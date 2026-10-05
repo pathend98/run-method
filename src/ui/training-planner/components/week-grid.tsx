@@ -8,25 +8,25 @@ import { MobileWeekView } from "./mobile-week-view";
 import { TrainingSessionCard } from "./training-session-card";
 import { format } from "date-fns";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 
 type WeekGridProps = {
   onAddTrainingSession?: (day: TrainingDay) => void;
-  onMoveActivity?: (
-    trainingSession: TrainingActivity,
+  onMoveTrainingSession?: (
+    trainingSession: PlannerTrainingSession,
     destination: TrainingSessionMoveDestination,
   ) => Promise<void>;
-  onSelectActivity: (trainingSession: TrainingActivity) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
   week: TrainingDay[];
 };
 
 export function WeekGrid({
   onAddTrainingSession,
-  onMoveActivity,
-  onSelectActivity,
+  onMoveTrainingSession,
+  onSelectTrainingSession,
   week,
 }: WeekGridProps) {
   const today = format(new Date(), "yyyy-MM-dd");
@@ -34,7 +34,7 @@ export function WeekGrid({
     string | null
   >(null);
   const activeTrainingSession = week
-    .flatMap((day) => day.activities)
+    .flatMap((day) => day.trainingSessions)
     .find((trainingSession) => trainingSession.id === activeTrainingSessionId);
   const isDragActive = activeTrainingSession !== undefined;
 
@@ -46,7 +46,7 @@ export function WeekGrid({
     clearActiveTrainingSession();
 
     const trainingSession = operation.source?.data.trainingSession as
-      TrainingActivity | undefined;
+      PlannerTrainingSession | undefined;
     const destination = operation.target?.data as
       TrainingSessionMoveDestination | undefined;
 
@@ -57,12 +57,14 @@ export function WeekGrid({
       trainingSession.status !== "SCHEDULED" ||
       (trainingSession.date === destination.date &&
         trainingSession.timeOfDay === destination.timeOfDay) ||
-      !onMoveActivity
+      !onMoveTrainingSession
     ) {
       return;
     }
 
-    void onMoveActivity(trainingSession, destination).catch(() => undefined);
+    void onMoveTrainingSession(trainingSession, destination).catch(
+      () => undefined,
+    );
   }
 
   return (
@@ -70,7 +72,7 @@ export function WeekGrid({
       <MobileWeekView
         key={week.map((day) => day.date ?? day.day).join("|")}
         onAddTrainingSession={onAddTrainingSession}
-        onSelectActivity={onSelectActivity}
+        onSelectTrainingSession={onSelectTrainingSession}
         week={week}
       />
       <DragDropProvider
@@ -106,7 +108,7 @@ export function WeekGrid({
                 isDragAndDropEnabled
                 isToday={day.date === today}
                 onAddTrainingSession={onAddTrainingSession}
-                onSelectActivity={onSelectActivity}
+                onSelectTrainingSession={onSelectTrainingSession}
               />
             ))}
           </div>

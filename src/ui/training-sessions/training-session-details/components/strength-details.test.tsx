@@ -4,7 +4,7 @@ import type { StrengthTrainingSession } from "@/domain/training-sessions";
 import { createStrengthTrainingSession } from "@/test-support/fixtures/training-session";
 import { StrengthDetails } from "./strength-details";
 
-function strengthActivity(
+function strengthTrainingSession(
   override: Partial<StrengthTrainingSession> = {},
 ): StrengthTrainingSession {
   return createStrengthTrainingSession({
@@ -18,7 +18,7 @@ function strengthActivity(
 }
 
 test("renders scheduled strength targets without recorded actual duration", () => {
-  render(<StrengthDetails trainingSession={strengthActivity()} />);
+  render(<StrengthDetails trainingSession={strengthTrainingSession()} />);
   const plannedMetrics = screen.getByLabelText(
     "Planned training session metrics",
   );
@@ -35,7 +35,7 @@ test("renders scheduled strength targets without recorded actual duration", () =
 test("prioritizes completed strength actual duration and keeps its target secondary", () => {
   render(
     <StrengthDetails
-      trainingSession={strengthActivity({ status: "COMPLETED" })}
+      trainingSession={strengthTrainingSession({ status: "COMPLETED" })}
     />,
   );
 
@@ -65,7 +65,7 @@ test("prioritizes completed strength actual duration and keeps its target second
 test("shows no target duration as secondary completed strength information", () => {
   render(
     <StrengthDetails
-      trainingSession={strengthActivity({
+      trainingSession={strengthTrainingSession({
         status: "COMPLETED",
         targetDurationSeconds: null,
       })}
@@ -83,7 +83,7 @@ test("shows no target duration as secondary completed strength information", () 
 test("renders missing planned values and omits a missing actual duration", () => {
   render(
     <StrengthDetails
-      trainingSession={strengthActivity({
+      trainingSession={strengthTrainingSession({
         actualDurationSeconds: null,
         targetDurationSeconds: null,
         timeOfDay: null,

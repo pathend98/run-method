@@ -2,7 +2,7 @@ import { createRunTrainingSession } from "@/test-support/fixtures/training-sessi
 import { render } from "@testing-library/react";
 
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "./types/training-planner-types";
 import {
@@ -17,11 +17,11 @@ const trainingSession = {
     targetDurationSeconds: 1800,
   }),
   day: "Monday",
-} satisfies TrainingActivity;
+} satisfies PlannerTrainingSession;
 const day = {
   day: "Monday",
   date: "2026-08-17",
-  activities: [],
+  trainingSessions: [],
 } satisfies TrainingDay;
 
 test("transitions through add, details, edit, move, completion, skip, delete, and closed modal states", () => {

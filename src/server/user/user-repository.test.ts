@@ -409,7 +409,7 @@ test("refuses to promote a user that is no longer a guest", async () => {
   expect(tx.insert).not.toHaveBeenCalled();
 });
 
-test("deletes only a guest user, allowing database cascades to remove activities", async () => {
+test("deletes only a guest user, allowing database cascades to remove training sessions", async () => {
   const returning = vi.fn().mockResolvedValue([{ id: guestUser.id }]);
   const where = vi.fn().mockReturnValue({ returning });
   const repository = new DrizzleUserRepository({

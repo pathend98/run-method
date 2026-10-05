@@ -33,7 +33,7 @@ function StrengthTrainingSessionFieldsHarness({
   );
 }
 
-test("renders an optional duration for strength activities", () => {
+test("renders an optional duration for strength training sessions", () => {
   render(
     <StrengthTrainingSessionFieldsHarness>
       <StrengthTrainingSessionFields />

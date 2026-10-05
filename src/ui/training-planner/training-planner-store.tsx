@@ -5,27 +5,30 @@ import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "./types/training-planner-types";
 
-export type { TrainingActivity, Weekday } from "./types/training-planner-types";
+export type {
+  PlannerTrainingSession,
+  Weekday,
+} from "./types/training-planner-types";
 
 export type TrainingPlannerActiveModal =
   | { kind: "add"; day: TrainingDay }
-  | { kind: "details"; trainingSession: TrainingActivity }
+  | { kind: "details"; trainingSession: PlannerTrainingSession }
   | {
       kind: "complete";
-      trainingSession: TrainingActivity;
+      trainingSession: PlannerTrainingSession;
       returnTo: "details" | "review";
     }
-  | { kind: "delete"; trainingSession: TrainingActivity }
-  | { kind: "edit"; trainingSession: TrainingActivity }
-  | { kind: "move"; trainingSession: TrainingActivity }
+  | { kind: "delete"; trainingSession: PlannerTrainingSession }
+  | { kind: "edit"; trainingSession: PlannerTrainingSession }
+  | { kind: "move"; trainingSession: PlannerTrainingSession }
   | { kind: "review" }
   | {
       kind: "skip";
-      trainingSession: TrainingActivity;
+      trainingSession: PlannerTrainingSession;
       returnTo: "details" | "review";
     }
   | null;
@@ -37,17 +40,17 @@ type TrainingPlannerStoreState = {
 type TrainingPlannerStoreActions = {
   closeModal: () => void;
   openAddTrainingSession: (day: TrainingDay) => void;
-  openTrainingSessionDetails: (trainingSession: TrainingActivity) => void;
+  openTrainingSessionDetails: (trainingSession: PlannerTrainingSession) => void;
   openCompleteTrainingSession: () => void;
   openCompleteTrainingSessionFromReview: (
-    trainingSession: TrainingActivity,
+    trainingSession: PlannerTrainingSession,
   ) => void;
   openDeleteTrainingSession: () => void;
   openEditTrainingSession: () => void;
   openMoveTrainingSession: () => void;
   openSkipTrainingSession: () => void;
   openSkipTrainingSessionFromReview: (
-    trainingSession: TrainingActivity,
+    trainingSession: PlannerTrainingSession,
   ) => void;
   returnToTrainingSessionDetails: () => void;
   returnFromTrainingSessionTransition: () => void;
