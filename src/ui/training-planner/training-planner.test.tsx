@@ -319,16 +319,16 @@ test("TrainingPlanner creates a training session and refreshes its week", async 
   );
 });
 
-test("TrainingPlanner edits an activity and refreshes its week", async () => {
+test("TrainingPlanner edits a training session and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = createRunTrainingSession({
+  const trainingSession = createRunTrainingSession({
     title: "Easy run",
     date: range.from,
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
   });
-  const updatedActivity = {
-    ...activity,
+  const updatedTrainingSession = {
+    ...trainingSession,
     title: "Updated easy run",
     updatedAt: "2026-08-31T10:00:00.000Z",
   };
@@ -338,14 +338,16 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
       hasBeenEdited = true;
       return Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue(updatedActivity),
+        json: vi.fn().mockResolvedValue(updatedTrainingSession),
       });
     }
     return Promise.resolve({
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue([hasBeenEdited ? updatedActivity : activity]),
+        .mockResolvedValue([
+          hasBeenEdited ? updatedTrainingSession : trainingSession,
+        ]),
     });
   });
   stubFetch(fetchMock);
@@ -374,7 +376,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     ).toHaveLength(1),
   );
   expect(fetchMock).toHaveBeenCalledWith(
-    `/api/v1/training-sessions/${activity.id}`,
+    `/api/v1/training-sessions/${trainingSession.id}`,
     expect.objectContaining({ method: "PATCH" }),
   );
   await waitFor(() =>

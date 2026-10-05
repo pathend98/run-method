@@ -6,8 +6,8 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { createEditActivityFormSchema } from "./edit-activity-form-schema";
-import { getEditActivityFormValues } from "./edit-activity-form-values";
+import { createEditTrainingSessionFormSchema } from "./edit-training-session-form-schema";
+import { getEditTrainingSessionFormValues } from "./edit-training-session-form-values";
 
 function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
   return createRunTrainingSession({
@@ -25,17 +25,17 @@ function strength(): StrengthTrainingSession {
 
 test("does not validate hidden skipped metric fields", () => {
   const invalidValues = {
-    ...getEditActivityFormValues(strength(), "KILOMETRES"),
+    ...getEditTrainingSessionFormValues(strength(), "KILOMETRES"),
     distance: "bad",
     pace: "bad",
   };
   expect(
-    createEditActivityFormSchema(strength(), "KILOMETRES").safeParse(
+    createEditTrainingSessionFormSchema(strength(), "KILOMETRES").safeParse(
       invalidValues,
     ).success,
   ).toBe(true);
   expect(
-    createEditActivityFormSchema(
+    createEditTrainingSessionFormSchema(
       run({ status: "SKIPPED", skipReason: "Rest" }),
       "KILOMETRES",
     ).safeParse(invalidValues).success,
@@ -50,11 +50,11 @@ test.each([
 ] as const)(
   "validates scheduled strength duration %#",
   (durationMinutes, success, message) => {
-    const result = createEditActivityFormSchema(
+    const result = createEditTrainingSessionFormSchema(
       strength(),
       "KILOMETRES",
     ).safeParse({
-      ...getEditActivityFormValues(strength(), "KILOMETRES"),
+      ...getEditTrainingSessionFormValues(strength(), "KILOMETRES"),
       durationMinutes,
     });
 
@@ -64,20 +64,26 @@ test.each([
 );
 
 test("validates completed strength actual duration", () => {
-  const activity = {
+  const trainingSession = {
     ...strength(),
     status: "COMPLETED" as const,
     actualDurationSeconds: 2400,
   };
   expect(
-    createEditActivityFormSchema(activity, "KILOMETRES").safeParse({
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+    createEditTrainingSessionFormSchema(
+      trainingSession,
+      "KILOMETRES",
+    ).safeParse({
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       durationMinutes: "bad",
     }).success,
   ).toBe(false);
   expect(
-    createEditActivityFormSchema(activity, "KILOMETRES").safeParse({
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+    createEditTrainingSessionFormSchema(
+      trainingSession,
+      "KILOMETRES",
+    ).safeParse({
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       durationMinutes: "00",
     }).success,
   ).toBe(false);
@@ -92,12 +98,12 @@ test.each([
   [run(), "pace", "0:00", "greater than zero"],
 ] as const)(
   "validates scheduled target field %s",
-  (activity, field, value, message) => {
-    const result = createEditActivityFormSchema(
-      activity,
+  (trainingSession, field, value, message) => {
+    const result = createEditTrainingSessionFormSchema(
+      trainingSession,
       "KILOMETRES",
     ).safeParse({
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       [field]: value,
     });
     expect(result.success).toBe(false);
@@ -107,8 +113,8 @@ test.each([
 
 test("accepts a valid scheduled run target", () => {
   expect(
-    createEditActivityFormSchema(run(), "KILOMETRES").safeParse({
-      ...getEditActivityFormValues(run(), "KILOMETRES"),
+    createEditTrainingSessionFormSchema(run(), "KILOMETRES").safeParse({
+      ...getEditTrainingSessionFormValues(run(), "KILOMETRES"),
       distance: "10.125",
       durationMinutes: "50",
     }).success,
@@ -116,14 +122,17 @@ test("accepts a valid scheduled run target", () => {
 });
 
 test("validates completed run actual metrics", () => {
-  const activity = run({
+  const trainingSession = run({
     status: "COMPLETED",
     actualDistanceMetres: 8000,
     actualDurationSeconds: 2700,
   });
   expect(
-    createEditActivityFormSchema(activity, "KILOMETRES").safeParse({
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+    createEditTrainingSessionFormSchema(
+      trainingSession,
+      "KILOMETRES",
+    ).safeParse({
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       distance: "0",
     }).success,
   ).toBe(false);
@@ -131,8 +140,8 @@ test("validates completed run actual metrics", () => {
 
 test("validates the title independently", () => {
   expect(
-    createEditActivityFormSchema(strength(), "KILOMETRES").safeParse({
-      ...getEditActivityFormValues(strength(), "KILOMETRES"),
+    createEditTrainingSessionFormSchema(strength(), "KILOMETRES").safeParse({
+      ...getEditTrainingSessionFormValues(strength(), "KILOMETRES"),
       title: "",
     }).success,
   ).toBe(false);

@@ -5,24 +5,24 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { EditActivityForm } from "./edit-activity-form";
+import { EditTrainingSessionForm } from "./edit-training-session-form";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const runActivity = createRunTrainingSession({
+const runTrainingSession = createRunTrainingSession({
   description: "Controlled effort",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
 }) satisfies RunTrainingSession;
 
-const strengthActivity = createStrengthTrainingSession({
+const strengthTrainingSession = createStrengthTrainingSession({
   id: "22222222-2222-4222-8222-222222222222",
-  description: runActivity.description,
+  description: runTrainingSession.description,
 });
 
 test("renders pre-populated editable fields for a scheduled run", () => {
   render(
-    <EditActivityForm
-      activity={runActivity}
+    <EditTrainingSessionForm
+      trainingSession={runTrainingSession}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
@@ -73,8 +73,8 @@ test("prefills mile values and preserves exact metres on a title edit", async ()
   const onEdit = vi.fn().mockResolvedValue(undefined);
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
-      <EditActivityForm
-        activity={{ ...runActivity, targetDistanceMetres: 8001 }}
+      <EditTrainingSessionForm
+        trainingSession={{ ...runTrainingSession, targetDistanceMetres: 8001 }}
         onClose={vi.fn()}
         onEdit={onEdit}
       />
@@ -101,8 +101,8 @@ test("prefills mile values and preserves exact metres on a title edit", async ()
 
 test("validates an empty title after blur", async () => {
   render(
-    <EditActivityForm
-      activity={runActivity}
+    <EditTrainingSessionForm
+      trainingSession={runTrainingSession}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
@@ -111,15 +111,17 @@ test("validates an empty title after blur", async () => {
   fireEvent.change(screen.getByLabelText("Title"), { target: { value: "" } });
   fireEvent.blur(screen.getByLabelText("Title"));
 
-  expect(await screen.findByText("Enter an activity title")).toBeDefined();
+  expect(
+    await screen.findByText("Enter a training session title"),
+  ).toBeDefined();
 });
 
 test("submits an edit and closes the form", async () => {
   const onClose = vi.fn();
   const onEdit = vi.fn().mockResolvedValue(undefined);
   render(
-    <EditActivityForm
-      activity={runActivity}
+    <EditTrainingSessionForm
+      trainingSession={runTrainingSession}
       onClose={onClose}
       onEdit={onEdit}
     />,
@@ -150,8 +152,8 @@ test("submits an edit and closes the form", async () => {
 test("keeps the form open and reports a failed edit", async () => {
   const onClose = vi.fn();
   render(
-    <EditActivityForm
-      activity={runActivity}
+    <EditTrainingSessionForm
+      trainingSession={runTrainingSession}
       onClose={onClose}
       onEdit={vi.fn().mockRejectedValue(new Error("nope"))}
     />,
@@ -159,7 +161,7 @@ test("keeps the form open and reports a failed edit", async () => {
   fireEvent.submit(screen.getByLabelText("Title").closest("form")!);
 
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to edit activity",
+    "Unable to edit training session",
   );
   expect(onClose).not.toHaveBeenCalled();
 });
@@ -167,8 +169,8 @@ test("keeps the form open and reports a failed edit", async () => {
 test("shows validation errors without submitting", async () => {
   const onEdit = vi.fn();
   render(
-    <EditActivityForm
-      activity={runActivity}
+    <EditTrainingSessionForm
+      trainingSession={runTrainingSession}
       onClose={vi.fn()}
       onEdit={onEdit}
     />,
@@ -176,15 +178,17 @@ test("shows validation errors without submitting", async () => {
   fireEvent.change(screen.getByLabelText("Title"), { target: { value: "" } });
   fireEvent.submit(screen.getByLabelText("Title").closest("form")!);
 
-  expect(await screen.findByText("Enter an activity title")).toBeDefined();
+  expect(
+    await screen.findByText("Enter a training session title"),
+  ).toBeDefined();
   expect(onEdit).not.toHaveBeenCalled();
 });
 
 test("renders editable actual metrics for completed runs", () => {
   render(
-    <EditActivityForm
-      activity={{
-        ...runActivity,
+    <EditTrainingSessionForm
+      trainingSession={{
+        ...runTrainingSession,
         status: "COMPLETED",
         actualDistanceMetres: 5900,
         actualDurationSeconds: 1500,
@@ -204,10 +208,10 @@ test("renders editable actual metrics for completed runs", () => {
   );
 });
 
-test("renders an editable duration for scheduled strength activities", () => {
+test("renders an editable duration for scheduled strength training sessions", () => {
   render(
-    <EditActivityForm
-      activity={strengthActivity}
+    <EditTrainingSessionForm
+      trainingSession={strengthTrainingSession}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,
@@ -221,11 +225,11 @@ test("renders an editable duration for scheduled strength activities", () => {
   expect(screen.queryByLabelText("Distance (km)")).toBeNull();
 });
 
-test("renders editable actual duration for completed strength activities", () => {
+test("renders editable actual duration for completed strength training sessions", () => {
   render(
-    <EditActivityForm
-      activity={{
-        ...strengthActivity,
+    <EditTrainingSessionForm
+      trainingSession={{
+        ...strengthTrainingSession,
         status: "COMPLETED",
         actualDurationSeconds: 2400,
       }}
@@ -240,10 +244,14 @@ test("renders editable actual duration for completed strength activities", () =>
   );
 });
 
-test("does not render metrics for skipped activities", () => {
+test("does not render metrics for skipped training sessions", () => {
   render(
-    <EditActivityForm
-      activity={{ ...runActivity, status: "SKIPPED", skipReason: "Rest" }}
+    <EditTrainingSessionForm
+      trainingSession={{
+        ...runTrainingSession,
+        status: "SKIPPED",
+        skipReason: "Rest",
+      }}
       onClose={vi.fn()}
       onEdit={vi.fn()}
     />,

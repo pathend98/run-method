@@ -6,7 +6,7 @@ export function DeleteTrainingSessionModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const returnToTrainingSessionDetails = useTrainingPlannerStore(
-    (state) => state.returnToActivityDetails,
+    (state) => state.returnToTrainingSessionDetails,
   );
   const deleteMutation = useDeleteTrainingSessionMutation();
 

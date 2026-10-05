@@ -11,7 +11,7 @@ import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
 import { TrainingSessionDetailsModal } from "@/ui/training-sessions/training-session-details/training-session-details-modal";
 import { AddTrainingSessionModal } from "@/ui/training-sessions/add-training-session/add-training-session-modal";
-import { EditActivityModal } from "@/ui/training-sessions/edit-activity/edit-activity-modal";
+import { EditTrainingSessionModal } from "@/ui/training-sessions/edit-training-session/edit-training-session-modal";
 import { CompleteTrainingSessionModal } from "@/ui/training-sessions/complete-training-session/complete-training-session-modal";
 import { SkipTrainingSessionModal } from "@/ui/training-sessions/skip-training-session/skip-training-session-modal";
 import { DeleteTrainingSessionModal } from "@/ui/training-sessions/delete-training-session/delete-training-session-modal";
@@ -127,7 +127,7 @@ export function TrainingPlanner() {
         weekRange={weekRange}
       />
       {activeModalKind === "details" ? <TrainingSessionDetailsModal /> : null}
-      {activeModalKind === "edit" ? <EditActivityModal /> : null}
+      {activeModalKind === "edit" ? <EditTrainingSessionModal /> : null}
       {activeModalKind === "move" ? <MoveTrainingSessionModal /> : null}
       {activeModalKind === "complete" ? <CompleteTrainingSessionModal /> : null}
       {activeModalKind === "skip" ? <SkipTrainingSessionModal /> : null}

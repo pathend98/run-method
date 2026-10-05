@@ -7,7 +7,7 @@ import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
-import { EditActivityModal } from "./edit-activity-modal";
+import { EditTrainingSessionModal } from "./edit-training-session-modal";
 
 const api = vi.hoisted(() => ({ editTrainingSession: vi.fn() }));
 
@@ -16,22 +16,24 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
   editTrainingSession: api.editTrainingSession,
 }));
 
-const activity = createRunTrainingSession({
+const trainingSession = createRunTrainingSession({
   description: "Controlled effort",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
 }) satisfies RunTrainingSession;
 
-type EditActivityModalTestProps = {
+type EditTrainingSessionModalTestProps = {
   onEdit?: (id: string, request: unknown) => Promise<RunTrainingSession>;
 };
 
-function renderEditActivityModal(props: EditActivityModalTestProps = {}) {
+function renderEditTrainingSessionModal(
+  props: EditTrainingSessionModalTestProps = {},
+) {
   const store = createTrainingPlannerStore();
-  store.getState().openActivityDetails({ ...activity, day: "Monday" });
-  store.getState().openEditActivity();
+  store.getState().openActivityDetails({ ...trainingSession, day: "Monday" });
+  store.getState().openEditTrainingSession();
   api.editTrainingSession.mockImplementation(
-    props.onEdit ?? vi.fn().mockResolvedValue(activity),
+    props.onEdit ?? vi.fn().mockResolvedValue(trainingSession),
   );
 
   return {
@@ -39,38 +41,52 @@ function renderEditActivityModal(props: EditActivityModalTestProps = {}) {
     ...render(
       <TrainingPlannerStoreProvider store={store}>
         <QueryProvider>
-          <EditActivityModal />
+          <EditTrainingSessionModal />
         </QueryProvider>
       </TrainingPlannerStoreProvider>,
     ),
   };
 }
 
-test("renders the selected activity and returns to details when dismissed", () => {
-  const { store } = renderEditActivityModal();
-  expect(screen.getByRole("dialog", { name: "Edit activity" })).toBeDefined();
-  expect(screen.getByText("Run · Monday, 17 August")).toBeDefined();
-  expect(screen.queryByText("2026-08-17")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(store.getState().activeModal?.kind).toBe("details");
-});
+test.each([
+  "Cancel",
+  "Close edit training session",
+  "Dismiss edit training session",
+])(
+  "renders the selected training session and returns to details using %s",
+  (dismissLabel) => {
+    const { store } = renderEditTrainingSessionModal();
+    expect(
+      screen.getByRole("dialog", { name: "Edit training session" }),
+    ).toBeDefined();
+    expect(screen.getByText("Run · Monday, 17 August")).toBeDefined();
+    expect(screen.queryByText("2026-08-17")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: dismissLabel }));
+    expect(store.getState().activeModal).toEqual({
+      kind: "details",
+      activity: { ...trainingSession, day: "Monday" },
+    });
+  },
+);
 
-test("updates the selected activity and closes the edit flow", async () => {
+test("updates the selected training session and closes the edit flow", async () => {
   const onEdit = vi
     .fn()
-    .mockResolvedValue({ ...activity, title: "Updated tempo" });
-  const { store } = renderEditActivityModal({ onEdit });
+    .mockResolvedValue({ ...trainingSession, title: "Updated tempo" });
+  const { store } = renderEditTrainingSessionModal({ onEdit });
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Updated tempo" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
   await waitFor(() => expect(onEdit).toHaveBeenCalledOnce());
   expect(store.getState().activeModal).toBeNull();
-  expect(screen.queryByRole("dialog", { name: "Edit activity" })).toBeNull();
+  expect(
+    screen.queryByRole("dialog", { name: "Edit training session" }),
+  ).toBeNull();
 });
 
 test("keeps the modal open after a failed edit", async () => {
-  renderEditActivityModal({
+  renderEditTrainingSessionModal({
     onEdit: vi.fn().mockRejectedValue(new Error("nope")),
   });
   fireEvent.change(screen.getByLabelText("Title"), {
@@ -78,24 +94,28 @@ test("keeps the modal open after a failed edit", async () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to edit activity",
+    "Unable to edit training session",
   );
 });
 
-test("renders nothing when edit activity is not active", () => {
+test("renders nothing when edit training session is not active", () => {
   render(
     <TrainingPlannerStoreProvider>
       <QueryProvider>
-        <EditActivityModal />
+        <EditTrainingSessionModal />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
 
-  expect(screen.queryByRole("dialog", { name: "Edit activity" })).toBeNull();
+  expect(
+    screen.queryByRole("dialog", { name: "Edit training session" }),
+  ).toBeNull();
 });
 
 test("shows its submitting state", async () => {
-  renderEditActivityModal({ onEdit: () => new Promise(() => undefined) });
+  renderEditTrainingSessionModal({
+    onEdit: () => new Promise(() => undefined),
+  });
   fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("button", { name: "Saving…" })).toHaveProperty(
     "disabled",
@@ -104,8 +124,8 @@ test("shows its submitting state", async () => {
 });
 
 test("disables saving while an automatic metric edit needs a choice", () => {
-  renderEditActivityModal();
-  const dialog = screen.getByRole("dialog", { name: "Edit activity" });
+  renderEditTrainingSessionModal();
+  const dialog = screen.getByRole("dialog", { name: "Edit training session" });
   expect(dialog.classList).toContain("sm:max-w-4xl");
 
   const pace = screen.getByLabelText("Pace (mm:ss / km) · Auto");

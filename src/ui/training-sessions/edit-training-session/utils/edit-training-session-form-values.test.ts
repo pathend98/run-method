@@ -6,7 +6,7 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { getEditActivityFormValues } from "./edit-activity-form-values";
+import { getEditTrainingSessionFormValues } from "./edit-training-session-form-values";
 
 function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
   return createRunTrainingSession({
@@ -26,7 +26,7 @@ function strength(
 }
 
 test("initializes common and run target values", () => {
-  expect(getEditActivityFormValues(run(), "KILOMETRES")).toEqual({
+  expect(getEditTrainingSessionFormValues(run(), "KILOMETRES")).toEqual({
     title: "Tempo run",
     date: "2026-08-17",
     timeOfDay: "AM",
@@ -42,7 +42,7 @@ test("initializes common and run target values", () => {
 
 test("maps nullable common values and derives pace", () => {
   expect(
-    getEditActivityFormValues(
+    getEditTrainingSessionFormValues(
       run({
         timeOfDay: null,
         description: null,
@@ -63,15 +63,17 @@ test("maps nullable common values and derives pace", () => {
   });
 });
 
-test("initializes the optional duration for strength activities", () => {
-  expect(getEditActivityFormValues(strength(), "KILOMETRES")).toMatchObject({
+test("initializes the optional duration for strength training sessions", () => {
+  expect(
+    getEditTrainingSessionFormValues(strength(), "KILOMETRES"),
+  ).toMatchObject({
     distance: "",
     durationMinutes: "40",
     pace: "",
   });
 
   expect(
-    getEditActivityFormValues(
+    getEditTrainingSessionFormValues(
       {
         ...strength(),
         targetDurationSeconds: null,
@@ -83,7 +85,7 @@ test("initializes the optional duration for strength activities", () => {
 
 test("initializes completed actual metrics instead of targets", () => {
   expect(
-    getEditActivityFormValues(
+    getEditTrainingSessionFormValues(
       run({
         status: "COMPLETED",
         actualDistanceMetres: 7500,
@@ -97,7 +99,7 @@ test("initializes completed actual metrics instead of targets", () => {
     pace: "5:20",
   });
   expect(
-    getEditActivityFormValues(
+    getEditTrainingSessionFormValues(
       strength({ status: "COMPLETED", actualDurationSeconds: 2100 }),
       "KILOMETRES",
     ),

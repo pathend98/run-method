@@ -6,18 +6,19 @@ import {
 } from "@/ui/training-sessions/formatters";
 
 export function formatLockedTargets(
-  activity: TrainingSession,
+  trainingSession: TrainingSession,
   measurementUnit: User["measurementUnit"],
 ) {
-  if (activity.activityType === "STRENGTH") {
+  if (trainingSession.activityType === "STRENGTH") {
     return (
-      formatDuration(activity.targetDurationSeconds) ?? "No target duration"
+      formatDuration(trainingSession.targetDurationSeconds) ??
+      "No target duration"
     );
   }
 
   return [
-    formatDistance(activity.targetDistanceMetres, measurementUnit),
-    formatDuration(activity.targetDurationSeconds),
+    formatDistance(trainingSession.targetDistanceMetres, measurementUnit),
+    formatDuration(trainingSession.targetDurationSeconds),
   ]
     .filter((value): value is string => value !== null)
     .join(" · ");

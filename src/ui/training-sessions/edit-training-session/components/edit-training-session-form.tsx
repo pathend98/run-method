@@ -10,15 +10,15 @@ import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import { FormField } from "@/ui/shared/form-field/form-field";
 import {
-  createEditActivityFormSchema,
-  type EditActivityFormValues,
-} from "../form/edit-activity-form-schema";
-import { getEditActivityFormValues } from "../form/edit-activity-form-values";
-import { toEditTrainingSessionRequest } from "../form/edit-training-session-request";
-import { EditRunActivityFields } from "./edit-run-activity-fields";
+  createEditTrainingSessionFormSchema,
+  type EditTrainingSessionFormValues,
+} from "../utils/edit-training-session-form-schema";
+import { getEditTrainingSessionFormValues } from "../utils/edit-training-session-form-values";
+import { toEditTrainingSessionRequest } from "../utils/edit-training-session-request";
+import { EditRunTrainingSessionFields } from "./edit-run-training-session-fields";
 
-type EditActivityFormProps = {
-  activity: TrainingSession;
+type EditTrainingSessionFormProps = {
+  trainingSession: TrainingSession;
   onClose: () => void;
   onEdit: (request: EditTrainingSessionRequest) => Promise<unknown>;
   onRunFieldsPendingChange?: (pending: boolean) => void;
@@ -26,18 +26,20 @@ type EditActivityFormProps = {
 
 function doNothing() {}
 
-export function EditActivityForm({
-  activity,
+export function EditTrainingSessionForm({
+  trainingSession,
   onClose,
   onEdit,
   onRunFieldsPendingChange = doNothing,
-}: EditActivityFormProps) {
+}: EditTrainingSessionFormProps) {
   const unit = useDistanceDisplayUnit();
-  const form = useForm<EditActivityFormValues>({
-    defaultValues: getEditActivityFormValues(activity, unit),
+  const form = useForm<EditTrainingSessionFormValues>({
+    defaultValues: getEditTrainingSessionFormValues(trainingSession, unit),
     mode: "onBlur",
     reValidateMode: "onBlur",
-    resolver: zodResolver(createEditActivityFormSchema(activity, unit)),
+    resolver: zodResolver(
+      createEditTrainingSessionFormSchema(trainingSession, unit),
+    ),
   });
   const {
     formState: { errors },
@@ -45,16 +47,16 @@ export function EditActivityForm({
     register,
     setError,
   } = form;
-  const isScheduled = activity.status === "SCHEDULED";
-  const isCompleted = activity.status === "COMPLETED";
+  const isScheduled = trainingSession.status === "SCHEDULED";
+  const isCompleted = trainingSession.status === "COMPLETED";
 
-  async function submit(values: EditActivityFormValues) {
+  async function submit(values: EditTrainingSessionFormValues) {
     try {
-      await onEdit(toEditTrainingSessionRequest(values, activity, unit));
+      await onEdit(toEditTrainingSessionRequest(values, trainingSession, unit));
       onClose();
     } catch {
       setError("root", {
-        message: "Unable to edit activity. Please try again.",
+        message: "Unable to edit training session. Please try again.",
       });
     }
   }
@@ -63,7 +65,7 @@ export function EditActivityForm({
     <FormProvider {...form}>
       <form
         className="mt-6 space-y-4"
-        id="edit-activity-form"
+        id="edit-training-session-form"
         noValidate
         onSubmit={handleSubmit(submit)}
       >
@@ -82,7 +84,7 @@ export function EditActivityForm({
           <>
             <FormField label="Day">
               <select {...register("date")}>
-                {getWeekDateOptions(activity.date).map((day) => (
+                {getWeekDateOptions(trainingSession.date).map((day) => (
                   <option key={day.value} value={day.value}>
                     {day.label}
                   </option>
@@ -103,11 +105,14 @@ export function EditActivityForm({
             Actual metrics
           </h3>
         ) : null}
-        {(isScheduled || isCompleted) && activity.activityType === "RUN" ? (
-          <EditRunActivityFields onPendingChange={onRunFieldsPendingChange} />
+        {(isScheduled || isCompleted) &&
+        trainingSession.activityType === "RUN" ? (
+          <EditRunTrainingSessionFields
+            onPendingChange={onRunFieldsPendingChange}
+          />
         ) : null}
         {(isScheduled || isCompleted) &&
-        activity.activityType === "STRENGTH" ? (
+        trainingSession.activityType === "STRENGTH" ? (
           <DurationFormInput
             label={
               isCompleted

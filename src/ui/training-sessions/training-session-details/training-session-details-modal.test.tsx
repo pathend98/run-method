@@ -28,11 +28,11 @@ beforeEach(() => {
     openCompleteTrainingSession: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),
-    openEditActivity: vi.fn(),
+    openEditTrainingSession: vi.fn(),
     openMoveTrainingSession: vi.fn(),
     openSkipTrainingSession: vi.fn(),
     openSkipTrainingSessionFromReview: vi.fn(),
-    returnToActivityDetails: vi.fn(),
+    returnToTrainingSessionDetails: vi.fn(),
     returnFromTrainingSessionTransition: vi.fn(),
     finishTrainingSessionTransition: vi.fn(),
     openReviewTrainingSessions: vi.fn(),
@@ -166,7 +166,7 @@ test("dispatches strength training sessions to the strength details component", 
 test("calls the edit action", () => {
   renderTrainingSessionDetails();
   fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-  expect(storeState.openEditActivity).toHaveBeenCalledExactlyOnceWith();
+  expect(storeState.openEditTrainingSession).toHaveBeenCalledExactlyOnceWith();
 });
 
 test("calls the complete action", () => {

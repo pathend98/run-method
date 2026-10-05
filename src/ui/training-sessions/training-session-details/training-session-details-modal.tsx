@@ -23,8 +23,8 @@ function canTransitionTrainingSession(
 export function TrainingSessionDetailsModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const openEditActivity = useTrainingPlannerStore(
-    (state) => state.openEditActivity,
+  const openEditTrainingSession = useTrainingPlannerStore(
+    (state) => state.openEditTrainingSession,
   );
   const openMoveTrainingSession = useTrainingPlannerStore(
     (state) => state.openMoveTrainingSession,
@@ -49,7 +49,7 @@ export function TrainingSessionDetailsModal() {
   const primaryHeaderActions: ModalAction[] = [
     {
       label: "Edit",
-      onClick: openEditActivity,
+      onClick: openEditTrainingSession,
       variant: "secondary",
     },
   ];

@@ -4,36 +4,41 @@ import {
   formatStatus,
   formatTimeOfDay,
 } from "@/ui/training-sessions/formatters";
-import { formatLockedTargets } from "../form/edit-activity-formatters";
+import { formatLockedTargets } from "../utils/edit-training-session-formatters";
 import { ReadOnlyDetail } from "./read-only-detail";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
-type EditActivitySummaryProps = {
-  activity: TrainingSession;
+type EditTrainingSessionSummaryProps = {
+  trainingSession: TrainingSession;
 };
 
-export function EditActivitySummary({ activity }: EditActivitySummaryProps) {
+export function EditTrainingSessionSummary({
+  trainingSession,
+}: EditTrainingSessionSummaryProps) {
   const measurementUnit = useDistanceDisplayUnit();
-  const isScheduled = activity.status === "SCHEDULED";
+  const isScheduled = trainingSession.status === "SCHEDULED";
   const showLockedTargets = !isScheduled;
 
   return (
     <dl className="mt-5 grid grid-cols-2 gap-3 rounded-lg bg-zinc-50 p-3 text-sm">
       <ReadOnlyDetail
-        label="Activity type"
-        value={formatActivityType(activity.activityType)}
+        label="Training session type"
+        value={formatActivityType(trainingSession.activityType)}
       />
-      <ReadOnlyDetail label="Status" value={formatStatus(activity.status)} />
+      <ReadOnlyDetail
+        label="Status"
+        value={formatStatus(trainingSession.status)}
+      />
       {!isScheduled ? (
         <ReadOnlyDetail
           label="Time of day"
-          value={formatTimeOfDay(activity.timeOfDay)}
+          value={formatTimeOfDay(trainingSession.timeOfDay)}
         />
       ) : null}
       {showLockedTargets ? (
         <ReadOnlyDetail
           label="Target details"
-          value={formatLockedTargets(activity, measurementUnit)}
+          value={formatLockedTargets(trainingSession, measurementUnit)}
         />
       ) : null}
     </dl>

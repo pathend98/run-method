@@ -3,18 +3,18 @@ import { useState } from "react";
 
 import type { EditTrainingSessionRequest } from "@/domain/training-sessions";
 import { Modal } from "@/ui/shared/modal/modal";
-import { EditActivityForm } from "./components/edit-activity-form";
-import { EditActivitySummary } from "./components/edit-activity-summary";
+import { EditTrainingSessionForm } from "./components/edit-training-session-form";
+import { EditTrainingSessionSummary } from "./components/edit-training-session-summary";
 import { formatActivityType } from "@/ui/training-sessions/formatters";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 
-export function EditActivityModal() {
+export function EditTrainingSessionModal() {
   const [runFieldsPending, setRunFieldsPending] = useState(false);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const returnToActivityDetails = useTrainingPlannerStore(
-    (state) => state.returnToActivityDetails,
+  const returnToTrainingSessionDetails = useTrainingPlannerStore(
+    (state) => state.returnToTrainingSessionDetails,
   );
   const editMutation = useEditTrainingSessionMutation();
 
@@ -22,11 +22,11 @@ export function EditActivityModal() {
     return null;
   }
 
-  const { activity } = activeModal;
+  const { trainingSession } = activeModal;
 
-  async function editActivity(request: EditTrainingSessionRequest) {
+  async function editTrainingSession(request: EditTrainingSessionRequest) {
     await editMutation.mutateAsync({
-      id: activity.id,
+      id: trainingSession.id,
       request,
     });
     closeModal();
@@ -34,33 +34,33 @@ export function EditActivityModal() {
 
   return (
     <Modal
-      dismissLabel="Dismiss edit activity"
-      closeLabel="Close edit activity"
-      eyebrow={`${formatActivityType(activity.activityType)} · ${format(parseISO(activity.date), "EEEE, d MMMM")}`}
+      dismissLabel="Dismiss edit training session"
+      closeLabel="Close edit training session"
+      eyebrow={`${formatActivityType(trainingSession.activityType)} · ${format(parseISO(trainingSession.date), "EEEE, d MMMM")}`}
       footerActions={[
         {
           label: "Cancel",
-          onClick: returnToActivityDetails,
+          onClick: returnToTrainingSessionDetails,
           variant: "tertiary",
         },
         {
           disabled: runFieldsPending,
-          form: "edit-activity-form",
+          form: "edit-training-session-form",
           label: editMutation.isPending ? "Saving…" : "Save changes",
           type: "submit",
           variant: "primary",
         },
       ]}
       isBusy={editMutation.isPending}
-      onClose={returnToActivityDetails}
+      onClose={returnToTrainingSessionDetails}
       size="large"
-      title="Edit activity"
+      title="Edit training session"
     >
-      <EditActivitySummary activity={activity} />
-      <EditActivityForm
-        activity={activity}
-        onClose={returnToActivityDetails}
-        onEdit={editActivity}
+      <EditTrainingSessionSummary trainingSession={trainingSession} />
+      <EditTrainingSessionForm
+        trainingSession={trainingSession}
+        onClose={returnToTrainingSessionDetails}
+        onEdit={editTrainingSession}
         onRunFieldsPendingChange={setRunFieldsPending}
       />
     </Modal>

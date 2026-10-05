@@ -9,8 +9,8 @@ import {
 } from "../../training-session-duration";
 import { runFieldIssueMessage } from "@/ui/runs/run-metrics";
 
-const editActivityFormBaseSchema = z.object({
-  title: z.string().trim().min(1, "Enter an activity title"),
+const editTrainingSessionFormBaseSchema = z.object({
+  title: z.string().trim().min(1, "Enter a training session title"),
   date: z.iso.date(),
   timeOfDay: z.enum(["AM", "ANY", "PM"]),
   description: z.string(),
@@ -22,21 +22,27 @@ const editActivityFormBaseSchema = z.object({
   pace: z.string(),
 });
 
-export type EditActivityFormValues = z.infer<typeof editActivityFormBaseSchema>;
+export type EditTrainingSessionFormValues = z.infer<
+  typeof editTrainingSessionFormBaseSchema
+>;
 
-export function createEditActivityFormSchema(
-  activity: TrainingSession,
+export function createEditTrainingSessionFormSchema(
+  trainingSession: TrainingSession,
   unit: RunningMetricUnit,
 ) {
-  return editActivityFormBaseSchema.superRefine((values, context) => {
-    if (activity.status === "SKIPPED") {
+  return editTrainingSessionFormBaseSchema.superRefine((values, context) => {
+    if (trainingSession.status === "SKIPPED") {
       return;
     }
 
-    if (activity.activityType === "STRENGTH") {
+    if (trainingSession.activityType === "STRENGTH") {
       if (!isZeroDuration(values)) {
-        validateDuration(context, values, activity.status === "COMPLETED");
-      } else if (activity.status === "COMPLETED") {
+        validateDuration(
+          context,
+          values,
+          trainingSession.status === "COMPLETED",
+        );
+      } else if (trainingSession.status === "COMPLETED") {
         validateDuration(context, values, true);
       }
       return;

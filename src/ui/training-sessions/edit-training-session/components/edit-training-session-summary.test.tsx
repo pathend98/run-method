@@ -5,22 +5,22 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { EditActivitySummary } from "./edit-activity-summary";
+import { EditTrainingSessionSummary } from "./edit-training-session-summary";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const runActivity = createRunTrainingSession({
+const runTrainingSession = createRunTrainingSession({
   description: "Controlled effort",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
 }) satisfies RunTrainingSession;
 
-const strengthActivity = createStrengthTrainingSession({
+const strengthTrainingSession = createStrengthTrainingSession({
   id: "22222222-2222-4222-8222-222222222222",
-  description: runActivity.description,
+  description: runTrainingSession.description,
 });
 
 test("renders scheduled run summary without locked targets", () => {
-  render(<EditActivitySummary activity={runActivity} />);
+  render(<EditTrainingSessionSummary trainingSession={runTrainingSession} />);
 
   expect(screen.getByText("Run")).toBeDefined();
   expect(screen.getByText("Scheduled")).toBeDefined();
@@ -31,37 +31,45 @@ test("renders scheduled run summary without locked targets", () => {
 
 test.each([
   {
-    ...runActivity,
+    ...runTrainingSession,
     status: "COMPLETED" as const,
     timeOfDay: null,
     targetDurationSeconds: 1800,
   },
   {
-    ...runActivity,
+    ...runTrainingSession,
     status: "SKIPPED" as const,
     skipReason: "Rest",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
   },
-])("renders terminal run timing and locked targets", (activity) => {
-  render(<EditActivitySummary activity={activity} />);
+])("renders terminal run timing and locked targets", (trainingSession) => {
+  render(<EditTrainingSessionSummary trainingSession={trainingSession} />);
 
   expect(screen.getByText("Time of day")).toBeDefined();
   expect(
-    screen.getByText(activity.timeOfDay === null ? "Anytime" : "Morning"),
+    screen.getByText(
+      trainingSession.timeOfDay === null ? "Anytime" : "Morning",
+    ),
   ).toBeDefined();
   expect(screen.getByText(/6\.00 km · 30m|5\.00 km · 30m/)).toBeDefined();
 });
 
 test("formats terminal AM and PM values for display", () => {
   const { rerender } = render(
-    <EditActivitySummary activity={{ ...runActivity, status: "COMPLETED" }} />,
+    <EditTrainingSessionSummary
+      trainingSession={{ ...runTrainingSession, status: "COMPLETED" }}
+    />,
   );
   expect(screen.getByText("Morning")).toBeDefined();
 
   rerender(
-    <EditActivitySummary
-      activity={{ ...runActivity, status: "SKIPPED", timeOfDay: "PM" }}
+    <EditTrainingSessionSummary
+      trainingSession={{
+        ...runTrainingSession,
+        status: "SKIPPED",
+        timeOfDay: "PM",
+      }}
     />,
   );
   expect(screen.getByText("Evening")).toBeDefined();
@@ -70,14 +78,18 @@ test("formats terminal AM and PM values for display", () => {
 test("shows locked run targets in miles", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
-      <EditActivitySummary activity={{ ...runActivity, status: "COMPLETED" }} />
+      <EditTrainingSessionSummary
+        trainingSession={{ ...runTrainingSession, status: "COMPLETED" }}
+      />
     </DistanceDisplayProvider>,
   );
   expect(screen.getByText("3.73 mi · 25m 30s")).toBeDefined();
 });
 
-test("hides the editable target duration for scheduled strength activities", () => {
-  render(<EditActivitySummary activity={strengthActivity} />);
+test("hides the editable target duration for scheduled strength training sessions", () => {
+  render(
+    <EditTrainingSessionSummary trainingSession={strengthTrainingSession} />,
+  );
 
   expect(screen.queryByText("Target details")).toBeNull();
   expect(screen.queryByText("45m")).toBeNull();
@@ -85,16 +97,16 @@ test("hides the editable target duration for scheduled strength activities", () 
 
 test("renders locked strength duration and a clear missing-duration fallback", () => {
   const { rerender } = render(
-    <EditActivitySummary
-      activity={{ ...strengthActivity, status: "COMPLETED" }}
+    <EditTrainingSessionSummary
+      trainingSession={{ ...strengthTrainingSession, status: "COMPLETED" }}
     />,
   );
   expect(screen.getByText("45m")).toBeDefined();
 
   rerender(
-    <EditActivitySummary
-      activity={{
-        ...strengthActivity,
+    <EditTrainingSessionSummary
+      trainingSession={{
+        ...strengthTrainingSession,
         status: "COMPLETED",
         targetDurationSeconds: null,
       }}

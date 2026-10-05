@@ -6,76 +6,80 @@ import {
 import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
 import { durationFieldsToSeconds } from "../../training-session-duration";
 import {
-  createEditActivityFormSchema,
-  type EditActivityFormValues,
-} from "./edit-activity-form-schema";
+  createEditTrainingSessionFormSchema,
+  type EditTrainingSessionFormValues,
+} from "./edit-training-session-form-schema";
 
 export function toEditTrainingSessionRequest(
-  values: EditActivityFormValues,
-  activity: TrainingSession,
+  values: EditTrainingSessionFormValues,
+  trainingSession: TrainingSession,
   unit: RunningMetricUnit,
 ): EditTrainingSessionRequest {
-  const parsed = createEditActivityFormSchema(activity, unit).parse(values);
+  const parsed = createEditTrainingSessionFormSchema(
+    trainingSession,
+    unit,
+  ).parse(values);
   const metrics = new RunningMetrics(unit);
   const base = {
     title: parsed.title,
     description: parsed.description.trim() || null,
-    ...(activity.status === "SCHEDULED" ? { date: parsed.date } : {}),
+    ...(trainingSession.status === "SCHEDULED" ? { date: parsed.date } : {}),
     timeOfDay:
-      activity.status === "SCHEDULED"
+      trainingSession.status === "SCHEDULED"
         ? parsed.timeOfDay === "ANY"
           ? null
           : parsed.timeOfDay
-        : activity.timeOfDay,
+        : trainingSession.timeOfDay,
   };
 
-  if (activity.activityType === "STRENGTH") {
+  if (trainingSession.activityType === "STRENGTH") {
     return editTrainingSessionRequestSchema.parse({
       ...base,
-      activityType: activity.activityType,
+      activityType: trainingSession.activityType,
       targetDurationSeconds:
-        activity.status !== "SCHEDULED"
-          ? activity.targetDurationSeconds
+        trainingSession.status !== "SCHEDULED"
+          ? trainingSession.targetDurationSeconds
           : durationFieldsToSeconds(parsed) === 0
             ? null
             : durationFieldsToSeconds(parsed),
-      ...(activity.status === "COMPLETED"
+      ...(trainingSession.status === "COMPLETED"
         ? { actualDurationSeconds: durationFieldsToSeconds(parsed) }
         : {}),
     });
   }
 
-  if (activity.status === "COMPLETED") {
+  if (trainingSession.status === "COMPLETED") {
     return editTrainingSessionRequestSchema.parse({
       ...base,
-      activityType: activity.activityType,
-      targetDistanceMetres: activity.targetDistanceMetres,
-      targetDurationSeconds: activity.targetDurationSeconds,
+      activityType: trainingSession.activityType,
+      targetDistanceMetres: trainingSession.targetDistanceMetres,
+      targetDurationSeconds: trainingSession.targetDurationSeconds,
       actualDistanceMetres: metrics.readDistanceInput(
         parsed.distance,
-        activity.actualDistanceMetres ?? activity.targetDistanceMetres,
+        trainingSession.actualDistanceMetres ??
+          trainingSession.targetDistanceMetres,
       ),
       actualDurationSeconds: durationFieldsToSeconds(parsed),
     });
   }
 
-  if (activity.status === "SKIPPED") {
+  if (trainingSession.status === "SKIPPED") {
     return editTrainingSessionRequestSchema.parse({
       ...base,
-      activityType: activity.activityType,
-      targetDistanceMetres: activity.targetDistanceMetres,
-      targetDurationSeconds: activity.targetDurationSeconds,
+      activityType: trainingSession.activityType,
+      targetDistanceMetres: trainingSession.targetDistanceMetres,
+      targetDurationSeconds: trainingSession.targetDurationSeconds,
     });
   }
 
   const distance = metrics.readDistanceInput(
     parsed.distance,
-    activity.targetDistanceMetres,
+    trainingSession.targetDistanceMetres,
   );
   const duration = durationFieldsToSeconds(parsed);
   return editTrainingSessionRequestSchema.parse({
     ...base,
-    activityType: activity.activityType,
+    activityType: trainingSession.activityType,
     targetDistanceMetres: distance,
     targetDurationSeconds: duration,
   });

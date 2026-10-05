@@ -45,11 +45,11 @@ beforeEach(() => {
     openCompleteTrainingSession: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),
-    openEditActivity: vi.fn(),
+    openEditTrainingSession: vi.fn(),
     openMoveTrainingSession: vi.fn(),
     openSkipTrainingSession: vi.fn(),
     openSkipTrainingSessionFromReview: vi.fn(),
-    returnToActivityDetails: vi.fn(),
+    returnToTrainingSessionDetails: vi.fn(),
     returnFromTrainingSessionTransition: vi.fn(),
     finishTrainingSessionTransition: vi.fn(),
     openReviewTrainingSessions: vi.fn(),
@@ -90,7 +90,7 @@ test.each([
 ])("returns to details from %s", (label) => {
   renderModal();
   fireEvent.click(screen.getByRole("button", { name: label }));
-  expect(storeState.returnToActivityDetails).toHaveBeenCalledOnce();
+  expect(storeState.returnToTrainingSessionDetails).toHaveBeenCalledOnce();
   expect(deleteMutation.mutateAsync).not.toHaveBeenCalled();
   expect(storeState.closeModal).not.toHaveBeenCalled();
 });
@@ -98,7 +98,7 @@ test.each([
 test("returns to details from Escape", () => {
   renderModal();
   fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
-  expect(storeState.returnToActivityDetails).toHaveBeenCalledOnce();
+  expect(storeState.returnToTrainingSessionDetails).toHaveBeenCalledOnce();
 });
 
 test("deletes the training session and closes only after success", async () => {
@@ -130,7 +130,7 @@ test("keeps the modal open on failure, displays the mutation error, and supports
     trainingSession.id,
   );
   expect(storeState.closeModal).not.toHaveBeenCalled();
-  expect(storeState.returnToActivityDetails).not.toHaveBeenCalled();
+  expect(storeState.returnToTrainingSessionDetails).not.toHaveBeenCalled();
   deleteMutation.isError = true;
   rerender(<DeleteTrainingSessionModal />);
   expect(screen.getByRole("alert").textContent).toBe(
@@ -163,6 +163,6 @@ test("disables actions and dismissal while deleting", () => {
   fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
   expect(deleteMutation.mutateAsync).not.toHaveBeenCalled();
   expect(storeState.closeModal).not.toHaveBeenCalled();
-  expect(storeState.returnToActivityDetails).not.toHaveBeenCalled();
+  expect(storeState.returnToTrainingSessionDetails).not.toHaveBeenCalled();
   expect(screen.getByRole("dialog")).toBeDefined();
 });

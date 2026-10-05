@@ -2,7 +2,7 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { formatLockedTargets } from "./edit-activity-formatters";
+import { formatLockedTargets } from "./edit-training-session-formatters";
 
 const run = createRunTrainingSession({
   description: "Controlled effort",

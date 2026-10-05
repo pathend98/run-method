@@ -2,10 +2,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
-import type { EditActivityFormValues } from "../form/edit-activity-form-schema";
-import { EditRunActivityFields } from "./edit-run-activity-fields";
+import type { EditTrainingSessionFormValues } from "../utils/edit-training-session-form-schema";
+import { EditRunTrainingSessionFields } from "./edit-run-training-session-fields";
 
-const defaultValues: EditActivityFormValues = {
+const defaultValues: EditTrainingSessionFormValues = {
   title: "Run",
   date: "2026-08-17",
   timeOfDay: "AM",
@@ -19,7 +19,7 @@ const defaultValues: EditActivityFormValues = {
 };
 
 function Harness({ children }: { children: ReactNode }) {
-  const form = useForm<EditActivityFormValues>({ defaultValues });
+  const form = useForm<EditTrainingSessionFormValues>({ defaultValues });
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(() => undefined)}>
@@ -39,7 +39,7 @@ function Harness({ children }: { children: ReactNode }) {
 test("renders every run metric and identifies the derived metric", () => {
   render(
     <Harness>
-      <EditRunActivityFields onPendingChange={vi.fn()} />
+      <EditRunTrainingSessionFields onPendingChange={vi.fn()} />
     </Harness>,
   );
 
@@ -51,7 +51,7 @@ test("renders every run metric and identifies the derived metric", () => {
 test("recalculates the derived metric and tracks changed fields", () => {
   render(
     <Harness>
-      <EditRunActivityFields onPendingChange={vi.fn()} />
+      <EditRunTrainingSessionFields onPendingChange={vi.fn()} />
     </Harness>,
   );
 
@@ -73,10 +73,10 @@ test("recalculates the derived metric and tracks changed fields", () => {
 
 test("renders field errors from the form after submission", async () => {
   function ErrorHarness() {
-    const form = useForm<EditActivityFormValues>({ defaultValues });
+    const form = useForm<EditTrainingSessionFormValues>({ defaultValues });
     return (
       <FormProvider {...form}>
-        <EditRunActivityFields onPendingChange={vi.fn()} />
+        <EditRunTrainingSessionFields onPendingChange={vi.fn()} />
         <button
           onClick={() => {
             form.setError("distance", { message: "Bad distance" });
@@ -101,7 +101,7 @@ test("renders field errors from the form after submission", async () => {
 test("revalidates run metrics after the form has been submitted", async () => {
   render(
     <Harness>
-      <EditRunActivityFields onPendingChange={vi.fn()} />
+      <EditRunTrainingSessionFields onPendingChange={vi.fn()} />
     </Harness>,
   );
   fireEvent.click(screen.getByRole("button", { name: "Submit" }));

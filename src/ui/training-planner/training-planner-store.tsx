@@ -20,7 +20,7 @@ export type TrainingPlannerActiveModal =
       returnTo: "details" | "review";
     }
   | { kind: "delete"; activity: TrainingActivity }
-  | { kind: "edit"; activity: TrainingActivity }
+  | { kind: "edit"; trainingSession: TrainingActivity }
   | { kind: "move"; activity: TrainingActivity }
   | { kind: "review" }
   | {
@@ -43,13 +43,13 @@ type TrainingPlannerStoreActions = {
     trainingSession: TrainingActivity,
   ) => void;
   openDeleteTrainingSession: () => void;
-  openEditActivity: () => void;
+  openEditTrainingSession: () => void;
   openMoveTrainingSession: () => void;
   openSkipTrainingSession: () => void;
   openSkipTrainingSessionFromReview: (
     trainingSession: TrainingActivity,
   ) => void;
-  returnToActivityDetails: () => void;
+  returnToTrainingSessionDetails: () => void;
   returnFromTrainingSessionTransition: () => void;
   finishTrainingSessionTransition: () => void;
   openReviewTrainingSessions: () => void;
@@ -98,13 +98,13 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
-    openEditActivity: () =>
+    openEditTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {
               activeModal: {
                 kind: "edit",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.activity,
               },
             }
           : state,
@@ -141,7 +141,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
           returnTo: "review",
         },
       }),
-    returnToActivityDetails: () =>
+    returnToTrainingSessionDetails: () =>
       set((state) =>
         state.activeModal?.kind === "edit" ||
         state.activeModal?.kind === "move" ||
@@ -153,7 +153,8 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
                 kind: "details",
                 activity:
                   state.activeModal.kind === "skip" ||
-                  state.activeModal.kind === "complete"
+                  state.activeModal.kind === "complete" ||
+                  state.activeModal.kind === "edit"
                     ? state.activeModal.trainingSession
                     : state.activeModal.activity,
               },

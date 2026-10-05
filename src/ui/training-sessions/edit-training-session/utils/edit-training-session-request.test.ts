@@ -6,7 +6,7 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { getEditActivityFormValues } from "./edit-activity-form-values";
+import { getEditTrainingSessionFormValues } from "./edit-training-session-form-values";
 import { toEditTrainingSessionRequest } from "./edit-training-session-request";
 
 function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
@@ -27,10 +27,10 @@ function strength(
 }
 
 test("converts scheduled run edits to canonical targets", () => {
-  const activity = run();
+  const trainingSession = run();
   const request = toEditTrainingSessionRequest(
     {
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       title: " Updated run ",
       description: " ",
       date: "2026-08-20",
@@ -38,7 +38,7 @@ test("converts scheduled run edits to canonical targets", () => {
       distance: "10.125",
       durationMinutes: "50",
     },
-    activity,
+    trainingSession,
     "KILOMETRES",
   );
 
@@ -59,16 +59,16 @@ test.each([
 ] as const)(
   "converts a scheduled strength duration of %#",
   (duration, targetDurationSeconds) => {
-    const activity = strength();
+    const trainingSession = strength();
     const request = toEditTrainingSessionRequest(
       {
-        ...getEditActivityFormValues(activity, "KILOMETRES"),
+        ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
         title: "Gym",
         date: "2026-08-20",
         timeOfDay: "PM",
         ...duration,
       },
-      activity,
+      trainingSession,
       "KILOMETRES",
     );
 
@@ -84,18 +84,18 @@ test.each([
 );
 
 test.each(["COMPLETED", "SKIPPED"] as const)(
-  "preserves the locked duration for a %s strength activity",
+  "preserves the locked duration for a %s strength training session",
   (status) => {
-    const activity = strength({
+    const trainingSession = strength({
       status,
       skipReason: status === "SKIPPED" ? "Rest" : null,
     });
     const request = toEditTrainingSessionRequest(
       {
-        ...getEditActivityFormValues(activity, "KILOMETRES"),
+        ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
         durationHours: "999",
       },
-      activity,
+      trainingSession,
       "KILOMETRES",
     );
 
@@ -109,106 +109,110 @@ test.each([
     status: "SKIPPED",
     skipReason: "Tired",
   }),
-])("preserves locked terminal run values", (activity) => {
+])("preserves locked terminal run values", (trainingSession) => {
   const request = toEditTrainingSessionRequest(
     {
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       title: "Renamed",
       timeOfDay: "PM",
       distance: "999",
       durationHours: "999",
       pace: "9:59",
     },
-    activity,
+    trainingSession,
     "KILOMETRES",
   );
 
-  expect(request.timeOfDay).toBe(activity.timeOfDay);
+  expect(request.timeOfDay).toBe(trainingSession.timeOfDay);
   expect(request.date).toBeUndefined();
   if (request.activityType === "RUN") {
-    expect(request.targetDistanceMetres).toBe(activity.targetDistanceMetres);
-    expect(request.targetDurationSeconds).toBe(activity.targetDurationSeconds);
+    expect(request.targetDistanceMetres).toBe(
+      trainingSession.targetDistanceMetres,
+    );
+    expect(request.targetDurationSeconds).toBe(
+      trainingSession.targetDurationSeconds,
+    );
   }
 });
 
 test("converts completed actual metrics while preserving run targets", () => {
-  const activity = run({
+  const trainingSession = run({
     status: "COMPLETED",
     actualDistanceMetres: 8000,
     actualDurationSeconds: 2700,
   });
   const request = toEditTrainingSessionRequest(
     {
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       distance: "8.5",
       durationMinutes: "46",
     },
-    activity,
+    trainingSession,
     "KILOMETRES",
   );
 
   expect(request).toMatchObject({
-    targetDistanceMetres: activity.targetDistanceMetres,
-    targetDurationSeconds: activity.targetDurationSeconds,
+    targetDistanceMetres: trainingSession.targetDistanceMetres,
+    targetDurationSeconds: trainingSession.targetDurationSeconds,
     actualDistanceMetres: 8500,
     actualDurationSeconds: 2760,
   });
 });
 
 test("converts completed strength actual duration while preserving its target", () => {
-  const activity = strength({
+  const trainingSession = strength({
     status: "COMPLETED",
     actualDurationSeconds: 2400,
   });
   const request = toEditTrainingSessionRequest(
     {
-      ...getEditActivityFormValues(activity, "KILOMETRES"),
+      ...getEditTrainingSessionFormValues(trainingSession, "KILOMETRES"),
       durationMinutes: "45",
     },
-    activity,
+    trainingSession,
     "KILOMETRES",
   );
 
   expect(request).toMatchObject({
-    targetDurationSeconds: activity.targetDurationSeconds,
+    targetDurationSeconds: trainingSession.targetDurationSeconds,
     actualDurationSeconds: 2700,
   });
 });
 
 test("preserves an untouched rounded mile distance when editing a run", () => {
-  const activity = run({ targetDistanceMetres: 8001 });
-  const values = getEditActivityFormValues(activity, "MILES");
+  const trainingSession = run({ targetDistanceMetres: 8001 });
+  const values = getEditTrainingSessionFormValues(trainingSession, "MILES");
   expect(values.distance).toBe("4.972");
   expect(
     toEditTrainingSessionRequest(
       { ...values, title: "Renamed" },
-      activity,
+      trainingSession,
       "MILES",
     ),
   ).toMatchObject({ targetDistanceMetres: 8001 });
   expect(
     toEditTrainingSessionRequest(
       { ...values, distance: "5" },
-      activity,
+      trainingSession,
       "MILES",
     ),
   ).toMatchObject({ targetDistanceMetres: 8047 });
 });
 
 test("converts edited completed run actuals from miles", () => {
-  const activity = run({
+  const trainingSession = run({
     status: "COMPLETED",
     actualDistanceMetres: 8001,
     actualDurationSeconds: 2700,
   });
-  const values = getEditActivityFormValues(activity, "MILES");
-  expect(toEditTrainingSessionRequest(values, activity, "MILES")).toMatchObject(
-    { actualDistanceMetres: 8001 },
-  );
+  const values = getEditTrainingSessionFormValues(trainingSession, "MILES");
+  expect(
+    toEditTrainingSessionRequest(values, trainingSession, "MILES"),
+  ).toMatchObject({ actualDistanceMetres: 8001 });
   expect(
     toEditTrainingSessionRequest(
       { ...values, distance: "5" },
-      activity,
+      trainingSession,
       "MILES",
     ),
   ).toMatchObject({ actualDistanceMetres: 8047 });
