@@ -45,7 +45,7 @@ test("transitions through add, details, edit, move, completion, skip, delete, an
   });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
-  store.getState().openDeleteActivity();
+  store.getState().openDeleteTrainingSession();
   expect(store.getState().activeModal).toEqual({ kind: "delete", activity });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
@@ -92,7 +92,7 @@ test("ignores invalid detail transitions", () => {
   const store = createTrainingPlannerStore();
   store.getState().openEditActivity();
   store.getState().openCompleteActivity();
-  store.getState().openDeleteActivity();
+  store.getState().openDeleteTrainingSession();
   store.getState().openSkipActivity();
   store.getState().openMoveActivity();
   expect(store.getState().activeModal).toBeNull();

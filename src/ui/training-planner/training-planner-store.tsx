@@ -38,7 +38,7 @@ type TrainingPlannerStoreActions = {
   openCompleteTrainingSessionFromReview: (
     trainingSession: TrainingActivity,
   ) => void;
-  openDeleteActivity: () => void;
+  openDeleteTrainingSession: () => void;
   openEditActivity: () => void;
   openMoveActivity: () => void;
   openSkipActivity: () => void;
@@ -83,7 +83,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
           returnTo: "review",
         },
       }),
-    openDeleteActivity: () =>
+    openDeleteTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {

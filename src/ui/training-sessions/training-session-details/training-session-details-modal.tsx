@@ -35,8 +35,8 @@ export function TrainingSessionDetailsModal() {
   const openSkipActivity = useTrainingPlannerStore(
     (state) => state.openSkipActivity,
   );
-  const openDeleteActivity = useTrainingPlannerStore(
-    (state) => state.openDeleteActivity,
+  const openDeleteTrainingSession = useTrainingPlannerStore(
+    (state) => state.openDeleteTrainingSession,
   );
 
   if (activeModal?.kind !== "details") {
@@ -75,7 +75,7 @@ export function TrainingSessionDetailsModal() {
       : []),
     {
       label: "Delete",
-      onClick: openDeleteActivity,
+      onClick: openDeleteTrainingSession,
       variant: "destructive",
     },
   ];
