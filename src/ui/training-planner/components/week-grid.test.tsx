@@ -39,7 +39,7 @@ vi.mock("@dnd-kit/react", () => ({
       <button
         aria-label="Start drag"
         onClick={() =>
-          onDragStart({ operation: { source: { id: "activity" } } })
+          onDragStart({ operation: { source: { id: "training-session" } } })
         }
         type="button"
       />
@@ -54,12 +54,12 @@ vi.mock("@dnd-kit/react", () => ({
         type="button"
       />
       <button
-        aria-label="Drop activity on Tuesday evening"
+        aria-label="Drop training session on Tuesday evening"
         onClick={() =>
           onDragEnd({
             canceled: false,
             operation: {
-              source: { data: { activity } },
+              source: { data: { trainingSession } },
               target: { data: { date: "2026-08-18", timeOfDay: "PM" } },
             },
           })
@@ -67,36 +67,38 @@ vi.mock("@dnd-kit/react", () => ({
         type="button"
       />
       <button
-        aria-label="Drop activity outside a zone"
+        aria-label="Drop training session outside a zone"
         onClick={() =>
           onDragEnd({
             canceled: false,
-            operation: { source: { data: { activity } }, target: null },
+            operation: { source: { data: { trainingSession } }, target: null },
           })
         }
         type="button"
       />
       <button
-        aria-label="Drop activity in its current slot"
+        aria-label="Drop training session in its current slot"
         onClick={() =>
           onDragEnd({
             canceled: false,
             operation: {
-              source: { data: { activity } },
-              target: { data: { date: activity.date, timeOfDay: "AM" } },
+              source: { data: { trainingSession } },
+              target: { data: { date: trainingSession.date, timeOfDay: "AM" } },
             },
           })
         }
         type="button"
       />
       <button
-        aria-label="Drop completed activity on Tuesday evening"
+        aria-label="Drop completed training session on Tuesday evening"
         onClick={() =>
           onDragEnd({
             canceled: false,
             operation: {
               source: {
-                data: { activity: { ...activity, status: "COMPLETED" } },
+                data: {
+                  trainingSession: { ...trainingSession, status: "COMPLETED" },
+                },
               },
               target: { data: { date: "2026-08-18", timeOfDay: "PM" } },
             },
@@ -118,9 +120,9 @@ import type {
   TrainingDay,
 } from "../types/training-planner-types";
 
-const activity = {
+const trainingSession = {
   ...createRunTrainingSession({
-    id: "activity",
+    id: "training-session",
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
   }),
@@ -128,7 +130,7 @@ const activity = {
 } satisfies TrainingActivity;
 
 const week = [
-  { day: "Monday", date: "2026-08-17", activities: [activity] },
+  { day: "Monday", date: "2026-08-17", activities: [trainingSession] },
   { day: "Tuesday", date: "2026-08-18", activities: [] },
 ] satisfies TrainingDay[];
 
@@ -194,7 +196,7 @@ test("resets the mobile selection when the displayed week changes", () => {
   ).toBe("true");
 });
 
-test("passes activity selection through from day columns", () => {
+test("passes training session selection through from day columns", () => {
   const onSelectActivity = vi.fn();
 
   render(<WeekGrid onSelectActivity={onSelectActivity} week={week} />);
@@ -204,10 +206,10 @@ test("passes activity selection through from day columns", () => {
     ).getByRole("button", { name: "View Tempo run details" }),
   );
 
-  expect(onSelectActivity).toHaveBeenCalledWith(activity);
+  expect(onSelectActivity).toHaveBeenCalledWith(trainingSession);
 });
 
-test("moves a scheduled activity to a different drop zone", () => {
+test("moves a scheduled training session to a different drop zone", () => {
   const onMoveActivity = vi.fn().mockResolvedValue(undefined);
 
   render(
@@ -218,10 +220,12 @@ test("moves a scheduled activity to a different drop zone", () => {
     />,
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Drop activity on Tuesday evening" }),
+    screen.getByRole("button", {
+      name: "Drop training session on Tuesday evening",
+    }),
   );
 
-  expect(onMoveActivity).toHaveBeenCalledWith(activity, {
+  expect(onMoveActivity).toHaveBeenCalledWith(trainingSession, {
     date: "2026-08-18",
     timeOfDay: "PM",
   });
@@ -240,21 +244,25 @@ test("does not move cancelled, outside, unchanged, or non-scheduled drops", () =
 
   fireEvent.click(screen.getByRole("button", { name: "End drag" }));
   fireEvent.click(
-    screen.getByRole("button", { name: "Drop activity outside a zone" }),
-  );
-  fireEvent.click(
-    screen.getByRole("button", { name: "Drop activity in its current slot" }),
+    screen.getByRole("button", {
+      name: "Drop training session outside a zone",
+    }),
   );
   fireEvent.click(
     screen.getByRole("button", {
-      name: "Drop completed activity on Tuesday evening",
+      name: "Drop training session in its current slot",
+    }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Drop completed training session on Tuesday evening",
     }),
   );
 
   expect(onMoveActivity).not.toHaveBeenCalled();
 });
 
-test("silently ignores a failed activity move", async () => {
+test("silently ignores a failed training session move", async () => {
   const onMoveActivity = vi.fn().mockRejectedValue(new Error("nope"));
 
   render(
@@ -265,7 +273,9 @@ test("silently ignores a failed activity move", async () => {
     />,
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Drop activity on Tuesday evening" }),
+    screen.getByRole("button", {
+      name: "Drop training session on Tuesday evening",
+    }),
   );
 
   await waitFor(() => expect(onMoveActivity).toHaveBeenCalledOnce());

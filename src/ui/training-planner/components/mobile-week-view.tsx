@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { useState } from "react";
 
 import { Button } from "@/ui/shared/button/button";
-import { TrainingActivityCard } from "./training-activity-card";
+import { TrainingSessionCard } from "./training-session-card";
 import type {
   TimeOfDay,
   TrainingActivity,
@@ -117,8 +117,8 @@ export function MobileWeekView({
                 <ul className="flex flex-col gap-2">
                   {section.activities.map((activity) => (
                     <li key={activity.id}>
-                      <TrainingActivityCard
-                        activity={activity}
+                      <TrainingSessionCard
+                        trainingSession={activity}
                         onSelect={() => onSelectActivity(activity)}
                       />
                     </li>

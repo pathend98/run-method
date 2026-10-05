@@ -1,4 +1,4 @@
-import { TrainingActivityCard } from "./training-activity-card";
+import { TrainingSessionCard } from "./training-session-card";
 import type {
   TrainingActivity,
   TrainingDay,
@@ -31,8 +31,8 @@ export function TimeOfDaySection({
       <ul className="flex flex-col gap-2">
         {activities.map((activity) => (
           <li key={activity.id}>
-            <TrainingActivityCard
-              activity={activity}
+            <TrainingSessionCard
+              trainingSession={activity}
               onSelect={() => onSelectActivity(activity)}
             />
           </li>

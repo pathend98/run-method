@@ -2,13 +2,17 @@ import { createRunTrainingSession } from "@/test-support/fixtures/training-sessi
 import { render, screen } from "@testing-library/react";
 
 const dndMocks = vi.hoisted(() => ({
+  input: undefined as { accept: string } | undefined,
   isDropTarget: false,
   ref: vi.fn(),
 }));
 
 vi.mock("@dnd-kit/react", () => ({
   useDraggable: () => ({ isDragSource: false, ref: vi.fn() }),
-  useDroppable: () => dndMocks,
+  useDroppable: (input: { accept: string }) => {
+    dndMocks.input = input;
+    return dndMocks;
+  },
 }));
 
 import { TimeOfDayDropZone } from "./time-of-day-drop-zone";
@@ -32,7 +36,7 @@ const day = {
   day: "Monday",
 } satisfies TrainingDay;
 
-test("renders a highlighted dashed drop zone while an activity is over it", () => {
+test("renders a highlighted dashed drop zone while a training session is over it", () => {
   dndMocks.isDropTarget = true;
 
   render(
@@ -48,6 +52,7 @@ test("renders a highlighted dashed drop zone while an activity is over it", () =
   );
 
   const zone = screen.getByRole("region", { name: "Morning" });
+  expect(dndMocks.input?.accept).toBe("training-session");
   expect(zone.className).toContain("border-dashed");
   expect(zone.className).toContain("border-l");
   expect(zone.className).toContain("border-t");

@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/react";
-import { DraggableActivityCard } from "./draggable-activity-card";
+import { DraggableTrainingSessionCard } from "./draggable-training-session-card";
 import type {
   TimeOfDay,
   TrainingActivity,
@@ -35,7 +35,7 @@ export function TimeOfDayDropZone({
     data: { date: day.date, timeOfDay },
     disabled: !isDragActive,
     id: createDropZoneId(day, timeOfDay),
-    accept: "training-activity",
+    accept: "training-session",
   });
 
   if (!isDragActive && activities.length === 0) return null;
@@ -62,8 +62,8 @@ export function TimeOfDayDropZone({
       <ul className="flex flex-col gap-2">
         {activities.map((activity) => (
           <li key={activity.id}>
-            <DraggableActivityCard
-              activity={activity}
+            <DraggableTrainingSessionCard
+              trainingSession={activity}
               onSelect={() => onSelectActivity(activity)}
             />
           </li>

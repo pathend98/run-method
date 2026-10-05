@@ -1,4 +1,4 @@
-import type { TrainingActivity } from "../types/training-planner-types";
+import type { TrainingSession } from "@/domain/training-sessions";
 import {
   CircleCheck,
   CircleMinus,
@@ -13,8 +13,8 @@ import {
 } from "@/ui/training-sessions/formatters";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
-type TrainingActivityCardProps = {
-  activity: TrainingActivity;
+type TrainingSessionCardProps = {
+  trainingSession: TrainingSession;
   className?: string;
   onSelect?: () => void;
 };
@@ -34,29 +34,30 @@ const statusStyles = {
   },
 } as const;
 
-export function TrainingActivityCard({
-  activity,
+export function TrainingSessionCard({
+  trainingSession,
   className,
   onSelect,
-}: TrainingActivityCardProps) {
+}: TrainingSessionCardProps) {
   const measurementUnit = useDistanceDisplayUnit();
-  const statusStyle = statusStyles[activity.status];
+  const statusStyle = statusStyles[trainingSession.status];
   const StatusIcon = statusStyle.icon;
-  const ActivityIcon = activity.activityType === "RUN" ? SportShoe : Dumbbell;
-  const isCompleted = activity.status === "COMPLETED";
+  const TrainingSessionIcon =
+    trainingSession.activityType === "RUN" ? SportShoe : Dumbbell;
+  const isCompleted = trainingSession.status === "COMPLETED";
   const distance =
-    activity.activityType === "RUN"
+    trainingSession.activityType === "RUN"
       ? formatDistance(
           isCompleted
-            ? activity.actualDistanceMetres
-            : activity.targetDistanceMetres,
+            ? trainingSession.actualDistanceMetres
+            : trainingSession.targetDistanceMetres,
           measurementUnit,
         )
       : null;
   const duration = formatCompactDuration(
     isCompleted
-      ? activity.actualDurationSeconds
-      : activity.targetDurationSeconds,
+      ? trainingSession.actualDurationSeconds
+      : trainingSession.targetDurationSeconds,
   );
   const metrics = [distance, duration].filter(
     (metric): metric is string => metric !== null,
@@ -64,20 +65,20 @@ export function TrainingActivityCard({
 
   return (
     <button
-      aria-label={`View ${activity.title} details`}
+      aria-label={`View ${trainingSession.title} details`}
       className={`w-full rounded-md border border-zinc-200 bg-white px-3 py-3 text-left transition hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600${className ? ` ${className}` : ""}`}
       onClick={onSelect}
       type="button"
     >
       <div className="flex gap-3">
-        <ActivityIcon
+        <TrainingSessionIcon
           aria-hidden="true"
           className="mt-0.5 size-4 shrink-0 text-zinc-500"
           strokeWidth={1.75}
         />
         <div className="flex min-w-0 flex-col gap-1">
           <p className="line-clamp-2 text-sm font-semibold text-zinc-950">
-            {activity.title}
+            {trainingSession.title}
           </p>
           <p className="text-xs font-medium leading-4 text-zinc-600">
             {metrics.join(" · ")}
@@ -86,10 +87,10 @@ export function TrainingActivityCard({
             className={`flex items-center gap-1 text-xs font-medium ${statusStyle.label}`}
           >
             <StatusIcon aria-hidden="true" className="size-3.5" />
-            {formatStatus(activity.status)}
+            {formatStatus(trainingSession.status)}
           </p>
           <span className="sr-only">
-            {activity.activityType === "RUN" ? "Run" : "Strength"}
+            {trainingSession.activityType === "RUN" ? "Run" : "Strength"}
           </span>
         </div>
       </div>

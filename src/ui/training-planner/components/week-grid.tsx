@@ -5,7 +5,7 @@ import { PointerActivationConstraints, type DragEndEvent } from "@dnd-kit/dom";
 import { useState } from "react";
 import { DayColumn } from "./day-column";
 import { MobileWeekView } from "./mobile-week-view";
-import { TrainingActivityCard } from "./training-activity-card";
+import { TrainingSessionCard } from "./training-session-card";
 import { format } from "date-fns";
 import type {
   TrainingActivity,
@@ -16,10 +16,10 @@ import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move
 type WeekGridProps = {
   onAddTrainingSession?: (day: TrainingDay) => void;
   onMoveActivity?: (
-    activity: TrainingActivity,
+    trainingSession: TrainingActivity,
     destination: TrainingSessionMoveDestination,
   ) => Promise<void>;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onSelectActivity: (trainingSession: TrainingActivity) => void;
   week: TrainingDay[];
 };
 
@@ -30,37 +30,39 @@ export function WeekGrid({
   week,
 }: WeekGridProps) {
   const today = format(new Date(), "yyyy-MM-dd");
-  const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
-  const activeActivity = week
+  const [activeTrainingSessionId, setActiveTrainingSessionId] = useState<
+    string | null
+  >(null);
+  const activeTrainingSession = week
     .flatMap((day) => day.activities)
-    .find((activity) => activity.id === activeActivityId);
-  const isDragActive = activeActivity !== undefined;
+    .find((trainingSession) => trainingSession.id === activeTrainingSessionId);
+  const isDragActive = activeTrainingSession !== undefined;
 
-  function clearActiveActivity() {
-    setActiveActivityId(null);
+  function clearActiveTrainingSession() {
+    setActiveTrainingSessionId(null);
   }
 
   function handleDragEnd({ canceled, operation }: DragEndEvent) {
-    clearActiveActivity();
+    clearActiveTrainingSession();
 
-    const activity = operation.source?.data.activity as
+    const trainingSession = operation.source?.data.trainingSession as
       TrainingActivity | undefined;
     const destination = operation.target?.data as
       TrainingSessionMoveDestination | undefined;
 
     if (
       canceled ||
-      !activity ||
+      !trainingSession ||
       !destination ||
-      activity.status !== "SCHEDULED" ||
-      (activity.date === destination.date &&
-        activity.timeOfDay === destination.timeOfDay) ||
+      trainingSession.status !== "SCHEDULED" ||
+      (trainingSession.date === destination.date &&
+        trainingSession.timeOfDay === destination.timeOfDay) ||
       !onMoveActivity
     ) {
       return;
     }
 
-    void onMoveActivity(activity, destination).catch(() => undefined);
+    void onMoveActivity(trainingSession, destination).catch(() => undefined);
   }
 
   return (
@@ -74,7 +76,7 @@ export function WeekGrid({
       <DragDropProvider
         onDragEnd={handleDragEnd}
         onDragStart={({ operation }) => {
-          setActiveActivityId(String(operation.source!.id));
+          setActiveTrainingSessionId(String(operation.source!.id));
         }}
         sensors={[
           PointerSensor.configure({
@@ -110,9 +112,9 @@ export function WeekGrid({
           </div>
         </div>
         <DragOverlay dropAnimation={null}>
-          {activeActivity ? (
+          {activeTrainingSession ? (
             <div aria-hidden="true" className="pointer-events-none w-64" inert>
-              <TrainingActivityCard activity={activeActivity} />
+              <TrainingSessionCard trainingSession={activeTrainingSession} />
             </div>
           ) : null}
         </DragOverlay>

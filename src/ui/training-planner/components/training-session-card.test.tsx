@@ -3,27 +3,26 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { TrainingActivityCard } from "./training-activity-card";
+import { TrainingSessionCard } from "./training-session-card";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
-import type { TrainingActivity } from "../types/training-planner-types";
+import type { TrainingSession } from "@/domain/training-sessions";
 
-function runActivity(
-  override: Partial<TrainingActivity> = {},
-): TrainingActivity {
+function runTrainingSession(
+  override: Partial<TrainingSession> = {},
+): TrainingSession {
   return {
     ...createRunTrainingSession({
-      id: "activity",
+      id: "training-session",
       description: "Controlled effort",
       targetDistanceMetres: 6000,
       targetDurationSeconds: 1530,
     }),
-    day: "Monday",
     ...override,
-  } as TrainingActivity;
+  } as TrainingSession;
 }
 
-test("renders a compact activity summary", () => {
-  render(<TrainingActivityCard activity={runActivity()} />);
+test("renders a compact training session summary", () => {
+  render(<TrainingSessionCard trainingSession={runTrainingSession()} />);
 
   const card = screen.getByRole("button", { name: "View Tempo run details" });
 
@@ -39,16 +38,19 @@ test("renders a compact activity summary", () => {
 test("shows the selected distance unit in a run card", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
-      <TrainingActivityCard activity={runActivity()} />
+      <TrainingSessionCard trainingSession={runTrainingSession()} />
     </DistanceDisplayProvider>,
   );
 
   expect(screen.getByText("3.73 mi · 25m 30s")).toBeDefined();
 });
 
-test("merges an optional class name into the activity button", () => {
+test("merges an optional class name into the training session button", () => {
   render(
-    <TrainingActivityCard activity={runActivity()} className="!cursor-grab" />,
+    <TrainingSessionCard
+      trainingSession={runTrainingSession()}
+      className="!cursor-grab"
+    />,
   );
 
   expect(
@@ -61,9 +63,11 @@ test.each([
   ["COMPLETED", "lucide-circle-check", "text-green-700"],
   ["SKIPPED", "lucide-circle-minus", "text-amber-700"],
 ] as const)(
-  "renders %s activities with a status icon and label",
+  "renders %s training sessions with a status icon and label",
   (status, iconClass, labelClass) => {
-    render(<TrainingActivityCard activity={runActivity({ status })} />);
+    render(
+      <TrainingSessionCard trainingSession={runTrainingSession({ status })} />,
+    );
 
     const card = screen.getByRole("button", {
       name: "View Tempo run details",
@@ -82,8 +86,8 @@ test.each([
 
 test("shows actual run metrics after completion", () => {
   render(
-    <TrainingActivityCard
-      activity={runActivity({
+    <TrainingSessionCard
+      trainingSession={runTrainingSession({
         status: "COMPLETED",
         actualDistanceMetres: 6250,
         actualDurationSeconds: 1575,
@@ -95,17 +99,16 @@ test("shows actual run metrics after completion", () => {
   expect(screen.queryByText("6.00 km · 25m 30s")).toBeNull();
 });
 
-test("shows duration only for strength activities", () => {
+test("shows duration only for strength training sessions", () => {
   render(
-    <TrainingActivityCard
-      activity={{
+    <TrainingSessionCard
+      trainingSession={{
         ...createStrengthTrainingSession({
-          id: "activity",
+          id: "training-session",
           title: "Tempo run",
           description: "Controlled effort",
           targetDurationSeconds: 5400,
         }),
-        day: "Monday",
       }}
     />,
   );
@@ -117,8 +120,8 @@ test("shows duration only for strength activities", () => {
 
 test("omits seconds from durations over one hour", () => {
   render(
-    <TrainingActivityCard
-      activity={runActivity({ targetDurationSeconds: 3849 })}
+    <TrainingSessionCard
+      trainingSession={runTrainingSession({ targetDurationSeconds: 3849 })}
     />,
   );
 
@@ -126,8 +129,8 @@ test("omits seconds from durations over one hour", () => {
   expect(screen.queryByText("6.00 km · 1h 4m 9s")).toBeNull();
 });
 
-test("uses the standard border for an activity card", () => {
-  render(<TrainingActivityCard activity={runActivity()} />);
+test("uses the standard border for a training session card", () => {
+  render(<TrainingSessionCard trainingSession={runTrainingSession()} />);
 
   const card = screen.getByRole("button", { name: "View Tempo run details" });
   expect(card.className).toContain("border-zinc-200");
@@ -137,7 +140,9 @@ test("uses the standard border for an activity card", () => {
 
 test("does not render descriptions in the planner overview", () => {
   render(
-    <TrainingActivityCard activity={runActivity({ title: "Easy run" })} />,
+    <TrainingSessionCard
+      trainingSession={runTrainingSession({ title: "Easy run" })}
+    />,
   );
 
   expect(
@@ -149,7 +154,12 @@ test("does not render descriptions in the planner overview", () => {
 test("calls the select handler when clicked", () => {
   const onSelect = vi.fn();
 
-  render(<TrainingActivityCard activity={runActivity()} onSelect={onSelect} />);
+  render(
+    <TrainingSessionCard
+      trainingSession={runTrainingSession()}
+      onSelect={onSelect}
+    />,
+  );
   fireEvent.click(
     screen.getByRole("button", { name: "View Tempo run details" }),
   );
