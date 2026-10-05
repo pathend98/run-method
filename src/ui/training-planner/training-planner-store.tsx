@@ -16,7 +16,7 @@ export type TrainingPlannerActiveModal =
   | { kind: "details"; activity: TrainingActivity }
   | {
       kind: "complete";
-      activity: TrainingActivity;
+      trainingSession: TrainingActivity;
       returnTo: "details" | "review";
     }
   | { kind: "delete"; activity: TrainingActivity }
@@ -38,7 +38,7 @@ type TrainingPlannerStoreActions = {
   closeModal: () => void;
   openAddTrainingSession: (day: TrainingDay) => void;
   openActivityDetails: (activity: TrainingActivity) => void;
-  openCompleteActivity: () => void;
+  openCompleteTrainingSession: () => void;
   openCompleteTrainingSessionFromReview: (
     trainingSession: TrainingActivity,
   ) => void;
@@ -67,13 +67,13 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
     openAddTrainingSession: (day) => set({ activeModal: { kind: "add", day } }),
     openActivityDetails: (activity) =>
       set({ activeModal: { kind: "details", activity } }),
-    openCompleteActivity: () =>
+    openCompleteTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {
               activeModal: {
                 kind: "complete",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.activity,
                 returnTo: "details",
               },
             }
@@ -83,7 +83,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
       set({
         activeModal: {
           kind: "complete",
-          activity: trainingSession,
+          trainingSession,
           returnTo: "review",
         },
       }),
@@ -152,7 +152,8 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
               activeModal: {
                 kind: "details",
                 activity:
-                  state.activeModal.kind === "skip"
+                  state.activeModal.kind === "skip" ||
+                  state.activeModal.kind === "complete"
                     ? state.activeModal.trainingSession
                     : state.activeModal.activity,
               },
@@ -168,10 +169,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             : {
                 activeModal: {
                   kind: "details",
-                  activity:
-                    state.activeModal.kind === "skip"
-                      ? state.activeModal.trainingSession
-                      : state.activeModal.activity,
+                  activity: state.activeModal.trainingSession,
                 },
               }
           : state,

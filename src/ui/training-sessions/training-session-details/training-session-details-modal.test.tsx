@@ -25,7 +25,7 @@ beforeEach(() => {
     closeModal: vi.fn(),
     openAddTrainingSession: vi.fn(),
     openActivityDetails: vi.fn(),
-    openCompleteActivity: vi.fn(),
+    openCompleteTrainingSession: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),
     openEditActivity: vi.fn(),
@@ -172,7 +172,9 @@ test("calls the edit action", () => {
 test("calls the complete action", () => {
   renderTrainingSessionDetails();
   fireEvent.click(screen.getByRole("button", { name: "Complete" }));
-  expect(storeState.openCompleteActivity).toHaveBeenCalledExactlyOnceWith();
+  expect(
+    storeState.openCompleteTrainingSession,
+  ).toHaveBeenCalledExactlyOnceWith();
 });
 
 test.each([

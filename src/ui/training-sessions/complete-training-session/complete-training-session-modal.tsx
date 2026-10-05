@@ -4,10 +4,10 @@ import type { CompleteTrainingSessionRequest } from "@/domain/training-sessions"
 import { Modal } from "@/ui/shared/modal/modal";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useCompleteTrainingSessionMutation } from "@/ui/training-sessions/mutations";
-import { CompleteActivityForm } from "./components/complete-activity-form";
+import { CompleteTrainingSessionForm } from "./components/complete-training-session-form";
 import { PlannedRunSummary } from "./components/planned-run-summary";
 
-export function CompleteActivityModal() {
+export function CompleteTrainingSessionModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const returnFromTrainingSessionTransition = useTrainingPlannerStore(
     (state) => state.returnFromTrainingSessionTransition,
@@ -19,17 +19,19 @@ export function CompleteActivityModal() {
   const [runFieldsPending, setRunFieldsPending] = useState(false);
 
   if (activeModal?.kind !== "complete") return null;
-  const { activity } = activeModal;
+  const { trainingSession } = activeModal;
 
-  async function completeActivity(request: CompleteTrainingSessionRequest) {
-    await completeMutation.mutateAsync({ id: activity.id, request });
+  async function completeTrainingSession(
+    request: CompleteTrainingSessionRequest,
+  ) {
+    await completeMutation.mutateAsync({ id: trainingSession.id, request });
     finishTrainingSessionTransition();
   }
 
   return (
     <Modal
-      dismissLabel="Dismiss complete activity"
-      closeLabel="Close complete activity"
+      dismissLabel="Dismiss complete training session"
+      closeLabel="Close complete training session"
       footerActions={[
         {
           label: "Cancel",
@@ -38,29 +40,29 @@ export function CompleteActivityModal() {
         },
         {
           disabled: runFieldsPending,
-          form: "complete-activity-form",
+          form: "complete-training-session-form",
           label: completeMutation.isPending
             ? "Completing…"
-            : "Complete activity",
+            : "Complete training session",
           type: "submit",
           variant: "primary",
         },
       ]}
       isBusy={completeMutation.isPending}
       onClose={returnFromTrainingSessionTransition}
-      title={activity.title}
+      title={trainingSession.title}
     >
       <h3 className="mt-6 text-base font-semibold text-zinc-950">
         How did it go?
       </h3>
-      <CompleteActivityForm
-        activity={activity}
+      <CompleteTrainingSessionForm
+        trainingSession={trainingSession}
         isSubmitting={completeMutation.isPending}
-        onComplete={completeActivity}
+        onComplete={completeTrainingSession}
         onRunFieldsPendingChange={setRunFieldsPending}
       />
-      {activity.activityType === "RUN" ? (
-        <PlannedRunSummary activity={activity} />
+      {trainingSession.activityType === "RUN" ? (
+        <PlannedRunSummary trainingSession={trainingSession} />
       ) : null}
     </Modal>
   );

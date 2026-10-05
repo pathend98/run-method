@@ -243,7 +243,9 @@ test("TrainingPlanner skips and completes training sessions through the API", as
   fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "5" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Complete training session" }),
+  );
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("/complete"),

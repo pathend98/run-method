@@ -29,8 +29,8 @@ export function TrainingSessionDetailsModal() {
   const openMoveTrainingSession = useTrainingPlannerStore(
     (state) => state.openMoveTrainingSession,
   );
-  const openCompleteActivity = useTrainingPlannerStore(
-    (state) => state.openCompleteActivity,
+  const openCompleteTrainingSession = useTrainingPlannerStore(
+    (state) => state.openCompleteTrainingSession,
   );
   const openSkipTrainingSession = useTrainingPlannerStore(
     (state) => state.openSkipTrainingSession,
@@ -89,7 +89,7 @@ export function TrainingSessionDetailsModal() {
           ? [
               {
                 label: "Complete",
-                onClick: openCompleteActivity,
+                onClick: openCompleteTrainingSession,
                 variant: "primary",
               },
             ]

@@ -9,7 +9,7 @@ import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
-import { CompleteActivityModal } from "./complete-activity-modal";
+import { CompleteTrainingSessionModal } from "./complete-training-session-modal";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const api = vi.hoisted(() => ({ completeTrainingSession: vi.fn() }));
@@ -18,7 +18,7 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
   completeTrainingSession: api.completeTrainingSession,
 }));
 
-const activity = {
+const trainingSession = {
   ...createRunTrainingSession({
     timeOfDay: null,
     targetDistanceMetres: 6000,
@@ -27,15 +27,22 @@ const activity = {
   day: "Monday",
 } as const;
 
-function renderModal(measurementUnit: "KILOMETRES" | "MILES" = "KILOMETRES") {
+function renderModal(
+  measurementUnit: "KILOMETRES" | "MILES" = "KILOMETRES",
+  fromReview = false,
+) {
   const store = createTrainingPlannerStore();
-  store.getState().openActivityDetails(activity);
-  store.getState().openCompleteActivity();
+  if (fromReview) {
+    store.getState().openCompleteTrainingSessionFromReview(trainingSession);
+  } else {
+    store.getState().openActivityDetails(trainingSession);
+    store.getState().openCompleteTrainingSession();
+  }
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
         <DistanceDisplayProvider measurementUnit={measurementUnit}>
-          <CompleteActivityModal />
+          <CompleteTrainingSessionModal />
         </DistanceDisplayProvider>
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
@@ -48,7 +55,7 @@ test("renders nothing when completion is not active", () => {
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <CompleteActivityModal />
+        <CompleteTrainingSessionModal />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
@@ -81,15 +88,20 @@ test("shows planned miles and mile pace with mile completion inputs", () => {
   );
 });
 
-test("completes the activity and closes the modal flow", async () => {
-  api.completeTrainingSession.mockResolvedValue(activity);
+test("completes the training session and closes the modal flow", async () => {
+  api.completeTrainingSession.mockResolvedValue(trainingSession);
   const store = renderModal();
-  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Complete training session" }),
+  );
   await waitFor(() =>
-    expect(api.completeTrainingSession).toHaveBeenCalledWith(activity.id, {
-      actualDistanceMetres: 6000,
-      actualDurationSeconds: 1530,
-    }),
+    expect(api.completeTrainingSession).toHaveBeenCalledWith(
+      trainingSession.id,
+      {
+        actualDistanceMetres: 6000,
+        actualDurationSeconds: 1530,
+      },
+    ),
   );
   expect(store.getState().activeModal).toBeNull();
 });
@@ -99,12 +111,14 @@ test("disables dismissal while completion is pending", async () => {
     () => new Promise(() => undefined),
   );
   renderModal();
-  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Complete training session" }),
+  );
   expect(
     await screen.findByRole("button", { name: "Completing…" }),
   ).toHaveProperty("disabled", true);
   expect(
-    screen.getByRole("button", { name: "Dismiss complete activity" }),
+    screen.getByRole("button", { name: "Dismiss complete training session" }),
   ).toHaveProperty("disabled", true);
 });
 
@@ -112,20 +126,20 @@ test("shows a duration-only completion dialog for strength", () => {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails({
     ...createStrengthTrainingSession({
-      id: activity.id,
-      title: activity.title,
-      date: activity.date,
-      timeOfDay: activity.timeOfDay,
-      description: activity.description,
+      id: trainingSession.id,
+      title: trainingSession.title,
+      date: trainingSession.date,
+      timeOfDay: trainingSession.timeOfDay,
+      description: trainingSession.description,
       targetDurationSeconds: 1800,
     }),
     day: "Monday",
   });
-  store.getState().openCompleteActivity();
+  store.getState().openCompleteTrainingSession();
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <CompleteActivityModal />
+        <CompleteTrainingSessionModal />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
@@ -134,4 +148,33 @@ test("shows a duration-only completion dialog for strength", () => {
     "value",
     "30",
   );
+});
+
+test("returns to review when completing a training session is cancelled", () => {
+  const store = renderModal("KILOMETRES", true);
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(store.getState().activeModal).toEqual({ kind: "review" });
+});
+
+test("returns to review after successfully completing a training session", async () => {
+  api.completeTrainingSession.mockResolvedValue(trainingSession);
+  const store = renderModal("KILOMETRES", true);
+  expect(store.getState().activeModal).toEqual({
+    kind: "complete",
+    trainingSession,
+    returnTo: "review",
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Complete training session" }),
+  );
+  await waitFor(() => {
+    expect(api.completeTrainingSession).toHaveBeenCalledWith(
+      trainingSession.id,
+      {
+        actualDistanceMetres: 6000,
+        actualDurationSeconds: 1530,
+      },
+    );
+    expect(store.getState().activeModal).toEqual({ kind: "review" });
+  });
 });

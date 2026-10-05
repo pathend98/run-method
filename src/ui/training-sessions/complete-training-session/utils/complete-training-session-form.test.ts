@@ -4,9 +4,9 @@ import {
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
 import {
-  createCompleteActivityFormSchema,
+  createCompleteTrainingSessionFormSchema,
   toCompleteTrainingSessionRequest,
-} from "./complete-activity-form";
+} from "./complete-training-session-form";
 
 const run = createRunTrainingSession({
   title: "Run",
@@ -49,7 +49,7 @@ test.each(["", "0", "5.1234", "five"])(
   "rejects invalid run distance %s",
   (distance) => {
     expect(
-      createCompleteActivityFormSchema(run, "KILOMETRES").safeParse({
+      createCompleteTrainingSessionFormSchema(run, "KILOMETRES").safeParse({
         ...fields,
         distance,
       }).success,
@@ -59,7 +59,7 @@ test.each(["", "0", "5.1234", "five"])(
 
 test("requires a non-zero duration", () => {
   expect(
-    createCompleteActivityFormSchema(run, "KILOMETRES").safeParse({
+    createCompleteTrainingSessionFormSchema(run, "KILOMETRES").safeParse({
       ...fields,
       durationMinutes: "00",
     }).success,
@@ -79,7 +79,10 @@ test("preserves the planned metres when mile prefill is submitted unchanged", ()
       "MILES",
     ),
   ).toMatchObject({ actualDistanceMetres: 8047 });
-  const invalid = createCompleteActivityFormSchema(planned, "MILES").safeParse({
+  const invalid = createCompleteTrainingSessionFormSchema(
+    planned,
+    "MILES",
+  ).safeParse({
     ...values,
     distance: "3.1234",
   });

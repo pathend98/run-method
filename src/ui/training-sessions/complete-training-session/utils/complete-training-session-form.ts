@@ -14,7 +14,7 @@ import {
   durationFieldsToSeconds,
 } from "../../training-session-duration";
 
-export const completeActivityFormSchema = z
+export const completeTrainingSessionFormSchema = z
   .object({
     ...durationFieldsSchema.shape,
     derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
@@ -31,16 +31,16 @@ export const completeActivityFormSchema = z
     }
   });
 
-export type CompleteActivityFormValues = z.infer<
-  typeof completeActivityFormSchema
+export type CompleteTrainingSessionFormValues = z.infer<
+  typeof completeTrainingSessionFormSchema
 >;
 
-export function createCompleteActivityFormSchema(
-  activity: TrainingSession,
+export function createCompleteTrainingSessionFormSchema(
+  trainingSession: TrainingSession,
   unit: RunningMetricUnit,
 ) {
-  return completeActivityFormSchema.superRefine((values, context) => {
-    if (activity.activityType !== "RUN") return;
+  return completeTrainingSessionFormSchema.superRefine((values, context) => {
+    if (trainingSession.activityType !== "RUN") return;
     const distanceIssue = new RunningMetrics(unit)
       .validate(values, false)
       .find((issue) => issue.field === "distance");
@@ -55,19 +55,22 @@ export function createCompleteActivityFormSchema(
 }
 
 export function toCompleteTrainingSessionRequest(
-  activity: TrainingSession,
-  values: CompleteActivityFormValues,
+  trainingSession: TrainingSession,
+  values: CompleteTrainingSessionFormValues,
   unit: RunningMetricUnit,
 ): CompleteTrainingSessionRequest {
-  const parsed = createCompleteActivityFormSchema(activity, unit).parse(values);
+  const parsed = createCompleteTrainingSessionFormSchema(
+    trainingSession,
+    unit,
+  ).parse(values);
   const metrics = new RunningMetrics(unit);
   return {
     actualDurationSeconds: durationFieldsToSeconds(parsed),
-    ...(activity.activityType === "RUN"
+    ...(trainingSession.activityType === "RUN"
       ? {
           actualDistanceMetres: metrics.readDistanceInput(
             parsed.distance,
-            activity.targetDistanceMetres,
+            trainingSession.targetDistanceMetres,
           ),
         }
       : {}),

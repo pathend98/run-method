@@ -7,7 +7,7 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { CompleteActivityForm } from "./complete-activity-form";
+import { CompleteTrainingSessionForm } from "./complete-training-session-form";
 
 const run = createRunTrainingSession({
   title: "Tempo",
@@ -21,14 +21,14 @@ const strength = createStrengthTrainingSession({
 });
 
 function renderForm(
-  activity: TrainingSession = run,
+  trainingSession: TrainingSession = run,
   onComplete = vi.fn().mockResolvedValue(undefined),
   isSubmitting = false,
 ) {
   const onRunFieldsPendingChange = vi.fn();
   render(
-    <CompleteActivityForm
-      activity={activity}
+    <CompleteTrainingSessionForm
+      trainingSession={trainingSession}
       isSubmitting={isSubmitting}
       onComplete={onComplete}
       onRunFieldsPendingChange={onRunFieldsPendingChange}
@@ -81,7 +81,7 @@ test("uses a duration-only strength form and reports failed completion", async (
     screen.getByLabelText("Actual duration (minutes)").closest("form")!,
   );
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to complete activity",
+    "Unable to complete training session",
   );
 });
 

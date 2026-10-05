@@ -49,10 +49,10 @@ test("transitions through add, details, edit, move, completion, skip, delete, an
   expect(store.getState().activeModal).toEqual({ kind: "delete", activity });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
-  store.getState().openCompleteActivity();
+  store.getState().openCompleteTrainingSession();
   expect(store.getState().activeModal).toEqual({
     kind: "complete",
-    activity,
+    trainingSession: activity,
     returnTo: "details",
   });
   store.getState().returnToActivityDetails();
@@ -68,7 +68,7 @@ test("returns completed and skipped review training sessions to the review modal
   store.getState().openCompleteTrainingSessionFromReview(activity);
   expect(store.getState().activeModal).toEqual({
     kind: "complete",
-    activity,
+    trainingSession: activity,
     returnTo: "review",
   });
   store.getState().returnFromTrainingSessionTransition();
@@ -79,7 +79,7 @@ test("returns completed and skipped review training sessions to the review modal
   expect(store.getState().activeModal).toEqual({ kind: "review" });
 
   store.getState().openActivityDetails(activity);
-  store.getState().openCompleteActivity();
+  store.getState().openCompleteTrainingSession();
   store.getState().finishTrainingSessionTransition();
   expect(store.getState().activeModal).toBeNull();
 
@@ -91,7 +91,7 @@ test("returns completed and skipped review training sessions to the review modal
 test("ignores invalid detail transitions", () => {
   const store = createTrainingPlannerStore();
   store.getState().openEditActivity();
-  store.getState().openCompleteActivity();
+  store.getState().openCompleteTrainingSession();
   store.getState().openDeleteTrainingSession();
   store.getState().openSkipTrainingSession();
   store.getState().openMoveTrainingSession();

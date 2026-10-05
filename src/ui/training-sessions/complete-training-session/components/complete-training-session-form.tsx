@@ -11,30 +11,32 @@ import { RunFieldFormInput } from "@/ui/runs/run-field-form-input/run-field-form
 import { durationSecondsToFields } from "../../training-session-duration";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
-  createCompleteActivityFormSchema,
+  createCompleteTrainingSessionFormSchema,
   toCompleteTrainingSessionRequest,
-  type CompleteActivityFormValues,
-} from "../utils/complete-activity-form";
+  type CompleteTrainingSessionFormValues,
+} from "../utils/complete-training-session-form";
 
-type CompleteActivityFormProps = {
-  activity: TrainingSession;
+type CompleteTrainingSessionFormProps = {
+  trainingSession: TrainingSession;
   isSubmitting: boolean;
   onComplete: (request: CompleteTrainingSessionRequest) => Promise<unknown>;
   onRunFieldsPendingChange: (pending: boolean) => void;
 };
 
-export function CompleteActivityForm({
-  activity,
+export function CompleteTrainingSessionForm({
+  trainingSession,
   isSubmitting,
   onComplete,
   onRunFieldsPendingChange,
-}: CompleteActivityFormProps) {
+}: CompleteTrainingSessionFormProps) {
   const unit = useDistanceDisplayUnit();
-  const form = useForm<CompleteActivityFormValues>({
-    defaultValues: defaultValues(activity, unit),
+  const form = useForm<CompleteTrainingSessionFormValues>({
+    defaultValues: defaultValues(trainingSession, unit),
     mode: "onBlur",
     reValidateMode: "onBlur",
-    resolver: zodResolver(createCompleteActivityFormSchema(activity, unit)),
+    resolver: zodResolver(
+      createCompleteTrainingSessionFormSchema(trainingSession, unit),
+    ),
   });
   const {
     formState: { errors },
@@ -42,14 +44,14 @@ export function CompleteActivityForm({
     setError,
   } = form;
 
-  async function submit(values: CompleteActivityFormValues) {
+  async function submit(values: CompleteTrainingSessionFormValues) {
     try {
       await onComplete(
-        toCompleteTrainingSessionRequest(activity, values, unit),
+        toCompleteTrainingSessionRequest(trainingSession, values, unit),
       );
     } catch {
       setError("root", {
-        message: "Unable to complete activity. Please try again.",
+        message: "Unable to complete training session. Please try again.",
       });
     }
   }
@@ -57,7 +59,7 @@ export function CompleteActivityForm({
   return (
     <FormProvider {...form}>
       <form
-        id="complete-activity-form"
+        id="complete-training-session-form"
         noValidate
         onSubmit={handleSubmit(submit)}
       >
@@ -67,7 +69,7 @@ export function CompleteActivityForm({
           </p>
         ) : null}
         <fieldset className="mt-6" disabled={isSubmitting}>
-          {activity.activityType === "RUN" ? (
+          {trainingSession.activityType === "RUN" ? (
             <RunFieldFormInput
               disabled={isSubmitting}
               onPendingChange={onRunFieldsPendingChange}
@@ -86,11 +88,13 @@ export function CompleteActivityForm({
 }
 
 function defaultValues(
-  activity: TrainingSession,
+  trainingSession: TrainingSession,
   unit: RunningMetricUnit,
-): CompleteActivityFormValues {
-  const duration = durationSecondsToFields(activity.targetDurationSeconds);
-  if (activity.activityType !== "RUN") {
+): CompleteTrainingSessionFormValues {
+  const duration = durationSecondsToFields(
+    trainingSession.targetDurationSeconds,
+  );
+  if (trainingSession.activityType !== "RUN") {
     return {
       ...duration,
       derivedMetric: null,
@@ -102,8 +106,8 @@ function defaultValues(
     ...duration,
     derivedMetric: "pace",
     ...new RunningMetrics(unit).prefill(
-      activity.targetDistanceMetres,
-      activity.targetDurationSeconds,
+      trainingSession.targetDistanceMetres,
+      trainingSession.targetDurationSeconds,
     ),
   };
 }
