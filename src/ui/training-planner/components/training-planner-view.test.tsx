@@ -1,31 +1,31 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import { TrainingPlannerStoreProvider } from "@/ui/training-planner/training-planner-store";
 import { TrainingPlannerView } from "./training-planner-view";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
-const activity = {
-  ...createRunActivity({
-    id: "activity",
+const trainingSession = {
+  ...createRunTrainingSession({
+    id: "training-session",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
   }),
   day: "Monday",
-} satisfies TrainingActivity;
+} satisfies PlannerTrainingSession;
 
 const week: TrainingDay[] = [
-  { day: "Monday", date: "2026-08-17", activities: [activity] },
-  { day: "Tuesday", date: "2026-08-18", activities: [] },
-  { day: "Wednesday", date: "2026-08-19", activities: [] },
-  { day: "Thursday", date: "2026-08-20", activities: [] },
-  { day: "Friday", date: "2026-08-21", activities: [] },
-  { day: "Saturday", date: "2026-08-22", activities: [] },
-  { day: "Sunday", date: "2026-08-23", activities: [] },
+  { day: "Monday", date: "2026-08-17", trainingSessions: [trainingSession] },
+  { day: "Tuesday", date: "2026-08-18", trainingSessions: [] },
+  { day: "Wednesday", date: "2026-08-19", trainingSessions: [] },
+  { day: "Thursday", date: "2026-08-20", trainingSessions: [] },
+  { day: "Friday", date: "2026-08-21", trainingSessions: [] },
+  { day: "Saturday", date: "2026-08-22", trainingSessions: [] },
+  { day: "Sunday", date: "2026-08-23", trainingSessions: [] },
 ];
 
 beforeEach(() => {
@@ -40,20 +40,20 @@ beforeEach(() => {
 function renderView(
   overrides: Partial<React.ComponentProps<typeof TrainingPlannerView>> = {},
 ) {
-  const onAddActivity = vi.fn();
-  const onSelectActivity = vi.fn();
+  const onAddTrainingSession = vi.fn();
+  const onSelectTrainingSession = vi.fn();
   render(
     <TrainingPlannerStoreProvider>
       <QueryProvider>
         <TrainingPlannerView
           isCurrentWeek
-          onAddActivity={onAddActivity}
+          onAddTrainingSession={onAddTrainingSession}
           onCurrentWeek={vi.fn()}
-          onMoveActivity={vi.fn().mockResolvedValue(undefined)}
+          onMoveTrainingSession={vi.fn().mockResolvedValue(undefined)}
           onNextWeek={vi.fn()}
           onPreviousWeek={vi.fn()}
-          onSelectActivity={onSelectActivity}
-          sessions={week.flatMap((day) => day.activities)}
+          onSelectTrainingSession={onSelectTrainingSession}
+          sessions={week.flatMap((day) => day.trainingSessions)}
           week={week}
           weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
           {...overrides}
@@ -61,7 +61,7 @@ function renderView(
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
-  return { onAddActivity, onSelectActivity };
+  return { onAddTrainingSession, onSelectTrainingSession };
 }
 
 test("renders the weekly grid without modal UI", () => {
@@ -110,8 +110,8 @@ test("renders the weekly grid without modal UI", () => {
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
-test("forwards activity and add selections through its private grid", () => {
-  const { onAddActivity, onSelectActivity } = renderView();
+test("forwards training session selections and add actions through its private grid", () => {
+  const { onAddTrainingSession, onSelectTrainingSession } = renderView();
   const mobilePlanner = screen.getByRole("region", {
     name: "Mobile weekly training planner",
   });
@@ -122,11 +122,11 @@ test("forwards activity and add selections through its private grid", () => {
   );
   fireEvent.click(
     within(mobilePlanner).getByRole("button", {
-      name: "Add activity to Monday",
+      name: "Add training session to Monday",
     }),
   );
-  expect(onSelectActivity).toHaveBeenCalledWith(activity);
-  expect(onAddActivity).toHaveBeenCalledWith(week[0]);
+  expect(onSelectTrainingSession).toHaveBeenCalledWith(trainingSession);
+  expect(onAddTrainingSession).toHaveBeenCalledWith(week[0]);
 });
 
 test("forwards week navigation callbacks", () => {

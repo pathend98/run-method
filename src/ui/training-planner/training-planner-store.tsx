@@ -5,25 +5,32 @@ import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "./types/training-planner-types";
 
-export type { TrainingActivity, Weekday } from "./types/training-planner-types";
+export type {
+  PlannerTrainingSession,
+  Weekday,
+} from "./types/training-planner-types";
 
 export type TrainingPlannerActiveModal =
   | { kind: "add"; day: TrainingDay }
-  | { kind: "details"; activity: TrainingActivity }
+  | { kind: "details"; trainingSession: PlannerTrainingSession }
   | {
       kind: "complete";
-      activity: TrainingActivity;
+      trainingSession: PlannerTrainingSession;
       returnTo: "details" | "review";
     }
-  | { kind: "delete"; activity: TrainingActivity }
-  | { kind: "edit"; activity: TrainingActivity }
-  | { kind: "move"; activity: TrainingActivity }
+  | { kind: "delete"; trainingSession: PlannerTrainingSession }
+  | { kind: "edit"; trainingSession: PlannerTrainingSession }
+  | { kind: "move"; trainingSession: PlannerTrainingSession }
   | { kind: "review" }
-  | { kind: "skip"; activity: TrainingActivity; returnTo: "details" | "review" }
+  | {
+      kind: "skip";
+      trainingSession: PlannerTrainingSession;
+      returnTo: "details" | "review";
+    }
   | null;
 
 type TrainingPlannerStoreState = {
@@ -32,19 +39,23 @@ type TrainingPlannerStoreState = {
 
 type TrainingPlannerStoreActions = {
   closeModal: () => void;
-  openAddActivity: (day: TrainingDay) => void;
-  openActivityDetails: (activity: TrainingActivity) => void;
-  openCompleteActivity: () => void;
-  openCompleteActivityFromReview: (activity: TrainingActivity) => void;
-  openDeleteActivity: () => void;
-  openEditActivity: () => void;
-  openMoveActivity: () => void;
-  openSkipActivity: () => void;
-  openSkipActivityFromReview: (activity: TrainingActivity) => void;
-  returnToActivityDetails: () => void;
-  returnFromActivityTransition: () => void;
-  finishActivityTransition: () => void;
-  openReviewActivities: () => void;
+  openAddTrainingSession: (day: TrainingDay) => void;
+  openTrainingSessionDetails: (trainingSession: PlannerTrainingSession) => void;
+  openCompleteTrainingSession: () => void;
+  openCompleteTrainingSessionFromReview: (
+    trainingSession: PlannerTrainingSession,
+  ) => void;
+  openDeleteTrainingSession: () => void;
+  openEditTrainingSession: () => void;
+  openMoveTrainingSession: () => void;
+  openSkipTrainingSession: () => void;
+  openSkipTrainingSessionFromReview: (
+    trainingSession: PlannerTrainingSession,
+  ) => void;
+  returnToTrainingSessionDetails: () => void;
+  returnFromTrainingSessionTransition: () => void;
+  finishTrainingSessionTransition: () => void;
+  openReviewTrainingSessions: () => void;
 };
 
 export type TrainingPlannerStore = TrainingPlannerStoreState &
@@ -56,72 +67,84 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
   return createStore<TrainingPlannerStore>()((set) => ({
     activeModal: null,
     closeModal: () => set({ activeModal: null }),
-    openAddActivity: (day) => set({ activeModal: { kind: "add", day } }),
-    openActivityDetails: (activity) =>
-      set({ activeModal: { kind: "details", activity } }),
-    openCompleteActivity: () =>
+    openAddTrainingSession: (day) => set({ activeModal: { kind: "add", day } }),
+    openTrainingSessionDetails: (trainingSession) =>
+      set({ activeModal: { kind: "details", trainingSession } }),
+    openCompleteTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {
               activeModal: {
                 kind: "complete",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.trainingSession,
                 returnTo: "details",
               },
             }
           : state,
       ),
-    openCompleteActivityFromReview: (activity) =>
-      set({ activeModal: { kind: "complete", activity, returnTo: "review" } }),
-    openDeleteActivity: () =>
+    openCompleteTrainingSessionFromReview: (trainingSession) =>
+      set({
+        activeModal: {
+          kind: "complete",
+          trainingSession,
+          returnTo: "review",
+        },
+      }),
+    openDeleteTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {
               activeModal: {
                 kind: "delete",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.trainingSession,
               },
             }
           : state,
       ),
-    openEditActivity: () =>
+    openEditTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {
               activeModal: {
                 kind: "edit",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.trainingSession,
               },
             }
           : state,
       ),
-    openMoveActivity: () =>
+    openMoveTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details" &&
-        state.activeModal.activity.status === "SCHEDULED"
+        state.activeModal.trainingSession.status === "SCHEDULED"
           ? {
               activeModal: {
                 kind: "move",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.trainingSession,
               },
             }
           : state,
       ),
-    openSkipActivity: () =>
+    openSkipTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {
               activeModal: {
                 kind: "skip",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.trainingSession,
                 returnTo: "details",
               },
             }
           : state,
       ),
-    openSkipActivityFromReview: (activity) =>
-      set({ activeModal: { kind: "skip", activity, returnTo: "review" } }),
-    returnToActivityDetails: () =>
+    openSkipTrainingSessionFromReview: (trainingSession) =>
+      set({
+        activeModal: {
+          kind: "skip",
+          trainingSession,
+          returnTo: "review",
+        },
+      }),
+    returnToTrainingSessionDetails: () =>
       set((state) =>
         state.activeModal?.kind === "edit" ||
         state.activeModal?.kind === "move" ||
@@ -131,12 +154,12 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
           ? {
               activeModal: {
                 kind: "details",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.trainingSession,
               },
             }
           : state,
       ),
-    returnFromActivityTransition: () =>
+    returnFromTrainingSessionTransition: () =>
       set((state) =>
         state.activeModal?.kind === "complete" ||
         state.activeModal?.kind === "skip"
@@ -145,12 +168,12 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             : {
                 activeModal: {
                   kind: "details",
-                  activity: state.activeModal.activity,
+                  trainingSession: state.activeModal.trainingSession,
                 },
               }
           : state,
       ),
-    finishActivityTransition: () =>
+    finishTrainingSessionTransition: () =>
       set((state) =>
         state.activeModal?.kind === "complete" ||
         state.activeModal?.kind === "skip"
@@ -159,7 +182,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             : { activeModal: null }
           : state,
       ),
-    openReviewActivities: () => set({ activeModal: { kind: "review" } }),
+    openReviewTrainingSessions: () => set({ activeModal: { kind: "review" } }),
   }));
 }
 

@@ -7,9 +7,9 @@ import {
   trainingSessionsQuerySchema,
 } from "./training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 
 const baseSession = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -27,7 +27,9 @@ const baseSession = {
 
 test("trainingSessionSchema validates run read models", () => {
   expect(
-    trainingSessionSchema.parse(createRunActivity({ title: "Easy run" })),
+    trainingSessionSchema.parse(
+      createRunTrainingSession({ title: "Easy run" }),
+    ),
   ).toEqual({
     ...baseSession,
     activityType: "RUN",
@@ -58,7 +60,7 @@ test.each([undefined, null, "invalid"])(
 test("trainingSessionSchema validates strength read models", () => {
   expect(
     trainingSessionSchema.parse(
-      createStrengthActivity({
+      createStrengthTrainingSession({
         id: "22222222-2222-4222-8222-222222222222",
         status: "COMPLETED",
         title: "Strength",
@@ -80,7 +82,7 @@ test("trainingSessionSchema validates strength read models", () => {
 test("trainingSessionSchema validates completed runs with required actuals", () => {
   expect(() =>
     trainingSessionSchema.parse(
-      createRunActivity({
+      createRunTrainingSession({
         title: "Easy run",
         status: "COMPLETED",
         actualDistanceMetres: 8050,
@@ -312,7 +314,7 @@ test("creation applies null defaults while editing requires explicit nullable fi
 });
 
 test("session response text preserves surrounding whitespace", () => {
-  const session = createRunActivity({
+  const session = createRunTrainingSession({
     title: " Easy run ",
     description: " Details ",
   });

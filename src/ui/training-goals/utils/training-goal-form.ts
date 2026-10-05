@@ -3,15 +3,12 @@ import {
   createTrainingGoalRequestSchema,
   trainingGoalTypeSchema,
 } from "@/domain/training-goals";
-import {
-  RunningMetrics,
-  type RunningMetricUnit,
-} from "@/ui/running-metrics/running-metrics";
+import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
 import {
   defaultDurationFields,
   durationFieldsSchema,
   durationFieldsToSeconds,
-} from "@/ui/training-sessions/duration-fields";
+} from "@/ui/training-sessions/training-session-duration";
 
 export function createTrainingGoalFormSchema(unit: RunningMetricUnit) {
   return durationFieldsSchema

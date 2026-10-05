@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import type { User } from "@/domain/user-types";
-import { Button } from "@/ui/components/button";
-import { FormField } from "@/ui/components/form-field";
+import { Button } from "@/ui/shared/button/button";
+import { FormField } from "@/ui/shared/form-field/form-field";
 import { updateCurrentUser } from "@/ui/users/user-api-client";
 
 type SettingsFormValues = {

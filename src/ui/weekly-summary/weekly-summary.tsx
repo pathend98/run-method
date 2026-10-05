@@ -7,7 +7,7 @@ import type {
 import {
   formatCompactDuration,
   formatDistance,
-} from "@/ui/training-sessions/training-session-metric-formatters";
+} from "@/ui/training-sessions/formatters";
 import { SummaryMetric } from "./components/summary-metric";
 import { getWeeklySummary } from "./services/weekly-summary-service";
 import {
@@ -17,38 +17,38 @@ import {
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type WeeklySummaryProps = {
-  activities: TrainingSession[];
+  trainingSessions: TrainingSession[];
   className?: string;
   weekRange: TrainingSessionDateRange;
 };
 
 export function WeeklySummary({
-  activities,
+  trainingSessions,
   className,
   weekRange,
 }: WeeklySummaryProps) {
   const measurementUnit = useDistanceDisplayUnit();
   const summary = getWeeklySummary(
-    activities,
+    trainingSessions,
     weekRange,
     format(new Date(), "yyyy-MM-dd"),
   );
-  const activityStatus = summary.isFutureWeek
-    ? `${summary.activities.scheduled} scheduled`
+  const trainingSessionStatus = summary.isFutureWeek
+    ? `${summary.trainingSessions.scheduled} scheduled`
     : [
-        ...(summary.activities.skipped > 0
-          ? [`${summary.activities.skipped} skipped`]
+        ...(summary.trainingSessions.skipped > 0
+          ? [`${summary.trainingSessions.skipped} skipped`]
           : []),
-        ...(summary.activities.due > 0
-          ? [`${summary.activities.due} due`]
+        ...(summary.trainingSessions.due > 0
+          ? [`${summary.trainingSessions.due} due`]
           : []),
-        ...(summary.activities.upcoming > 0
-          ? [`${summary.activities.upcoming} upcoming`]
+        ...(summary.trainingSessions.upcoming > 0
+          ? [`${summary.trainingSessions.upcoming} upcoming`]
           : []),
       ].join(" · ");
-  const primaryActivityStatus = summary.isFutureWeek
-    ? `${summary.activities.scheduled} scheduled`
-    : `${summary.activities.completed} completed`;
+  const primaryTrainingSessionStatus = summary.isFutureWeek
+    ? `${summary.trainingSessions.scheduled} scheduled`
+    : `${summary.trainingSessions.completed} completed`;
 
   return (
     <section
@@ -102,18 +102,18 @@ export function WeeklySummary({
       />
       <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-600 uppercase">
-          Activities
+          Training sessions
         </h2>
         <div className="flex flex-wrap items-baseline gap-1 sm:block">
           <p className="text-sm font-medium text-zinc-950 sm:text-2xl sm:font-semibold">
-            {primaryActivityStatus}
+            {primaryTrainingSessionStatus}
           </p>
-          {!summary.isFutureWeek && activityStatus ? (
+          {!summary.isFutureWeek && trainingSessionStatus ? (
             <p className="text-sm text-zinc-600">
               <span aria-hidden="true" className="mr-1 sm:hidden">
                 ·
               </span>
-              {activityStatus}
+              {trainingSessionStatus}
             </p>
           ) : null}
         </div>

@@ -1,32 +1,34 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { TimeOfDaySection } from "./time-of-day-section";
-import type { TrainingActivity } from "../types/training-planner-types";
+import type { PlannerTrainingSession } from "../types/training-planner-types";
 
-const baseActivity = {
-  ...createRunActivity({
-    id: "activity",
+const baseTrainingSession = {
+  ...createRunTrainingSession({
+    id: "training-session",
     description: "Controlled effort",
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
   }),
   day: "Monday",
-} satisfies TrainingActivity;
+} satisfies PlannerTrainingSession;
 
-function activity(override: Partial<TrainingActivity> = {}): TrainingActivity {
-  return { ...baseActivity, ...override } as TrainingActivity;
+function trainingSession(
+  override: Partial<PlannerTrainingSession> = {},
+): PlannerTrainingSession {
+  return { ...baseTrainingSession, ...override } as PlannerTrainingSession;
 }
 
-test("renders a labelled time section with activity cards", () => {
+test("renders a labelled time section with training session cards", () => {
   render(
     <TimeOfDaySection
-      activities={[
-        activity({ id: "tempo", title: "Tempo run" }),
-        activity({ id: "strides", title: "Strides" }),
+      trainingSessions={[
+        trainingSession({ id: "tempo", title: "Tempo run" }),
+        trainingSession({ id: "strides", title: "Strides" }),
       ]}
       day="Monday"
       label="Any time"
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
     />,
   );
 
@@ -50,16 +52,19 @@ test("renders a labelled time section with activity cards", () => {
   ).toBeDefined();
 });
 
-test("passes the selected activity to the select handler", () => {
-  const onSelectActivity = vi.fn();
-  const selectedActivity = activity({ id: "tempo", title: "Tempo run" });
+test("passes the selected training session to the select handler", () => {
+  const onSelectTrainingSession = vi.fn();
+  const selectedTrainingSession = trainingSession({
+    id: "tempo",
+    title: "Tempo run",
+  });
 
   render(
     <TimeOfDaySection
-      activities={[selectedActivity]}
+      trainingSessions={[selectedTrainingSession]}
       day="Monday"
       label="AM"
-      onSelectActivity={onSelectActivity}
+      onSelectTrainingSession={onSelectTrainingSession}
     />,
   );
 
@@ -67,5 +72,5 @@ test("passes the selected activity to the select handler", () => {
     screen.getByRole("button", { name: "View Tempo run details" }),
   );
 
-  expect(onSelectActivity).toHaveBeenCalledWith(selectedActivity);
+  expect(onSelectTrainingSession).toHaveBeenCalledWith(selectedTrainingSession);
 });

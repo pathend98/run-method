@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import type { CreateTrainingGoalRequest } from "@/domain/training-goals";
-import type { RunningMetricUnit } from "@/ui/running-metrics/running-metrics";
-import { Button } from "@/ui/components/button";
-import { FormField } from "@/ui/components/form-field";
-import { DurationFormInput } from "@/ui/components/duration-form-input";
+import type { RunningMetricUnit } from "@/ui/runs/run-metrics";
+import { Button } from "@/ui/shared/button/button";
+import { FormField } from "@/ui/shared/form-field/form-field";
+import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form-input";
 import {
   createTrainingGoalFormSchema,
   defaultTrainingGoalFormValues,

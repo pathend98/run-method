@@ -11,12 +11,12 @@ export type Weekday =
   | "Saturday"
   | "Sunday";
 
-export type TrainingActivity = TrainingSession & {
+export type PlannerTrainingSession = TrainingSession & {
   day: Weekday;
 };
 
 export type TrainingDay = {
   day: Weekday;
   date?: string;
-  activities: TrainingActivity[];
+  trainingSessions: PlannerTrainingSession[];
 };

@@ -1,4 +1,4 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import {
   fireEvent,
   render as testingRender,
@@ -82,7 +82,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([
-        createRunActivity({
+        createRunTrainingSession({
           title: "Easy run",
           date: getCurrentWeekRange().from,
         }),
@@ -108,8 +108,8 @@ test("TrainingPlanner renders loaded planner data", async () => {
   expect(screen.getByRole("dialog", { name: "Move Easy run" })).toBeDefined();
 });
 
-test("TrainingPlanner opens the activity review modal from the attention panel", async () => {
-  const pastSession = createRunActivity({
+test("TrainingPlanner opens the training session review modal from the attention panel", async () => {
+  const pastSession = createRunTrainingSession({
     title: "Easy run",
     date: format(subDays(new Date(), 1), "yyyy-MM-dd"),
   });
@@ -127,10 +127,12 @@ test("TrainingPlanner opens the activity review modal from the attention panel",
   );
 
   fireEvent.click(
-    await screen.findByRole("button", { name: "Review activities" }),
+    await screen.findByRole("button", { name: "Review training sessions" }),
   );
   expect(
-    await screen.findByRole("dialog", { name: "Activities needing attention" }),
+    await screen.findByRole("dialog", {
+      name: "Training sessions needing attention",
+    }),
   ).toBeDefined();
 });
 
@@ -155,8 +157,8 @@ test("TrainingPlanner renders error state", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 });
 
-test("TrainingPlanner skips and completes activities through the API", async () => {
-  const session = createRunActivity({
+test("TrainingPlanner skips and completes training sessions through the API", async () => {
+  const session = createRunTrainingSession({
     title: "Easy run",
     date: getCurrentWeekRange().from,
     targetDistanceMetres: 5000,
@@ -205,12 +207,14 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Skip" }));
   fireEvent.change(
-    screen.getByLabelText("Why are you skipping this activity?"),
+    screen.getByLabelText("Why are you skipping this training session?"),
     {
       target: { value: "Recovery" },
     },
   );
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Skip training session" }),
+  );
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("/skip"),
@@ -239,7 +243,9 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "5" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Complete activity" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Complete training session" }),
+  );
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("/complete"),
@@ -248,14 +254,14 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   );
 });
 
-test("TrainingPlanner creates an activity and refreshes its week", async () => {
+test("TrainingPlanner creates a training session and refreshes its week", async () => {
   const range = getCurrentWeekRange();
   const fetchMock = vi.fn().mockImplementation((_url, options) => {
     if (options?.method === "POST") {
       return Promise.resolve({
         ok: true,
         json: vi.fn().mockResolvedValue(
-          createRunActivity({
+          createRunTrainingSession({
             title: "Easy run",
             date: range.from,
             timeOfDay: null,
@@ -282,7 +288,9 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
     name: "Weekly training planner",
   });
   fireEvent.click(
-    within(planner).getByRole("button", { name: "Add activity to Monday" }),
+    within(planner).getByRole("button", {
+      name: "Add training session to Monday",
+    }),
   );
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Easy run" },
@@ -295,7 +303,7 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
   });
   fireEvent.click(
     screen
-      .getByRole("dialog", { name: "Add activity" })
+      .getByRole("dialog", { name: "Add training session" })
       .querySelector('button[type="submit"]') as HTMLButtonElement,
   );
 
@@ -311,16 +319,16 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
   );
 });
 
-test("TrainingPlanner edits an activity and refreshes its week", async () => {
+test("TrainingPlanner edits a training session and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = createRunActivity({
+  const trainingSession = createRunTrainingSession({
     title: "Easy run",
     date: range.from,
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
   });
-  const updatedActivity = {
-    ...activity,
+  const updatedTrainingSession = {
+    ...trainingSession,
     title: "Updated easy run",
     updatedAt: "2026-08-31T10:00:00.000Z",
   };
@@ -330,14 +338,16 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
       hasBeenEdited = true;
       return Promise.resolve({
         ok: true,
-        json: vi.fn().mockResolvedValue(updatedActivity),
+        json: vi.fn().mockResolvedValue(updatedTrainingSession),
       });
     }
     return Promise.resolve({
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue([hasBeenEdited ? updatedActivity : activity]),
+        .mockResolvedValue([
+          hasBeenEdited ? updatedTrainingSession : trainingSession,
+        ]),
     });
   });
   stubFetch(fetchMock);
@@ -366,7 +376,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
     ).toHaveLength(1),
   );
   expect(fetchMock).toHaveBeenCalledWith(
-    `/api/v1/training-sessions/${activity.id}`,
+    `/api/v1/training-sessions/${trainingSession.id}`,
     expect.objectContaining({ method: "PATCH" }),
   );
   await waitFor(() =>
@@ -382,9 +392,9 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
-test("TrainingPlanner deletes an activity and refreshes its week", async () => {
+test("TrainingPlanner deletes a training session and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = createRunActivity({
+  const trainingSession = createRunTrainingSession({
     title: "Easy run",
     date: range.from,
     targetDistanceMetres: 5000,
@@ -398,7 +408,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     }
     return Promise.resolve({
       ok: true,
-      json: vi.fn().mockResolvedValue(deleted ? [] : [activity]),
+      json: vi.fn().mockResolvedValue(deleted ? [] : [trainingSession]),
     });
   });
   stubFetch(fetchMock);
@@ -427,7 +437,7 @@ test("TrainingPlanner deletes an activity and refreshes its week", async () => {
     ).toHaveLength(1),
   );
   expect(fetchMock).toHaveBeenCalledWith(
-    `/api/v1/training-sessions/${activity.id}`,
+    `/api/v1/training-sessions/${trainingSession.id}`,
     { method: "DELETE" },
   );
   await waitFor(() =>

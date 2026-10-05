@@ -1,6 +1,6 @@
 import { isValidElement } from "react";
 import RootLayout, { metadata } from "./layout";
-import { Navbar } from "@/ui/navbar/navbar";
+import { Navbar } from "@/ui/shell/navbar/navbar";
 import { QueryProvider } from "./query-provider";
 
 test("exports the application metadata", () => {

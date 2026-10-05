@@ -1,7 +1,7 @@
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import type {
   EditTrainingSessionRequest,
   RunTrainingSession,
@@ -10,13 +10,13 @@ import type {
 import { DrizzleTrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsTransformer } from "./training-sessions-transformer";
 
-const run: RunTrainingSession = createRunActivity({
+const run: RunTrainingSession = createRunTrainingSession({
   title: "Easy run",
   updatedAt: "2026-08-01T10:30:00.000Z",
 });
 
 const strength: Extract<TrainingSession, { activityType: "STRENGTH" }> =
-  createStrengthActivity({
+  createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     status: "COMPLETED",
     timeOfDay: "PM",

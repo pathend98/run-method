@@ -1,58 +1,60 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 
 import { MobileWeekView } from "./mobile-week-view";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
-const baseActivity = {
-  ...createRunActivity({
+const baseTrainingSession = {
+  ...createRunTrainingSession({
     date: "2026-08-19",
-    id: "activity",
+    id: "training-session",
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1800,
     title: "Easy run",
   }),
   day: "Wednesday",
-} satisfies TrainingActivity;
+} satisfies PlannerTrainingSession;
 
-function activity(overrides: Partial<TrainingActivity> = {}): TrainingActivity {
-  return { ...baseActivity, ...overrides } as TrainingActivity;
+function trainingSession(
+  overrides: Partial<PlannerTrainingSession> = {},
+): PlannerTrainingSession {
+  return { ...baseTrainingSession, ...overrides } as PlannerTrainingSession;
 }
 
 function createWeek(): TrainingDay[] {
   return [
-    { day: "Monday", date: "2026-08-17", activities: [] },
-    { day: "Tuesday", date: "2026-08-18", activities: [] },
+    { day: "Monday", date: "2026-08-17", trainingSessions: [] },
+    { day: "Tuesday", date: "2026-08-18", trainingSessions: [] },
     {
       day: "Wednesday",
       date: "2026-08-19",
-      activities: [
-        activity({ id: "morning", title: "Easy run" }),
+      trainingSessions: [
+        trainingSession({ id: "morning", title: "Easy run" }),
         {
-          ...createStrengthActivity({
+          ...createStrengthTrainingSession({
             id: "evening",
             date: "2026-08-19",
             timeOfDay: "PM",
           }),
           day: "Wednesday",
         },
-        activity({
+        trainingSession({
           id: "anytime",
           timeOfDay: null,
           title: "Recovery run",
         }),
       ],
     },
-    { day: "Thursday", date: "2026-08-20", activities: [] },
-    { day: "Friday", date: "2026-08-21", activities: [] },
-    { day: "Saturday", date: "2026-08-22", activities: [] },
-    { day: "Sunday", date: "2026-08-23", activities: [] },
+    { day: "Thursday", date: "2026-08-20", trainingSessions: [] },
+    { day: "Friday", date: "2026-08-21", trainingSessions: [] },
+    { day: "Saturday", date: "2026-08-22", trainingSessions: [] },
+    { day: "Sunday", date: "2026-08-23", trainingSessions: [] },
   ];
 }
 
@@ -64,7 +66,9 @@ test("defaults to today and renders its full-width agenda in time order", () => 
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-08-19T12:00:00"));
 
-  render(<MobileWeekView onSelectActivity={vi.fn()} week={createWeek()} />);
+  render(
+    <MobileWeekView onSelectTrainingSession={vi.fn()} week={createWeek()} />,
+  );
 
   const picker = screen.getByRole("tablist", { name: "Choose training day" });
   const tabs = within(picker).getAllByRole("tab");
@@ -101,7 +105,9 @@ test("defaults to today and renders its full-width agenda in time order", () => 
 test("falls back to Monday and changes the selected agenda", () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-08-30T12:00:00"));
-  render(<MobileWeekView onSelectActivity={vi.fn()} week={createWeek()} />);
+  render(
+    <MobileWeekView onSelectTrainingSession={vi.fn()} week={createWeek()} />,
+  );
 
   expect(
     screen
@@ -121,16 +127,16 @@ test("falls back to Monday and changes the selected agenda", () => {
   expect(screen.queryByText("Rest day")).toBeNull();
 });
 
-test("forwards activity details and the selected day add action", () => {
+test("forwards training session details and the selected day add action", () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-08-19T12:00:00"));
-  const onAddActivity = vi.fn();
-  const onSelectActivity = vi.fn();
+  const onAddTrainingSession = vi.fn();
+  const onSelectTrainingSession = vi.fn();
   const week = createWeek();
   render(
     <MobileWeekView
-      onAddActivity={onAddActivity}
-      onSelectActivity={onSelectActivity}
+      onAddTrainingSession={onAddTrainingSession}
+      onSelectTrainingSession={onSelectTrainingSession}
       week={week}
     />,
   );
@@ -139,19 +145,21 @@ test("forwards activity details and the selected day add action", () => {
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Add activity to Wednesday" }),
+    screen.getByRole("button", { name: "Add training session to Wednesday" }),
   );
 
-  expect(onSelectActivity).toHaveBeenCalledWith(week[2].activities[0]);
-  expect(onAddActivity).toHaveBeenCalledWith(week[2]);
-  expect(screen.getByText("+ Add activity")).toBeDefined();
+  expect(onSelectTrainingSession).toHaveBeenCalledWith(
+    week[2].trainingSessions[0],
+  );
+  expect(onAddTrainingSession).toHaveBeenCalledWith(week[2]);
+  expect(screen.getByText("+ Add training session")).toBeDefined();
 });
 
 test("supports an omitted add handler and a day without a date", () => {
   render(
     <MobileWeekView
-      onSelectActivity={vi.fn()}
-      week={[{ day: "Monday", activities: [] }]}
+      onSelectTrainingSession={vi.fn()}
+      week={[{ day: "Monday", trainingSessions: [] }]}
     />,
   );
 
@@ -159,14 +167,14 @@ test("supports an omitted add handler and a day without a date", () => {
   expect(tab.textContent).toBe("Mon");
   expect(() =>
     fireEvent.click(
-      screen.getByRole("button", { name: "Add activity to Monday" }),
+      screen.getByRole("button", { name: "Add training session to Monday" }),
     ),
   ).not.toThrow();
 });
 
 test("renders nothing for an empty week", () => {
   const { container } = render(
-    <MobileWeekView onSelectActivity={vi.fn()} week={[]} />,
+    <MobileWeekView onSelectTrainingSession={vi.fn()} week={[]} />,
   );
 
   expect(container.firstChild).toBeNull();
@@ -174,16 +182,16 @@ test("renders nothing for an empty week", () => {
 
 test("falls back to the new week when its selected date is no longer present", () => {
   const { rerender } = render(
-    <MobileWeekView onSelectActivity={vi.fn()} week={createWeek()} />,
+    <MobileWeekView onSelectTrainingSession={vi.fn()} week={createWeek()} />,
   );
   fireEvent.click(screen.getByRole("tab", { name: "Tuesday 18 August" }));
 
   rerender(
     <MobileWeekView
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
       week={[
-        { day: "Monday", date: "2026-08-24", activities: [] },
-        { day: "Tuesday", date: "2026-08-25", activities: [] },
+        { day: "Monday", date: "2026-08-24", trainingSessions: [] },
+        { day: "Tuesday", date: "2026-08-25", trainingSessions: [] },
       ]}
     />,
   );

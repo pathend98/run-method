@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
 import { TrainingPlanner } from "./training-planner";
 import { getCurrentWeekRange } from "./services/training-planner-service";
@@ -88,7 +88,7 @@ test("retries a failed current-user lookup", async () => {
 });
 
 test("uses the loaded user's miles preference for planner distances", async () => {
-  const activity = createRunActivity({
+  const trainingSession = createRunTrainingSession({
     date: getCurrentWeekRange().from,
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
@@ -103,7 +103,7 @@ test("uses the loaded user's miles preference for planner distances", async () =
           .mockResolvedValue(
             url === "/api/v1/me"
               ? createUser({ id: athleteId, measurementUnit: "MILES" })
-              : [activity],
+              : [trainingSession],
           ),
       }),
     ),

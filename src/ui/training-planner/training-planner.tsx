@@ -3,20 +3,20 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+import { fetchTrainingSessions } from "@/ui/training-sessions/api/training-sessions-api-client";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
-import { ActivityDetailsModal } from "@/ui/activity-details/activity-details-modal";
-import { AddActivityModal } from "@/ui/add-activity/add-activity-modal";
-import { EditActivityModal } from "@/ui/edit-activity/edit-activity-modal";
-import { CompleteActivityModal } from "@/ui/complete-activity/complete-activity-modal";
-import { SkipActivityModal } from "@/ui/skip-activity/skip-activity-modal";
-import { DeleteActivityModal } from "@/ui/delete-activity/delete-activity-modal";
-import { ReviewActivitiesModal } from "@/ui/review-activities/review-activities-modal";
-import { MoveActivityModal } from "@/ui/move-activity/move-activity-modal";
+import { TrainingSessionDetailsModal } from "@/ui/training-sessions/training-session-details/training-session-details-modal";
+import { AddTrainingSessionModal } from "@/ui/training-sessions/add-training-session/add-training-session-modal";
+import { EditTrainingSessionModal } from "@/ui/training-sessions/edit-training-session/edit-training-session-modal";
+import { CompleteTrainingSessionModal } from "@/ui/training-sessions/complete-training-session/complete-training-session-modal";
+import { SkipTrainingSessionModal } from "@/ui/training-sessions/skip-training-session/skip-training-session-modal";
+import { DeleteTrainingSessionModal } from "@/ui/training-sessions/delete-training-session/delete-training-session-modal";
+import { ReviewTrainingSessionsModal } from "@/ui/training-sessions/review-training-sessions/review-training-sessions-modal";
+import { MoveTrainingSessionModal } from "@/ui/training-sessions/move-training-session/move-training-session-modal";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
@@ -24,17 +24,17 @@ import {
   resolveWeekRange,
 } from "./services/training-planner-service";
 import { useTrainingPlannerStore } from "./training-planner-store";
-import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/create-move-training-session-request";
-import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
-import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
-import type { TrainingActivity } from "./types/training-planner-types";
+import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
+import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations/training-session-mutations";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
+import type { PlannerTrainingSession } from "./types/training-planner-types";
 
 export function TrainingPlanner() {
-  const openAddActivity = useTrainingPlannerStore(
-    (state) => state.openAddActivity,
+  const openAddTrainingSession = useTrainingPlannerStore(
+    (state) => state.openAddTrainingSession,
   );
-  const openActivityDetails = useTrainingPlannerStore(
-    (state) => state.openActivityDetails,
+  const openTrainingSessionDetails = useTrainingPlannerStore(
+    (state) => state.openTrainingSessionDetails,
   );
   const activeModalKind = useTrainingPlannerStore(
     (state) => state.activeModal?.kind,
@@ -75,13 +75,13 @@ export function TrainingPlanner() {
     });
   }
 
-  async function moveActivity(
-    activity: TrainingActivity,
+  async function moveTrainingSession(
+    trainingSession: PlannerTrainingSession,
     destination: TrainingSessionMoveDestination,
   ) {
     await editMutation.mutateAsync({
-      id: activity.id,
-      request: createMoveTrainingSessionRequest(activity, destination),
+      id: trainingSession.id,
+      request: createMoveTrainingSessionRequest(trainingSession, destination),
     });
   }
   if (currentUser.isError || query.isError) {
@@ -115,27 +115,27 @@ export function TrainingPlanner() {
       <TrainingPlannerView
         isCurrentWeek={weekRange.from === currentWeekRange.from}
         onCurrentWeek={() => navigateToWeek(null)}
-        onMoveActivity={moveActivity}
+        onMoveTrainingSession={moveTrainingSession}
         onNextWeek={() => navigateToWeek(getAdjacentWeekStart(weekRange, 1))}
         onPreviousWeek={() =>
           navigateToWeek(getAdjacentWeekStart(weekRange, -1))
         }
-        onAddActivity={openAddActivity}
-        onSelectActivity={openActivityDetails}
+        onAddTrainingSession={openAddTrainingSession}
+        onSelectTrainingSession={openTrainingSessionDetails}
         sessions={query.data}
         week={week}
         weekRange={weekRange}
       />
-      {activeModalKind === "details" ? <ActivityDetailsModal /> : null}
-      {activeModalKind === "edit" ? <EditActivityModal /> : null}
-      {activeModalKind === "move" ? <MoveActivityModal /> : null}
-      {activeModalKind === "complete" ? <CompleteActivityModal /> : null}
-      {activeModalKind === "skip" ? <SkipActivityModal /> : null}
-      {activeModalKind === "delete" ? <DeleteActivityModal /> : null}
+      {activeModalKind === "details" ? <TrainingSessionDetailsModal /> : null}
+      {activeModalKind === "edit" ? <EditTrainingSessionModal /> : null}
+      {activeModalKind === "move" ? <MoveTrainingSessionModal /> : null}
+      {activeModalKind === "complete" ? <CompleteTrainingSessionModal /> : null}
+      {activeModalKind === "skip" ? <SkipTrainingSessionModal /> : null}
+      {activeModalKind === "delete" ? <DeleteTrainingSessionModal /> : null}
       {activeModalKind === "add" ? (
-        <AddActivityModal athleteId={currentUser.data.id} />
+        <AddTrainingSessionModal athleteId={currentUser.data.id} />
       ) : null}
-      {activeModalKind === "review" ? <ReviewActivitiesModal /> : null}
+      {activeModalKind === "review" ? <ReviewTrainingSessionsModal /> : null}
     </DistanceDisplayProvider>
   );
 }

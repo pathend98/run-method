@@ -1,10 +1,10 @@
 import { TimeOfDaySection } from "./time-of-day-section";
 import { TimeOfDayDropZone } from "./time-of-day-drop-zone";
-import { Button } from "@/ui/components/button";
+import { Button } from "@/ui/shared/button/button";
 import { formatDayDate } from "../services/training-planner-service";
 import type {
   TimeOfDay,
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
@@ -14,8 +14,8 @@ type DayColumnProps = {
   isDragAndDropEnabled?: boolean;
   isDragActive?: boolean;
   isToday?: boolean;
-  onAddActivity?: (day: TrainingDay) => void;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onAddTrainingSession?: (day: TrainingDay) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
 };
 
 const timeSections: { label: string; value: TimeOfDay }[] = [
@@ -30,17 +30,17 @@ export function DayColumn({
   isDragAndDropEnabled = false,
   isDragActive = false,
   isToday = false,
-  onAddActivity,
-  onSelectActivity,
+  onAddTrainingSession,
+  onSelectTrainingSession,
 }: DayColumnProps) {
   const sections = timeSections.map((section) => ({
     ...section,
-    activities: day.activities.filter(
-      (activity) => activity.timeOfDay === section.value,
+    trainingSessions: day.trainingSessions.filter(
+      (trainingSession) => trainingSession.timeOfDay === section.value,
     ),
   }));
   const populatedTimeSections = sections.filter(
-    (section) => section.activities.length > 0,
+    (section) => section.trainingSessions.length > 0,
   );
 
   return (
@@ -80,12 +80,12 @@ export function DayColumn({
           sections.map((section) => (
             <TimeOfDayDropZone
               key={section.label}
-              activities={section.activities}
+              trainingSessions={section.trainingSessions}
               day={day}
               hasLeadingDay={hasLeadingDay}
               isDragActive={isDragActive}
               label={section.label}
-              onSelectActivity={onSelectActivity}
+              onSelectTrainingSession={onSelectTrainingSession}
               timeOfDay={section.value}
             />
           ))
@@ -93,19 +93,19 @@ export function DayColumn({
           populatedTimeSections.map((section) => (
             <TimeOfDaySection
               key={section.label}
-              activities={section.activities}
+              trainingSessions={section.trainingSessions}
               day={day.day}
               label={section.label}
-              onSelectActivity={onSelectActivity}
+              onSelectTrainingSession={onSelectTrainingSession}
             />
           ))
         )}
       </div>
       <footer className="pt-4">
         <Button
-          aria-label={`Add activity to ${day.day}`}
+          aria-label={`Add training session to ${day.day}`}
           className="px-1 py-1 text-xs hover:text-teal-700 hover:underline [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
-          onClick={() => onAddActivity?.(day)}
+          onClick={() => onAddTrainingSession?.(day)}
           type="button"
           variant="tertiary"
         >

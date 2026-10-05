@@ -5,76 +5,80 @@ import { PointerActivationConstraints, type DragEndEvent } from "@dnd-kit/dom";
 import { useState } from "react";
 import { DayColumn } from "./day-column";
 import { MobileWeekView } from "./mobile-week-view";
-import { TrainingActivityCard } from "./training-activity-card";
+import { TrainingSessionCard } from "./training-session-card";
 import { format } from "date-fns";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
-import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 
 type WeekGridProps = {
-  onAddActivity?: (day: TrainingDay) => void;
-  onMoveActivity?: (
-    activity: TrainingActivity,
+  onAddTrainingSession?: (day: TrainingDay) => void;
+  onMoveTrainingSession?: (
+    trainingSession: PlannerTrainingSession,
     destination: TrainingSessionMoveDestination,
   ) => Promise<void>;
-  onSelectActivity: (activity: TrainingActivity) => void;
+  onSelectTrainingSession: (trainingSession: PlannerTrainingSession) => void;
   week: TrainingDay[];
 };
 
 export function WeekGrid({
-  onAddActivity,
-  onMoveActivity,
-  onSelectActivity,
+  onAddTrainingSession,
+  onMoveTrainingSession,
+  onSelectTrainingSession,
   week,
 }: WeekGridProps) {
   const today = format(new Date(), "yyyy-MM-dd");
-  const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
-  const activeActivity = week
-    .flatMap((day) => day.activities)
-    .find((activity) => activity.id === activeActivityId);
-  const isDragActive = activeActivity !== undefined;
+  const [activeTrainingSessionId, setActiveTrainingSessionId] = useState<
+    string | null
+  >(null);
+  const activeTrainingSession = week
+    .flatMap((day) => day.trainingSessions)
+    .find((trainingSession) => trainingSession.id === activeTrainingSessionId);
+  const isDragActive = activeTrainingSession !== undefined;
 
-  function clearActiveActivity() {
-    setActiveActivityId(null);
+  function clearActiveTrainingSession() {
+    setActiveTrainingSessionId(null);
   }
 
   function handleDragEnd({ canceled, operation }: DragEndEvent) {
-    clearActiveActivity();
+    clearActiveTrainingSession();
 
-    const activity = operation.source?.data.activity as
-      TrainingActivity | undefined;
+    const trainingSession = operation.source?.data.trainingSession as
+      PlannerTrainingSession | undefined;
     const destination = operation.target?.data as
       TrainingSessionMoveDestination | undefined;
 
     if (
       canceled ||
-      !activity ||
+      !trainingSession ||
       !destination ||
-      activity.status !== "SCHEDULED" ||
-      (activity.date === destination.date &&
-        activity.timeOfDay === destination.timeOfDay) ||
-      !onMoveActivity
+      trainingSession.status !== "SCHEDULED" ||
+      (trainingSession.date === destination.date &&
+        trainingSession.timeOfDay === destination.timeOfDay) ||
+      !onMoveTrainingSession
     ) {
       return;
     }
 
-    void onMoveActivity(activity, destination).catch(() => undefined);
+    void onMoveTrainingSession(trainingSession, destination).catch(
+      () => undefined,
+    );
   }
 
   return (
     <>
       <MobileWeekView
         key={week.map((day) => day.date ?? day.day).join("|")}
-        onAddActivity={onAddActivity}
-        onSelectActivity={onSelectActivity}
+        onAddTrainingSession={onAddTrainingSession}
+        onSelectTrainingSession={onSelectTrainingSession}
         week={week}
       />
       <DragDropProvider
         onDragEnd={handleDragEnd}
         onDragStart={({ operation }) => {
-          setActiveActivityId(String(operation.source!.id));
+          setActiveTrainingSessionId(String(operation.source!.id));
         }}
         sensors={[
           PointerSensor.configure({
@@ -103,16 +107,16 @@ export function WeekGrid({
                 isDragActive={isDragActive}
                 isDragAndDropEnabled
                 isToday={day.date === today}
-                onAddActivity={onAddActivity}
-                onSelectActivity={onSelectActivity}
+                onAddTrainingSession={onAddTrainingSession}
+                onSelectTrainingSession={onSelectTrainingSession}
               />
             ))}
           </div>
         </div>
         <DragOverlay dropAnimation={null}>
-          {activeActivity ? (
+          {activeTrainingSession ? (
             <div aria-hidden="true" className="pointer-events-none w-64" inert>
-              <TrainingActivityCard activity={activeActivity} />
+              <TrainingSessionCard trainingSession={activeTrainingSession} />
             </div>
           ) : null}
         </DragOverlay>

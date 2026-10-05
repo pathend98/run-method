@@ -1,11 +1,11 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type {
   RunTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
-import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
-import type { TrainingActivity } from "./types/training-planner-types";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
+import type { PlannerTrainingSession } from "./types/training-planner-types";
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
 import { TrainingPlannerStoreProvider } from "./training-planner-store";
@@ -24,32 +24,32 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("./components/training-planner-view", () => ({
   TrainingPlannerView: ({
-    onMoveActivity,
+    onMoveTrainingSession,
     sessions,
   }: {
-    onMoveActivity: (
-      activity: TrainingActivity,
+    onMoveTrainingSession: (
+      trainingSession: PlannerTrainingSession,
       destination: TrainingSessionMoveDestination,
     ) => Promise<void>;
     sessions: TrainingSession[];
   }) => (
     <button
       onClick={() =>
-        void onMoveActivity(
-          { ...sessions[0], day: "Monday" } as TrainingActivity,
+        void onMoveTrainingSession(
+          { ...sessions[0], day: "Monday" } as PlannerTrainingSession,
           { date: "2026-09-08", timeOfDay: "PM" },
         )
       }
       type="button"
     >
-      Move activity
+      Move training session
     </button>
   ),
 }));
 
 import { TrainingPlanner } from "./training-planner";
 
-const activity = createRunActivity({
+const trainingSession = createRunTrainingSession({
   title: "Easy run",
   date: "2026-09-07",
   targetDistanceMetres: 5000,
@@ -72,7 +72,7 @@ test("persists a drag move through the existing edit mutation", async () => {
       return Promise.resolve({
         ok: true,
         json: vi.fn().mockResolvedValue({
-          ...activity,
+          ...trainingSession,
           date: "2026-09-08",
           timeOfDay: "PM",
         }),
@@ -81,7 +81,7 @@ test("persists a drag move through the existing edit mutation", async () => {
 
     return Promise.resolve({
       ok: true,
-      json: vi.fn().mockResolvedValue([activity]),
+      json: vi.fn().mockResolvedValue([trainingSession]),
     });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -93,8 +93,10 @@ test("persists a drag move through the existing edit mutation", async () => {
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
-  await screen.findByRole("button", { name: "Move activity" });
-  fireEvent.click(screen.getByRole("button", { name: "Move activity" }));
+  await screen.findByRole("button", { name: "Move training session" });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Move training session" }),
+  );
 
   await waitFor(() =>
     expect(
@@ -102,17 +104,17 @@ test("persists a drag move through the existing edit mutation", async () => {
     ).toHaveLength(1),
   );
   expect(fetchMock).toHaveBeenCalledWith(
-    `/api/v1/training-sessions/${activity.id}`,
+    `/api/v1/training-sessions/${trainingSession.id}`,
     expect.objectContaining({
       method: "PATCH",
       body: JSON.stringify({
-        title: activity.title,
+        title: trainingSession.title,
         date: "2026-09-08",
         timeOfDay: "PM",
-        description: activity.description,
+        description: trainingSession.description,
         activityType: "RUN",
-        targetDistanceMetres: activity.targetDistanceMetres,
-        targetDurationSeconds: activity.targetDurationSeconds,
+        targetDistanceMetres: trainingSession.targetDistanceMetres,
+        targetDurationSeconds: trainingSession.targetDurationSeconds,
       }),
     }),
   );

@@ -1,8 +1,8 @@
 import { TrainingSessionsTransitionConflictError } from "./training-sessions-errors";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import type {
   EditTrainingSessionRequest,
   TrainingSession,
@@ -13,7 +13,7 @@ const validator = new DefaultTrainingSessionsValidator();
 const today = new Date("2026-08-26T12:00:00");
 const timeZone = "UTC";
 
-const runSession: TrainingSession = createRunActivity({
+const runSession: TrainingSession = createRunTrainingSession({
   title: "Easy run",
   date: "2026-08-26",
   targetDistanceMetres: 5000,
@@ -236,7 +236,7 @@ test.each([
 
 test("rejects future strength session transitions", () => {
   const validator = new DefaultTrainingSessionsValidator(() => today);
-  const strength: TrainingSession = createStrengthActivity({
+  const strength: TrainingSession = createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     date: "2026-08-27",
     targetDurationSeconds: 1800,
@@ -278,7 +278,7 @@ test("allows run completion actuals", () => {
 });
 
 test("rejects distance when completing strength sessions", () => {
-  const strength: TrainingSession = createStrengthActivity({
+  const strength: TrainingSession = createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     date: "2026-08-26",
     targetDurationSeconds: 1800,
@@ -297,7 +297,7 @@ test("rejects distance when completing strength sessions", () => {
 });
 
 test("allows title and description edits on terminal strength sessions", () => {
-  const current: TrainingSession = createStrengthActivity({
+  const current: TrainingSession = createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     status: "SKIPPED",
     date: "2026-08-26",
@@ -323,7 +323,7 @@ test.each([
 ])(
   "rejects changed strength duration for %s sessions",
   (_name, status, targetDurationSeconds) => {
-    const current: TrainingSession = createStrengthActivity({
+    const current: TrainingSession = createStrengthTrainingSession({
       id: "22222222-2222-4222-8222-222222222222",
       status,
       date: "2026-08-26",

@@ -1,32 +1,32 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { DayColumn } from "./day-column";
 import type {
-  TrainingActivity,
+  PlannerTrainingSession,
   TrainingDay,
 } from "../types/training-planner-types";
 
-function runActivity(
-  override: Partial<TrainingActivity> = {},
-): TrainingActivity {
+function runTrainingSession(
+  override: Partial<PlannerTrainingSession> = {},
+): PlannerTrainingSession {
   return {
-    ...createRunActivity({ id: "activity" }),
+    ...createRunTrainingSession({ id: "training-session" }),
     day: "Monday",
     ...override,
-  } as TrainingActivity;
+  } as PlannerTrainingSession;
 }
 
-function strengthActivity(
-  override: Partial<TrainingActivity> = {},
-): TrainingActivity {
+function strengthTrainingSession(
+  override: Partial<PlannerTrainingSession> = {},
+): PlannerTrainingSession {
   return {
-    ...createStrengthActivity({ id: "strength", timeOfDay: "PM" }),
+    ...createStrengthTrainingSession({ id: "strength", timeOfDay: "PM" }),
     day: "Monday",
     ...override,
-  } as TrainingActivity;
+  } as PlannerTrainingSession;
 }
 
 test("renders populated time buckets in day order", () => {
@@ -35,17 +35,21 @@ test("renders populated time buckets in day order", () => {
       day={{
         day: "Monday",
         date: "2026-08-17",
-        activities: [
-          runActivity({ id: "am", title: "Morning run", timeOfDay: "AM" }),
-          strengthActivity({
+        trainingSessions: [
+          runTrainingSession({
+            id: "am",
+            title: "Morning run",
+            timeOfDay: "AM",
+          }),
+          strengthTrainingSession({
             id: "any",
             title: "Mobility",
             timeOfDay: null,
           }),
-          strengthActivity({ id: "pm", title: "Evening lift" }),
+          strengthTrainingSession({ id: "pm", title: "Evening lift" }),
         ],
       }}
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
     />,
   );
 
@@ -67,11 +71,11 @@ test("renders populated time buckets in day order", () => {
   );
 });
 
-test("renders an empty state for days without activities", () => {
+test("renders an empty state for days without training sessions", () => {
   render(
     <DayColumn
-      day={{ day: "Tuesday", activities: [] }}
-      onSelectActivity={vi.fn()}
+      day={{ day: "Tuesday", trainingSessions: [] }}
+      onSelectTrainingSession={vi.fn()}
     />,
   );
 
@@ -83,10 +87,10 @@ test("renders an empty state for days without activities", () => {
 test("makes drag drop zones continuous and full-width within a day column", () => {
   render(
     <DayColumn
-      day={{ day: "Monday", activities: [runActivity()] }}
+      day={{ day: "Monday", trainingSessions: [runTrainingSession()] }}
       isDragActive
       isDragAndDropEnabled
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
     />,
   );
 
@@ -99,32 +103,34 @@ test("makes drag drop zones continuous and full-width within a day column", () =
   expect(zones?.className).toContain("pt-5");
 });
 
-test("passes the selected activity to the select handler", () => {
-  const onSelectActivity = vi.fn();
-  const selectedActivity = runActivity({ title: "Morning run" });
+test("passes the selected training session to the select handler", () => {
+  const onSelectTrainingSession = vi.fn();
+  const selectedTrainingSession = runTrainingSession({ title: "Morning run" });
   const day = {
     day: "Monday",
-    activities: [selectedActivity],
+    trainingSessions: [selectedTrainingSession],
   } satisfies TrainingDay;
 
-  render(<DayColumn day={day} onSelectActivity={onSelectActivity} />);
+  render(
+    <DayColumn day={day} onSelectTrainingSession={onSelectTrainingSession} />,
+  );
   fireEvent.click(
     screen.getByRole("button", { name: "View Morning run details" }),
   );
 
-  expect(onSelectActivity).toHaveBeenCalledWith(selectedActivity);
+  expect(onSelectTrainingSession).toHaveBeenCalledWith(selectedTrainingSession);
 });
 
-test("adds a soft today tint while retaining the standard activity card border", () => {
+test("adds a soft today tint while retaining the standard training session card border", () => {
   render(
     <DayColumn
       day={{
         day: "Monday",
         date: "2026-08-17",
-        activities: [runActivity()],
+        trainingSessions: [runTrainingSession()],
       }}
       isToday
-      onSelectActivity={vi.fn()}
+      onSelectTrainingSession={vi.fn()}
     />,
   );
 
@@ -138,46 +144,52 @@ test("adds a soft today tint while retaining the standard activity card border",
 });
 
 test("passes its day to the add handler", () => {
-  const onAddActivity = vi.fn();
-  const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
+  const onAddTrainingSession = vi.fn();
+  const day = {
+    day: "Monday" as const,
+    date: "2026-08-17",
+    trainingSessions: [],
+  };
   render(
     <DayColumn
       day={day}
-      onAddActivity={onAddActivity}
-      onSelectActivity={vi.fn()}
+      onAddTrainingSession={onAddTrainingSession}
+      onSelectTrainingSession={vi.fn()}
     />,
   );
 
-  const addActivity = screen.getByRole("button", {
-    name: "Add activity to Monday",
+  const addTrainingSession = screen.getByRole("button", {
+    name: "Add training session to Monday",
   });
-  expect(addActivity.textContent).toBe("+ Add");
-  expect(addActivity.className).toContain("[@media(hover:hover)]:opacity-0");
-  expect(addActivity.className).toContain(
+  expect(addTrainingSession.textContent).toBe("+ Add");
+  expect(addTrainingSession.className).toContain(
+    "[@media(hover:hover)]:opacity-0",
+  );
+  expect(addTrainingSession.className).toContain(
     "[@media(hover:hover)]:group-hover:opacity-100",
   );
-  expect(addActivity.className).toContain(
+  expect(addTrainingSession.className).toContain(
     "[@media(hover:hover)]:group-focus-within:opacity-100",
   );
-  expect(addActivity.className).not.toContain("lg:");
-  expect(addActivity.className).not.toContain("border");
-  expect(addActivity.className).not.toMatch(/(^|\s)bg-/);
+  expect(addTrainingSession.className).not.toContain("lg:");
+  expect(addTrainingSession.className).not.toContain("border");
+  expect(addTrainingSession.className).not.toMatch(/(^|\s)bg-/);
 
-  fireEvent.click(addActivity);
-  expect(onAddActivity).toHaveBeenCalledWith(day);
+  fireEvent.click(addTrainingSession);
+  expect(onAddTrainingSession).toHaveBeenCalledWith(day);
 });
 
 test("allows an omitted add handler", () => {
   render(
     <DayColumn
-      day={{ day: "Monday", activities: [] }}
-      onSelectActivity={vi.fn()}
+      day={{ day: "Monday", trainingSessions: [] }}
+      onSelectTrainingSession={vi.fn()}
     />,
   );
 
   expect(() =>
     fireEvent.click(
-      screen.getByRole("button", { name: "Add activity to Monday" }),
+      screen.getByRole("button", { name: "Add training session to Monday" }),
     ),
   ).not.toThrow();
 });
