@@ -28,7 +28,7 @@ function renderModal(fromReview = false) {
   if (fromReview) {
     store.getState().openSkipTrainingSessionFromReview(trainingSession);
   } else {
-    store.getState().openActivityDetails(trainingSession);
+    store.getState().openTrainingSessionDetails(trainingSession);
     store.getState().openSkipTrainingSession();
   }
   render(

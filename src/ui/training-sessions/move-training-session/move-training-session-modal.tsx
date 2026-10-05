@@ -24,7 +24,7 @@ export function MoveTrainingSessionModal() {
     return null;
   }
 
-  const { activity: trainingSession } = activeModal;
+  const { trainingSession } = activeModal;
   const selectedDate = date || trainingSession.date;
   const selectedTimeOfDay = timeOfDay ?? trainingSession.timeOfDay ?? "ANY";
   const days = getWeekDateOptions(trainingSession.date);

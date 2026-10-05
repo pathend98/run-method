@@ -59,7 +59,7 @@ beforeEach(() => {
     activeModal: { kind: "review" },
     closeModal: vi.fn(),
     openAddTrainingSession: vi.fn(),
-    openActivityDetails: vi.fn(),
+    openTrainingSessionDetails: vi.fn(),
     openCompleteTrainingSession: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),

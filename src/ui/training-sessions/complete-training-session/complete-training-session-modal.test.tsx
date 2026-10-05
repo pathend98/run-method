@@ -35,7 +35,7 @@ function renderModal(
   if (fromReview) {
     store.getState().openCompleteTrainingSessionFromReview(trainingSession);
   } else {
-    store.getState().openActivityDetails(trainingSession);
+    store.getState().openTrainingSessionDetails(trainingSession);
     store.getState().openCompleteTrainingSession();
   }
   render(
@@ -124,7 +124,7 @@ test("disables dismissal while completion is pending", async () => {
 
 test("shows a duration-only completion dialog for strength", () => {
   const store = createTrainingPlannerStore();
-  store.getState().openActivityDetails({
+  store.getState().openTrainingSessionDetails({
     ...createStrengthTrainingSession({
       id: trainingSession.id,
       title: trainingSession.title,

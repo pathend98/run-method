@@ -52,10 +52,10 @@ beforeEach(() => {
     isPending: false,
   };
   storeState = {
-    activeModal: { kind: "move", activity: trainingSession },
+    activeModal: { kind: "move", trainingSession: trainingSession },
     closeModal: vi.fn(),
     openAddTrainingSession: vi.fn(),
-    openActivityDetails: vi.fn(),
+    openTrainingSessionDetails: vi.fn(),
     openCompleteTrainingSession: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),
@@ -160,7 +160,7 @@ test("moves a strength training session with its original schedule and targets",
   });
   storeState.activeModal = {
     kind: "move",
-    activity: { ...strengthTrainingSession, day: "Thursday" },
+    trainingSession: { ...strengthTrainingSession, day: "Thursday" },
   };
   renderModal();
   expect(screen.getByLabelText("Time")).toHaveProperty("value", "ANY");

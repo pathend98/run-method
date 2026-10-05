@@ -11,7 +11,7 @@ export function DeleteTrainingSessionModal() {
   const deleteMutation = useDeleteTrainingSessionMutation();
 
   if (activeModal?.kind !== "delete") return null;
-  const { activity: trainingSession } = activeModal;
+  const { trainingSession } = activeModal;
 
   async function deleteTrainingSession() {
     try {

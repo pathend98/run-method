@@ -30,7 +30,9 @@ function renderEditTrainingSessionModal(
   props: EditTrainingSessionModalTestProps = {},
 ) {
   const store = createTrainingPlannerStore();
-  store.getState().openActivityDetails({ ...trainingSession, day: "Monday" });
+  store
+    .getState()
+    .openTrainingSessionDetails({ ...trainingSession, day: "Monday" });
   store.getState().openEditTrainingSession();
   api.editTrainingSession.mockImplementation(
     props.onEdit ?? vi.fn().mockResolvedValue(trainingSession),
@@ -64,7 +66,7 @@ test.each([
     fireEvent.click(screen.getByRole("button", { name: dismissLabel }));
     expect(store.getState().activeModal).toEqual({
       kind: "details",
-      activity: { ...trainingSession, day: "Monday" },
+      trainingSession: { ...trainingSession, day: "Monday" },
     });
   },
 );

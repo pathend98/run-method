@@ -38,10 +38,10 @@ beforeEach(() => {
     isError: false,
   };
   storeState = {
-    activeModal: { kind: "delete", activity: trainingSession },
+    activeModal: { kind: "delete", trainingSession: trainingSession },
     closeModal: vi.fn(),
     openAddTrainingSession: vi.fn(),
-    openActivityDetails: vi.fn(),
+    openTrainingSessionDetails: vi.fn(),
     openCompleteTrainingSession: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),

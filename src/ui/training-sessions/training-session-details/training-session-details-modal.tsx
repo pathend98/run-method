@@ -43,7 +43,7 @@ export function TrainingSessionDetailsModal() {
     return null;
   }
 
-  const { activity: trainingSession } = activeModal;
+  const { trainingSession } = activeModal;
 
   const canTransition = canTransitionTrainingSession(trainingSession);
   const primaryHeaderActions: ModalAction[] = [

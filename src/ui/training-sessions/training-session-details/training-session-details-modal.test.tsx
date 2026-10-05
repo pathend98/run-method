@@ -24,7 +24,7 @@ beforeEach(() => {
     activeModal: null,
     closeModal: vi.fn(),
     openAddTrainingSession: vi.fn(),
-    openActivityDetails: vi.fn(),
+    openTrainingSessionDetails: vi.fn(),
     openCompleteTrainingSession: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),
@@ -65,7 +65,7 @@ const strength = createStrengthTrainingSession({
 function selectTrainingSession(trainingSession: TrainingSession) {
   storeState.activeModal = {
     kind: "details",
-    activity: { ...trainingSession, day: "Monday" },
+    trainingSession: { ...trainingSession, day: "Monday" },
   };
 }
 

@@ -33,8 +33,8 @@ export function TrainingPlanner() {
   const openAddTrainingSession = useTrainingPlannerStore(
     (state) => state.openAddTrainingSession,
   );
-  const openActivityDetails = useTrainingPlannerStore(
-    (state) => state.openActivityDetails,
+  const openTrainingSessionDetails = useTrainingPlannerStore(
+    (state) => state.openTrainingSessionDetails,
   );
   const activeModalKind = useTrainingPlannerStore(
     (state) => state.activeModal?.kind,
@@ -121,7 +121,7 @@ export function TrainingPlanner() {
           navigateToWeek(getAdjacentWeekStart(weekRange, -1))
         }
         onAddTrainingSession={openAddTrainingSession}
-        onSelectActivity={openActivityDetails}
+        onSelectActivity={openTrainingSessionDetails}
         sessions={query.data}
         week={week}
         weekRange={weekRange}
