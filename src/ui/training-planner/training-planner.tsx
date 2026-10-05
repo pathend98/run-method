@@ -3,20 +3,20 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { fetchTrainingSessions } from "@/ui/activities/api/training-sessions-api-client";
+import { fetchTrainingSessions } from "@/ui/training-sessions/api/training-sessions-api-client";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { Button } from "@/ui/shared/button/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
-import { ActivityDetailsModal } from "@/ui/activities/activity-details/activity-details-modal";
-import { AddActivityModal } from "@/ui/activities/add-activity/add-activity-modal";
-import { EditActivityModal } from "@/ui/activities/edit-activity/edit-activity-modal";
-import { CompleteActivityModal } from "@/ui/activities/complete-activity/complete-activity-modal";
-import { SkipActivityModal } from "@/ui/activities/skip-activity/skip-activity-modal";
-import { DeleteActivityModal } from "@/ui/activities/delete-activity/delete-activity-modal";
-import { ReviewActivitiesModal } from "@/ui/activities/review-activities/review-activities-modal";
-import { MoveActivityModal } from "@/ui/activities/move-activity/move-activity-modal";
+import { ActivityDetailsModal } from "@/ui/training-sessions/activity-details/activity-details-modal";
+import { AddActivityModal } from "@/ui/training-sessions/add-activity/add-activity-modal";
+import { EditActivityModal } from "@/ui/training-sessions/edit-activity/edit-activity-modal";
+import { CompleteActivityModal } from "@/ui/training-sessions/complete-activity/complete-activity-modal";
+import { SkipActivityModal } from "@/ui/training-sessions/skip-activity/skip-activity-modal";
+import { DeleteActivityModal } from "@/ui/training-sessions/delete-activity/delete-activity-modal";
+import { ReviewActivitiesModal } from "@/ui/training-sessions/review-activities/review-activities-modal";
+import { MoveActivityModal } from "@/ui/training-sessions/move-activity/move-activity-modal";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
@@ -24,9 +24,9 @@ import {
   resolveWeekRange,
 } from "./services/training-planner-service";
 import { useTrainingPlannerStore } from "./training-planner-store";
-import { createMoveTrainingSessionRequest } from "@/ui/activities/move-activity";
-import { useEditTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
-import type { TrainingSessionMoveDestination } from "@/ui/activities/move-activity/create-move-training-session-request";
+import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/move-activity";
+import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations/training-session-mutations";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-activity/create-move-training-session-request";
 import type { TrainingActivity } from "./types/training-planner-types";
 
 export function TrainingPlanner() {

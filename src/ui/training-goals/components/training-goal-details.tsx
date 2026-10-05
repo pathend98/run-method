@@ -5,7 +5,7 @@ import type { User } from "@/domain/user-types";
 import {
   formatDistance,
   formatDuration,
-} from "@/ui/activities/formatters/training-session-metric-formatters";
+} from "@/ui/training-sessions/formatters";
 
 type TrainingGoalDetailsProps = {
   goal: TrainingGoal;

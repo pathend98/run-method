@@ -2,7 +2,7 @@
 
 import type { TrainingSessionDateRange } from "@/domain/training-sessions";
 import { Button } from "@/ui/shared/button/button";
-import { PastActivitiesAttentionPanel } from "@/ui/activities/past-activities-attention/past-activities-attention-panel";
+import { PastActivitiesAttentionPanel } from "@/ui/training-sessions/past-activities-attention";
 import type { TrainingSession } from "@/domain/training-sessions";
 import { WeekGrid } from "./week-grid";
 import { WeeklySummary } from "@/ui/weekly-summary/weekly-summary";
@@ -11,7 +11,7 @@ import type {
   TrainingActivity,
   TrainingDay,
 } from "../types/training-planner-types";
-import type { TrainingSessionMoveDestination } from "@/ui/activities/move-activity/create-move-training-session-request";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-activity";
 
 type TrainingPlannerViewProps = {
   isCurrentWeek: boolean;

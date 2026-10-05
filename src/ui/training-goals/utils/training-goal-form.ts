@@ -8,7 +8,7 @@ import {
   defaultDurationFields,
   durationFieldsSchema,
   durationFieldsToSeconds,
-} from "@/ui/activities/training-session-duration/duration-fields";
+} from "@/ui/training-sessions/training-session-duration";
 
 export function createTrainingGoalFormSchema(unit: RunningMetricUnit) {
   return durationFieldsSchema
