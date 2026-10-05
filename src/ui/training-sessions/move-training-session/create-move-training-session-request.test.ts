@@ -12,7 +12,7 @@ const run = createRunTrainingSession({
   targetDurationSeconds: 1530,
 }) satisfies RunTrainingSession;
 
-test("creates an edit request for a moved run", () => {
+test("creates an edit request for a moved run training session", () => {
   expect(
     createMoveTrainingSessionRequest(run, {
       date: "2026-09-11",
@@ -29,7 +29,7 @@ test("creates an edit request for a moved run", () => {
   });
 });
 
-test("creates an edit request for a moved strength activity", () => {
+test("creates an edit request for a moved strength training session", () => {
   const strength = createStrengthTrainingSession({
     title: run.title,
     date: run.date,

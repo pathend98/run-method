@@ -29,7 +29,7 @@ beforeEach(() => {
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),
     openEditActivity: vi.fn(),
-    openMoveActivity: vi.fn(),
+    openMoveTrainingSession: vi.fn(),
     openSkipActivity: vi.fn(),
     openSkipTrainingSessionFromReview: vi.fn(),
     returnToActivityDetails: vi.fn(),
@@ -176,7 +176,7 @@ test("calls the complete action", () => {
 });
 
 test.each([
-  ["Move", "openMoveActivity"],
+  ["Move", "openMoveTrainingSession"],
   ["Skip", "openSkipActivity"],
   ["Delete", "openDeleteTrainingSession"],
 ] as const)("calls the %s action from more actions", (label, action) => {

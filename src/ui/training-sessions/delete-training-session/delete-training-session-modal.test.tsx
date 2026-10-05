@@ -46,7 +46,7 @@ beforeEach(() => {
     openCompleteTrainingSessionFromReview: vi.fn(),
     openDeleteTrainingSession: vi.fn(),
     openEditActivity: vi.fn(),
-    openMoveActivity: vi.fn(),
+    openMoveTrainingSession: vi.fn(),
     openSkipActivity: vi.fn(),
     openSkipTrainingSessionFromReview: vi.fn(),
     returnToActivityDetails: vi.fn(),

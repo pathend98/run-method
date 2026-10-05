@@ -7,7 +7,7 @@ import { Modal } from "@/ui/shared/modal/modal";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 
-export function MoveActivityModal() {
+export function MoveTrainingSessionModal() {
   const [date, setDate] = useState("");
   const [timeOfDay, setTimeOfDay] = useState<"AM" | "ANY" | "PM" | undefined>(
     undefined,
@@ -15,7 +15,7 @@ export function MoveActivityModal() {
   const [error, setError] = useState<string | null>(null);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const returnToActivityDetails = useTrainingPlannerStore(
+  const returnToTrainingSessionDetails = useTrainingPlannerStore(
     (state) => state.returnToActivityDetails,
   );
   const editMutation = useEditTrainingSessionMutation();
@@ -24,46 +24,46 @@ export function MoveActivityModal() {
     return null;
   }
 
-  const { activity } = activeModal;
-  const selectedDate = date || activity.date;
-  const selectedTimeOfDay = timeOfDay ?? activity.timeOfDay ?? "ANY";
-  const days = getWeekDateOptions(activity.date);
+  const { activity: trainingSession } = activeModal;
+  const selectedDate = date || trainingSession.date;
+  const selectedTimeOfDay = timeOfDay ?? trainingSession.timeOfDay ?? "ANY";
+  const days = getWeekDateOptions(trainingSession.date);
 
-  async function moveActivity() {
+  async function moveTrainingSession() {
     try {
-      const request = createMoveTrainingSessionRequest(activity, {
+      const request = createMoveTrainingSessionRequest(trainingSession, {
         date: selectedDate,
         timeOfDay: selectedTimeOfDay === "ANY" ? null : selectedTimeOfDay,
       });
       await editMutation.mutateAsync({
-        id: activity.id,
+        id: trainingSession.id,
         request,
       });
       closeModal();
     } catch {
-      setError("Unable to move activity. Please try again.");
+      setError("Unable to move training session. Please try again.");
     }
   }
 
   return (
     <Modal
-      dismissLabel="Dismiss move activity"
-      closeLabel="Close move activity"
+      dismissLabel="Dismiss move training session"
+      closeLabel="Close move training session"
       footerActions={[
         {
           label: "Cancel",
-          onClick: returnToActivityDetails,
+          onClick: returnToTrainingSessionDetails,
           variant: "tertiary",
         },
         {
           label: editMutation.isPending ? "Moving…" : "Move",
-          onClick: () => void moveActivity(),
+          onClick: () => void moveTrainingSession(),
           variant: "primary",
         },
       ]}
       isBusy={editMutation.isPending}
-      onClose={returnToActivityDetails}
-      title={`Move ${activity.title}`}
+      onClose={returnToTrainingSessionDetails}
+      title={`Move ${trainingSession.title}`}
     >
       <div className="mt-6 space-y-4">
         {error ? (
@@ -75,7 +75,7 @@ export function MoveActivityModal() {
           </p>
         ) : null}
         <p className="text-sm text-zinc-600">
-          When do you want to do this activity?
+          When do you want to do this training session?
         </p>
         <FormField label="Day">
           <select

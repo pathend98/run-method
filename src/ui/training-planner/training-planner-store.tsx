@@ -40,7 +40,7 @@ type TrainingPlannerStoreActions = {
   ) => void;
   openDeleteTrainingSession: () => void;
   openEditActivity: () => void;
-  openMoveActivity: () => void;
+  openMoveTrainingSession: () => void;
   openSkipActivity: () => void;
   openSkipTrainingSessionFromReview: (
     trainingSession: TrainingActivity,
@@ -105,7 +105,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
-    openMoveActivity: () =>
+    openMoveTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details" &&
         state.activeModal.activity.status === "SCHEDULED"

@@ -16,7 +16,7 @@ import { CompleteActivityModal } from "@/ui/training-sessions/complete-activity/
 import { SkipActivityModal } from "@/ui/training-sessions/skip-activity/skip-activity-modal";
 import { DeleteTrainingSessionModal } from "@/ui/training-sessions/delete-training-session/delete-training-session-modal";
 import { ReviewTrainingSessionsModal } from "@/ui/training-sessions/review-training-sessions/review-training-sessions-modal";
-import { MoveActivityModal } from "@/ui/training-sessions/move-activity/move-activity-modal";
+import { MoveTrainingSessionModal } from "@/ui/training-sessions/move-training-session/move-training-session-modal";
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
@@ -24,9 +24,9 @@ import {
   resolveWeekRange,
 } from "./services/training-planner-service";
 import { useTrainingPlannerStore } from "./training-planner-store";
-import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/move-activity";
+import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations/training-session-mutations";
-import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-activity/create-move-training-session-request";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 import type { TrainingActivity } from "./types/training-planner-types";
 
 export function TrainingPlanner() {
@@ -128,7 +128,7 @@ export function TrainingPlanner() {
       />
       {activeModalKind === "details" ? <TrainingSessionDetailsModal /> : null}
       {activeModalKind === "edit" ? <EditActivityModal /> : null}
-      {activeModalKind === "move" ? <MoveActivityModal /> : null}
+      {activeModalKind === "move" ? <MoveTrainingSessionModal /> : null}
       {activeModalKind === "complete" ? <CompleteActivityModal /> : null}
       {activeModalKind === "skip" ? <SkipActivityModal /> : null}
       {activeModalKind === "delete" ? <DeleteTrainingSessionModal /> : null}

@@ -33,7 +33,7 @@ test("transitions through add, details, edit, move, completion, skip, delete, an
   expect(store.getState().activeModal).toEqual({ kind: "edit", activity });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
-  store.getState().openMoveActivity();
+  store.getState().openMoveTrainingSession();
   expect(store.getState().activeModal).toEqual({ kind: "move", activity });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
@@ -94,7 +94,7 @@ test("ignores invalid detail transitions", () => {
   store.getState().openCompleteActivity();
   store.getState().openDeleteTrainingSession();
   store.getState().openSkipActivity();
-  store.getState().openMoveActivity();
+  store.getState().openMoveTrainingSession();
   expect(store.getState().activeModal).toBeNull();
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toBeNull();
@@ -104,7 +104,7 @@ test("does not open move activity for non-scheduled details", () => {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails({ ...activity, status: "COMPLETED" });
 
-  store.getState().openMoveActivity();
+  store.getState().openMoveTrainingSession();
 
   expect(store.getState().activeModal).toMatchObject({ kind: "details" });
 });
