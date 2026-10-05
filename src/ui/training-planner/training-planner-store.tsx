@@ -35,16 +35,20 @@ type TrainingPlannerStoreActions = {
   openAddActivity: (day: TrainingDay) => void;
   openActivityDetails: (activity: TrainingActivity) => void;
   openCompleteActivity: () => void;
-  openCompleteActivityFromReview: (activity: TrainingActivity) => void;
+  openCompleteTrainingSessionFromReview: (
+    trainingSession: TrainingActivity,
+  ) => void;
   openDeleteActivity: () => void;
   openEditActivity: () => void;
   openMoveActivity: () => void;
   openSkipActivity: () => void;
-  openSkipActivityFromReview: (activity: TrainingActivity) => void;
+  openSkipTrainingSessionFromReview: (
+    trainingSession: TrainingActivity,
+  ) => void;
   returnToActivityDetails: () => void;
   returnFromActivityTransition: () => void;
   finishActivityTransition: () => void;
-  openReviewActivities: () => void;
+  openReviewTrainingSessions: () => void;
 };
 
 export type TrainingPlannerStore = TrainingPlannerStoreState &
@@ -71,8 +75,14 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
-    openCompleteActivityFromReview: (activity) =>
-      set({ activeModal: { kind: "complete", activity, returnTo: "review" } }),
+    openCompleteTrainingSessionFromReview: (trainingSession) =>
+      set({
+        activeModal: {
+          kind: "complete",
+          activity: trainingSession,
+          returnTo: "review",
+        },
+      }),
     openDeleteActivity: () =>
       set((state) =>
         state.activeModal?.kind === "details"
@@ -119,8 +129,14 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
-    openSkipActivityFromReview: (activity) =>
-      set({ activeModal: { kind: "skip", activity, returnTo: "review" } }),
+    openSkipTrainingSessionFromReview: (trainingSession) =>
+      set({
+        activeModal: {
+          kind: "skip",
+          activity: trainingSession,
+          returnTo: "review",
+        },
+      }),
     returnToActivityDetails: () =>
       set((state) =>
         state.activeModal?.kind === "edit" ||
@@ -159,7 +175,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             : { activeModal: null }
           : state,
       ),
-    openReviewActivities: () => set({ activeModal: { kind: "review" } }),
+    openReviewTrainingSessions: () => set({ activeModal: { kind: "review" } }),
   }));
 }
 

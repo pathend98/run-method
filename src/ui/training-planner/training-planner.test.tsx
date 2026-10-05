@@ -108,7 +108,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
   expect(screen.getByRole("dialog", { name: "Move Easy run" })).toBeDefined();
 });
 
-test("TrainingPlanner opens the activity review modal from the attention panel", async () => {
+test("TrainingPlanner opens the training session review modal from the attention panel", async () => {
   const pastSession = createRunTrainingSession({
     title: "Easy run",
     date: format(subDays(new Date(), 1), "yyyy-MM-dd"),
@@ -127,10 +127,12 @@ test("TrainingPlanner opens the activity review modal from the attention panel",
   );
 
   fireEvent.click(
-    await screen.findByRole("button", { name: "Review activities" }),
+    await screen.findByRole("button", { name: "Review training sessions" }),
   );
   expect(
-    await screen.findByRole("dialog", { name: "Activities needing attention" }),
+    await screen.findByRole("dialog", {
+      name: "Training sessions needing attention",
+    }),
   ).toBeDefined();
 });
 

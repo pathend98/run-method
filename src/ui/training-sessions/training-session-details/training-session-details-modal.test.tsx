@@ -1,39 +1,48 @@
-import {
-  fireEvent,
-  render as testingRender,
-  screen,
-  within,
-} from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { addDays, format } from "date-fns";
 
-import { QueryProvider } from "@/app/query-provider";
-import type {
-  CompleteTrainingSessionRequest,
-  RunTrainingSession,
-  StrengthTrainingSession,
-} from "@/domain/training-sessions";
+import type { TrainingSession } from "@/domain/training-sessions";
 import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { TrainingSessionDetailsModal as ActualActivityDetailsModal } from "./training-session-details-modal";
 import {
-  createTrainingPlannerStore,
-  TrainingPlannerStoreProvider,
+  useTrainingPlannerStore,
+  type TrainingPlannerStore,
 } from "@/ui/training-planner/training-planner-store";
+import { TrainingSessionDetailsModal } from "./training-session-details-modal";
 
-const api = vi.hoisted(() => ({
-  completeTrainingSession: vi.fn(),
-  deleteTrainingSession: vi.fn(),
+vi.mock("@/ui/training-planner/training-planner-store", () => ({
+  useTrainingPlannerStore: vi.fn(),
 }));
 
-vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
-  ...(await importOriginal()),
-  completeTrainingSession: api.completeTrainingSession,
-  deleteTrainingSession: api.deleteTrainingSession,
-}));
+let storeState: TrainingPlannerStore;
 
-const runActivity = createRunTrainingSession({
+beforeEach(() => {
+  vi.resetAllMocks();
+  storeState = {
+    activeModal: null,
+    closeModal: vi.fn(),
+    openAddActivity: vi.fn(),
+    openActivityDetails: vi.fn(),
+    openCompleteActivity: vi.fn(),
+    openCompleteTrainingSessionFromReview: vi.fn(),
+    openDeleteActivity: vi.fn(),
+    openEditActivity: vi.fn(),
+    openMoveActivity: vi.fn(),
+    openSkipActivity: vi.fn(),
+    openSkipTrainingSessionFromReview: vi.fn(),
+    returnToActivityDetails: vi.fn(),
+    returnFromActivityTransition: vi.fn(),
+    finishActivityTransition: vi.fn(),
+    openReviewTrainingSessions: vi.fn(),
+  };
+  vi.mocked(useTrainingPlannerStore).mockImplementation((selector) =>
+    selector(storeState),
+  );
+});
+
+const run = createRunTrainingSession({
   id: "run",
   date: format(new Date(), "yyyy-MM-dd"),
   description: "Controlled effort",
@@ -42,139 +51,64 @@ const runActivity = createRunTrainingSession({
   targetDurationSeconds: 1530,
   actualDistanceMetres: 5900,
   actualDurationSeconds: 1500,
-}) satisfies RunTrainingSession;
+});
 
-const strengthActivity = createStrengthTrainingSession({
+const strength = createStrengthTrainingSession({
   id: "strength",
-  date: runActivity.date,
+  date: run.date,
   timeOfDay: "PM",
-  description: runActivity.description,
-  updatedAt: runActivity.updatedAt,
+  description: run.description,
+  updatedAt: run.updatedAt,
   actualDurationSeconds: 2400,
 });
 
-type ActivityDetailsModalTestProps = {
-  activity: RunTrainingSession | StrengthTrainingSession;
-  onClose: () => void;
-  onEdit: () => void;
-  isDeleting?: boolean;
-  isTransitioning?: boolean;
-  onComplete?: (
-    id: string,
-    request: CompleteTrainingSessionRequest,
-  ) => Promise<unknown>;
-  onDelete?: (id: string) => Promise<void>;
-};
-
-const ActivityDetailsModal = ActualActivityDetailsModal as unknown as (
-  props: ActivityDetailsModalTestProps,
-) => React.ReactElement;
-
-function render(ui: React.ReactElement<ActivityDetailsModalTestProps>) {
-  const store = createTrainingPlannerStore();
-  let currentProps = ui.props;
-  function configureMutationHandlers() {
-    api.deleteTrainingSession.mockImplementation(
-      currentProps.onDelete ?? vi.fn().mockResolvedValue(undefined),
-    );
-    api.completeTrainingSession.mockImplementation(
-      currentProps.onComplete ?? vi.fn().mockResolvedValue(undefined),
-    );
-  }
-
-  configureMutationHandlers();
-  store
-    .getState()
-    .openActivityDetails({ ...currentProps.activity, day: "Monday" });
-  store.subscribe((state, previousState) => {
-    if (
-      state.activeModal?.kind === "edit" &&
-      previousState.activeModal?.kind === "details"
-    ) {
-      currentProps.onEdit();
-    }
-    if (state.activeModal === null && previousState.activeModal !== null) {
-      currentProps.onClose();
-    }
-  });
-  const rendered = testingRender(
-    <TrainingPlannerStoreProvider store={store}>
-      <QueryProvider>{ui}</QueryProvider>
-    </TrainingPlannerStoreProvider>,
-  );
-
-  return {
-    ...rendered,
-    rerender: (nextUi: React.ReactElement<ActivityDetailsModalTestProps>) => {
-      currentProps = nextUi.props;
-      configureMutationHandlers();
-      store
-        .getState()
-        .openActivityDetails({ ...currentProps.activity, day: "Monday" });
-      rendered.rerender(
-        <TrainingPlannerStoreProvider store={store}>
-          <QueryProvider>{nextUi}</QueryProvider>
-        </TrainingPlannerStoreProvider>,
-      );
-    },
+function selectTrainingSession(trainingSession: TrainingSession) {
+  storeState.activeModal = {
+    kind: "details",
+    activity: { ...trainingSession, day: "Monday" },
   };
 }
 
-function selectMoreActivityAction(name: "Move" | "Skip" | "Delete") {
+function renderTrainingSessionDetails(trainingSession: TrainingSession = run) {
+  selectTrainingSession(trainingSession);
+  return render(<TrainingSessionDetailsModal />);
+}
+
+function selectMoreTrainingSessionAction(name: "Move" | "Skip" | "Delete") {
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
-  expect(screen.getByRole("menuitem", { name: "Move" }).classList).toContain(
-    "border-zinc-200",
-  );
   fireEvent.click(screen.getByRole("menuitem", { name }));
 }
 
-function renderActivityDetails(
-  overrides: Partial<ActivityDetailsModalTestProps> = {},
-) {
-  return render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      onClose={vi.fn()}
-      onEdit={vi.fn()}
-      {...overrides}
-    />,
-  );
-}
-
 test("calls the close handler from the close button", () => {
-  const onClose = vi.fn();
-  renderActivityDetails({ onClose });
+  renderTrainingSessionDetails();
   fireEvent.click(
-    screen.getByRole("button", { name: "Close activity details" }),
+    screen.getByRole("button", { name: "Close training session details" }),
   );
-  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(storeState.closeModal).toHaveBeenCalledTimes(1);
 });
 
 test("calls the close handler from the backdrop", () => {
-  const onClose = vi.fn();
-  renderActivityDetails({ onClose });
+  renderTrainingSessionDetails();
   fireEvent.click(
-    screen.getByRole("button", { name: "Dismiss activity details" }),
+    screen.getByRole("button", { name: "Dismiss training session details" }),
   );
-  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(storeState.closeModal).toHaveBeenCalledTimes(1);
 });
 
 test("calls the close handler from the Escape key", () => {
-  const onClose = vi.fn();
-  renderActivityDetails({ onClose });
+  renderTrainingSessionDetails();
   fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
-  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(storeState.closeModal).toHaveBeenCalledTimes(1);
 });
 
 test("ignores non-Escape keys", () => {
-  const onClose = vi.fn();
-  renderActivityDetails({ onClose });
+  renderTrainingSessionDetails();
   fireEvent.keyDown(window, { key: "Enter", code: "Enter" });
-  expect(onClose).not.toHaveBeenCalled();
+  expect(storeState.closeModal).not.toHaveBeenCalled();
 });
 
 test("renders as an accessible full-screen mobile and centered desktop modal", () => {
-  renderActivityDetails();
+  renderTrainingSessionDetails();
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
   const overlay = modal.parentElement;
   expect(overlay?.classList.contains("items-center")).toBe(true);
@@ -192,61 +126,67 @@ test("renders as an accessible full-screen mobile and centered desktop modal", (
   ).toBeDefined();
 });
 
-test("dispatches run activities to the run details component", () => {
-  renderActivityDetails();
+test.each([
+  [run, "Run · Scheduled · Morning"],
+  [strength, "Strength · Scheduled · Evening"],
+  [{ ...run, timeOfDay: null }, "Run · Scheduled · Anytime"],
+] as const)(
+  "renders metadata beneath the training session title (%s, %s)",
+  (trainingSession, metadata) => {
+    renderTrainingSessionDetails(trainingSession);
+    const modal = screen.getByRole("dialog", { name: trainingSession.title });
+    const title = within(modal).getByRole("heading", {
+      name: trainingSession.title,
+    });
+    const subtitle = within(modal).getByText(metadata);
+
+    expect(title.compareDocumentPosition(subtitle)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(
+      within(modal).queryByRole("heading", { name: "Details" }),
+    ).toBeNull();
+  },
+);
+
+test("dispatches run training sessions to the run details component", () => {
+  renderTrainingSessionDetails();
   const modal = screen.getByRole("dialog", { name: "Tempo run" });
   expect(within(modal).queryByText("Target type")).toBeNull();
   expect(within(modal).getByText("4:15 / km")).toBeDefined();
 });
 
-test("dispatches strength activities to the strength details component", () => {
-  renderActivityDetails({ activity: strengthActivity });
+test("dispatches strength training sessions to the strength details component", () => {
+  renderTrainingSessionDetails(strength);
   const modal = screen.getByRole("dialog", { name: "Strength" });
   expect(within(modal).getByText("45m")).toBeDefined();
   expect(within(modal).queryByText("Target pace")).toBeNull();
 });
 
-test("calls the edit handler", () => {
-  const onEdit = vi.fn();
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={onEdit}
-    />,
-  );
+test("calls the edit action", () => {
+  renderTrainingSessionDetails();
   fireEvent.click(screen.getByRole("button", { name: "Edit" }));
-  expect(onEdit).toHaveBeenCalledOnce();
+  expect(storeState.openEditActivity).toHaveBeenCalledExactlyOnceWith();
 });
 
-test("opens the separate delete modal flow", () => {
-  const store = createTrainingPlannerStore();
-  store.getState().openActivityDetails({ ...runActivity, day: "Monday" });
-  testingRender(
-    <TrainingPlannerStoreProvider store={store}>
-      <QueryProvider>
-        <ActualActivityDetailsModal />
-      </QueryProvider>
-    </TrainingPlannerStoreProvider>,
-  );
-
-  selectMoreActivityAction("Delete");
-  expect(store.getState().activeModal).toMatchObject({ kind: "delete" });
-  expect(screen.queryByText("Delete “Tempo run”? ")).toBeNull();
+test("calls the complete action", () => {
+  renderTrainingSessionDetails();
+  fireEvent.click(screen.getByRole("button", { name: "Complete" }));
+  expect(storeState.openCompleteActivity).toHaveBeenCalledExactlyOnceWith();
 });
 
-test("puts complete in the footer and skip in more actions for eligible activities", () => {
-  const { rerender } = render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+test.each([
+  ["Move", "openMoveActivity"],
+  ["Skip", "openSkipActivity"],
+  ["Delete", "openDeleteActivity"],
+] as const)("calls the %s action from more actions", (label, action) => {
+  renderTrainingSessionDetails();
+  selectMoreTrainingSessionAction(label);
+  expect(storeState[action]).toHaveBeenCalledExactlyOnceWith();
+});
+
+test("puts complete in the footer and skip in more actions for eligible training sessions", () => {
+  const { rerender } = renderTrainingSessionDetails();
   expect(screen.getByRole("button", { name: "Edit" }).classList).toContain(
     "border-zinc-200",
   );
@@ -257,7 +197,7 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     screen.getByRole("button", { name: "More actions" }).classList,
   ).toContain("size-9");
   expect(
-    screen.getByRole("button", { name: "Close activity details" }),
+    screen.getByRole("button", { name: "Close training session details" }),
   ).toBeDefined();
   expect(screen.getByRole("button", { name: "Complete" }).classList).toContain(
     "py-2",
@@ -274,32 +214,17 @@ test("puts complete in the footer and skip in more actions for eligible activiti
     "bg-red-50",
   );
 
-  rerender(
-    <ActivityDetailsModal
-      activity={{ ...runActivity, status: "COMPLETED" }}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  selectTrainingSession({ ...run, status: "COMPLETED" });
+  rerender(<TrainingSessionDetailsModal />);
   expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Complete" })).toBeNull();
 });
 
-test("hides skip and complete actions for future scheduled activities", () => {
-  render(
-    <ActivityDetailsModal
-      activity={{
-        ...runActivity,
-        date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-      }}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+test("hides skip and complete actions for future scheduled training sessions", () => {
+  renderTrainingSessionDetails({
+    ...run,
+    date: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+  });
 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
@@ -308,16 +233,7 @@ test("hides skip and complete actions for future scheduled activities", () => {
 });
 
 test("dismisses more actions with Escape before dismissing the modal", () => {
-  const onClose = vi.fn();
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={onClose}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderTrainingSessionDetails();
 
   const trigger = screen.getByRole("button", {
     name: "More actions",
@@ -329,20 +245,12 @@ test("dismisses more actions with Escape before dismissing the modal", () => {
   fireEvent.keyDown(menu, { key: "Escape" });
 
   expect(screen.queryByRole("menu")).toBeNull();
-  expect(onClose).not.toHaveBeenCalled();
+  expect(storeState.closeModal).not.toHaveBeenCalled();
   expect(document.activeElement).toBe(trigger);
 });
 
 test("dismisses more actions when interacting outside the menu", () => {
-  render(
-    <ActivityDetailsModal
-      activity={runActivity}
-      isDeleting={false}
-      onClose={vi.fn()}
-      onDelete={vi.fn()}
-      onEdit={vi.fn()}
-    />,
-  );
+  renderTrainingSessionDetails();
 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.pointerDown(screen.getByRole("menuitem", { name: "Skip" }));
@@ -352,18 +260,24 @@ test("dismisses more actions when interacting outside the menu", () => {
   expect(screen.queryByRole("menu")).toBeNull();
 });
 
-test("opens the separate skip modal flow", () => {
-  const store = createTrainingPlannerStore();
-  store.getState().openActivityDetails({ ...runActivity, day: "Monday" });
-  testingRender(
-    <TrainingPlannerStoreProvider store={store}>
-      <QueryProvider>
-        <ActualActivityDetailsModal />
-      </QueryProvider>
-    </TrainingPlannerStoreProvider>,
-  );
+test.each([null, { kind: "review" } as const])(
+  "renders nothing when details are inactive (%j)",
+  (activeModal) => {
+    storeState.activeModal = activeModal;
+    render(<TrainingSessionDetailsModal />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  },
+);
 
-  selectMoreActivityAction("Skip");
-  expect(store.getState().activeModal).toMatchObject({ kind: "skip" });
-  expect(screen.queryByLabelText("Skip reason")).toBeNull();
-});
+test.each(["COMPLETED", "SKIPPED"] as const)(
+  "hides transition and move actions for %s training sessions",
+  (status) => {
+    renderTrainingSessionDetails({ ...run, status });
+    expect(screen.queryByRole("button", { name: "Complete" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "More actions" }));
+    expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Skip" })).toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Edit" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).toBeDefined();
+  },
+);

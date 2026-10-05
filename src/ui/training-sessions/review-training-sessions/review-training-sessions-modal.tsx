@@ -1,7 +1,6 @@
 "use client";
 
-import { skipToken, useQuery } from "@tanstack/react-query";
-import { format, parseISO, subDays } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useEffect } from "react";
 
 import type { TrainingSession } from "@/domain/training-sessions";
@@ -12,38 +11,30 @@ import {
   formatCompactDuration,
   formatDistance,
 } from "@/ui/training-sessions/formatters";
-import { fetchTrainingSessions } from "@/ui/training-sessions/api";
+import { useReviewTrainingSessionsQuery } from "./hooks/use-review-training-sessions-query";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
   useTrainingPlannerStore,
-  type TrainingActivity,
+  type Weekday,
 } from "@/ui/training-planner/training-planner-store";
 
-export function ReviewActivitiesModal() {
+export function ReviewTrainingSessionsModal() {
   const measurementUnit = useDistanceDisplayUnit();
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const openCompleteActivity = useTrainingPlannerStore(
-    (state) => state.openCompleteActivityFromReview,
+  const openCompleteTrainingSession = useTrainingPlannerStore(
+    (state) => state.openCompleteTrainingSessionFromReview,
   );
-  const openSkipActivity = useTrainingPlannerStore(
-    (state) => state.openSkipActivityFromReview,
+  const openSkipTrainingSession = useTrainingPlannerStore(
+    (state) => state.openSkipTrainingSessionFromReview,
   );
   const currentUser = useCurrentUserQuery();
   const athleteId = currentUser.data?.id;
-  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
-  const query = useQuery({
-    queryKey: ["training-sessions", athleteId, "past-scheduled", yesterday],
-    queryFn: athleteId
-      ? () =>
-          fetchTrainingSessions(athleteId, {
-            status: "SCHEDULED",
-            to: yesterday,
-          })
-      : skipToken,
-    enabled: activeModal?.kind === "review",
-  });
+  const query = useReviewTrainingSessionsQuery(
+    athleteId,
+    activeModal?.kind === "review",
+  );
 
   useEffect(() => {
     if (activeModal?.kind === "review" && query.data?.length === 0) {
@@ -60,24 +51,25 @@ export function ReviewActivitiesModal() {
     return null;
   }
 
-  const activitiesByDate = groupActivitiesByDate(query.data);
+  const trainingSessionsByDate = groupTrainingSessionsByDate(query.data);
   const count = query.data.length;
 
   return (
     <Modal
-      dismissLabel="Dismiss activities requiring attention"
-      closeLabel="Close activities requiring attention"
+      dismissLabel="Dismiss training sessions requiring attention"
+      closeLabel="Close training sessions requiring attention"
       footerActions={[
         { label: "Close", onClick: closeModal, variant: "tertiary" },
       ]}
       onClose={closeModal}
-      title="Activities needing attention"
+      title="Training sessions needing attention"
     >
       <p className="mt-2 text-sm text-zinc-600">
-        {count} {count === 1 ? "activity" : "activities"} remaining.
+        {count} {count === 1 ? "training session" : "training sessions"}{" "}
+        remaining.
       </p>
       <div className="mt-5 divide-y divide-zinc-200">
-        {activitiesByDate.map(([date, activities]) => (
+        {trainingSessionsByDate.map(([date, trainingSessions]) => (
           <section
             className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 py-3"
             key={date}
@@ -86,23 +78,25 @@ export function ReviewActivitiesModal() {
               {format(parseISO(date), "EEE d MMM")}
             </h3>
             <ul className="flex min-w-0 flex-col gap-3">
-              {activities.map((activity) => (
+              {trainingSessions.map((trainingSession) => (
                 <li
                   className="flex flex-wrap items-start justify-between gap-3"
-                  key={activity.id}
+                  key={trainingSession.id}
                 >
                   <div>
                     <p className="font-medium text-zinc-950">
-                      {activity.title}
+                      {trainingSession.title}
                     </p>
                     <p className="text-sm text-zinc-600">
-                      {formatPlannedMetrics(activity, measurementUnit)}
+                      {formatPlannedMetrics(trainingSession, measurementUnit)}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       onClick={() =>
-                        openCompleteActivity(toTrainingActivity(activity))
+                        openCompleteTrainingSession(
+                          toPlannerTrainingSession(trainingSession),
+                        )
                       }
                       size="compact"
                       variant="primary"
@@ -111,7 +105,9 @@ export function ReviewActivitiesModal() {
                     </Button>
                     <Button
                       onClick={() =>
-                        openSkipActivity(toTrainingActivity(activity))
+                        openSkipTrainingSession(
+                          toPlannerTrainingSession(trainingSession),
+                        )
                       }
                       size="compact"
                       variant="warning"
@@ -129,33 +125,35 @@ export function ReviewActivitiesModal() {
   );
 }
 
-function groupActivitiesByDate(activities: TrainingSession[]) {
+function groupTrainingSessionsByDate(trainingSessions: TrainingSession[]) {
   const grouped = new Map<string, TrainingSession[]>();
-  for (const activity of activities) {
-    grouped.set(activity.date, [
-      ...(grouped.get(activity.date) ?? []),
-      activity,
+  for (const trainingSession of trainingSessions) {
+    grouped.set(trainingSession.date, [
+      ...(grouped.get(trainingSession.date) ?? []),
+      trainingSession,
     ]);
   }
   return [...grouped.entries()];
 }
 
 function formatPlannedMetrics(
-  activity: TrainingSession,
+  trainingSession: TrainingSession,
   measurementUnit: User["measurementUnit"],
 ) {
   const metrics = [
-    ...(activity.activityType === "RUN"
-      ? [formatDistance(activity.targetDistanceMetres, measurementUnit)]
+    ...(trainingSession.activityType === "RUN"
+      ? [formatDistance(trainingSession.targetDistanceMetres, measurementUnit)]
       : []),
-    formatCompactDuration(activity.targetDurationSeconds),
+    formatCompactDuration(trainingSession.targetDurationSeconds),
   ].filter((metric): metric is string => metric !== null);
   return metrics.join(" · ");
 }
 
-function toTrainingActivity(activity: TrainingSession): TrainingActivity {
+function toPlannerTrainingSession(
+  trainingSession: TrainingSession,
+): TrainingSession & { day: Weekday } {
   return {
-    ...activity,
-    day: format(parseISO(activity.date), "EEEE") as TrainingActivity["day"],
+    ...trainingSession,
+    day: format(parseISO(trainingSession.date), "EEEE") as Weekday,
   };
 }

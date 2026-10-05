@@ -61,11 +61,11 @@ test("transitions through add, details, edit, move, completion, skip, delete, an
   expect(store.getState().activeModal).toBeNull();
 });
 
-test("returns completed and skipped review activities to the review modal", () => {
+test("returns completed and skipped review training sessions to the review modal", () => {
   const store = createTrainingPlannerStore();
 
-  store.getState().openReviewActivities();
-  store.getState().openCompleteActivityFromReview(activity);
+  store.getState().openReviewTrainingSessions();
+  store.getState().openCompleteTrainingSessionFromReview(activity);
   expect(store.getState().activeModal).toEqual({
     kind: "complete",
     activity,
@@ -74,7 +74,7 @@ test("returns completed and skipped review activities to the review modal", () =
   store.getState().returnFromActivityTransition();
   expect(store.getState().activeModal).toEqual({ kind: "review" });
 
-  store.getState().openSkipActivityFromReview(activity);
+  store.getState().openSkipTrainingSessionFromReview(activity);
   store.getState().finishActivityTransition();
   expect(store.getState().activeModal).toEqual({ kind: "review" });
 

@@ -8,7 +8,7 @@ import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
-import { PastActivitiesAttentionPanel } from "./past-activities-attention-panel";
+import { PastTrainingSessionsAttentionPanel } from "./past-training-sessions-attention-panel";
 
 const session = createRunTrainingSession({
   title: "Easy run",
@@ -41,14 +41,14 @@ function renderPanel(className?: string) {
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <PastActivitiesAttentionPanel className={className} />
+        <PastTrainingSessionsAttentionPanel className={className} />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
   return store;
 }
 
-test("renders a compact attention panel and fetches past scheduled activities", async () => {
+test("renders a compact attention panel and fetches past scheduled training sessions", async () => {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,
     json: vi
@@ -61,22 +61,26 @@ test("renders a compact attention panel and fetches past scheduled activities", 
   stubFetch(fetchMock);
   const store = renderPanel("mb-8");
 
-  const heading = await screen.findByText("2 activities need your attention.");
+  const heading = await screen.findByText(
+    "2 training sessions need your attention.",
+  );
   expect(heading).toBeDefined();
   expect(
-    screen.getByLabelText("Activities requiring attention").classList,
+    screen.getByLabelText("Training sessions requiring attention").classList,
   ).toContain("mb-8");
   expect(
-    screen.getByText("Past activities are waiting to be completed."),
+    screen.getByText("Past training sessions are waiting to be completed."),
   ).toBeDefined();
   expect(fetchMock).toHaveBeenCalledWith(
     `/api/v1/athletes/${athleteId}/training-sessions?to=${format(subDays(new Date(), 1), "yyyy-MM-dd")}&status=SCHEDULED`,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Review activities" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Review training sessions" }),
+  );
   expect(store.getState().activeModal).toEqual({ kind: "review" });
 });
 
-test("does not render when no activity needs attention", async () => {
+test("does not render when no training session needs attention", async () => {
   stubFetch(
     vi
       .fn()
@@ -86,12 +90,12 @@ test("does not render when no activity needs attention", async () => {
 
   await waitFor(() =>
     expect(
-      screen.queryByLabelText("Activities requiring attention"),
+      screen.queryByLabelText("Training sessions requiring attention"),
     ).toBeNull(),
   );
 });
 
-test("uses singular grammar for one activity", async () => {
+test("uses singular grammar for one training session", async () => {
   stubFetch(
     vi.fn().mockResolvedValue({
       ok: true,
@@ -101,6 +105,6 @@ test("uses singular grammar for one activity", async () => {
   renderPanel();
 
   expect(
-    await screen.findByText("1 activity needs your attention."),
+    await screen.findByText("1 training session needs your attention."),
   ).toBeDefined();
 });

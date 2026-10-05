@@ -82,8 +82,8 @@ export function TrainingSessionDetailsModal() {
 
   return (
     <Modal
-      dismissLabel="Dismiss activity details"
-      closeLabel="Close activity details"
+      dismissLabel="Dismiss training session details"
+      closeLabel="Close training session details"
       footerActions={
         canTransition
           ? [

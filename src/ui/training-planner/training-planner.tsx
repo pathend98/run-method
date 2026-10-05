@@ -15,7 +15,7 @@ import { EditActivityModal } from "@/ui/training-sessions/edit-activity/edit-act
 import { CompleteActivityModal } from "@/ui/training-sessions/complete-activity/complete-activity-modal";
 import { SkipActivityModal } from "@/ui/training-sessions/skip-activity/skip-activity-modal";
 import { DeleteActivityModal } from "@/ui/training-sessions/delete-activity/delete-activity-modal";
-import { ReviewActivitiesModal } from "@/ui/training-sessions/review-activities/review-activities-modal";
+import { ReviewTrainingSessionsModal } from "@/ui/training-sessions/review-training-sessions/review-training-sessions-modal";
 import { MoveActivityModal } from "@/ui/training-sessions/move-activity/move-activity-modal";
 import {
   getAdjacentWeekStart,
@@ -135,7 +135,7 @@ export function TrainingPlanner() {
       {activeModalKind === "add" ? (
         <AddActivityModal athleteId={currentUser.data.id} />
       ) : null}
-      {activeModalKind === "review" ? <ReviewActivitiesModal /> : null}
+      {activeModalKind === "review" ? <ReviewTrainingSessionsModal /> : null}
     </DistanceDisplayProvider>
   );
 }
