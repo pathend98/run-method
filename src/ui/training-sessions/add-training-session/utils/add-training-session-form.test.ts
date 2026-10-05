@@ -1,14 +1,14 @@
 import {
-  createAddActivityFormSchema,
-  defaultAddActivityFormValues,
+  createAddTrainingSessionFormSchema,
+  defaultAddTrainingSessionFormValues,
   toCreateTrainingSessionRequest,
-} from "./add-activity-form";
+} from "./add-training-session-form";
 
 test("converts friendly run values into the create request", () => {
   expect(
     toCreateTrainingSessionRequest(
       {
-        ...defaultAddActivityFormValues,
+        ...defaultAddTrainingSessionFormValues,
         title: "  Tempo run  ",
         timeOfDay: "AM",
         description: "  Controlled  ",
@@ -34,7 +34,7 @@ test("converts entered miles to whole metres", () => {
   expect(
     toCreateTrainingSessionRequest(
       {
-        ...defaultAddActivityFormValues,
+        ...defaultAddTrainingSessionFormValues,
         title: "Five miles",
         distance: "5",
         durationMinutes: "40",
@@ -50,9 +50,9 @@ test("converts entered miles to whole metres", () => {
 });
 
 test("validates mile distance precision with a mile-specific message", () => {
-  const schema = createAddActivityFormSchema("MILES");
+  const schema = createAddTrainingSessionFormSchema("MILES");
   const values = {
-    ...defaultAddActivityFormValues,
+    ...defaultAddTrainingSessionFormValues,
     title: "Run",
     distance: "5.1234",
     durationMinutes: "40",
@@ -70,7 +70,7 @@ test("supports optional strength duration", () => {
   expect(
     toCreateTrainingSessionRequest(
       {
-        ...defaultAddActivityFormValues,
+        ...defaultAddTrainingSessionFormValues,
         title: "Lift",
         activityType: "STRENGTH",
       },
@@ -84,7 +84,7 @@ test("always converts runs to distance and duration without pace", () => {
   expect(
     toCreateTrainingSessionRequest(
       {
-        ...defaultAddActivityFormValues,
+        ...defaultAddTrainingSessionFormValues,
         title: "Intervals",
         derivedMetric: "duration",
         timeOfDay: "PM",
@@ -110,7 +110,7 @@ test("converts a specified strength duration", () => {
   expect(
     toCreateTrainingSessionRequest(
       {
-        ...defaultAddActivityFormValues,
+        ...defaultAddTrainingSessionFormValues,
         title: "Lift",
         activityType: "STRENGTH",
         durationMinutes: "35",
@@ -126,8 +126,8 @@ test("converts a specified strength duration", () => {
 
 test("rejects incomplete required targets", () => {
   expect(
-    createAddActivityFormSchema("KILOMETRES").safeParse({
-      ...defaultAddActivityFormValues,
+    createAddTrainingSessionFormSchema("KILOMETRES").safeParse({
+      ...defaultAddTrainingSessionFormValues,
       title: "Run",
       distance: "5",
     }).success,
@@ -153,9 +153,9 @@ test.each([
   },
 ])("rejects invalid target values %#", (override) => {
   expect(
-    createAddActivityFormSchema("KILOMETRES").safeParse({
-      ...defaultAddActivityFormValues,
-      title: "Activity",
+    createAddTrainingSessionFormSchema("KILOMETRES").safeParse({
+      ...defaultAddTrainingSessionFormValues,
+      title: "Training session",
       ...override,
     }).success,
   ).toBe(false);
@@ -163,8 +163,8 @@ test.each([
 
 test("requires all three displayed run metrics", () => {
   expect(
-    createAddActivityFormSchema("KILOMETRES").safeParse({
-      ...defaultAddActivityFormValues,
+    createAddTrainingSessionFormSchema("KILOMETRES").safeParse({
+      ...defaultAddTrainingSessionFormValues,
       title: "Run",
       distance: "5",
       durationMinutes: "30",

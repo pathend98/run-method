@@ -4,16 +4,20 @@ import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import {
-  createAddActivityFormSchema,
-  defaultAddActivityFormValues,
-  type AddActivityFormValues,
-} from "../form/add-activity-form";
-import { RunActivityFields } from "./run-activity-fields";
+  createAddTrainingSessionFormSchema,
+  defaultAddTrainingSessionFormValues,
+  type AddTrainingSessionFormValues,
+} from "../utils/add-training-session-form";
+import { RunTrainingSessionFields } from "./run-training-session-fields";
 
-function RunActivityFieldsHarness({ children }: { children: ReactNode }) {
-  const form = useForm<AddActivityFormValues>({
-    defaultValues: defaultAddActivityFormValues,
-    resolver: zodResolver(createAddActivityFormSchema("KILOMETRES")),
+function RunTrainingSessionFieldsHarness({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const form = useForm<AddTrainingSessionFormValues>({
+    defaultValues: defaultAddTrainingSessionFormValues,
+    resolver: zodResolver(createAddTrainingSessionFormSchema("KILOMETRES")),
   });
 
   return (
@@ -31,9 +35,9 @@ function RunActivityFieldsHarness({ children }: { children: ReactNode }) {
 
 test("shows fields for every run target", () => {
   render(
-    <RunActivityFieldsHarness>
-      <RunActivityFields onPendingChange={vi.fn()} />
-    </RunActivityFieldsHarness>,
+    <RunTrainingSessionFieldsHarness>
+      <RunTrainingSessionFields onPendingChange={vi.fn()} />
+    </RunTrainingSessionFieldsHarness>,
   );
 
   expect(screen.queryByLabelText("Run target")).toBeNull();
@@ -44,9 +48,9 @@ test("shows fields for every run target", () => {
 
 test("renders validation errors for the selected run target", async () => {
   render(
-    <RunActivityFieldsHarness>
-      <RunActivityFields onPendingChange={vi.fn()} />
-    </RunActivityFieldsHarness>,
+    <RunTrainingSessionFieldsHarness>
+      <RunTrainingSessionFields onPendingChange={vi.fn()} />
+    </RunTrainingSessionFieldsHarness>,
   );
 
   fireEvent.click(screen.getByRole("button", { name: "Submit" }));
@@ -60,9 +64,9 @@ test("renders validation errors for the selected run target", async () => {
 
 test("does not validate untouched metrics when distance is entered", () => {
   render(
-    <RunActivityFieldsHarness>
-      <RunActivityFields onPendingChange={vi.fn()} />
-    </RunActivityFieldsHarness>,
+    <RunTrainingSessionFieldsHarness>
+      <RunTrainingSessionFields onPendingChange={vi.fn()} />
+    </RunTrainingSessionFieldsHarness>,
   );
 
   fireEvent.change(screen.getByPlaceholderText("8"), {
@@ -78,9 +82,9 @@ test("does not validate untouched metrics when distance is entered", () => {
 
 test("keeps an invalid Auto metric so it can be validated after blur", async () => {
   render(
-    <RunActivityFieldsHarness>
-      <RunActivityFields onPendingChange={vi.fn()} />
-    </RunActivityFieldsHarness>,
+    <RunTrainingSessionFieldsHarness>
+      <RunTrainingSessionFields onPendingChange={vi.fn()} />
+    </RunTrainingSessionFieldsHarness>,
   );
 
   fireEvent.change(screen.getByPlaceholderText("8"), {
@@ -100,9 +104,9 @@ test("keeps an invalid Auto metric so it can be validated after blur", async () 
 
 test("revalidates run metrics when they lose focus", async () => {
   render(
-    <RunActivityFieldsHarness>
-      <RunActivityFields onPendingChange={vi.fn()} />
-    </RunActivityFieldsHarness>,
+    <RunTrainingSessionFieldsHarness>
+      <RunTrainingSessionFields onPendingChange={vi.fn()} />
+    </RunTrainingSessionFieldsHarness>,
   );
   fireEvent.click(screen.getByRole("button", { name: "Submit" }));
   expect(

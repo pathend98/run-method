@@ -14,7 +14,7 @@ type DayColumnProps = {
   isDragAndDropEnabled?: boolean;
   isDragActive?: boolean;
   isToday?: boolean;
-  onAddActivity?: (day: TrainingDay) => void;
+  onAddTrainingSession?: (day: TrainingDay) => void;
   onSelectActivity: (activity: TrainingActivity) => void;
 };
 
@@ -30,7 +30,7 @@ export function DayColumn({
   isDragAndDropEnabled = false,
   isDragActive = false,
   isToday = false,
-  onAddActivity,
+  onAddTrainingSession,
   onSelectActivity,
 }: DayColumnProps) {
   const sections = timeSections.map((section) => ({
@@ -103,9 +103,9 @@ export function DayColumn({
       </div>
       <footer className="pt-4">
         <Button
-          aria-label={`Add activity to ${day.day}`}
+          aria-label={`Add training session to ${day.day}`}
           className="px-1 py-1 text-xs hover:text-teal-700 hover:underline [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
-          onClick={() => onAddActivity?.(day)}
+          onClick={() => onAddTrainingSession?.(day)}
           type="button"
           variant="tertiary"
         >

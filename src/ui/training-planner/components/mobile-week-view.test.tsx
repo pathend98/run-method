@@ -121,15 +121,15 @@ test("falls back to Monday and changes the selected agenda", () => {
   expect(screen.queryByText("Rest day")).toBeNull();
 });
 
-test("forwards activity details and the selected day add action", () => {
+test("forwards training session details and the selected day add action", () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-08-19T12:00:00"));
-  const onAddActivity = vi.fn();
+  const onAddTrainingSession = vi.fn();
   const onSelectActivity = vi.fn();
   const week = createWeek();
   render(
     <MobileWeekView
-      onAddActivity={onAddActivity}
+      onAddTrainingSession={onAddTrainingSession}
       onSelectActivity={onSelectActivity}
       week={week}
     />,
@@ -139,12 +139,12 @@ test("forwards activity details and the selected day add action", () => {
     screen.getByRole("button", { name: "View Easy run details" }),
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Add activity to Wednesday" }),
+    screen.getByRole("button", { name: "Add training session to Wednesday" }),
   );
 
   expect(onSelectActivity).toHaveBeenCalledWith(week[2].activities[0]);
-  expect(onAddActivity).toHaveBeenCalledWith(week[2]);
-  expect(screen.getByText("+ Add activity")).toBeDefined();
+  expect(onAddTrainingSession).toHaveBeenCalledWith(week[2]);
+  expect(screen.getByText("+ Add training session")).toBeDefined();
 });
 
 test("supports an omitted add handler and a day without a date", () => {
@@ -159,7 +159,7 @@ test("supports an omitted add handler and a day without a date", () => {
   expect(tab.textContent).toBe("Mon");
   expect(() =>
     fireEvent.click(
-      screen.getByRole("button", { name: "Add activity to Monday" }),
+      screen.getByRole("button", { name: "Add training session to Monday" }),
     ),
   ).not.toThrow();
 });

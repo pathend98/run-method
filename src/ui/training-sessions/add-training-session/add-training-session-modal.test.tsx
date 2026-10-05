@@ -5,7 +5,7 @@ import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
-import { AddActivityModal } from "./add-activity-modal";
+import { AddTrainingSessionModal } from "./add-training-session-modal";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const api = vi.hoisted(() => ({ createTrainingSession: vi.fn() }));
@@ -17,14 +17,16 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
 
 const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
 
-type AddActivityModalTestProps = {
+type AddTrainingSessionModalTestProps = {
   onCreate?: (request: unknown) => Promise<unknown>;
   measurementUnit?: "KILOMETRES" | "MILES";
 };
 
-function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
+function renderAddTrainingSessionModal(
+  props: AddTrainingSessionModalTestProps = {},
+) {
   const store = createTrainingPlannerStore();
-  store.getState().openAddActivity(day);
+  store.getState().openAddTrainingSession(day);
   api.createTrainingSession.mockImplementation(
     props.onCreate ?? vi.fn().mockResolvedValue({}),
   );
@@ -37,7 +39,7 @@ function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
           <DistanceDisplayProvider
             measurementUnit={props.measurementUnit ?? "KILOMETRES"}
           >
-            <AddActivityModal athleteId="33333333-3333-4333-8333-333333333333" />
+            <AddTrainingSessionModal athleteId="33333333-3333-4333-8333-333333333333" />
           </DistanceDisplayProvider>
         </QueryProvider>
       </TrainingPlannerStoreProvider>,
@@ -46,7 +48,7 @@ function renderAddActivityModal(props: AddActivityModalTestProps = {}) {
 }
 
 test("renders time-of-day labels while retaining their request values", () => {
-  renderAddActivityModal();
+  renderAddTrainingSessionModal();
 
   const options = Array.from(
     screen.getByLabelText("Time of day").querySelectorAll("option"),
@@ -61,14 +63,14 @@ test("renders time-of-day labels while retaining their request values", () => {
 });
 
 test("renders the selected date in a human-readable format", () => {
-  renderAddActivityModal();
+  renderAddTrainingSessionModal();
 
   expect(screen.getByText("Monday, 17 August")).toBeDefined();
 });
 
-test("submits a converted activity for its selected day and closes", async () => {
+test("submits a converted training session for its selected day and closes", async () => {
   const onCreate = vi.fn().mockResolvedValue(undefined);
-  const { store } = renderAddActivityModal({ onCreate });
+  const { store } = renderAddTrainingSessionModal({ onCreate });
 
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Easy run" },
@@ -79,7 +81,7 @@ test("submits a converted activity for its selected day and closes", async () =>
   fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "45" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add training session" }));
 
   await waitFor(() =>
     expect(onCreate).toHaveBeenCalledWith(
@@ -96,7 +98,7 @@ test("submits a converted activity for its selected day and closes", async () =>
 
 test("accepts distance and pace in miles", async () => {
   const onCreate = vi.fn().mockResolvedValue(undefined);
-  renderAddActivityModal({ measurementUnit: "MILES", onCreate });
+  renderAddTrainingSessionModal({ measurementUnit: "MILES", onCreate });
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Five miles" },
   });
@@ -110,7 +112,7 @@ test("accepts distance and pace in miles", async () => {
     "value",
     "40",
   );
-  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add training session" }));
   await waitFor(() =>
     expect(onCreate).toHaveBeenCalledWith(
       "33333333-3333-4333-8333-333333333333",
@@ -123,7 +125,7 @@ test("accepts distance and pace in miles", async () => {
 });
 
 test("keeps the form open after a failed creation and supports dismissal", async () => {
-  const { store } = renderAddActivityModal({
+  const { store } = renderAddTrainingSessionModal({
     onCreate: vi.fn().mockRejectedValue(new Error("nope")),
   });
   fireEvent.change(screen.getByLabelText("Title"), {
@@ -135,19 +137,21 @@ test("keeps the form open after a failed creation and supports dismissal", async
   fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "45" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add training session" }));
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to add activity",
+    "Unable to add training session",
   );
   expect(store.getState().activeModal?.kind).toBe("add");
 
-  fireEvent.click(screen.getByRole("button", { name: "Close add activity" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Close add training session" }),
+  );
   expect(store.getState().activeModal).toBeNull();
 });
 
-test("switches activity fields and reports validation errors", async () => {
-  renderAddActivityModal();
-  const activityType = screen.getByLabelText("Activity type");
+test("switches training session fields and reports validation errors", async () => {
+  renderAddTrainingSessionModal();
+  const activityType = screen.getByLabelText("Training session type");
   fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "8" },
   });
@@ -157,15 +161,19 @@ test("switches activity fields and reports validation errors", async () => {
   expect(
     (screen.getByLabelText("Distance (km)") as HTMLInputElement).value,
   ).toBe("8");
-  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
-  expect(await screen.findByText("Enter an activity title")).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: "Add training session" }));
+  expect(
+    await screen.findByText("Enter a training session title"),
+  ).toBeDefined();
 });
 
 test("validates invalid fields after they lose focus", async () => {
-  renderAddActivityModal();
+  renderAddTrainingSessionModal();
 
   fireEvent.blur(screen.getByLabelText("Title"));
-  expect(await screen.findByText("Enter an activity title")).toBeDefined();
+  expect(
+    await screen.findByText("Enter a training session title"),
+  ).toBeDefined();
 
   fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "0" },
@@ -188,28 +196,32 @@ test("validates invalid fields after they lose focus", async () => {
   expect(await screen.findByText("Enter pace as mm:ss")).toBeDefined();
 });
 
-test("renders nothing when add activity is not active", () => {
+test("renders nothing when add training session is not active", () => {
   render(
     <TrainingPlannerStoreProvider>
       <QueryProvider>
-        <AddActivityModal athleteId="33333333-3333-4333-8333-333333333333" />
+        <AddTrainingSessionModal athleteId="33333333-3333-4333-8333-333333333333" />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
 
-  expect(screen.queryByRole("dialog", { name: "Add activity" })).toBeNull();
+  expect(
+    screen.queryByRole("dialog", { name: "Add training session" }),
+  ).toBeNull();
 });
 
 test("uses the large modal layout", () => {
-  renderAddActivityModal();
+  renderAddTrainingSessionModal();
 
   expect(
-    screen.getByRole("dialog", { name: "Add activity" }).classList,
+    screen.getByRole("dialog", { name: "Add training session" }).classList,
   ).toContain("sm:max-w-4xl");
 });
 
 test("shows its submitting state", async () => {
-  renderAddActivityModal({ onCreate: () => new Promise(() => undefined) });
+  renderAddTrainingSessionModal({
+    onCreate: () => new Promise(() => undefined),
+  });
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Easy run" },
   });
@@ -219,7 +231,7 @@ test("shows its submitting state", async () => {
   fireEvent.change(screen.getByLabelText("Duration (minutes)"), {
     target: { value: "45" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Add activity" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add training session" }));
   expect(await screen.findByRole("button", { name: "Adding…" })).toHaveProperty(
     "disabled",
     true,
@@ -227,7 +239,7 @@ test("shows its submitting state", async () => {
 });
 
 test("blocks submission while an Auto override is unresolved", () => {
-  renderAddActivityModal();
+  renderAddTrainingSessionModal();
   fireEvent.change(screen.getByLabelText("Distance (km)"), {
     target: { value: "8" },
   });
@@ -239,13 +251,11 @@ test("blocks submission while an Auto override is unresolved", () => {
   fireEvent.change(pace, { target: { value: "5:20" } });
   fireEvent.blur(pace);
 
-  expect(screen.getByRole("button", { name: "Add activity" })).toHaveProperty(
-    "disabled",
-    true,
-  );
+  expect(
+    screen.getByRole("button", { name: "Add training session" }),
+  ).toHaveProperty("disabled", true);
   fireEvent.click(screen.getByRole("button", { name: "Keep distance" }));
-  expect(screen.getByRole("button", { name: "Add activity" })).toHaveProperty(
-    "disabled",
-    false,
-  );
+  expect(
+    screen.getByRole("button", { name: "Add training session" }),
+  ).toHaveProperty("disabled", false);
 });

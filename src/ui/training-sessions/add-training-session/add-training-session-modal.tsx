@@ -5,29 +5,29 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 
 import { FormField } from "@/ui/shared/form-field/form-field";
 import { Modal } from "@/ui/shared/modal/modal";
-import { RunActivityFields } from "./components/run-activity-fields";
-import { StrengthActivityFields } from "./components/strength-activity-fields";
+import { RunTrainingSessionFields } from "./components/run-training-session-fields";
+import { StrengthTrainingSessionFields } from "./components/strength-training-session-fields";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useCreateTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
-  createAddActivityFormSchema,
-  defaultAddActivityFormValues,
+  createAddTrainingSessionFormSchema,
+  defaultAddTrainingSessionFormValues,
   toCreateTrainingSessionRequest,
-  type AddActivityFormValues,
-} from "./form/add-activity-form";
+  type AddTrainingSessionFormValues,
+} from "./utils/add-training-session-form";
 
-export function AddActivityModal({ athleteId }: { athleteId: string }) {
+export function AddTrainingSessionModal({ athleteId }: { athleteId: string }) {
   const unit = useDistanceDisplayUnit();
   const [runFieldsPending, setRunFieldsPending] = useState(false);
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const createMutation = useCreateTrainingSessionMutation();
-  const form = useForm<AddActivityFormValues>({
-    defaultValues: defaultAddActivityFormValues,
+  const form = useForm<AddTrainingSessionFormValues>({
+    defaultValues: defaultAddTrainingSessionFormValues,
     mode: "onBlur",
     reValidateMode: "onBlur",
-    resolver: zodResolver(createAddActivityFormSchema(unit)),
+    resolver: zodResolver(createAddTrainingSessionFormSchema(unit)),
   });
   const {
     control,
@@ -46,7 +46,7 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
 
   const date = dayDate;
 
-  async function submit(values: AddActivityFormValues) {
+  async function submit(values: AddTrainingSessionFormValues) {
     try {
       await createMutation.mutateAsync({
         athleteId,
@@ -55,15 +55,15 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
       closeModal();
     } catch {
       setError("root", {
-        message: "Unable to add activity. Please try again.",
+        message: "Unable to add training session. Please try again.",
       });
     }
   }
 
   return (
     <Modal
-      dismissLabel="Dismiss add activity"
-      closeLabel="Close add activity"
+      dismissLabel="Dismiss add training session"
+      closeLabel="Close add training session"
       eyebrow={format(parseISO(date), "EEEE, d MMMM")}
       footerActions={[
         {
@@ -73,8 +73,8 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
         },
         {
           disabled: activityType === "RUN" && runFieldsPending,
-          form: "add-activity-form",
-          label: createMutation.isPending ? "Adding…" : "Add activity",
+          form: "add-training-session-form",
+          label: createMutation.isPending ? "Adding…" : "Add training session",
           type: "submit",
           variant: "primary",
         },
@@ -82,12 +82,12 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
       isBusy={createMutation.isPending}
       onClose={closeModal}
       size="large"
-      title="Add activity"
+      title="Add training session"
     >
       <FormProvider {...form}>
         <form
           className="mt-6 space-y-4"
-          id="add-activity-form"
+          id="add-training-session-form"
           noValidate
           onSubmit={handleSubmit(submit)}
         >
@@ -103,7 +103,7 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
             <input autoFocus {...register("title")} />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Activity type">
+            <FormField label="Training session type">
               <select {...register("activityType")}>
                 <option value="RUN">Run</option>
                 <option value="STRENGTH">Strength</option>
@@ -118,9 +118,9 @@ export function AddActivityModal({ athleteId }: { athleteId: string }) {
             </FormField>
           </div>
           {activityType === "RUN" ? (
-            <RunActivityFields onPendingChange={setRunFieldsPending} />
+            <RunTrainingSessionFields onPendingChange={setRunFieldsPending} />
           ) : (
-            <StrengthActivityFields />
+            <StrengthTrainingSessionFields />
           )}
           <FormField label="Description (optional)">
             <textarea className="min-h-24" {...register("description")} />

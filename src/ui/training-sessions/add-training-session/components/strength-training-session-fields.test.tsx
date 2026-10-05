@@ -4,19 +4,23 @@ import type { ReactNode } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import {
-  createAddActivityFormSchema,
-  defaultAddActivityFormValues,
-  type AddActivityFormValues,
-} from "../form/add-activity-form";
-import { StrengthActivityFields } from "./strength-activity-fields";
+  createAddTrainingSessionFormSchema,
+  defaultAddTrainingSessionFormValues,
+  type AddTrainingSessionFormValues,
+} from "../utils/add-training-session-form";
+import { StrengthTrainingSessionFields } from "./strength-training-session-fields";
 
-function StrengthActivityFieldsHarness({ children }: { children: ReactNode }) {
-  const form = useForm<AddActivityFormValues>({
+function StrengthTrainingSessionFieldsHarness({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const form = useForm<AddTrainingSessionFormValues>({
     defaultValues: {
-      ...defaultAddActivityFormValues,
+      ...defaultAddTrainingSessionFormValues,
       activityType: "STRENGTH",
     },
-    resolver: zodResolver(createAddActivityFormSchema("KILOMETRES")),
+    resolver: zodResolver(createAddTrainingSessionFormSchema("KILOMETRES")),
   });
 
   return (
@@ -31,9 +35,9 @@ function StrengthActivityFieldsHarness({ children }: { children: ReactNode }) {
 
 test("renders an optional duration for strength activities", () => {
   render(
-    <StrengthActivityFieldsHarness>
-      <StrengthActivityFields />
-    </StrengthActivityFieldsHarness>,
+    <StrengthTrainingSessionFieldsHarness>
+      <StrengthTrainingSessionFields />
+    </StrengthTrainingSessionFieldsHarness>,
   );
 
   expect(
@@ -43,9 +47,9 @@ test("renders an optional duration for strength activities", () => {
 
 test("renders a validation error for an invalid strength duration", async () => {
   render(
-    <StrengthActivityFieldsHarness>
-      <StrengthActivityFields />
-    </StrengthActivityFieldsHarness>,
+    <StrengthTrainingSessionFieldsHarness>
+      <StrengthTrainingSessionFields />
+    </StrengthTrainingSessionFieldsHarness>,
   );
 
   fireEvent.change(

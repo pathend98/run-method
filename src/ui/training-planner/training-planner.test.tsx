@@ -250,7 +250,7 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   );
 });
 
-test("TrainingPlanner creates an activity and refreshes its week", async () => {
+test("TrainingPlanner creates a training session and refreshes its week", async () => {
   const range = getCurrentWeekRange();
   const fetchMock = vi.fn().mockImplementation((_url, options) => {
     if (options?.method === "POST") {
@@ -284,7 +284,9 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
     name: "Weekly training planner",
   });
   fireEvent.click(
-    within(planner).getByRole("button", { name: "Add activity to Monday" }),
+    within(planner).getByRole("button", {
+      name: "Add training session to Monday",
+    }),
   );
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "Easy run" },
@@ -297,7 +299,7 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
   });
   fireEvent.click(
     screen
-      .getByRole("dialog", { name: "Add activity" })
+      .getByRole("dialog", { name: "Add training session" })
       .querySelector('button[type="submit"]') as HTMLButtonElement,
   );
 

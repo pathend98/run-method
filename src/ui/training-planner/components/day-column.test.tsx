@@ -138,33 +138,35 @@ test("adds a soft today tint while retaining the standard activity card border",
 });
 
 test("passes its day to the add handler", () => {
-  const onAddActivity = vi.fn();
+  const onAddTrainingSession = vi.fn();
   const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
   render(
     <DayColumn
       day={day}
-      onAddActivity={onAddActivity}
+      onAddTrainingSession={onAddTrainingSession}
       onSelectActivity={vi.fn()}
     />,
   );
 
-  const addActivity = screen.getByRole("button", {
-    name: "Add activity to Monday",
+  const addTrainingSession = screen.getByRole("button", {
+    name: "Add training session to Monday",
   });
-  expect(addActivity.textContent).toBe("+ Add");
-  expect(addActivity.className).toContain("[@media(hover:hover)]:opacity-0");
-  expect(addActivity.className).toContain(
+  expect(addTrainingSession.textContent).toBe("+ Add");
+  expect(addTrainingSession.className).toContain(
+    "[@media(hover:hover)]:opacity-0",
+  );
+  expect(addTrainingSession.className).toContain(
     "[@media(hover:hover)]:group-hover:opacity-100",
   );
-  expect(addActivity.className).toContain(
+  expect(addTrainingSession.className).toContain(
     "[@media(hover:hover)]:group-focus-within:opacity-100",
   );
-  expect(addActivity.className).not.toContain("lg:");
-  expect(addActivity.className).not.toContain("border");
-  expect(addActivity.className).not.toMatch(/(^|\s)bg-/);
+  expect(addTrainingSession.className).not.toContain("lg:");
+  expect(addTrainingSession.className).not.toContain("border");
+  expect(addTrainingSession.className).not.toMatch(/(^|\s)bg-/);
 
-  fireEvent.click(addActivity);
-  expect(onAddActivity).toHaveBeenCalledWith(day);
+  fireEvent.click(addTrainingSession);
+  expect(onAddTrainingSession).toHaveBeenCalledWith(day);
 });
 
 test("allows an omitted add handler", () => {
@@ -177,7 +179,7 @@ test("allows an omitted add handler", () => {
 
   expect(() =>
     fireEvent.click(
-      screen.getByRole("button", { name: "Add activity to Monday" }),
+      screen.getByRole("button", { name: "Add training session to Monday" }),
     ),
   ).not.toThrow();
 });

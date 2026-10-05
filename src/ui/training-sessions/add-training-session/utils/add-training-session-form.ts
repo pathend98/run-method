@@ -16,8 +16,8 @@ import {
   type DurationFields,
 } from "../../training-session-duration";
 
-const addActivityFormBaseSchema = z.object({
-  title: z.string().trim().min(1, "Enter an activity title"),
+const addTrainingSessionFormBaseSchema = z.object({
+  title: z.string().trim().min(1, "Enter a training session title"),
   activityType: z.enum(["RUN", "STRENGTH"]),
   derivedMetric: z.enum(["distance", "duration", "pace"]).nullable(),
   timeOfDay: z.enum(["AM", "ANY", "PM"]),
@@ -29,8 +29,8 @@ const addActivityFormBaseSchema = z.object({
   pace: z.string(),
 });
 
-export function createAddActivityFormSchema(unit: RunningMetricUnit) {
-  return addActivityFormBaseSchema.superRefine((value, context) => {
+export function createAddTrainingSessionFormSchema(unit: RunningMetricUnit) {
+  return addTrainingSessionFormBaseSchema.superRefine((value, context) => {
     if (value.activityType === "STRENGTH") {
       if (!isZeroDuration(value)) {
         validateDuration(context, value);
@@ -48,25 +48,28 @@ export function createAddActivityFormSchema(unit: RunningMetricUnit) {
   });
 }
 
-export type AddActivityFormValues = z.infer<typeof addActivityFormBaseSchema>;
+export type AddTrainingSessionFormValues = z.infer<
+  typeof addTrainingSessionFormBaseSchema
+>;
 
-export const defaultAddActivityFormValues: AddActivityFormValues = {
-  title: "",
-  activityType: "RUN",
-  derivedMetric: null,
-  timeOfDay: "ANY",
-  description: "",
-  distance: "",
-  ...defaultDurationFields,
-  pace: "",
-};
+export const defaultAddTrainingSessionFormValues: AddTrainingSessionFormValues =
+  {
+    title: "",
+    activityType: "RUN",
+    derivedMetric: null,
+    timeOfDay: "ANY",
+    description: "",
+    distance: "",
+    ...defaultDurationFields,
+    pace: "",
+  };
 
 export function toCreateTrainingSessionRequest(
-  values: AddActivityFormValues,
+  values: AddTrainingSessionFormValues,
   date: string,
   unit: RunningMetricUnit,
 ): CreateTrainingSessionRequest {
-  const parsed = createAddActivityFormSchema(unit).parse(values);
+  const parsed = createAddTrainingSessionFormSchema(unit).parse(values);
   const base = {
     title: parsed.title,
     date,

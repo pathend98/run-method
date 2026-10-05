@@ -54,7 +54,7 @@ beforeEach(() => {
   storeState = {
     activeModal: { kind: "move", activity: trainingSession },
     closeModal: vi.fn(),
-    openAddActivity: vi.fn(),
+    openAddTrainingSession: vi.fn(),
     openActivityDetails: vi.fn(),
     openCompleteActivity: vi.fn(),
     openCompleteTrainingSessionFromReview: vi.fn(),

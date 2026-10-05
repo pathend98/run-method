@@ -1,9 +1,11 @@
 import { RunFieldFormInput } from "@/ui/runs/run-field-form-input/run-field-form-input";
 
-type RunActivityFieldsProps = {
+type RunTrainingSessionFieldsProps = {
   onPendingChange: (pending: boolean) => void;
 };
 
-export function RunActivityFields({ onPendingChange }: RunActivityFieldsProps) {
+export function RunTrainingSessionFields({
+  onPendingChange,
+}: RunTrainingSessionFieldsProps) {
   return <RunFieldFormInput onPendingChange={onPendingChange} />;
 }

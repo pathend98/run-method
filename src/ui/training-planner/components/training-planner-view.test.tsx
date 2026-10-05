@@ -40,14 +40,14 @@ beforeEach(() => {
 function renderView(
   overrides: Partial<React.ComponentProps<typeof TrainingPlannerView>> = {},
 ) {
-  const onAddActivity = vi.fn();
+  const onAddTrainingSession = vi.fn();
   const onSelectActivity = vi.fn();
   render(
     <TrainingPlannerStoreProvider>
       <QueryProvider>
         <TrainingPlannerView
           isCurrentWeek
-          onAddActivity={onAddActivity}
+          onAddTrainingSession={onAddTrainingSession}
           onCurrentWeek={vi.fn()}
           onMoveActivity={vi.fn().mockResolvedValue(undefined)}
           onNextWeek={vi.fn()}
@@ -61,7 +61,7 @@ function renderView(
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );
-  return { onAddActivity, onSelectActivity };
+  return { onAddTrainingSession, onSelectActivity };
 }
 
 test("renders the weekly grid without modal UI", () => {
@@ -110,8 +110,8 @@ test("renders the weekly grid without modal UI", () => {
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 
-test("forwards activity and add selections through its private grid", () => {
-  const { onAddActivity, onSelectActivity } = renderView();
+test("forwards training session selections and add actions through its private grid", () => {
+  const { onAddTrainingSession, onSelectActivity } = renderView();
   const mobilePlanner = screen.getByRole("region", {
     name: "Mobile weekly training planner",
   });
@@ -122,11 +122,11 @@ test("forwards activity and add selections through its private grid", () => {
   );
   fireEvent.click(
     within(mobilePlanner).getByRole("button", {
-      name: "Add activity to Monday",
+      name: "Add training session to Monday",
     }),
   );
   expect(onSelectActivity).toHaveBeenCalledWith(activity);
-  expect(onAddActivity).toHaveBeenCalledWith(week[0]);
+  expect(onAddTrainingSession).toHaveBeenCalledWith(week[0]);
 });
 
 test("forwards week navigation callbacks", () => {

@@ -26,7 +26,7 @@ const day = {
 
 test("transitions through add, details, edit, move, completion, skip, delete, and closed modal states", () => {
   const store = createTrainingPlannerStore();
-  store.getState().openAddActivity(day);
+  store.getState().openAddTrainingSession(day);
   expect(store.getState().activeModal).toEqual({ kind: "add", day });
   store.getState().openActivityDetails(activity);
   store.getState().openEditActivity();

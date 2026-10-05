@@ -12,7 +12,7 @@ import type {
 } from "../types/training-planner-types";
 
 type MobileWeekViewProps = {
-  onAddActivity?: (day: TrainingDay) => void;
+  onAddTrainingSession?: (day: TrainingDay) => void;
   onSelectActivity: (activity: TrainingActivity) => void;
   week: TrainingDay[];
 };
@@ -24,7 +24,7 @@ const timeSections: { label: string; value: TimeOfDay }[] = [
 ];
 
 export function MobileWeekView({
-  onAddActivity,
+  onAddTrainingSession,
   onSelectActivity,
   week,
 }: MobileWeekViewProps) {
@@ -130,12 +130,12 @@ export function MobileWeekView({
         )}
 
         <Button
-          aria-label={`Add activity to ${selectedDay.day}`}
+          aria-label={`Add training session to ${selectedDay.day}`}
           className="self-start px-1 py-1 text-sm hover:text-teal-700 hover:underline"
-          onClick={() => onAddActivity?.(selectedDay)}
+          onClick={() => onAddTrainingSession?.(selectedDay)}
           variant="tertiary"
         >
-          + Add activity
+          + Add training session
         </Button>
       </div>
     </section>

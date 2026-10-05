@@ -14,7 +14,7 @@ import type {
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 
 type WeekGridProps = {
-  onAddActivity?: (day: TrainingDay) => void;
+  onAddTrainingSession?: (day: TrainingDay) => void;
   onMoveActivity?: (
     activity: TrainingActivity,
     destination: TrainingSessionMoveDestination,
@@ -24,7 +24,7 @@ type WeekGridProps = {
 };
 
 export function WeekGrid({
-  onAddActivity,
+  onAddTrainingSession,
   onMoveActivity,
   onSelectActivity,
   week,
@@ -67,7 +67,7 @@ export function WeekGrid({
     <>
       <MobileWeekView
         key={week.map((day) => day.date ?? day.day).join("|")}
-        onAddActivity={onAddActivity}
+        onAddTrainingSession={onAddTrainingSession}
         onSelectActivity={onSelectActivity}
         week={week}
       />
@@ -103,7 +103,7 @@ export function WeekGrid({
                 isDragActive={isDragActive}
                 isDragAndDropEnabled
                 isToday={day.date === today}
-                onAddActivity={onAddActivity}
+                onAddTrainingSession={onAddTrainingSession}
                 onSelectActivity={onSelectActivity}
               />
             ))}

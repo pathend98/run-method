@@ -32,7 +32,7 @@ type TrainingPlannerStoreState = {
 
 type TrainingPlannerStoreActions = {
   closeModal: () => void;
-  openAddActivity: (day: TrainingDay) => void;
+  openAddTrainingSession: (day: TrainingDay) => void;
   openActivityDetails: (activity: TrainingActivity) => void;
   openCompleteActivity: () => void;
   openCompleteTrainingSessionFromReview: (
@@ -60,7 +60,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
   return createStore<TrainingPlannerStore>()((set) => ({
     activeModal: null,
     closeModal: () => set({ activeModal: null }),
-    openAddActivity: (day) => set({ activeModal: { kind: "add", day } }),
+    openAddTrainingSession: (day) => set({ activeModal: { kind: "add", day } }),
     openActivityDetails: (activity) =>
       set({ activeModal: { kind: "details", activity } }),
     openCompleteActivity: () =>

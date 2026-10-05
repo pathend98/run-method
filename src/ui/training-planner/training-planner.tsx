@@ -10,7 +10,7 @@ import { Button } from "@/ui/shared/button/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
 import { TrainingSessionDetailsModal } from "@/ui/training-sessions/training-session-details/training-session-details-modal";
-import { AddActivityModal } from "@/ui/training-sessions/add-activity/add-activity-modal";
+import { AddTrainingSessionModal } from "@/ui/training-sessions/add-training-session/add-training-session-modal";
 import { EditActivityModal } from "@/ui/training-sessions/edit-activity/edit-activity-modal";
 import { CompleteActivityModal } from "@/ui/training-sessions/complete-activity/complete-activity-modal";
 import { SkipActivityModal } from "@/ui/training-sessions/skip-activity/skip-activity-modal";
@@ -30,8 +30,8 @@ import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move
 import type { TrainingActivity } from "./types/training-planner-types";
 
 export function TrainingPlanner() {
-  const openAddActivity = useTrainingPlannerStore(
-    (state) => state.openAddActivity,
+  const openAddTrainingSession = useTrainingPlannerStore(
+    (state) => state.openAddTrainingSession,
   );
   const openActivityDetails = useTrainingPlannerStore(
     (state) => state.openActivityDetails,
@@ -120,7 +120,7 @@ export function TrainingPlanner() {
         onPreviousWeek={() =>
           navigateToWeek(getAdjacentWeekStart(weekRange, -1))
         }
-        onAddActivity={openAddActivity}
+        onAddTrainingSession={openAddTrainingSession}
         onSelectActivity={openActivityDetails}
         sessions={query.data}
         week={week}
@@ -133,7 +133,7 @@ export function TrainingPlanner() {
       {activeModalKind === "skip" ? <SkipActivityModal /> : null}
       {activeModalKind === "delete" ? <DeleteTrainingSessionModal /> : null}
       {activeModalKind === "add" ? (
-        <AddActivityModal athleteId={currentUser.data.id} />
+        <AddTrainingSessionModal athleteId={currentUser.data.id} />
       ) : null}
       {activeModalKind === "review" ? <ReviewTrainingSessionsModal /> : null}
     </DistanceDisplayProvider>
