@@ -1,4 +1,4 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type {
   RunTrainingSession,
@@ -49,7 +49,7 @@ vi.mock("./components/training-planner-view", () => ({
 
 import { TrainingPlanner } from "./training-planner";
 
-const activity = createRunActivity({
+const activity = createRunTrainingSession({
   title: "Easy run",
   date: "2026-09-07",
   targetDistanceMetres: 5000,

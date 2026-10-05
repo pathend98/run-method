@@ -1,6 +1,6 @@
 import { TrainingSessionsTransitionConflictError } from "@/server/training-sessions/training-sessions-errors";
 import type * as ServerModule from "@/server/server";
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { NextRequest } from "next/server";
 
 import { UserNotFoundError } from "@/server/user/user-errors";
@@ -58,7 +58,9 @@ const athleteId = "33333333-3333-4333-8333-333333333333";
 beforeEach(() => {
   vi.resetAllMocks();
   findBySessionKey.mockResolvedValue(createUser({ id: athleteId }));
-  repository.findById.mockResolvedValue(createRunActivity({ id, athleteId }));
+  repository.findById.mockResolvedValue(
+    createRunTrainingSession({ id, athleteId }),
+  );
 });
 const completeRequest = {
   actualDurationSeconds: 1500,
@@ -218,7 +220,7 @@ test.each([
     findBySessionKey.mockRejectedValue(new UserNotFoundError());
   if (kind === "foreign")
     repository.findById.mockResolvedValue(
-      createRunActivity({ id, athleteId: "other-id" }),
+      createRunTrainingSession({ id, athleteId: "other-id" }),
     );
   if (kind === "absent") repository.findById.mockResolvedValue(null);
 
@@ -257,7 +259,7 @@ test.each(["foreign", "absent", "lookup failure"])(
   async (kind) => {
     if (kind === "foreign")
       repository.findById.mockResolvedValue(
-        createRunActivity({ athleteId: "other-id" }),
+        createRunTrainingSession({ athleteId: "other-id" }),
       );
     if (kind === "absent") repository.findById.mockResolvedValue(null);
     if (kind === "lookup failure")
@@ -298,7 +300,7 @@ test.each(["foreign", "absent", "lookup failure"])(
   async (kind) => {
     if (kind === "foreign")
       repository.findById.mockResolvedValue(
-        createRunActivity({ athleteId: "other-id" }),
+        createRunTrainingSession({ athleteId: "other-id" }),
       );
     if (kind === "absent") repository.findById.mockResolvedValue(null);
     if (kind === "lookup failure")
@@ -381,7 +383,7 @@ test.each(["COMPLETED", "SKIPPED"] as const)(
         `only scheduled training sessions can be completed`,
       );
     });
-    repository.findById.mockResolvedValue(createRunActivity({ status }));
+    repository.findById.mockResolvedValue(createRunTrainingSession({ status }));
     const response = await POST(request(), context());
     expect(response.status).toBe(409);
     expect(repository.complete).not.toHaveBeenCalled();

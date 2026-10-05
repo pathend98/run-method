@@ -2,19 +2,19 @@ import { render, screen } from "@testing-library/react";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { EditActivitySummary } from "./edit-activity-summary";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const runActivity = createRunActivity({
+const runActivity = createRunTrainingSession({
   description: "Controlled effort",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
 }) satisfies RunTrainingSession;
 
-const strengthActivity = createStrengthActivity({
+const strengthActivity = createStrengthTrainingSession({
   id: "22222222-2222-4222-8222-222222222222",
   description: runActivity.description,
 });

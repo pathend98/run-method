@@ -1,10 +1,10 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { TimeOfDaySection } from "./time-of-day-section";
 import type { TrainingActivity } from "../types/training-planner-types";
 
 const baseActivity = {
-  ...createRunActivity({
+  ...createRunTrainingSession({
     id: "activity",
     description: "Controlled effort",
     targetDistanceMetres: 6000,

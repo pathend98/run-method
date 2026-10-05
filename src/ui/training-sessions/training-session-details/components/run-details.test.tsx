@@ -1,14 +1,14 @@
 import { render, screen, within } from "@testing-library/react";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { RunDetails } from "./run-details";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 type RunOverride = Partial<RunTrainingSession>;
 
 function runActivity(override: RunOverride = {}): RunTrainingSession {
-  return createRunActivity({
+  return createRunTrainingSession({
     id: "run",
     description: "Controlled effort",
     updatedAt: "2026-08-01T11:30:00.000Z",

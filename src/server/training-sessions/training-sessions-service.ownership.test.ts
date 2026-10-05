@@ -1,18 +1,18 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import type { TrainingSessionsRepository } from "./training-sessions-repository";
 import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
 
-const runSession = createRunActivity();
+const runSession = createRunTrainingSession();
 const actorId = runSession.athleteId;
 const timeZone = "UTC";
 
 function createService() {
   const repository: TrainingSessionsRepository = {
     find: vi.fn().mockResolvedValue([]),
-    findById: vi.fn().mockResolvedValue(createRunActivity()),
+    findById: vi.fn().mockResolvedValue(createRunTrainingSession()),
     create: vi.fn(),
     deleteById: vi.fn(),
     skip: vi.fn(),

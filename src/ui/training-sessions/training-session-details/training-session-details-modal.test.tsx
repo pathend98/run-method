@@ -13,9 +13,9 @@ import type {
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { TrainingSessionDetailsModal as ActualActivityDetailsModal } from "./training-session-details-modal";
 import {
   createTrainingPlannerStore,
@@ -33,7 +33,7 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
   deleteTrainingSession: api.deleteTrainingSession,
 }));
 
-const runActivity = createRunActivity({
+const runActivity = createRunTrainingSession({
   id: "run",
   date: format(new Date(), "yyyy-MM-dd"),
   description: "Controlled effort",
@@ -44,7 +44,7 @@ const runActivity = createRunActivity({
   actualDurationSeconds: 1500,
 }) satisfies RunTrainingSession;
 
-const strengthActivity = createStrengthActivity({
+const strengthActivity = createStrengthTrainingSession({
   id: "strength",
   date: runActivity.date,
   timeOfDay: "PM",

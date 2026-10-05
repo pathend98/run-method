@@ -3,14 +3,14 @@ import type {
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { getEditActivityFormValues } from "./edit-activity-form-values";
 import { toEditTrainingSessionRequest } from "./edit-training-session-request";
 
 function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
-  return createRunActivity({
+  return createRunTrainingSession({
     description: "Controlled effort",
     ...override,
   });
@@ -19,7 +19,7 @@ function run(override: Partial<RunTrainingSession> = {}): RunTrainingSession {
 function strength(
   override: Partial<StrengthTrainingSession> = {},
 ): StrengthTrainingSession {
-  return createStrengthActivity({
+  return createStrengthTrainingSession({
     description: "Controlled effort",
     targetDurationSeconds: 2400,
     ...override,

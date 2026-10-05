@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 
 import type { TrainingSession } from "@/domain/training-sessions";
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { WeeklySummary } from "./weekly-summary";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const activity: TrainingSession = createRunActivity({
+const activity: TrainingSession = createRunTrainingSession({
   date: "2026-08-22",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,

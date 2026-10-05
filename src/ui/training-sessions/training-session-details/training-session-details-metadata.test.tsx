@@ -6,16 +6,16 @@ import type {
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
 import { TrainingSessionDetailsModal } from "./training-session-details-modal";
 
-const runActivity = createRunActivity({
+const runActivity = createRunTrainingSession({
   id: "run",
   description: "Controlled effort",
   updatedAt: "2026-08-01T11:30:00.000Z",
@@ -41,7 +41,7 @@ function renderActivityDetails(
 test.each([
   [runActivity, "Run · Scheduled · Morning"],
   [
-    createStrengthActivity({
+    createStrengthTrainingSession({
       id: "strength",
       timeOfDay: "PM",
       description: runActivity.description,

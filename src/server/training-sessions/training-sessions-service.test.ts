@@ -1,8 +1,8 @@
 import { TrainingSessionsTransitionConflictError } from "./training-sessions-errors";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import type {
   EditTrainingSessionRequest,
@@ -20,12 +20,12 @@ import type { TrainingSessionsValidator } from "./training-sessions-validator";
 import type { UserService } from "../user/user-service";
 
 const timeZone = "UTC";
-const actorId = createRunActivity().athleteId;
+const actorId = createRunTrainingSession().athleteId;
 
 function createService() {
   const repository: TrainingSessionsRepository = {
     find: vi.fn().mockResolvedValue([]),
-    findById: vi.fn().mockResolvedValue(createRunActivity()),
+    findById: vi.fn().mockResolvedValue(createRunTrainingSession()),
     create: vi.fn(),
     deleteById: vi.fn(),
     skip: vi.fn(),
@@ -246,7 +246,7 @@ test.each(["skip", "complete"] as const)(
   },
 );
 
-const runSession: TrainingSession = createRunActivity({
+const runSession: TrainingSession = createRunTrainingSession({
   title: "Easy run",
   date: "2026-08-26",
   targetDistanceMetres: 5000,
@@ -458,7 +458,7 @@ test("does not write unchanged completed actuals", async () => {
 
 test("does not write an unchanged completed strength actual duration", async () => {
   const { repository, service } = createService();
-  const completed: StrengthTrainingSession = createStrengthActivity({
+  const completed: StrengthTrainingSession = createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     status: "COMPLETED",
     date: "2026-08-26",
@@ -484,7 +484,7 @@ test("does not write an unchanged completed strength actual duration", async () 
 
 test("edits scheduled strength sessions", async () => {
   const { repository, service } = createService();
-  const strength: TrainingSession = createStrengthActivity({
+  const strength: TrainingSession = createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     date: "2026-08-26",
     timeOfDay: null,
@@ -507,7 +507,7 @@ test("edits scheduled strength sessions", async () => {
 
 test("returns unchanged strength sessions without writing", async () => {
   const { repository, service } = createService();
-  const strength: TrainingSession = createStrengthActivity({
+  const strength: TrainingSession = createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     date: "2026-08-26",
     timeOfDay: null,
@@ -532,7 +532,7 @@ test.each([2400, null])(
   "writes a scheduled strength duration change to %s",
   async (targetDurationSeconds) => {
     const { repository, service } = createService();
-    const strength: TrainingSession = createStrengthActivity({
+    const strength: TrainingSession = createStrengthTrainingSession({
       id: "22222222-2222-4222-8222-222222222222",
       date: "2026-08-26",
       timeOfDay: null,

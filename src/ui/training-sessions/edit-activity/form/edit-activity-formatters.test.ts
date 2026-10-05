@@ -1,16 +1,18 @@
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { formatLockedTargets } from "./edit-activity-formatters";
 
-const run = createRunActivity({
+const run = createRunTrainingSession({
   description: "Controlled effort",
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1800,
 });
 
-const strength = createStrengthActivity({ description: "Controlled effort" });
+const strength = createStrengthTrainingSession({
+  description: "Controlled effort",
+});
 
 test("formats the available locked run targets", () => {
   expect(formatLockedTargets(run, "KILOMETRES")).toBe("6.00 km · 30m");

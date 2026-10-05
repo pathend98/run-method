@@ -4,18 +4,18 @@ import type {
   TrainingSession,
 } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { CompleteActivityForm } from "./complete-activity-form";
 
-const run = createRunActivity({
+const run = createRunTrainingSession({
   title: "Tempo",
   timeOfDay: null,
   targetDistanceMetres: 6000,
   targetDurationSeconds: 1530,
 }) satisfies RunTrainingSession;
-const strength = createStrengthActivity({
+const strength = createStrengthTrainingSession({
   title: run.title,
   timeOfDay: run.timeOfDay,
 });

@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { DayColumn } from "./day-column";
 import type {
   TrainingActivity,
@@ -13,7 +13,7 @@ function runActivity(
   override: Partial<TrainingActivity> = {},
 ): TrainingActivity {
   return {
-    ...createRunActivity({ id: "activity" }),
+    ...createRunTrainingSession({ id: "activity" }),
     day: "Monday",
     ...override,
   } as TrainingActivity;
@@ -23,7 +23,7 @@ function strengthActivity(
   override: Partial<TrainingActivity> = {},
 ): TrainingActivity {
   return {
-    ...createStrengthActivity({ id: "strength", timeOfDay: "PM" }),
+    ...createStrengthTrainingSession({ id: "strength", timeOfDay: "PM" }),
     day: "Monday",
     ...override,
   } as TrainingActivity;

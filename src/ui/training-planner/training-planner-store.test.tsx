@@ -1,4 +1,4 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { render } from "@testing-library/react";
 
 import type {
@@ -11,7 +11,7 @@ import {
 } from "./training-planner-store";
 
 const activity = {
-  ...createRunActivity({
+  ...createRunTrainingSession({
     id: "activity",
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,

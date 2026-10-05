@@ -1,11 +1,11 @@
 import { createMoveTrainingSessionRequest } from "./create-move-training-session-request";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 
-const run = createRunActivity({
+const run = createRunTrainingSession({
   date: "2026-09-10",
   description: "Controlled effort",
   targetDistanceMetres: 6000,
@@ -30,7 +30,7 @@ test("creates an edit request for a moved run", () => {
 });
 
 test("creates an edit request for a moved strength activity", () => {
-  const strength = createStrengthActivity({
+  const strength = createStrengthTrainingSession({
     title: run.title,
     date: run.date,
     description: run.description,

@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { TrainingActivityCard } from "./training-activity-card";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import type { TrainingActivity } from "../types/training-planner-types";
@@ -11,7 +11,7 @@ function runActivity(
   override: Partial<TrainingActivity> = {},
 ): TrainingActivity {
   return {
-    ...createRunActivity({
+    ...createRunTrainingSession({
       id: "activity",
       description: "Controlled effort",
       targetDistanceMetres: 6000,
@@ -99,7 +99,7 @@ test("shows duration only for strength activities", () => {
   render(
     <TrainingActivityCard
       activity={{
-        ...createStrengthActivity({
+        ...createStrengthTrainingSession({
           id: "activity",
           title: "Tempo run",
           description: "Controlled effort",

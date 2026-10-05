@@ -1,7 +1,7 @@
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import {
   createTrainingSession,
   completeTrainingSession,
@@ -20,7 +20,7 @@ const createRequest = {
   targetDurationSeconds: 1800,
 };
 
-const createdSession = createStrengthActivity({
+const createdSession = createStrengthTrainingSession({
   date: createRequest.date,
   timeOfDay: createRequest.timeOfDay,
   targetDurationSeconds: createRequest.targetDurationSeconds,
@@ -36,10 +36,10 @@ test("fetchTrainingSessions calls the API and parses sessions", async () => {
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([
-        createRunActivity({
+        createRunTrainingSession({
           title: "Easy run",
         }),
-        createStrengthActivity({
+        createStrengthTrainingSession({
           id: "22222222-2222-4222-8222-222222222222",
           status: "COMPLETED",
           timeOfDay: "PM",

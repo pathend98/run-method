@@ -1,4 +1,4 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { format, subDays } from "date-fns";
 
@@ -10,7 +10,7 @@ import {
 } from "@/ui/training-planner/training-planner-store";
 import { PastActivitiesAttentionPanel } from "./past-activities-attention-panel";
 
-const session = createRunActivity({
+const session = createRunTrainingSession({
   title: "Easy run",
   date: "2026-08-31",
   targetDistanceMetres: 12000,

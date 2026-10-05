@@ -1,7 +1,7 @@
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
@@ -15,13 +15,13 @@ import { ReviewActivitiesModal } from "./review-activities-modal";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const sessions = [
-  createRunActivity({
+  createRunTrainingSession({
     title: "Easy run",
     date: "2026-08-31",
     targetDistanceMetres: 12000,
     targetDurationSeconds: 3360,
   }),
-  createRunActivity({
+  createRunTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     title: "Easy run 2",
     date: "2026-08-31",
@@ -107,7 +107,7 @@ test("shows review list distances in miles", async () => {
 
 test("shows duration-only planned metrics for strength activities", async () => {
   renderModal([
-    createStrengthActivity({
+    createStrengthTrainingSession({
       id: "33333333-3333-4333-8333-333333333333",
       title: "Strength session",
       date: "2026-09-01",

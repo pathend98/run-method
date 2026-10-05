@@ -1,7 +1,10 @@
-import { createRunActivity, createStrengthActivity } from "./activity";
+import {
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "./training-session";
 
-test("creates scheduled strength and run activities with their distinct fields", () => {
-  expect(createStrengthActivity()).toEqual({
+test("creates scheduled strength and run training sessions with their distinct fields", () => {
+  expect(createStrengthTrainingSession()).toEqual({
     id: "11111111-1111-4111-8111-111111111111",
     athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Strength",
@@ -17,7 +20,7 @@ test("creates scheduled strength and run activities with their distinct fields",
     targetDurationSeconds: 2700,
     actualDurationSeconds: null,
   });
-  expect(createRunActivity()).toEqual({
+  expect(createRunTrainingSession()).toEqual({
     id: "11111111-1111-4111-8111-111111111111",
     athleteId: "33333333-3333-4333-8333-333333333333",
     title: "Tempo run",
@@ -37,12 +40,12 @@ test("creates scheduled strength and run activities with their distinct fields",
   });
 });
 
-test("applies overrides without changing later activities", () => {
-  const strength = createStrengthActivity({
+test("applies overrides without changing later training sessions", () => {
+  const strength = createStrengthTrainingSession({
     status: "COMPLETED",
     actualDurationSeconds: 2400,
   });
-  const run = createRunActivity({
+  const run = createRunTrainingSession({
     title: "Easy run",
     targetDistanceMetres: 5000,
   });
@@ -52,8 +55,8 @@ test("applies overrides without changing later activities", () => {
     actualDurationSeconds: 2400,
   });
   expect(run).toMatchObject({ title: "Easy run", targetDistanceMetres: 5000 });
-  expect(createStrengthActivity()).not.toBe(strength);
-  expect(createRunActivity()).not.toBe(run);
-  expect(createStrengthActivity().actualDurationSeconds).toBeNull();
-  expect(createRunActivity().targetDistanceMetres).toBe(8000);
+  expect(createStrengthTrainingSession()).not.toBe(strength);
+  expect(createRunTrainingSession()).not.toBe(run);
+  expect(createStrengthTrainingSession().actualDurationSeconds).toBeNull();
+  expect(createRunTrainingSession().targetDistanceMetres).toBe(8000);
 });

@@ -1,10 +1,10 @@
-import { createStrengthActivity } from "@/test-support/fixtures/activity";
+import { createStrengthTrainingSession } from "@/test-support/fixtures/training-session";
 import { render, screen } from "@testing-library/react";
 
 import type { StrengthTrainingSession } from "@/domain/training-sessions";
 import { TrainingSessionDetailsBody } from "./training-session-details-body";
 
-const activity = createStrengthActivity({
+const activity = createStrengthTrainingSession({
   id: "strength",
   status: "SKIPPED",
   timeOfDay: "PM",

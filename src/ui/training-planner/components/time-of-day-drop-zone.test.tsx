@@ -1,4 +1,4 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { render, screen } from "@testing-library/react";
 
 const dndMocks = vi.hoisted(() => ({
@@ -18,7 +18,7 @@ import type {
 } from "../types/training-planner-types";
 
 const activity = {
-  ...createRunActivity({
+  ...createRunTrainingSession({
     id: "activity",
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,

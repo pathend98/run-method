@@ -1,4 +1,4 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import {
   fireEvent,
   render as testingRender,
@@ -82,7 +82,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
     vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue([
-        createRunActivity({
+        createRunTrainingSession({
           title: "Easy run",
           date: getCurrentWeekRange().from,
         }),
@@ -109,7 +109,7 @@ test("TrainingPlanner renders loaded planner data", async () => {
 });
 
 test("TrainingPlanner opens the activity review modal from the attention panel", async () => {
-  const pastSession = createRunActivity({
+  const pastSession = createRunTrainingSession({
     title: "Easy run",
     date: format(subDays(new Date(), 1), "yyyy-MM-dd"),
   });
@@ -156,7 +156,7 @@ test("TrainingPlanner renders error state", async () => {
 });
 
 test("TrainingPlanner skips and completes activities through the API", async () => {
-  const session = createRunActivity({
+  const session = createRunTrainingSession({
     title: "Easy run",
     date: getCurrentWeekRange().from,
     targetDistanceMetres: 5000,
@@ -255,7 +255,7 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
       return Promise.resolve({
         ok: true,
         json: vi.fn().mockResolvedValue(
-          createRunActivity({
+          createRunTrainingSession({
             title: "Easy run",
             date: range.from,
             timeOfDay: null,
@@ -313,7 +313,7 @@ test("TrainingPlanner creates an activity and refreshes its week", async () => {
 
 test("TrainingPlanner edits an activity and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = createRunActivity({
+  const activity = createRunTrainingSession({
     title: "Easy run",
     date: range.from,
     targetDistanceMetres: 5000,
@@ -384,7 +384,7 @@ test("TrainingPlanner edits an activity and refreshes its week", async () => {
 
 test("TrainingPlanner deletes an activity and refreshes its week", async () => {
   const range = getCurrentWeekRange();
-  const activity = createRunActivity({
+  const activity = createRunTrainingSession({
     title: "Easy run",
     date: range.from,
     targetDistanceMetres: 5000,

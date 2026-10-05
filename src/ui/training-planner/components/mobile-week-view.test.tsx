@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 
 import { MobileWeekView } from "./mobile-week-view";
 import type {
@@ -11,7 +11,7 @@ import type {
 } from "../types/training-planner-types";
 
 const baseActivity = {
-  ...createRunActivity({
+  ...createRunTrainingSession({
     date: "2026-08-19",
     id: "activity",
     targetDistanceMetres: 6000,
@@ -35,7 +35,7 @@ function createWeek(): TrainingDay[] {
       activities: [
         activity({ id: "morning", title: "Easy run" }),
         {
-          ...createStrengthActivity({
+          ...createStrengthTrainingSession({
             id: "evening",
             date: "2026-08-19",
             timeOfDay: "PM",

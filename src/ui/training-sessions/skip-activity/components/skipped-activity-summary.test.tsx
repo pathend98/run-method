@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react";
 
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { SkippedActivitySummary } from "./skipped-activity-summary";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const activity = createRunActivity({
+const activity = createRunTrainingSession({
   id: "run",
   title: "Easy run",
   timeOfDay: null,
@@ -31,7 +31,7 @@ test("shows the planned run distance and pace in miles", () => {
 test("shows strength duration without run metrics", () => {
   render(
     <SkippedActivitySummary
-      activity={createStrengthActivity({
+      activity={createStrengthTrainingSession({
         id: activity.id,
         title: activity.title,
         timeOfDay: activity.timeOfDay,
@@ -46,7 +46,7 @@ test("shows strength duration without run metrics", () => {
 test("omits metrics for strength activities without a target duration", () => {
   const { container } = render(
     <SkippedActivitySummary
-      activity={createStrengthActivity({
+      activity={createStrengthTrainingSession({
         id: activity.id,
         title: activity.title,
         timeOfDay: activity.timeOfDay,

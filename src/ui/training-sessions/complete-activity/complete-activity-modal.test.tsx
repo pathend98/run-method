@@ -2,9 +2,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
@@ -19,7 +19,7 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
 }));
 
 const activity = {
-  ...createRunActivity({
+  ...createRunTrainingSession({
     timeOfDay: null,
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
@@ -111,7 +111,7 @@ test("disables dismissal while completion is pending", async () => {
 test("shows a duration-only completion dialog for strength", () => {
   const store = createTrainingPlannerStore();
   store.getState().openActivityDetails({
-    ...createStrengthActivity({
+    ...createStrengthTrainingSession({
       id: activity.id,
       title: activity.title,
       date: activity.date,

@@ -1,4 +1,4 @@
-import { createStrengthActivity } from "@/test-support/fixtures/activity";
+import { createStrengthTrainingSession } from "@/test-support/fixtures/training-session";
 import type { CreateTrainingSessionRequest } from "@/domain/training-sessions";
 import { DefaultTrainingSessionsService } from "./training-sessions-service";
 import { UserNotFoundError } from "../user/user-errors";
@@ -82,7 +82,7 @@ test("delegates creation to the repository", async () => {
     description: null,
     targetDurationSeconds: 1800,
   };
-  const created = createStrengthActivity({
+  const created = createStrengthTrainingSession({
     date: request.date,
     targetDurationSeconds: request.targetDurationSeconds,
     createdAt: "2026-08-26T10:00:00.000Z",

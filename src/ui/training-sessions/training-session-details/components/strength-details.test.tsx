@@ -1,13 +1,13 @@
 import { render, screen, within } from "@testing-library/react";
 
 import type { StrengthTrainingSession } from "@/domain/training-sessions";
-import { createStrengthActivity } from "@/test-support/fixtures/activity";
+import { createStrengthTrainingSession } from "@/test-support/fixtures/training-session";
 import { StrengthDetails } from "./strength-details";
 
 function strengthActivity(
   override: Partial<StrengthTrainingSession> = {},
 ): StrengthTrainingSession {
-  return createStrengthActivity({
+  return createStrengthTrainingSession({
     id: "strength",
     timeOfDay: "PM",
     description: "Full body",

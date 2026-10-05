@@ -3,13 +3,13 @@ import type {
   TrainingSession,
 } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import { getWeeklySummary } from "./weekly-summary-service";
 
 const activities: TrainingSession[] = [
-  createRunActivity({
+  createRunTrainingSession({
     title: "Activity",
     timeOfDay: null,
     actualDistanceMetres: 9500,
@@ -18,7 +18,7 @@ const activities: TrainingSession[] = [
     targetDistanceMetres: 10000,
     targetDurationSeconds: 3000,
   }),
-  createStrengthActivity({
+  createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     title: "Activity",
     timeOfDay: null,
@@ -26,7 +26,7 @@ const activities: TrainingSession[] = [
     status: "COMPLETED",
     targetDurationSeconds: null,
   }),
-  createRunActivity({
+  createRunTrainingSession({
     id: "33333333-3333-4333-8333-333333333333",
     date: "2026-08-20",
     title: "Activity",
@@ -34,7 +34,7 @@ const activities: TrainingSession[] = [
     targetDistanceMetres: 5000,
     targetDurationSeconds: 1800,
   }),
-  createStrengthActivity({
+  createStrengthTrainingSession({
     id: "44444444-4444-4444-8444-444444444444",
     title: "Activity",
     timeOfDay: null,
@@ -42,7 +42,7 @@ const activities: TrainingSession[] = [
     status: "SKIPPED",
     targetDurationSeconds: 1200,
   }),
-  createStrengthActivity({
+  createStrengthTrainingSession({
     id: "55555555-5555-4555-8555-555555555555",
     date: "2026-08-22",
     title: "Activity",

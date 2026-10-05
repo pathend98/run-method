@@ -1,4 +1,4 @@
-import { createRunActivity } from "@/test-support/fixtures/activity";
+import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
@@ -15,7 +15,7 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
 }));
 
 const activity = {
-  ...createRunActivity({
+  ...createRunTrainingSession({
     title: "Easy run",
     timeOfDay: null,
     targetDurationSeconds: 2400,

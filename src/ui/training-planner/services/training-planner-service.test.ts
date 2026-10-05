@@ -1,7 +1,7 @@
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import {
   formatDayDate,
   formatWeekRange,
@@ -52,14 +52,14 @@ test("formatDayDate formats a compact day label", () => {
 test("groupSessionsByWeekday groups API sessions into planner days", () => {
   const week = groupSessionsByWeekday(
     [
-      createRunActivity({
+      createRunTrainingSession({
         title: "Long run",
         date: "2026-08-22",
         description: "90 minutes",
         targetDistanceMetres: 18000,
         targetDurationSeconds: 5400,
       }),
-      createStrengthActivity({
+      createStrengthTrainingSession({
         id: "22222222-2222-4222-8222-222222222222",
         date: "2026-08-22",
         timeOfDay: null,

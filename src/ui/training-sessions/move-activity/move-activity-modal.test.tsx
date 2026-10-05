@@ -9,9 +9,9 @@ import {
 import { QueryProvider } from "@/app/query-provider";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import {
-  createRunActivity,
-  createStrengthActivity,
-} from "@/test-support/fixtures/activity";
+  createRunTrainingSession,
+  createStrengthTrainingSession,
+} from "@/test-support/fixtures/training-session";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
@@ -25,7 +25,7 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
   editTrainingSession: api.editTrainingSession,
 }));
 
-const activity = createRunActivity({
+const activity = createRunTrainingSession({
   date: "2026-09-10",
   timeOfDay: "PM",
   description: "Controlled effort",
@@ -110,7 +110,7 @@ test("moves the activity and returns to the training planner", async () => {
 });
 
 test("moves a strength activity with its existing duration", async () => {
-  const strengthActivity = createStrengthActivity({
+  const strengthActivity = createStrengthTrainingSession({
     id: "22222222-2222-4222-8222-222222222222",
     title: activity.title,
     date: activity.date,

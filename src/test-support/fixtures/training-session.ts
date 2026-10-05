@@ -3,7 +3,7 @@ import type {
   StrengthTrainingSession,
 } from "@/domain/training-sessions";
 
-const baseActivity = {
+const baseTrainingSession = {
   id: "11111111-1111-4111-8111-111111111111",
   athleteId: "33333333-3333-4333-8333-333333333333",
   status: "SCHEDULED",
@@ -16,11 +16,11 @@ const baseActivity = {
   updatedAt: "2026-08-01T10:00:00.000Z",
 } as const;
 
-export function createStrengthActivity(
+export function createStrengthTrainingSession(
   overrides: Partial<StrengthTrainingSession> = {},
 ): StrengthTrainingSession {
   return {
-    ...baseActivity,
+    ...baseTrainingSession,
     title: "Strength",
     activityType: "STRENGTH",
     targetDurationSeconds: 2700,
@@ -29,11 +29,11 @@ export function createStrengthActivity(
   };
 }
 
-export function createRunActivity(
+export function createRunTrainingSession(
   overrides: Partial<RunTrainingSession> = {},
 ): RunTrainingSession {
   return {
-    ...baseActivity,
+    ...baseTrainingSession,
     title: "Tempo run",
     activityType: "RUN",
     targetDistanceMetres: 8000,
