@@ -95,7 +95,7 @@ export function TrainingPlannerView({
           </Button>
         </nav>
         <WeeklySummary
-          activities={sessions}
+          trainingSessions={sessions}
           className="mb-8"
           weekRange={weekRange}
         />

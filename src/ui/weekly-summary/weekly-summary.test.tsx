@@ -5,7 +5,7 @@ import { createRunTrainingSession } from "@/test-support/fixtures/training-sessi
 import { WeeklySummary } from "./weekly-summary";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const activity: TrainingSession = createRunTrainingSession({
+const trainingSession: TrainingSession = createRunTrainingSession({
   date: "2026-08-22",
   targetDistanceMetres: 5000,
   targetDurationSeconds: 1800,
@@ -21,11 +21,11 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-test("renders current-week completed and activity-status lines", () => {
+test("renders current-week completed and training session status lines", () => {
   vi.setSystemTime(new Date(2026, 7, 20, 12));
   render(
     <WeeklySummary
-      activities={[activity]}
+      trainingSessions={[trainingSession]}
       className="mb-8"
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
@@ -36,10 +36,10 @@ test("renders current-week completed and activity-status lines", () => {
   expect(completedDistance.classList.contains("font-semibold")).toBe(true);
   expect(screen.getByText("5.00 km scheduled")).toBeDefined();
   expect(screen.getByText("0m")).toBeDefined();
-  const completedActivities = screen.getByText("0 completed");
-  expect(completedActivities.classList).toContain("text-sm");
-  expect(completedActivities.classList).toContain("sm:text-2xl");
-  expect(completedActivities.classList).toContain("sm:font-semibold");
+  const completedTrainingSessions = screen.getByText("0 completed");
+  expect(completedTrainingSessions.classList).toContain("text-sm");
+  expect(completedTrainingSessions.classList).toContain("sm:text-2xl");
+  expect(completedTrainingSessions.classList).toContain("sm:font-semibold");
   expect(screen.getByText("1 upcoming")).toBeDefined();
   expect(screen.queryByText(/due/)).toBeNull();
   expect(screen.queryByText(/skipped/)).toBeNull();
@@ -48,19 +48,19 @@ test("renders current-week completed and activity-status lines", () => {
   expect(summary.classList).toContain("grid-cols-2");
   expect(summary.classList).toContain("sm:grid-cols-3");
   expect(summary.classList).toContain("mb-8");
-  const activities = screen.getByRole("heading", {
+  const trainingSessions = screen.getByRole("heading", {
     level: 2,
-    name: "Activities",
+    name: "Training sessions",
   }).parentElement;
-  expect(activities?.classList).toContain("col-span-2");
-  expect(activities?.classList).toContain("sm:col-span-1");
+  expect(trainingSessions?.classList).toContain("col-span-2");
+  expect(trainingSessions?.classList).toContain("sm:col-span-1");
   expect(screen.getByText("·").classList).toContain("sm:hidden");
 });
 
 test("calculates distance and duration progress from completed actuals", () => {
   vi.setSystemTime(new Date(2026, 7, 20, 12));
-  const completedActivity: TrainingSession = {
-    ...activity,
+  const completedTrainingSession: TrainingSession = {
+    ...trainingSession,
     actualDistanceMetres: 2500,
     actualDurationSeconds: 900,
     date: "2026-08-20",
@@ -68,7 +68,7 @@ test("calculates distance and duration progress from completed actuals", () => {
   };
   render(
     <WeeklySummary
-      activities={[completedActivity]}
+      trainingSessions={[completedTrainingSession]}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
@@ -86,16 +86,16 @@ test("calculates distance and duration progress from completed actuals", () => {
   expect(screen.queryByText(/skipped|due|upcoming/)).toBeNull();
 });
 
-test("includes skipped activities when present", () => {
+test("includes skipped training sessions when present", () => {
   vi.setSystemTime(new Date(2026, 7, 20, 12));
-  const skippedActivity: TrainingSession = {
-    ...activity,
+  const skippedTrainingSession: TrainingSession = {
+    ...trainingSession,
     skipReason: "Rest day",
     status: "SKIPPED",
   };
   render(
     <WeeklySummary
-      activities={[skippedActivity]}
+      trainingSessions={[skippedTrainingSession]}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
@@ -106,8 +106,8 @@ test("includes skipped activities when present", () => {
 
 test("shows planned totals and variance for a past week", () => {
   vi.setSystemTime(new Date(2026, 7, 24, 12));
-  const pastActivity: TrainingSession = {
-    ...activity,
+  const pastTrainingSession: TrainingSession = {
+    ...trainingSession,
     actualDistanceMetres: 86700,
     actualDurationSeconds: 23820,
     date: "2026-08-17",
@@ -117,7 +117,7 @@ test("shows planned totals and variance for a past week", () => {
   };
   render(
     <WeeklySummary
-      activities={[pastActivity]}
+      trainingSessions={[pastTrainingSession]}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
@@ -138,9 +138,9 @@ test("shows past-week totals and variance in miles", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
       <WeeklySummary
-        activities={[
+        trainingSessions={[
           {
-            ...activity,
+            ...trainingSession,
             actualDistanceMetres: 9656,
             actualDurationSeconds: 1800,
             date: "2026-08-17",
@@ -157,11 +157,11 @@ test("shows past-week totals and variance in miles", () => {
   expect(screen.getByText("5.00 mi planned · +1.0 mi")).toBeDefined();
 });
 
-test("includes due activities when present", () => {
+test("includes due training sessions when present", () => {
   vi.setSystemTime(new Date(2026, 7, 20, 12));
   render(
     <WeeklySummary
-      activities={[{ ...activity, date: "2026-08-20" }]}
+      trainingSessions={[{ ...trainingSession, date: "2026-08-20" }]}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
@@ -173,16 +173,16 @@ test("renders only scheduled values for a future week", () => {
   vi.setSystemTime(new Date(2026, 7, 16, 12));
   render(
     <WeeklySummary
-      activities={[activity]}
+      trainingSessions={[trainingSession]}
       weekRange={{ from: "2026-08-17", to: "2026-08-23" }}
     />,
   );
 
   expect(screen.queryByText("0.0 km")).toBeNull();
-  const scheduledActivities = screen.getByText("1 scheduled");
-  expect(scheduledActivities.classList).toContain("text-sm");
-  expect(scheduledActivities.classList).toContain("sm:text-2xl");
-  expect(scheduledActivities.classList).toContain("sm:font-semibold");
+  const scheduledTrainingSessions = screen.getByText("1 scheduled");
+  expect(scheduledTrainingSessions.classList).toContain("text-sm");
+  expect(scheduledTrainingSessions.classList).toContain("sm:text-2xl");
+  expect(scheduledTrainingSessions.classList).toContain("sm:font-semibold");
   expect(
     screen
       .getByRole("progressbar", { name: "Running distance progress" })

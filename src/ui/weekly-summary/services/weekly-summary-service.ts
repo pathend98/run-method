@@ -10,7 +10,7 @@ export type WeeklySummary = {
   isPastWeek: boolean;
   scheduledDistanceMetres: number;
   scheduledDurationSeconds: number;
-  activities: {
+  trainingSessions: {
     completed: number;
     due: number;
     scheduled: number;
@@ -20,16 +20,16 @@ export type WeeklySummary = {
 };
 
 export function getWeeklySummary(
-  activities: TrainingSession[],
+  trainingSessions: TrainingSession[],
   weekRange: TrainingSessionDateRange,
   today: string,
 ): WeeklySummary {
   const isFutureWeek = weekRange.from > today;
   const isPastWeek = weekRange.to < today;
-  const summaryActivities = {
+  const summaryTrainingSessions = {
     completed: 0,
     due: 0,
-    scheduled: activities.length,
+    scheduled: trainingSessions.length,
     skipped: 0,
     upcoming: 0,
   };
@@ -38,27 +38,27 @@ export function getWeeklySummary(
   let scheduledDistanceMetres = 0;
   let scheduledDurationSeconds = 0;
 
-  for (const activity of activities) {
-    scheduledDurationSeconds += activity.targetDurationSeconds ?? 0;
+  for (const trainingSession of trainingSessions) {
+    scheduledDurationSeconds += trainingSession.targetDurationSeconds ?? 0;
 
-    if (activity.activityType === "RUN") {
-      scheduledDistanceMetres += activity.targetDistanceMetres;
+    if (trainingSession.activityType === "RUN") {
+      scheduledDistanceMetres += trainingSession.targetDistanceMetres;
     }
 
-    if (activity.status === "COMPLETED") {
-      summaryActivities.completed += 1;
-      completedDurationSeconds += activity.actualDurationSeconds ?? 0;
+    if (trainingSession.status === "COMPLETED") {
+      summaryTrainingSessions.completed += 1;
+      completedDurationSeconds += trainingSession.actualDurationSeconds ?? 0;
 
-      if (activity.activityType === "RUN") {
-        completedDistanceMetres += activity.actualDistanceMetres ?? 0;
+      if (trainingSession.activityType === "RUN") {
+        completedDistanceMetres += trainingSession.actualDistanceMetres ?? 0;
       }
-    } else if (activity.status === "SKIPPED") {
-      summaryActivities.skipped += 1;
+    } else if (trainingSession.status === "SKIPPED") {
+      summaryTrainingSessions.skipped += 1;
     } else if (!isFutureWeek) {
-      if (isPastWeek || activity.date <= today) {
-        summaryActivities.due += 1;
+      if (isPastWeek || trainingSession.date <= today) {
+        summaryTrainingSessions.due += 1;
       } else {
-        summaryActivities.upcoming += 1;
+        summaryTrainingSessions.upcoming += 1;
       }
     }
   }
@@ -70,6 +70,6 @@ export function getWeeklySummary(
     isPastWeek,
     scheduledDistanceMetres,
     scheduledDurationSeconds,
-    activities: summaryActivities,
+    trainingSessions: summaryTrainingSessions,
   };
 }
