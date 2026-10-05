@@ -5,18 +5,18 @@ import {
   formatDuration,
   formatPace,
 } from "@/ui/training-sessions/formatters";
-import { ActivityDetailsBody } from "./activity-details-body";
+import { TrainingSessionDetailsBody } from "./training-session-details-body";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
-type RunActivityDetailsProps = {
-  activity: RunTrainingSession;
+type RunDetailsProps = {
+  trainingSession: RunTrainingSession;
 };
 
-export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
+export function RunDetails({ trainingSession }: RunDetailsProps) {
   const measurementUnit = useDistanceDisplayUnit();
   const runningMetrics = new RunningMetrics(measurementUnit);
-  const distanceMetres = activity.targetDistanceMetres;
-  const durationSeconds = activity.targetDurationSeconds;
+  const distanceMetres = trainingSession.targetDistanceMetres;
+  const durationSeconds = trainingSession.targetDurationSeconds;
   const paceSecondsPerKilometre = runningMetrics.paceForRun(
     distanceMetres,
     durationSeconds,
@@ -24,13 +24,13 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
   const targetDistance = formatDistance(distanceMetres, measurementUnit);
   const targetDuration = formatDuration(durationSeconds);
   const targetPace = formatPace(paceSecondsPerKilometre, measurementUnit);
-  const isCompleted = activity.status === "COMPLETED";
-  const actualDistance = activity.actualDistanceMetres;
-  const actualDuration = activity.actualDurationSeconds;
+  const isCompleted = trainingSession.status === "COMPLETED";
+  const actualDistance = trainingSession.actualDistanceMetres;
+  const actualDuration = trainingSession.actualDurationSeconds;
   const completedMetrics =
     isCompleted && actualDistance !== null && actualDuration !== null ? (
       <dl
-        aria-label="Completed activity metrics"
+        aria-label="Completed training session metrics"
         className="mt-6 grid gap-8 sm:grid-cols-3"
       >
         <div>
@@ -68,7 +68,7 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
 
   const plannedMetrics = (
     <dl
-      aria-label="Planned activity metrics"
+      aria-label="Planned training session metrics"
       className="mt-6 grid gap-8 sm:grid-cols-3"
     >
       <div>
@@ -99,8 +99,8 @@ export function RunActivityDetails({ activity }: RunActivityDetailsProps) {
   );
 
   return (
-    <ActivityDetailsBody
-      activity={activity}
+    <TrainingSessionDetailsBody
+      trainingSession={trainingSession}
       plannedMetrics={completedMetrics ?? plannedMetrics}
     />
   );

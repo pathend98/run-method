@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import { createRunActivity } from "@/test-support/fixtures/activity";
-import { RunActivityDetails } from "./run-activity-details";
+import { RunDetails } from "./run-details";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 type RunOverride = Partial<RunTrainingSession>;
@@ -21,8 +21,10 @@ function runActivity(override: RunOverride = {}): RunTrainingSession {
 }
 
 test("renders scheduled run targets without recorded actual values", () => {
-  render(<RunActivityDetails activity={runActivity()} />);
-  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  render(<RunDetails trainingSession={runActivity()} />);
+  const plannedMetrics = screen.getByLabelText(
+    "Planned training session metrics",
+  );
 
   expect(within(plannedMetrics).queryByText("AM")).toBeNull();
   expect(screen.queryByRole("heading", { name: "Details" })).toBeNull();
@@ -38,8 +40,10 @@ test("renders scheduled run targets without recorded actual values", () => {
 });
 
 test("renders run targets as spacious responsive metric groups", () => {
-  render(<RunActivityDetails activity={runActivity()} />);
-  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  render(<RunDetails trainingSession={runActivity()} />);
+  const plannedMetrics = screen.getByLabelText(
+    "Planned training session metrics",
+  );
   expect(plannedMetrics.classList.contains("sm:grid-cols-3")).toBe(true);
   expect(plannedMetrics.classList.contains("gap-8")).toBe(true);
   expect(
@@ -70,17 +74,21 @@ test("renders run targets as spacious responsive metric groups", () => {
 
 test("prioritizes completed run actuals and shows their targets as supporting text", () => {
   render(
-    <RunActivityDetails
-      activity={runActivity({
+    <RunDetails
+      trainingSession={runActivity({
         status: "COMPLETED",
         actualDurationSeconds: 1500,
       })}
     />,
   );
 
-  const completedMetrics = screen.getByLabelText("Completed activity metrics");
+  const completedMetrics = screen.getByLabelText(
+    "Completed training session metrics",
+  );
 
-  expect(screen.queryByLabelText("Planned activity metrics")).toBeNull();
+  expect(
+    screen.queryByLabelText("Planned training session metrics"),
+  ).toBeNull();
   expect(completedMetrics.classList.contains("gap-8")).toBe(true);
   expect(
     [...completedMetrics.querySelectorAll("dt")].map(
@@ -113,11 +121,13 @@ test("prioritizes completed run actuals and shows their targets as supporting te
 test("shows target and actual distances and paces in miles", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
-      <RunActivityDetails activity={runActivity({ status: "COMPLETED" })} />
+      <RunDetails trainingSession={runActivity({ status: "COMPLETED" })} />
     </DistanceDisplayProvider>,
   );
 
-  const completedMetrics = screen.getByLabelText("Completed activity metrics");
+  const completedMetrics = screen.getByLabelText(
+    "Completed training session metrics",
+  );
   expect(within(completedMetrics).getByText("3.67 mi")).toBeDefined();
   expect(within(completedMetrics).getByText("Target: 3.73 mi")).toBeDefined();
   expect(within(completedMetrics).getByText("6:49 / mi")).toBeDefined();
@@ -147,7 +157,7 @@ test.each([
 }>)(
   "derives $expectedDerivedTarget",
   ({ expectedDerivedTarget, expectedDuration, override }) => {
-    render(<RunActivityDetails activity={runActivity(override)} />);
+    render(<RunDetails trainingSession={runActivity(override)} />);
     expect(screen.getByText(expectedDuration)).toBeDefined();
     expect(screen.getByText(expectedDerivedTarget)).toBeDefined();
   },
@@ -155,8 +165,8 @@ test.each([
 
 test("renders derived pace and no actual metrics", () => {
   render(
-    <RunActivityDetails
-      activity={runActivity({
+    <RunDetails
+      trainingSession={runActivity({
         actualDistanceMetres: null,
         actualDurationSeconds: null,
         targetDistanceMetres: 5000,
@@ -165,7 +175,9 @@ test("renders derived pace and no actual metrics", () => {
       })}
     />,
   );
-  const plannedMetrics = screen.getByLabelText("Planned activity metrics");
+  const plannedMetrics = screen.getByLabelText(
+    "Planned training session metrics",
+  );
   expect(within(plannedMetrics).queryByText("Any time")).toBeNull();
   expect(screen.getByText("5.00 km")).toBeDefined();
   expect(screen.getByText("30m")).toBeDefined();
@@ -180,7 +192,7 @@ test.each([
 ] satisfies Array<[string, RunOverride, string]>)(
   "omits non-completed actual %s",
   (_name, override, expectedLabel) => {
-    render(<RunActivityDetails activity={runActivity(override)} />);
+    render(<RunDetails trainingSession={runActivity(override)} />);
     expect(screen.queryByText(expectedLabel)).toBeNull();
   },
 );

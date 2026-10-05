@@ -16,7 +16,7 @@ import {
   createRunActivity,
   createStrengthActivity,
 } from "@/test-support/fixtures/activity";
-import { ActivityDetailsModal as ActualActivityDetailsModal } from "./activity-details-modal";
+import { TrainingSessionDetailsModal as ActualActivityDetailsModal } from "./training-session-details-modal";
 import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,

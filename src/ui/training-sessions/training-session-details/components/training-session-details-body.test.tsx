@@ -2,7 +2,7 @@ import { createStrengthActivity } from "@/test-support/fixtures/activity";
 import { render, screen } from "@testing-library/react";
 
 import type { StrengthTrainingSession } from "@/domain/training-sessions";
-import { ActivityDetailsBody } from "./activity-details-body";
+import { TrainingSessionDetailsBody } from "./training-session-details-body";
 
 const activity = createStrengthActivity({
   id: "strength",
@@ -15,8 +15,8 @@ const activity = createStrengthActivity({
 
 test("renders the skip reason before planned metrics and description", () => {
   render(
-    <ActivityDetailsBody
-      activity={activity}
+    <TrainingSessionDetailsBody
+      trainingSession={activity}
       plannedMetrics={<p>Planned metrics</p>}
     />,
   );
@@ -42,8 +42,8 @@ test("renders the skip reason before planned metrics and description", () => {
 
 test("omits the description section and absent skip metadata when unavailable", () => {
   render(
-    <ActivityDetailsBody
-      activity={{
+    <TrainingSessionDetailsBody
+      trainingSession={{
         ...activity,
         description: null,
         skipReason: null,

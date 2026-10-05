@@ -13,7 +13,7 @@ import {
   createTrainingPlannerStore,
   TrainingPlannerStoreProvider,
 } from "@/ui/training-planner/training-planner-store";
-import { ActivityDetailsModal } from "./activity-details-modal";
+import { TrainingSessionDetailsModal } from "./training-session-details-modal";
 
 const runActivity = createRunActivity({
   id: "run",
@@ -32,7 +32,7 @@ function renderActivityDetails(
   render(
     <TrainingPlannerStoreProvider store={store}>
       <QueryProvider>
-        <ActivityDetailsModal />
+        <TrainingSessionDetailsModal />
       </QueryProvider>
     </TrainingPlannerStoreProvider>,
   );

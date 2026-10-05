@@ -9,7 +9,7 @@ import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { Button } from "@/ui/shared/button/button";
 import { PlannerStatus } from "./components/planner-status";
 import { TrainingPlannerView } from "./components/training-planner-view";
-import { ActivityDetailsModal } from "@/ui/training-sessions/activity-details/activity-details-modal";
+import { TrainingSessionDetailsModal } from "@/ui/training-sessions/training-session-details/training-session-details-modal";
 import { AddActivityModal } from "@/ui/training-sessions/add-activity/add-activity-modal";
 import { EditActivityModal } from "@/ui/training-sessions/edit-activity/edit-activity-modal";
 import { CompleteActivityModal } from "@/ui/training-sessions/complete-activity/complete-activity-modal";
@@ -126,7 +126,7 @@ export function TrainingPlanner() {
         week={week}
         weekRange={weekRange}
       />
-      {activeModalKind === "details" ? <ActivityDetailsModal /> : null}
+      {activeModalKind === "details" ? <TrainingSessionDetailsModal /> : null}
       {activeModalKind === "edit" ? <EditActivityModal /> : null}
       {activeModalKind === "move" ? <MoveActivityModal /> : null}
       {activeModalKind === "complete" ? <CompleteActivityModal /> : null}

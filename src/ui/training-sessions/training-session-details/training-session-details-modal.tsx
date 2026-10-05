@@ -3,13 +3,24 @@ import {
   formatActivityType,
   formatStatus,
   formatTimeOfDay,
-} from "@/ui/training-sessions/formatters";
-import { RunActivityDetails } from "./components/run-activity-details";
-import { StrengthActivityDetails } from "./components/strength-activity-details";
-import { canTransitionActivity } from "./actions/activity-transition-availability";
+} from "../formatters";
+import { RunDetails } from "./components/run-details";
+import { StrengthDetails } from "./components/strength-details";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import type { TrainingSession } from "@/domain/training-sessions";
+import { format } from "date-fns";
 
-export function ActivityDetailsModal() {
+function canTransitionTrainingSession(
+  trainingSession: TrainingSession,
+  now = new Date(),
+): boolean {
+  return (
+    trainingSession.status === "SCHEDULED" &&
+    trainingSession.date <= format(now, "yyyy-MM-dd")
+  );
+}
+
+export function TrainingSessionDetailsModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
   const closeModal = useTrainingPlannerStore((state) => state.closeModal);
   const openEditActivity = useTrainingPlannerStore(
@@ -32,9 +43,9 @@ export function ActivityDetailsModal() {
     return null;
   }
 
-  const { activity } = activeModal;
+  const { activity: trainingSession } = activeModal;
 
-  const canTransition = canTransitionActivity(activity);
+  const canTransition = canTransitionTrainingSession(trainingSession);
   const primaryHeaderActions: ModalAction[] = [
     {
       label: "Edit",
@@ -44,7 +55,7 @@ export function ActivityDetailsModal() {
   ];
 
   const secondaryHeaderActions: ModalAction[] = [
-    ...(activity.status === "SCHEDULED"
+    ...(trainingSession.status === "SCHEDULED"
       ? [
           {
             label: "Move",
@@ -88,13 +99,13 @@ export function ActivityDetailsModal() {
       primaryHeaderActions={primaryHeaderActions}
       secondaryHeaderActions={secondaryHeaderActions}
       size="large"
-      subtitle={`${formatActivityType(activity.activityType)} · ${formatStatus(activity.status)} · ${formatTimeOfDay(activity.timeOfDay)}`}
-      title={activity.title}
+      subtitle={`${formatActivityType(trainingSession.activityType)} · ${formatStatus(trainingSession.status)} · ${formatTimeOfDay(trainingSession.timeOfDay)}`}
+      title={trainingSession.title}
     >
-      {activity.activityType === "RUN" ? (
-        <RunActivityDetails activity={activity} />
+      {trainingSession.activityType === "RUN" ? (
+        <RunDetails trainingSession={trainingSession} />
       ) : (
-        <StrengthActivityDetails activity={activity} />
+        <StrengthDetails trainingSession={trainingSession} />
       )}
     </Modal>
   );

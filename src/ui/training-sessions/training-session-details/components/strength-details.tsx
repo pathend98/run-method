@@ -1,19 +1,20 @@
 import type { StrengthTrainingSession } from "@/domain/training-sessions";
 import { formatDuration } from "@/ui/training-sessions/formatters";
-import { ActivityDetailsBody } from "./activity-details-body";
+import { TrainingSessionDetailsBody } from "./training-session-details-body";
 
-type StrengthActivityDetailsProps = {
-  activity: StrengthTrainingSession;
+type StrengthDetailsProps = {
+  trainingSession: StrengthTrainingSession;
 };
 
-export function StrengthActivityDetails({
-  activity,
-}: StrengthActivityDetailsProps) {
-  const targetDuration = formatDuration(activity.targetDurationSeconds);
-  const actualDuration = activity.actualDurationSeconds;
+export function StrengthDetails({ trainingSession }: StrengthDetailsProps) {
+  const targetDuration = formatDuration(trainingSession.targetDurationSeconds);
+  const actualDuration = trainingSession.actualDurationSeconds;
   const completedMetrics =
-    activity.status === "COMPLETED" && actualDuration !== null ? (
-      <dl aria-label="Completed activity metrics" className="mt-6 grid gap-8">
+    trainingSession.status === "COMPLETED" && actualDuration !== null ? (
+      <dl
+        aria-label="Completed training session metrics"
+        className="mt-6 grid gap-8"
+      >
         <div>
           <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Actual duration
@@ -28,7 +29,10 @@ export function StrengthActivityDetails({
       </dl>
     ) : null;
   const plannedMetrics = (
-    <dl aria-label="Planned activity metrics" className="mt-6 grid gap-8">
+    <dl
+      aria-label="Planned training session metrics"
+      className="mt-6 grid gap-8"
+    >
       <div>
         <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Duration
@@ -41,8 +45,8 @@ export function StrengthActivityDetails({
   );
 
   return (
-    <ActivityDetailsBody
-      activity={activity}
+    <TrainingSessionDetailsBody
+      trainingSession={trainingSession}
       plannedMetrics={completedMetrics ?? plannedMetrics}
     />
   );
