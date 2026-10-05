@@ -3,7 +3,7 @@ import {
   formatActivityType,
   formatStatus,
   formatTimeOfDay,
-} from "@/ui/training-sessions/training-session-label-formatters";
+} from "@/ui/activities/formatters/training-session-label-formatters";
 import { RunActivityDetails } from "./components/run-activity-details";
 import { StrengthActivityDetails } from "./components/strength-activity-details";
 import { canTransitionActivity } from "./actions/activity-transition-availability";

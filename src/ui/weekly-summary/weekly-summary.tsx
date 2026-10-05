@@ -7,7 +7,7 @@ import type {
 import {
   formatCompactDuration,
   formatDistance,
-} from "@/ui/training-sessions/training-session-metric-formatters";
+} from "@/ui/activities/formatters/training-session-metric-formatters";
 import { SummaryMetric } from "./components/summary-metric";
 import { getWeeklySummary } from "./services/weekly-summary-service";
 import {

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 
-import type { RunningMetricInput as RunFieldInputValue } from "@/ui/running-metrics/running-metrics";
+import type { RunningMetricInput as RunFieldInputValue } from "../../run-metrics";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { RunFieldInput } from "./run-field-input";
 

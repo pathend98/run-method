@@ -11,8 +11,8 @@ import { Modal } from "@/ui/shared/modal/modal";
 import {
   formatCompactDuration,
   formatDistance,
-} from "@/ui/training-sessions/training-session-metric-formatters";
-import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+} from "@/ui/activities/formatters/training-session-metric-formatters";
+import { fetchTrainingSessions } from "@/ui/activities/api/training-sessions-api-client";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {

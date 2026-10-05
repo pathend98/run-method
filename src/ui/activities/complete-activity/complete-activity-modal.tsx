@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { CompleteTrainingSessionRequest } from "@/domain/training-sessions";
 import { Modal } from "@/ui/shared/modal/modal";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import { useCompleteTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import { useCompleteTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
 import { CompleteActivityForm } from "./components/complete-activity-form";
 import { PlannedRunSummary } from "./components/planned-run-summary";
 

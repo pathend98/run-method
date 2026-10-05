@@ -5,7 +5,7 @@ import {
   type RunningMetricInput as RunFieldInputValue,
   type RunningMetric as RunFieldMetric,
   type RunningMetricUnit as RunFieldUnit,
-} from "@/ui/runs/run-metrics";
+} from "../../run-metrics";
 
 type UseRunFieldInputControllerOptions = {
   onChange: (value: RunFieldInputValue) => void;

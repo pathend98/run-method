@@ -4,7 +4,7 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 
 import { Button } from "@/ui/shared/button/button";
-import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+import { fetchTrainingSessions } from "@/ui/activities/api/training-sessions-api-client";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 

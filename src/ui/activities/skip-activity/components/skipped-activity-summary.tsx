@@ -3,7 +3,7 @@ import {
   formatDistance,
   formatDuration,
   formatPace,
-} from "@/ui/training-sessions/training-session-metric-formatters";
+} from "@/ui/activities/formatters/training-session-metric-formatters";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type SkippedActivitySummaryProps = { activity: TrainingSession };

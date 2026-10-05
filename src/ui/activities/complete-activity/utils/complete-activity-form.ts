@@ -12,7 +12,7 @@ import {
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
-} from "@/ui/training-sessions/duration-fields";
+} from "@/ui/activities/training-session-duration/duration-fields";
 
 export const completeActivityFormSchema = z
   .object({

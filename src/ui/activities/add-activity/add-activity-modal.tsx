@@ -8,7 +8,7 @@ import { Modal } from "@/ui/shared/modal/modal";
 import { RunActivityFields } from "./components/run-activity-fields";
 import { StrengthActivityFields } from "./components/strength-activity-fields";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import { useCreateTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import { useCreateTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
   createAddActivityFormSchema,

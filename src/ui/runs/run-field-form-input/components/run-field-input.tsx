@@ -4,7 +4,7 @@ import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import type {
   RunningMetric as RunFieldMetric,
   RunningMetricInput as RunFieldInputValue,
-} from "@/ui/running-metrics/running-metrics";
+} from "../../run-metrics";
 import { useRunFieldInputController } from "../hooks/use-run-field-input-controller";
 import { RunDurationField } from "./run-duration-field";
 

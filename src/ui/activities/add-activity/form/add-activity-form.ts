@@ -14,7 +14,7 @@ import {
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
-} from "@/ui/training-sessions/duration-fields";
+} from "@/ui/activities/training-session-duration/duration-fields";
 
 const addActivityFormBaseSchema = z.object({
   title: z.string().trim().min(1, "Enter an activity title"),

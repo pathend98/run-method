@@ -11,13 +11,10 @@ import { EditActivityModal } from "./edit-activity-modal";
 
 const api = vi.hoisted(() => ({ editTrainingSession: vi.fn() }));
 
-vi.mock(
-  "@/ui/training-sessions/training-sessions-api-client",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    editTrainingSession: api.editTrainingSession,
-  }),
-);
+vi.mock("@/ui/activities/api", async (importOriginal) => ({
+  ...(await importOriginal()),
+  editTrainingSession: api.editTrainingSession,
+}));
 
 const activity = createRunActivity({
   description: "Controlled effort",

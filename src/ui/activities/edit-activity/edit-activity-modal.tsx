@@ -5,9 +5,9 @@ import type { EditTrainingSessionRequest } from "@/domain/training-sessions";
 import { Modal } from "@/ui/shared/modal/modal";
 import { EditActivityForm } from "./components/edit-activity-form";
 import { EditActivitySummary } from "./components/edit-activity-summary";
-import { formatActivityType } from "@/ui/training-sessions/training-session-label-formatters";
+import { formatActivityType } from "@/ui/activities/formatters/training-session-label-formatters";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import { useEditTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
 
 export function EditActivityModal() {
   const [runFieldsPending, setRunFieldsPending] = useState(false);

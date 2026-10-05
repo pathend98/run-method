@@ -13,13 +13,10 @@ import { CompleteActivityModal } from "./complete-activity-modal";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const api = vi.hoisted(() => ({ completeTrainingSession: vi.fn() }));
-vi.mock(
-  "@/ui/training-sessions/training-sessions-api-client",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    completeTrainingSession: api.completeTrainingSession,
-  }),
-);
+vi.mock("@/ui/activities/api", async (importOriginal) => ({
+  ...(await importOriginal()),
+  completeTrainingSession: api.completeTrainingSession,
+}));
 
 const activity = {
   ...createRunActivity({

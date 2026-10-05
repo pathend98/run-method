@@ -18,7 +18,7 @@ const api = vi.hoisted(() => ({
   skipTrainingSession: vi.fn(),
 }));
 
-vi.mock("./training-sessions-api-client", () => api);
+vi.mock("../api", () => api);
 
 function createWrapper(queryClient: QueryClient) {
   return function QueryWrapper({ children }: { children: ReactNode }) {

@@ -15,13 +15,10 @@ import {
 import { DeleteActivityModal } from "./delete-activity-modal";
 
 const api = vi.hoisted(() => ({ deleteTrainingSession: vi.fn() }));
-vi.mock(
-  "@/ui/training-sessions/training-sessions-api-client",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    deleteTrainingSession: api.deleteTrainingSession,
-  }),
-);
+vi.mock("@/ui/activities/api", async (importOriginal) => ({
+  ...(await importOriginal()),
+  deleteTrainingSession: api.deleteTrainingSession,
+}));
 
 const activity = {
   ...createRunActivity({

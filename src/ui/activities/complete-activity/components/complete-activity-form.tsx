@@ -8,7 +8,7 @@ import type {
 import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
 import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form-input";
 import { RunFieldFormInput } from "@/ui/runs/run-field-form-input/run-field-form-input";
-import { durationSecondsToFields } from "@/ui/training-sessions/duration-fields";
+import { durationSecondsToFields } from "@/ui/activities/training-session-duration/duration-fields";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
   createCompleteActivityFormSchema,

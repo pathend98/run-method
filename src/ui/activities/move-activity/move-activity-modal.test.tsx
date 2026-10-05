@@ -20,13 +20,10 @@ import { MoveActivityModal } from "./move-activity-modal";
 
 const api = vi.hoisted(() => ({ editTrainingSession: vi.fn() }));
 
-vi.mock(
-  "@/ui/training-sessions/training-sessions-api-client",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    editTrainingSession: api.editTrainingSession,
-  }),
-);
+vi.mock("@/ui/activities/api", async (importOriginal) => ({
+  ...(await importOriginal()),
+  editTrainingSession: api.editTrainingSession,
+}));
 
 const activity = createRunActivity({
   date: "2026-09-10",

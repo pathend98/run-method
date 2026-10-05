@@ -9,13 +9,10 @@ import {
 import { SkipActivityModal } from "./skip-activity-modal";
 
 const api = vi.hoisted(() => ({ skipTrainingSession: vi.fn() }));
-vi.mock(
-  "@/ui/training-sessions/training-sessions-api-client",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    skipTrainingSession: api.skipTrainingSession,
-  }),
-);
+vi.mock("@/ui/activities/api", async (importOriginal) => ({
+  ...(await importOriginal()),
+  skipTrainingSession: api.skipTrainingSession,
+}));
 
 const activity = {
   ...createRunActivity({

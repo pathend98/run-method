@@ -4,7 +4,7 @@ import {
   formatDistance,
   formatDuration,
   formatPace,
-} from "@/ui/training-sessions/training-session-metric-formatters";
+} from "@/ui/activities/formatters/training-session-metric-formatters";
 import { ActivityDetailsBody } from "./activity-details-body";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 

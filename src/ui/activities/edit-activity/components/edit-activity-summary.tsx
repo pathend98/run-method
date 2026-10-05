@@ -3,7 +3,7 @@ import {
   formatActivityType,
   formatStatus,
   formatTimeOfDay,
-} from "@/ui/training-sessions/training-session-label-formatters";
+} from "@/ui/activities/formatters/training-session-label-formatters";
 import { formatLockedTargets } from "../form/edit-activity-formatters";
 import { ReadOnlyDetail } from "./read-only-detail";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";

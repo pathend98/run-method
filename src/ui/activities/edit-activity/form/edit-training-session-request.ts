@@ -4,7 +4,7 @@ import {
   type TrainingSession,
 } from "@/domain/training-sessions";
 import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
-import { durationFieldsToSeconds } from "@/ui/training-sessions/duration-fields";
+import { durationFieldsToSeconds } from "@/ui/activities/training-session-duration/duration-fields";
 import {
   createEditActivityFormSchema,
   type EditActivityFormValues,

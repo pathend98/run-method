@@ -10,13 +10,10 @@ import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
 const api = vi.hoisted(() => ({ createTrainingSession: vi.fn() }));
 
-vi.mock(
-  "@/ui/training-sessions/training-sessions-api-client",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    createTrainingSession: api.createTrainingSession,
-  }),
-);
+vi.mock("@/ui/activities/api", async (importOriginal) => ({
+  ...(await importOriginal()),
+  createTrainingSession: api.createTrainingSession,
+}));
 
 const day = { day: "Monday" as const, date: "2026-08-17", activities: [] };
 

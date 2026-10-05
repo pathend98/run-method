@@ -4,9 +4,9 @@ import {
   formatActivityType,
   formatStatus,
   formatTimeOfDay,
-} from "@/ui/training-sessions/training-session-label-formatters";
+} from "@/ui/activities/formatters/training-session-label-formatters";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import { useSkipTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import { useSkipTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
 import { SkipActivityForm } from "./components/skip-activity-form";
 import { SkippedActivitySummary } from "./components/skipped-activity-summary";
 

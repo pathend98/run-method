@@ -27,14 +27,11 @@ const api = vi.hoisted(() => ({
   deleteTrainingSession: vi.fn(),
 }));
 
-vi.mock(
-  "@/ui/training-sessions/training-sessions-api-client",
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    completeTrainingSession: api.completeTrainingSession,
-    deleteTrainingSession: api.deleteTrainingSession,
-  }),
-);
+vi.mock("@/ui/activities/api", async (importOriginal) => ({
+  ...(await importOriginal()),
+  completeTrainingSession: api.completeTrainingSession,
+  deleteTrainingSession: api.deleteTrainingSession,
+}));
 
 const runActivity = createRunActivity({
   id: "run",

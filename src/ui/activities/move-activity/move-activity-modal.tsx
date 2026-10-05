@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 import { getWeekDateOptions } from "@/core/date/week-date-options";
-import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/create-move-training-session-request";
+import { createMoveTrainingSessionRequest } from "./create-move-training-session-request";
 import { FormField } from "@/ui/shared/form-field/form-field";
 import { Modal } from "@/ui/shared/modal/modal";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import { useEditTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
 
 export function MoveActivityModal() {
   const [date, setDate] = useState("");

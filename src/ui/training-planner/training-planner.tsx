@@ -3,7 +3,7 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { fetchTrainingSessions } from "@/ui/training-sessions/training-sessions-api-client";
+import { fetchTrainingSessions } from "@/ui/activities/api/training-sessions-api-client";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { Button } from "@/ui/shared/button/button";
@@ -24,9 +24,9 @@ import {
   resolveWeekRange,
 } from "./services/training-planner-service";
 import { useTrainingPlannerStore } from "./training-planner-store";
-import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/create-move-training-session-request";
-import { useEditTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
-import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/create-move-training-session-request";
+import { createMoveTrainingSessionRequest } from "@/ui/activities/move-activity";
+import { useEditTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
+import type { TrainingSessionMoveDestination } from "@/ui/activities/move-activity/create-move-training-session-request";
 import type { TrainingActivity } from "./types/training-planner-types";
 
 export function TrainingPlanner() {

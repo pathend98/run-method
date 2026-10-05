@@ -15,7 +15,7 @@ import {
   deleteTrainingSession,
   editTrainingSession,
   skipTrainingSession,
-} from "./training-sessions-api-client";
+} from "../api";
 
 const trainingSessionsQueryKey = ["training-sessions"];
 

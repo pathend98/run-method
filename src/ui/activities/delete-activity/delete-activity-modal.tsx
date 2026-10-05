@@ -1,6 +1,6 @@
 import { Modal } from "@/ui/shared/modal/modal";
 import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
-import { useDeleteTrainingSessionMutation } from "@/ui/training-sessions/training-session-mutations";
+import { useDeleteTrainingSessionMutation } from "@/ui/activities/mutations/training-session-mutations";
 
 export function DeleteActivityModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);

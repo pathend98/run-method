@@ -9,8 +9,8 @@ import {
 import {
   formatCompactDuration,
   formatDistance,
-} from "@/ui/training-sessions/training-session-metric-formatters";
-import { formatStatus } from "@/ui/training-sessions/training-session-label-formatters";
+} from "@/ui/activities/formatters/training-session-metric-formatters";
+import { formatStatus } from "@/ui/activities/formatters/training-session-label-formatters";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type TrainingActivityCardProps = {
