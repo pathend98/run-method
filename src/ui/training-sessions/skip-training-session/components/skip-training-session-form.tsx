@@ -4,25 +4,25 @@ import { FormProvider, useForm } from "react-hook-form";
 import type { SkipTrainingSessionRequest } from "@/domain/training-sessions";
 import { FormField } from "@/ui/shared/form-field/form-field";
 import {
-  skipActivityFormSchema,
+  skipTrainingSessionFormSchema,
   toSkipTrainingSessionRequest,
-  type SkipActivityFormValues,
-} from "../form/skip-activity-form";
+  type SkipTrainingSessionFormValues,
+} from "../utils/skip-training-session-form";
 
-type SkipActivityFormProps = {
+type SkipTrainingSessionFormProps = {
   isSubmitting: boolean;
   onSkip: (request: SkipTrainingSessionRequest) => Promise<unknown>;
 };
 
-export function SkipActivityForm({
+export function SkipTrainingSessionForm({
   isSubmitting,
   onSkip,
-}: SkipActivityFormProps) {
-  const form = useForm<SkipActivityFormValues>({
+}: SkipTrainingSessionFormProps) {
+  const form = useForm<SkipTrainingSessionFormValues>({
     defaultValues: { skipReason: "" },
     mode: "onBlur",
     reValidateMode: "onBlur",
-    resolver: zodResolver(skipActivityFormSchema),
+    resolver: zodResolver(skipTrainingSessionFormSchema),
   });
   const {
     formState: { errors },
@@ -31,19 +31,23 @@ export function SkipActivityForm({
     setError,
   } = form;
 
-  async function submit(values: SkipActivityFormValues) {
+  async function submit(values: SkipTrainingSessionFormValues) {
     try {
       await onSkip(toSkipTrainingSessionRequest(values));
     } catch {
       setError("root", {
-        message: "Unable to skip activity. Please try again.",
+        message: "Unable to skip training session. Please try again.",
       });
     }
   }
 
   return (
     <FormProvider {...form}>
-      <form id="skip-activity-form" noValidate onSubmit={handleSubmit(submit)}>
+      <form
+        id="skip-training-session-form"
+        noValidate
+        onSubmit={handleSubmit(submit)}
+      >
         {errors.root ? (
           <p className="mt-4 text-sm text-red-700" role="alert">
             {errors.root.message}
@@ -52,14 +56,14 @@ export function SkipActivityForm({
         <fieldset className="mt-4" disabled={isSubmitting}>
           <FormField
             error={errors.skipReason?.message}
-            label="Why are you skipping this activity?"
+            label="Why are you skipping this training session?"
           >
             <textarea
-              aria-label="Why are you skipping this activity?"
+              aria-label="Why are you skipping this training session?"
               autoFocus
               className="min-h-24"
               disabled={isSubmitting}
-              placeholder="Tell us why you're skipping this workout..."
+              placeholder="Tell us why you're skipping this training session..."
               {...register("skipReason")}
             />
           </FormField>

@@ -157,7 +157,7 @@ test("TrainingPlanner renders error state", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 });
 
-test("TrainingPlanner skips and completes activities through the API", async () => {
+test("TrainingPlanner skips and completes training sessions through the API", async () => {
   const session = createRunTrainingSession({
     title: "Easy run",
     date: getCurrentWeekRange().from,
@@ -207,12 +207,14 @@ test("TrainingPlanner skips and completes activities through the API", async () 
   fireEvent.click(screen.getByRole("button", { name: "More actions" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Skip" }));
   fireEvent.change(
-    screen.getByLabelText("Why are you skipping this activity?"),
+    screen.getByLabelText("Why are you skipping this training session?"),
     {
       target: { value: "Recovery" },
     },
   );
-  fireEvent.click(screen.getByRole("button", { name: "Skip activity" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Skip training session" }),
+  );
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("/skip"),

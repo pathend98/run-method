@@ -2,14 +2,16 @@ import { z } from "zod";
 
 import type { SkipTrainingSessionRequest } from "@/domain/training-sessions";
 
-export const skipActivityFormSchema = z.object({
+export const skipTrainingSessionFormSchema = z.object({
   skipReason: z.string().trim().min(1, "Enter a skip reason"),
 });
 
-export type SkipActivityFormValues = z.infer<typeof skipActivityFormSchema>;
+export type SkipTrainingSessionFormValues = z.infer<
+  typeof skipTrainingSessionFormSchema
+>;
 
 export function toSkipTrainingSessionRequest(
-  values: SkipActivityFormValues,
+  values: SkipTrainingSessionFormValues,
 ): SkipTrainingSessionRequest {
-  return skipActivityFormSchema.parse(values);
+  return skipTrainingSessionFormSchema.parse(values);
 }

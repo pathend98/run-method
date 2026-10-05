@@ -13,7 +13,7 @@ import { TrainingSessionDetailsModal } from "@/ui/training-sessions/training-ses
 import { AddTrainingSessionModal } from "@/ui/training-sessions/add-training-session/add-training-session-modal";
 import { EditActivityModal } from "@/ui/training-sessions/edit-activity/edit-activity-modal";
 import { CompleteActivityModal } from "@/ui/training-sessions/complete-activity/complete-activity-modal";
-import { SkipActivityModal } from "@/ui/training-sessions/skip-activity/skip-activity-modal";
+import { SkipTrainingSessionModal } from "@/ui/training-sessions/skip-training-session/skip-training-session-modal";
 import { DeleteTrainingSessionModal } from "@/ui/training-sessions/delete-training-session/delete-training-session-modal";
 import { ReviewTrainingSessionsModal } from "@/ui/training-sessions/review-training-sessions/review-training-sessions-modal";
 import { MoveTrainingSessionModal } from "@/ui/training-sessions/move-training-session/move-training-session-modal";
@@ -130,7 +130,7 @@ export function TrainingPlanner() {
       {activeModalKind === "edit" ? <EditActivityModal /> : null}
       {activeModalKind === "move" ? <MoveTrainingSessionModal /> : null}
       {activeModalKind === "complete" ? <CompleteActivityModal /> : null}
-      {activeModalKind === "skip" ? <SkipActivityModal /> : null}
+      {activeModalKind === "skip" ? <SkipTrainingSessionModal /> : null}
       {activeModalKind === "delete" ? <DeleteTrainingSessionModal /> : null}
       {activeModalKind === "add" ? (
         <AddTrainingSessionModal athleteId={currentUser.data.id} />

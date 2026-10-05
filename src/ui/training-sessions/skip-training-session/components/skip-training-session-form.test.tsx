@@ -1,12 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-import { SkipActivityForm } from "./skip-activity-form";
+import { SkipTrainingSessionForm } from "./skip-training-session-form";
 
-const skipReasonLabelText = "Why are you skipping this activity?";
+const skipReasonLabelText = "Why are you skipping this training session?";
 
 test("validates and submits a skip reason", async () => {
   const onSkip = vi.fn().mockResolvedValue(undefined);
-  render(<SkipActivityForm isSubmitting={false} onSkip={onSkip} />);
+  render(<SkipTrainingSessionForm isSubmitting={false} onSkip={onSkip} />);
 
   fireEvent.submit(screen.getByLabelText(skipReasonLabelText).closest("form")!);
   expect(await screen.findByText("Enter a skip reason")).toBeDefined();
@@ -20,7 +20,7 @@ test("validates and submits a skip reason", async () => {
 });
 
 test("validates an empty skip reason after blur", async () => {
-  render(<SkipActivityForm isSubmitting={false} onSkip={vi.fn()} />);
+  render(<SkipTrainingSessionForm isSubmitting={false} onSkip={vi.fn()} />);
 
   fireEvent.blur(screen.getByLabelText(skipReasonLabelText));
 
@@ -28,7 +28,7 @@ test("validates an empty skip reason after blur", async () => {
 });
 
 test("disables the skip field while submitting", () => {
-  render(<SkipActivityForm isSubmitting onSkip={vi.fn()} />);
+  render(<SkipTrainingSessionForm isSubmitting onSkip={vi.fn()} />);
   expect(screen.getByLabelText(skipReasonLabelText)).toHaveProperty(
     "disabled",
     true,
@@ -37,7 +37,7 @@ test("disables the skip field while submitting", () => {
 
 test("reports submission failures", async () => {
   render(
-    <SkipActivityForm
+    <SkipTrainingSessionForm
       isSubmitting={false}
       onSkip={vi.fn().mockRejectedValue(new Error("nope"))}
     />,
@@ -48,6 +48,6 @@ test("reports submission failures", async () => {
   });
   fireEvent.submit(screen.getByLabelText(skipReasonLabelText).closest("form")!);
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to skip activity",
+    "Unable to skip training session",
   );
 });

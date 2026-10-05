@@ -37,10 +37,10 @@ test("transitions through add, details, edit, move, completion, skip, delete, an
   expect(store.getState().activeModal).toEqual({ kind: "move", activity });
   store.getState().returnToActivityDetails();
   expect(store.getState().activeModal).toEqual({ kind: "details", activity });
-  store.getState().openSkipActivity();
+  store.getState().openSkipTrainingSession();
   expect(store.getState().activeModal).toEqual({
     kind: "skip",
-    activity,
+    trainingSession: activity,
     returnTo: "details",
   });
   store.getState().returnToActivityDetails();
@@ -71,20 +71,20 @@ test("returns completed and skipped review training sessions to the review modal
     activity,
     returnTo: "review",
   });
-  store.getState().returnFromActivityTransition();
+  store.getState().returnFromTrainingSessionTransition();
   expect(store.getState().activeModal).toEqual({ kind: "review" });
 
   store.getState().openSkipTrainingSessionFromReview(activity);
-  store.getState().finishActivityTransition();
+  store.getState().finishTrainingSessionTransition();
   expect(store.getState().activeModal).toEqual({ kind: "review" });
 
   store.getState().openActivityDetails(activity);
   store.getState().openCompleteActivity();
-  store.getState().finishActivityTransition();
+  store.getState().finishTrainingSessionTransition();
   expect(store.getState().activeModal).toBeNull();
 
-  store.getState().returnFromActivityTransition();
-  store.getState().finishActivityTransition();
+  store.getState().returnFromTrainingSessionTransition();
+  store.getState().finishTrainingSessionTransition();
   expect(store.getState().activeModal).toBeNull();
 });
 
@@ -93,7 +93,7 @@ test("ignores invalid detail transitions", () => {
   store.getState().openEditActivity();
   store.getState().openCompleteActivity();
   store.getState().openDeleteTrainingSession();
-  store.getState().openSkipActivity();
+  store.getState().openSkipTrainingSession();
   store.getState().openMoveTrainingSession();
   expect(store.getState().activeModal).toBeNull();
   store.getState().returnToActivityDetails();

@@ -32,8 +32,8 @@ export function TrainingSessionDetailsModal() {
   const openCompleteActivity = useTrainingPlannerStore(
     (state) => state.openCompleteActivity,
   );
-  const openSkipActivity = useTrainingPlannerStore(
-    (state) => state.openSkipActivity,
+  const openSkipTrainingSession = useTrainingPlannerStore(
+    (state) => state.openSkipTrainingSession,
   );
   const openDeleteTrainingSession = useTrainingPlannerStore(
     (state) => state.openDeleteTrainingSession,
@@ -68,7 +68,7 @@ export function TrainingSessionDetailsModal() {
       ? [
           {
             label: "Skip",
-            onClick: openSkipActivity,
+            onClick: openSkipTrainingSession,
             variant: "warning" as const,
           },
         ]

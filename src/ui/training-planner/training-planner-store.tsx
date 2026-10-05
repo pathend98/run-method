@@ -23,7 +23,11 @@ export type TrainingPlannerActiveModal =
   | { kind: "edit"; activity: TrainingActivity }
   | { kind: "move"; activity: TrainingActivity }
   | { kind: "review" }
-  | { kind: "skip"; activity: TrainingActivity; returnTo: "details" | "review" }
+  | {
+      kind: "skip";
+      trainingSession: TrainingActivity;
+      returnTo: "details" | "review";
+    }
   | null;
 
 type TrainingPlannerStoreState = {
@@ -41,13 +45,13 @@ type TrainingPlannerStoreActions = {
   openDeleteTrainingSession: () => void;
   openEditActivity: () => void;
   openMoveTrainingSession: () => void;
-  openSkipActivity: () => void;
+  openSkipTrainingSession: () => void;
   openSkipTrainingSessionFromReview: (
     trainingSession: TrainingActivity,
   ) => void;
   returnToActivityDetails: () => void;
-  returnFromActivityTransition: () => void;
-  finishActivityTransition: () => void;
+  returnFromTrainingSessionTransition: () => void;
+  finishTrainingSessionTransition: () => void;
   openReviewTrainingSessions: () => void;
 };
 
@@ -117,13 +121,13 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             }
           : state,
       ),
-    openSkipActivity: () =>
+    openSkipTrainingSession: () =>
       set((state) =>
         state.activeModal?.kind === "details"
           ? {
               activeModal: {
                 kind: "skip",
-                activity: state.activeModal.activity,
+                trainingSession: state.activeModal.activity,
                 returnTo: "details",
               },
             }
@@ -133,7 +137,7 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
       set({
         activeModal: {
           kind: "skip",
-          activity: trainingSession,
+          trainingSession,
           returnTo: "review",
         },
       }),
@@ -147,12 +151,15 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
           ? {
               activeModal: {
                 kind: "details",
-                activity: state.activeModal.activity,
+                activity:
+                  state.activeModal.kind === "skip"
+                    ? state.activeModal.trainingSession
+                    : state.activeModal.activity,
               },
             }
           : state,
       ),
-    returnFromActivityTransition: () =>
+    returnFromTrainingSessionTransition: () =>
       set((state) =>
         state.activeModal?.kind === "complete" ||
         state.activeModal?.kind === "skip"
@@ -161,12 +168,15 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
             : {
                 activeModal: {
                   kind: "details",
-                  activity: state.activeModal.activity,
+                  activity:
+                    state.activeModal.kind === "skip"
+                      ? state.activeModal.trainingSession
+                      : state.activeModal.activity,
                 },
               }
           : state,
       ),
-    finishActivityTransition: () =>
+    finishTrainingSessionTransition: () =>
       set((state) =>
         state.activeModal?.kind === "complete" ||
         state.activeModal?.kind === "skip"

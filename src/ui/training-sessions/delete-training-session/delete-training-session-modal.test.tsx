@@ -47,11 +47,11 @@ beforeEach(() => {
     openDeleteTrainingSession: vi.fn(),
     openEditActivity: vi.fn(),
     openMoveTrainingSession: vi.fn(),
-    openSkipActivity: vi.fn(),
+    openSkipTrainingSession: vi.fn(),
     openSkipTrainingSessionFromReview: vi.fn(),
     returnToActivityDetails: vi.fn(),
-    returnFromActivityTransition: vi.fn(),
-    finishActivityTransition: vi.fn(),
+    returnFromTrainingSessionTransition: vi.fn(),
+    finishTrainingSessionTransition: vi.fn(),
     openReviewTrainingSessions: vi.fn(),
   };
   vi.mocked(useTrainingPlannerStore).mockImplementation((selector) =>

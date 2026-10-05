@@ -9,11 +9,11 @@ import { PlannedRunSummary } from "./components/planned-run-summary";
 
 export function CompleteActivityModal() {
   const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const returnFromActivityTransition = useTrainingPlannerStore(
-    (state) => state.returnFromActivityTransition,
+  const returnFromTrainingSessionTransition = useTrainingPlannerStore(
+    (state) => state.returnFromTrainingSessionTransition,
   );
-  const finishActivityTransition = useTrainingPlannerStore(
-    (state) => state.finishActivityTransition,
+  const finishTrainingSessionTransition = useTrainingPlannerStore(
+    (state) => state.finishTrainingSessionTransition,
   );
   const completeMutation = useCompleteTrainingSessionMutation();
   const [runFieldsPending, setRunFieldsPending] = useState(false);
@@ -23,7 +23,7 @@ export function CompleteActivityModal() {
 
   async function completeActivity(request: CompleteTrainingSessionRequest) {
     await completeMutation.mutateAsync({ id: activity.id, request });
-    finishActivityTransition();
+    finishTrainingSessionTransition();
   }
 
   return (
@@ -33,7 +33,7 @@ export function CompleteActivityModal() {
       footerActions={[
         {
           label: "Cancel",
-          onClick: returnFromActivityTransition,
+          onClick: returnFromTrainingSessionTransition,
           variant: "tertiary",
         },
         {
@@ -47,7 +47,7 @@ export function CompleteActivityModal() {
         },
       ]}
       isBusy={completeMutation.isPending}
-      onClose={returnFromActivityTransition}
+      onClose={returnFromTrainingSessionTransition}
       title={activity.title}
     >
       <h3 className="mt-6 text-base font-semibold text-zinc-950">

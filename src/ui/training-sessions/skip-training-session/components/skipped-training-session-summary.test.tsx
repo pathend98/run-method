@@ -4,10 +4,10 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { SkippedActivitySummary } from "./skipped-activity-summary";
+import { SkippedTrainingSessionSummary } from "./skipped-training-session-summary";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
-const activity = createRunTrainingSession({
+const trainingSession = createRunTrainingSession({
   id: "run",
   title: "Easy run",
   timeOfDay: null,
@@ -15,14 +15,14 @@ const activity = createRunTrainingSession({
 });
 
 test("shows planned run metrics with a human-readable duration", () => {
-  render(<SkippedActivitySummary activity={activity} />);
+  render(<SkippedTrainingSessionSummary trainingSession={trainingSession} />);
   expect(screen.getByText("8.00 km · 40m · 5:00 / km")).toBeDefined();
 });
 
 test("shows the planned run distance and pace in miles", () => {
   render(
     <DistanceDisplayProvider measurementUnit="MILES">
-      <SkippedActivitySummary activity={activity} />
+      <SkippedTrainingSessionSummary trainingSession={trainingSession} />
     </DistanceDisplayProvider>,
   );
   expect(screen.getByText("4.97 mi · 40m · 8:03 / mi")).toBeDefined();
@@ -30,11 +30,11 @@ test("shows the planned run distance and pace in miles", () => {
 
 test("shows strength duration without run metrics", () => {
   render(
-    <SkippedActivitySummary
-      activity={createStrengthTrainingSession({
-        id: activity.id,
-        title: activity.title,
-        timeOfDay: activity.timeOfDay,
+    <SkippedTrainingSessionSummary
+      trainingSession={createStrengthTrainingSession({
+        id: trainingSession.id,
+        title: trainingSession.title,
+        timeOfDay: trainingSession.timeOfDay,
         targetDurationSeconds: 1800,
       })}
     />,
@@ -45,11 +45,11 @@ test("shows strength duration without run metrics", () => {
 
 test("omits metrics for strength activities without a target duration", () => {
   const { container } = render(
-    <SkippedActivitySummary
-      activity={createStrengthTrainingSession({
-        id: activity.id,
-        title: activity.title,
-        timeOfDay: activity.timeOfDay,
+    <SkippedTrainingSessionSummary
+      trainingSession={createStrengthTrainingSession({
+        id: trainingSession.id,
+        title: trainingSession.title,
+        timeOfDay: trainingSession.timeOfDay,
         targetDurationSeconds: null,
       })}
     />,
