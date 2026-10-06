@@ -14,19 +14,20 @@ import {
 import { useReviewTrainingSessionsQuery } from "./hooks/use-review-training-sessions-query";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
-import {
-  useTrainingPlannerStore,
-  type Weekday,
-} from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 
 export function ReviewTrainingSessionsModal() {
   const measurementUnit = useDistanceDisplayUnit();
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const openCompleteTrainingSession = useTrainingPlannerStore(
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const closeModal = useTrainingSessionDialogsStore(
+    (state) => state.closeModal,
+  );
+  const openCompleteTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openCompleteTrainingSessionFromReview,
   );
-  const openSkipTrainingSession = useTrainingPlannerStore(
+  const openSkipTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openSkipTrainingSessionFromReview,
   );
   const currentUser = useCurrentUserQuery();
@@ -94,9 +95,7 @@ export function ReviewTrainingSessionsModal() {
                   <div className="flex gap-2">
                     <Button
                       onClick={() =>
-                        openCompleteTrainingSession(
-                          toPlannerTrainingSession(trainingSession),
-                        )
+                        openCompleteTrainingSession(trainingSession)
                       }
                       size="compact"
                       variant="primary"
@@ -104,11 +103,7 @@ export function ReviewTrainingSessionsModal() {
                       Complete
                     </Button>
                     <Button
-                      onClick={() =>
-                        openSkipTrainingSession(
-                          toPlannerTrainingSession(trainingSession),
-                        )
-                      }
+                      onClick={() => openSkipTrainingSession(trainingSession)}
                       size="compact"
                       variant="warning"
                     >
@@ -147,13 +142,4 @@ function formatPlannedMetrics(
     formatCompactDuration(trainingSession.targetDurationSeconds),
   ].filter((metric): metric is string => metric !== null);
   return metrics.join(" · ");
-}
-
-function toPlannerTrainingSession(
-  trainingSession: TrainingSession,
-): TrainingSession & { day: Weekday } {
-  return {
-    ...trainingSession,
-    day: format(parseISO(trainingSession.date), "EEEE") as Weekday,
-  };
 }

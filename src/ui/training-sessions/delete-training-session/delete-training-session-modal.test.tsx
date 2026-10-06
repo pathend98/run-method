@@ -2,13 +2,13 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import {
-  useTrainingPlannerStore,
-  type TrainingPlannerStore,
-} from "@/ui/training-planner/training-planner-store";
+  useTrainingSessionDialogsStore,
+  type TrainingSessionDialogsStore,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { DeleteTrainingSessionModal } from "./delete-training-session-modal";
 
-vi.mock("@/ui/training-planner/training-planner-store", () => ({
-  useTrainingPlannerStore: vi.fn(),
+vi.mock("@/ui/training-sessions/training-session-dialogs", () => ({
+  useTrainingSessionDialogsStore: vi.fn(),
 }));
 vi.mock("@/ui/training-sessions/mutations", () => ({
   useDeleteTrainingSessionMutation: () => deleteMutation,
@@ -20,10 +20,9 @@ const trainingSession = {
     timeOfDay: null,
     targetDurationSeconds: 2400,
   }),
-  day: "Monday",
 } as const;
 
-let storeState: TrainingPlannerStore;
+let storeState: TrainingSessionDialogsStore;
 let deleteMutation: {
   mutateAsync: ReturnType<typeof vi.fn<(id: string) => Promise<void>>>;
   isPending: boolean;
@@ -54,7 +53,7 @@ beforeEach(() => {
     finishTrainingSessionTransition: vi.fn(),
     openReviewTrainingSessions: vi.fn(),
   };
-  vi.mocked(useTrainingPlannerStore).mockImplementation((selector) =>
+  vi.mocked(useTrainingSessionDialogsStore).mockImplementation((selector) =>
     selector(storeState),
   );
 });

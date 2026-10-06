@@ -3,9 +3,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
 import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
-import { TrainingPlannerStoreProvider } from "./training-planner-store";
+import { TrainingSessionDialogsStoreProvider } from "@/ui/training-sessions/training-session-dialogs";
 import { TrainingPlanner } from "./training-planner";
-import { getCurrentWeekRange } from "./services/training-planner-service";
+import { getCurrentWeekRange } from "./calendar/week-range";
 
 const athleteId = "33333333-3333-4333-8333-333333333333";
 
@@ -18,9 +18,9 @@ vi.mock("next/navigation", () => ({
 function renderPlanner() {
   render(
     <QueryProvider>
-      <TrainingPlannerStoreProvider>
+      <TrainingSessionDialogsStoreProvider>
         <TrainingPlanner />
-      </TrainingPlannerStoreProvider>
+      </TrainingSessionDialogsStoreProvider>
     </QueryProvider>,
   );
 }

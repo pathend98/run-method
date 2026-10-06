@@ -5,10 +5,10 @@ import type {
   TrainingSession,
 } from "@/domain/training-sessions";
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
-import type { PlannerTrainingSession } from "./types/training-planner-types";
+import type { PlannerTrainingSession } from "./calendar/training-calendar-types";
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
-import { TrainingPlannerStoreProvider } from "./training-planner-store";
+import { TrainingSessionDialogsStoreProvider } from "@/ui/training-sessions/training-session-dialogs";
 
 const navigation = vi.hoisted(() => ({
   pathname: "/",
@@ -22,7 +22,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(navigation.search),
 }));
 
-vi.mock("./components/training-planner-view", () => ({
+vi.mock("./presentation/training-planner-view", () => ({
   TrainingPlannerView: ({
     onMoveTrainingSession,
     sessions,
@@ -87,11 +87,11 @@ test("persists a drag move through the existing edit mutation", async () => {
   vi.stubGlobal("fetch", fetchMock);
 
   render(
-    <TrainingPlannerStoreProvider>
+    <TrainingSessionDialogsStoreProvider>
       <QueryProvider>
         <TrainingPlanner />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
   await screen.findByRole("button", { name: "Move training session" });
   fireEvent.click(

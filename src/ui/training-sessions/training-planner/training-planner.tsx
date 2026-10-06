@@ -7,8 +7,8 @@ import { fetchTrainingSessions } from "@/ui/training-sessions/api/training-sessi
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 import { Button } from "@/ui/shared/button/button";
-import { PlannerStatus } from "./components/planner-status";
-import { TrainingPlannerView } from "./components/training-planner-view";
+import { PlannerStatus } from "./presentation/planner-status";
+import { TrainingPlannerView } from "./presentation/training-planner-view";
 import { TrainingSessionDetailsModal } from "@/ui/training-sessions/training-session-details/training-session-details-modal";
 import { AddTrainingSessionModal } from "@/ui/training-sessions/add-training-session/add-training-session-modal";
 import { EditTrainingSessionModal } from "@/ui/training-sessions/edit-training-session/edit-training-session-modal";
@@ -20,23 +20,23 @@ import { MoveTrainingSessionModal } from "@/ui/training-sessions/move-training-s
 import {
   getAdjacentWeekStart,
   getCurrentWeekRange,
-  groupSessionsByWeekday,
   resolveWeekRange,
-} from "./services/training-planner-service";
-import { useTrainingPlannerStore } from "./training-planner-store";
+} from "./calendar/week-range";
+import { groupSessionsByWeekday } from "./calendar/group-sessions-by-weekday";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { createMoveTrainingSessionRequest } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations/training-session-mutations";
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
-import type { PlannerTrainingSession } from "./types/training-planner-types";
+import type { PlannerTrainingSession } from "./calendar/training-calendar-types";
 
 export function TrainingPlanner() {
-  const openAddTrainingSession = useTrainingPlannerStore(
+  const openAddTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openAddTrainingSession,
   );
-  const openTrainingSessionDetails = useTrainingPlannerStore(
+  const openTrainingSessionDetails = useTrainingSessionDialogsStore(
     (state) => state.openTrainingSessionDetails,
   );
-  const activeModalKind = useTrainingPlannerStore(
+  const activeModalKind = useTrainingSessionDialogsStore(
     (state) => state.activeModal?.kind,
   );
   const editMutation = useEditTrainingSessionMutation();
@@ -120,7 +120,7 @@ export function TrainingPlanner() {
         onPreviousWeek={() =>
           navigateToWeek(getAdjacentWeekStart(weekRange, -1))
         }
-        onAddTrainingSession={openAddTrainingSession}
+        onAddTrainingSession={(day) => openAddTrainingSession(day.date)}
         onSelectTrainingSession={openTrainingSessionDetails}
         sessions={query.data}
         week={week}

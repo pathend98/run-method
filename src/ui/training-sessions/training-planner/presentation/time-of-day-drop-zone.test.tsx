@@ -19,7 +19,7 @@ import { TimeOfDayDropZone } from "./time-of-day-drop-zone";
 import type {
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 const trainingSession = {
   ...createRunTrainingSession({

@@ -5,9 +5,9 @@ import { format, subDays } from "date-fns";
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
 import {
-  createTrainingPlannerStore,
-  TrainingPlannerStoreProvider,
-} from "@/ui/training-planner/training-planner-store";
+  createTrainingSessionDialogsStore,
+  TrainingSessionDialogsStoreProvider,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { PastTrainingSessionsAttentionPanel } from "./past-training-sessions-attention-panel";
 
 const session = createRunTrainingSession({
@@ -37,13 +37,13 @@ function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
 }
 
 function renderPanel(className?: string) {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
   render(
-    <TrainingPlannerStoreProvider store={store}>
+    <TrainingSessionDialogsStoreProvider store={store}>
       <QueryProvider>
         <PastTrainingSessionsAttentionPanel className={className} />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
   return store;
 }

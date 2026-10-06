@@ -4,9 +4,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryProvider } from "@/app/query-provider";
 import type { RunTrainingSession } from "@/domain/training-sessions";
 import {
-  createTrainingPlannerStore,
-  TrainingPlannerStoreProvider,
-} from "@/ui/training-planner/training-planner-store";
+  createTrainingSessionDialogsStore,
+  TrainingSessionDialogsStoreProvider,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { EditTrainingSessionModal } from "./edit-training-session-modal";
 
 const api = vi.hoisted(() => ({ editTrainingSession: vi.fn() }));
@@ -29,10 +29,8 @@ type EditTrainingSessionModalTestProps = {
 function renderEditTrainingSessionModal(
   props: EditTrainingSessionModalTestProps = {},
 ) {
-  const store = createTrainingPlannerStore();
-  store
-    .getState()
-    .openTrainingSessionDetails({ ...trainingSession, day: "Monday" });
+  const store = createTrainingSessionDialogsStore();
+  store.getState().openTrainingSessionDetails(trainingSession);
   store.getState().openEditTrainingSession();
   api.editTrainingSession.mockImplementation(
     props.onEdit ?? vi.fn().mockResolvedValue(trainingSession),
@@ -41,11 +39,11 @@ function renderEditTrainingSessionModal(
   return {
     store,
     ...render(
-      <TrainingPlannerStoreProvider store={store}>
+      <TrainingSessionDialogsStoreProvider store={store}>
         <QueryProvider>
           <EditTrainingSessionModal />
         </QueryProvider>
-      </TrainingPlannerStoreProvider>,
+      </TrainingSessionDialogsStoreProvider>,
     ),
   };
 }
@@ -66,7 +64,7 @@ test.each([
     fireEvent.click(screen.getByRole("button", { name: dismissLabel }));
     expect(store.getState().activeModal).toEqual({
       kind: "details",
-      trainingSession: { ...trainingSession, day: "Monday" },
+      trainingSession: trainingSession,
     });
   },
 );
@@ -102,11 +100,11 @@ test("keeps the modal open after a failed edit", async () => {
 
 test("renders nothing when edit training session is not active", () => {
   render(
-    <TrainingPlannerStoreProvider>
+    <TrainingSessionDialogsStoreProvider>
       <QueryProvider>
         <EditTrainingSessionModal />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
 
   expect(

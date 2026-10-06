@@ -8,7 +8,7 @@ import { MobileWeekView } from "./mobile-week-view";
 import type {
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 const baseTrainingSession = {
   ...createRunTrainingSession({

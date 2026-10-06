@@ -1,33 +1,23 @@
 import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
-import type {
-  PlannerTrainingSession,
-  TrainingDay,
-} from "./types/training-planner-types";
 import {
-  createTrainingPlannerStore,
-  useTrainingPlannerStore,
-} from "./training-planner-store";
+  TrainingSessionDialogsStoreProvider,
+  createTrainingSessionDialogsStore,
+  useTrainingSessionDialogsStore,
+} from "@/ui/training-sessions/training-session-dialogs";
 
-const trainingSession = {
-  ...createRunTrainingSession({
-    id: "training-session",
-    targetDistanceMetres: 5000,
-    targetDurationSeconds: 1800,
-  }),
-  day: "Monday",
-} satisfies PlannerTrainingSession;
-const day = {
-  day: "Monday",
-  date: "2026-08-17",
-  trainingSessions: [],
-} satisfies TrainingDay;
+const trainingSession = createRunTrainingSession({
+  id: "training-session",
+  targetDistanceMetres: 5000,
+  targetDurationSeconds: 1800,
+});
+const date = "2026-08-17";
 
 test("transitions through add, details, edit, move, completion, skip, delete, and closed modal states", () => {
-  const store = createTrainingPlannerStore();
-  store.getState().openAddTrainingSession(day);
-  expect(store.getState().activeModal).toEqual({ kind: "add", day });
+  const store = createTrainingSessionDialogsStore();
+  store.getState().openAddTrainingSession(date);
+  expect(store.getState().activeModal).toEqual({ kind: "add", date });
   store.getState().openTrainingSessionDetails(trainingSession);
   store.getState().openEditTrainingSession();
   expect(store.getState().activeModal).toEqual({
@@ -86,7 +76,7 @@ test("transitions through add, details, edit, move, completion, skip, delete, an
 });
 
 test("returns completed and skipped review training sessions to the review modal", () => {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
 
   store.getState().openReviewTrainingSessions();
   store.getState().openCompleteTrainingSessionFromReview(trainingSession);
@@ -113,7 +103,7 @@ test("returns completed and skipped review training sessions to the review modal
 });
 
 test("ignores invalid detail transitions", () => {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
   store.getState().openEditTrainingSession();
   store.getState().openCompleteTrainingSession();
   store.getState().openDeleteTrainingSession();
@@ -125,7 +115,7 @@ test("ignores invalid detail transitions", () => {
 });
 
 test("does not open move training session for non-scheduled details", () => {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
   store
     .getState()
     .openTrainingSessionDetails({ ...trainingSession, status: "COMPLETED" });
@@ -137,11 +127,42 @@ test("does not open move training session for non-scheduled details", () => {
 
 test("requires a provider when using the selector hook", () => {
   function StoreConsumer() {
-    useTrainingPlannerStore((state) => state.activeModal);
+    useTrainingSessionDialogsStore((state) => state.activeModal);
     return null;
   }
 
   expect(() => render(<StoreConsumer />)).toThrow(
-    "useTrainingPlannerStore must be used within TrainingPlannerStoreProvider",
+    "useTrainingSessionDialogsStore must be used within TrainingSessionDialogsStoreProvider",
   );
+});
+
+test("isolates dialog state between mounted providers", () => {
+  function DialogConsumer({ label }: { label: string }) {
+    const activeModal = useTrainingSessionDialogsStore(
+      (state) => state.activeModal,
+    );
+    const openReview = useTrainingSessionDialogsStore(
+      (state) => state.openReviewTrainingSessions,
+    );
+    return (
+      <button onClick={openReview}>
+        {label}: {activeModal?.kind ?? "closed"}
+      </button>
+    );
+  }
+
+  render(
+    <>
+      <TrainingSessionDialogsStoreProvider>
+        <DialogConsumer label="First" />
+      </TrainingSessionDialogsStoreProvider>
+      <TrainingSessionDialogsStoreProvider>
+        <DialogConsumer label="Second" />
+      </TrainingSessionDialogsStoreProvider>
+    </>,
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "First: closed" }));
+  expect(screen.getByRole("button", { name: "First: review" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "Second: closed" })).toBeDefined();
 });

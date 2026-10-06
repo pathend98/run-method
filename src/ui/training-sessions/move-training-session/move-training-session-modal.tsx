@@ -4,7 +4,7 @@ import { getWeekDateOptions } from "@/core/date/week-date-options";
 import { createMoveTrainingSessionRequest } from "./create-move-training-session-request";
 import { FormField } from "@/ui/shared/form-field/form-field";
 import { Modal } from "@/ui/shared/modal/modal";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 
 export function MoveTrainingSessionModal() {
@@ -13,9 +13,13 @@ export function MoveTrainingSessionModal() {
     undefined,
   );
   const [error, setError] = useState<string | null>(null);
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const returnToTrainingSessionDetails = useTrainingPlannerStore(
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const closeModal = useTrainingSessionDialogsStore(
+    (state) => state.closeModal,
+  );
+  const returnToTrainingSessionDetails = useTrainingSessionDialogsStore(
     (state) => state.returnToTrainingSessionDetails,
   );
   const editMutation = useEditTrainingSessionMutation();

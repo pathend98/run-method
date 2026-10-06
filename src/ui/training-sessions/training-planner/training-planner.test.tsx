@@ -10,9 +10,9 @@ import { format, subDays } from "date-fns";
 
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";
-import { TrainingPlannerStoreProvider } from "./training-planner-store";
+import { TrainingSessionDialogsStoreProvider } from "@/ui/training-sessions/training-session-dialogs";
 import { TrainingPlanner } from "./training-planner";
-import { getCurrentWeekRange } from "./services/training-planner-service";
+import { getCurrentWeekRange } from "./calendar/week-range";
 
 const navigation = vi.hoisted(() => ({
   pathname: "/",
@@ -41,14 +41,18 @@ function stubFetch(fetchMock: (url: string, options?: RequestInit) => unknown) {
 
 function render(ui: React.ReactElement) {
   const rendered = testingRender(
-    <TrainingPlannerStoreProvider>{ui}</TrainingPlannerStoreProvider>,
+    <TrainingSessionDialogsStoreProvider>
+      {ui}
+    </TrainingSessionDialogsStoreProvider>,
   );
 
   return {
     ...rendered,
     rerender: (nextUi: React.ReactElement) =>
       rendered.rerender(
-        <TrainingPlannerStoreProvider>{nextUi}</TrainingPlannerStoreProvider>,
+        <TrainingSessionDialogsStoreProvider>
+          {nextUi}
+        </TrainingSessionDialogsStoreProvider>,
       ),
   };
 }

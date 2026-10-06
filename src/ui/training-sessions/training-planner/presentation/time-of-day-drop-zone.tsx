@@ -4,7 +4,7 @@ import type {
   TimeOfDay,
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 type TimeOfDayDropZoneProps = {
   trainingSessions: PlannerTrainingSession[];

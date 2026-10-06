@@ -1,12 +1,12 @@
 import { TimeOfDaySection } from "./time-of-day-section";
 import { TimeOfDayDropZone } from "./time-of-day-drop-zone";
 import { Button } from "@/ui/shared/button/button";
-import { formatDayDate } from "../services/training-planner-service";
+import { formatDayDate } from "../formatters/calendar-date-formatters";
 import type {
   TimeOfDay,
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 type DayColumnProps = {
   day: TrainingDay;

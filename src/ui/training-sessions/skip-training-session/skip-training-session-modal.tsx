@@ -5,17 +5,19 @@ import {
   formatStatus,
   formatTimeOfDay,
 } from "@/ui/training-sessions/formatters";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { useSkipTrainingSessionMutation } from "../mutations";
 import { SkipTrainingSessionForm } from "./components/skip-training-session-form";
 import { SkippedTrainingSessionSummary } from "./components/skipped-training-session-summary";
 
 export function SkipTrainingSessionModal() {
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const returnFromTrainingSessionTransition = useTrainingPlannerStore(
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const returnFromTrainingSessionTransition = useTrainingSessionDialogsStore(
     (state) => state.returnFromTrainingSessionTransition,
   );
-  const finishTrainingSessionTransition = useTrainingPlannerStore(
+  const finishTrainingSessionTransition = useTrainingSessionDialogsStore(
     (state) => state.finishTrainingSessionTransition,
   );
   const skipMutation = useSkipTrainingSessionMutation();

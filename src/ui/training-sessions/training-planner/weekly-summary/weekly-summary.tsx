@@ -8,12 +8,12 @@ import {
   formatCompactDuration,
   formatDistance,
 } from "@/ui/training-sessions/formatters";
-import { SummaryMetric } from "./components/summary-metric";
-import { getWeeklySummary } from "./services/weekly-summary-service";
+import { SummaryMetric } from "./presentation/summary-metric";
+import { getWeeklySummary } from "./calculation/weekly-summary";
 import {
   formatDistanceVariance,
   formatDurationVariance,
-} from "./utils/summary-variance";
+} from "./formatters/summary-variance";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type WeeklySummaryProps = {

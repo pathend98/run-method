@@ -6,14 +6,18 @@ import { Modal } from "@/ui/shared/modal/modal";
 import { EditTrainingSessionForm } from "./components/edit-training-session-form";
 import { EditTrainingSessionSummary } from "./components/edit-training-session-summary";
 import { formatActivityType } from "@/ui/training-sessions/formatters";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { useEditTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 
 export function EditTrainingSessionModal() {
   const [runFieldsPending, setRunFieldsPending] = useState(false);
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const returnToTrainingSessionDetails = useTrainingPlannerStore(
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const closeModal = useTrainingSessionDialogsStore(
+    (state) => state.closeModal,
+  );
+  const returnToTrainingSessionDetails = useTrainingSessionDialogsStore(
     (state) => state.returnToTrainingSessionDetails,
   );
   const editMutation = useEditTrainingSessionMutation();

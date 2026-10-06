@@ -2,12 +2,12 @@ import { createRunTrainingSession } from "@/test-support/fixtures/training-sessi
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
-import { TrainingPlannerStoreProvider } from "@/ui/training-planner/training-planner-store";
+import { TrainingSessionDialogsStoreProvider } from "@/ui/training-sessions/training-session-dialogs";
 import { TrainingPlannerView } from "./training-planner-view";
 import type {
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 const trainingSession = {
   ...createRunTrainingSession({
@@ -43,7 +43,7 @@ function renderView(
   const onAddTrainingSession = vi.fn();
   const onSelectTrainingSession = vi.fn();
   render(
-    <TrainingPlannerStoreProvider>
+    <TrainingSessionDialogsStoreProvider>
       <QueryProvider>
         <TrainingPlannerView
           isCurrentWeek
@@ -59,7 +59,7 @@ function renderView(
           {...overrides}
         />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
   return { onAddTrainingSession, onSelectTrainingSession };
 }

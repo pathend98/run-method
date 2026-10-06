@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import type {
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
 
 type WeekGridProps = {

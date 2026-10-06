@@ -7,7 +7,7 @@ import { DayColumn } from "./day-column";
 import type {
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 function runTrainingSession(
   override: Partial<PlannerTrainingSession> = {},

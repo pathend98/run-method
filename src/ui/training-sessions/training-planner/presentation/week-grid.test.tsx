@@ -118,7 +118,7 @@ import { WeekGrid } from "./week-grid";
 import type {
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 const trainingSession = {
   ...createRunTrainingSession({

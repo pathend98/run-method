@@ -2,9 +2,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import {
-  createTrainingPlannerStore,
-  TrainingPlannerStoreProvider,
-} from "@/ui/training-planner/training-planner-store";
+  createTrainingSessionDialogsStore,
+  TrainingSessionDialogsStoreProvider,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { AddTrainingSessionModal } from "./add-training-session-modal";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
@@ -15,11 +15,7 @@ vi.mock("@/ui/training-sessions/api", async (importOriginal) => ({
   createTrainingSession: api.createTrainingSession,
 }));
 
-const day = {
-  day: "Monday" as const,
-  date: "2026-08-17",
-  trainingSessions: [],
-};
+const date = "2026-08-17";
 
 type AddTrainingSessionModalTestProps = {
   onCreate?: (request: unknown) => Promise<unknown>;
@@ -29,8 +25,8 @@ type AddTrainingSessionModalTestProps = {
 function renderAddTrainingSessionModal(
   props: AddTrainingSessionModalTestProps = {},
 ) {
-  const store = createTrainingPlannerStore();
-  store.getState().openAddTrainingSession(day);
+  const store = createTrainingSessionDialogsStore();
+  store.getState().openAddTrainingSession(date);
   api.createTrainingSession.mockImplementation(
     props.onCreate ?? vi.fn().mockResolvedValue({}),
   );
@@ -38,7 +34,7 @@ function renderAddTrainingSessionModal(
   return {
     store,
     ...render(
-      <TrainingPlannerStoreProvider store={store}>
+      <TrainingSessionDialogsStoreProvider store={store}>
         <QueryProvider>
           <DistanceDisplayProvider
             measurementUnit={props.measurementUnit ?? "KILOMETRES"}
@@ -46,7 +42,7 @@ function renderAddTrainingSessionModal(
             <AddTrainingSessionModal athleteId="33333333-3333-4333-8333-333333333333" />
           </DistanceDisplayProvider>
         </QueryProvider>
-      </TrainingPlannerStoreProvider>,
+      </TrainingSessionDialogsStoreProvider>,
     ),
   };
 }
@@ -91,7 +87,7 @@ test("submits a converted training session for its selected day and closes", asy
     expect(onCreate).toHaveBeenCalledWith(
       "33333333-3333-4333-8333-333333333333",
       expect.objectContaining({
-        date: day.date,
+        date,
         targetDistanceMetres: 8000,
         targetDurationSeconds: 2700,
       }),
@@ -202,11 +198,11 @@ test("validates invalid fields after they lose focus", async () => {
 
 test("renders nothing when add training session is not active", () => {
   render(
-    <TrainingPlannerStoreProvider>
+    <TrainingSessionDialogsStoreProvider>
       <QueryProvider>
         <AddTrainingSessionModal athleteId="33333333-3333-4333-8333-333333333333" />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
 
   expect(
@@ -262,4 +258,21 @@ test("blocks submission while an Auto override is unresolved", () => {
   expect(
     screen.getByRole("button", { name: "Add training session" }),
   ).toHaveProperty("disabled", false);
+});
+
+test("renders nothing when the selected date is absent", () => {
+  const store = createTrainingSessionDialogsStore();
+  store.getState().openAddTrainingSession(undefined);
+
+  render(
+    <TrainingSessionDialogsStoreProvider store={store}>
+      <QueryProvider>
+        <AddTrainingSessionModal athleteId="33333333-3333-4333-8333-333333333333" />
+      </QueryProvider>
+    </TrainingSessionDialogsStoreProvider>,
+  );
+
+  expect(
+    screen.queryByRole("dialog", { name: "Add training session" }),
+  ).toBeNull();
 });

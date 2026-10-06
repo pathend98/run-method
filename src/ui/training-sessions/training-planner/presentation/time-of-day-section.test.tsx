@@ -1,7 +1,7 @@
 import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { TimeOfDaySection } from "./time-of-day-section";
-import type { PlannerTrainingSession } from "../types/training-planner-types";
+import type { PlannerTrainingSession } from "../calendar/training-calendar-types";
 
 const baseTrainingSession = {
   ...createRunTrainingSession({

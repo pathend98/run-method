@@ -6,7 +6,7 @@ import {
   createRunTrainingSession,
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
-import { getWeeklySummary } from "./weekly-summary-service";
+import { getWeeklySummary } from "./weekly-summary";
 
 const trainingSessions: TrainingSession[] = [
   createRunTrainingSession({

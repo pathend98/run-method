@@ -2,7 +2,7 @@ import { TrainingSessionCard } from "./training-session-card";
 import type {
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 type TimeOfDaySectionProps = {
   trainingSessions: PlannerTrainingSession[];

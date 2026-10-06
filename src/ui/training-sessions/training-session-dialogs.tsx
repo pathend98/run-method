@@ -4,70 +4,62 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 
-import type {
-  PlannerTrainingSession,
-  TrainingDay,
-} from "./types/training-planner-types";
+import type { TrainingSession } from "@/domain/training-sessions";
 
-export type {
-  PlannerTrainingSession,
-  Weekday,
-} from "./types/training-planner-types";
-
-export type TrainingPlannerActiveModal =
-  | { kind: "add"; day: TrainingDay }
-  | { kind: "details"; trainingSession: PlannerTrainingSession }
+export type TrainingSessionActiveModal =
+  | { kind: "add"; date: string | undefined }
+  | { kind: "details"; trainingSession: TrainingSession }
   | {
       kind: "complete";
-      trainingSession: PlannerTrainingSession;
+      trainingSession: TrainingSession;
       returnTo: "details" | "review";
     }
-  | { kind: "delete"; trainingSession: PlannerTrainingSession }
-  | { kind: "edit"; trainingSession: PlannerTrainingSession }
-  | { kind: "move"; trainingSession: PlannerTrainingSession }
+  | { kind: "delete"; trainingSession: TrainingSession }
+  | { kind: "edit"; trainingSession: TrainingSession }
+  | { kind: "move"; trainingSession: TrainingSession }
   | { kind: "review" }
   | {
       kind: "skip";
-      trainingSession: PlannerTrainingSession;
+      trainingSession: TrainingSession;
       returnTo: "details" | "review";
     }
   | null;
 
-type TrainingPlannerStoreState = {
-  activeModal: TrainingPlannerActiveModal;
+type TrainingSessionDialogsStoreState = {
+  activeModal: TrainingSessionActiveModal;
 };
 
-type TrainingPlannerStoreActions = {
+type TrainingSessionDialogsStoreActions = {
   closeModal: () => void;
-  openAddTrainingSession: (day: TrainingDay) => void;
-  openTrainingSessionDetails: (trainingSession: PlannerTrainingSession) => void;
+  openAddTrainingSession: (date: string | undefined) => void;
+  openTrainingSessionDetails: (trainingSession: TrainingSession) => void;
   openCompleteTrainingSession: () => void;
   openCompleteTrainingSessionFromReview: (
-    trainingSession: PlannerTrainingSession,
+    trainingSession: TrainingSession,
   ) => void;
   openDeleteTrainingSession: () => void;
   openEditTrainingSession: () => void;
   openMoveTrainingSession: () => void;
   openSkipTrainingSession: () => void;
-  openSkipTrainingSessionFromReview: (
-    trainingSession: PlannerTrainingSession,
-  ) => void;
+  openSkipTrainingSessionFromReview: (trainingSession: TrainingSession) => void;
   returnToTrainingSessionDetails: () => void;
   returnFromTrainingSessionTransition: () => void;
   finishTrainingSessionTransition: () => void;
   openReviewTrainingSessions: () => void;
 };
 
-export type TrainingPlannerStore = TrainingPlannerStoreState &
-  TrainingPlannerStoreActions;
+export type TrainingSessionDialogsStore = TrainingSessionDialogsStoreState &
+  TrainingSessionDialogsStoreActions;
 
-export type TrainingPlannerStoreApi = StoreApi<TrainingPlannerStore>;
+export type TrainingSessionDialogsStoreApi =
+  StoreApi<TrainingSessionDialogsStore>;
 
-export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
-  return createStore<TrainingPlannerStore>()((set) => ({
+export function createTrainingSessionDialogsStore(): TrainingSessionDialogsStoreApi {
+  return createStore<TrainingSessionDialogsStore>()((set) => ({
     activeModal: null,
     closeModal: () => set({ activeModal: null }),
-    openAddTrainingSession: (day) => set({ activeModal: { kind: "add", day } }),
+    openAddTrainingSession: (date) =>
+      set({ activeModal: { kind: "add", date } }),
     openTrainingSessionDetails: (trainingSession) =>
       set({ activeModal: { kind: "details", trainingSession } }),
     openCompleteTrainingSession: () =>
@@ -186,42 +178,46 @@ export function createTrainingPlannerStore(): TrainingPlannerStoreApi {
   }));
 }
 
-// Context scopes a fresh Zustand store to each mounted planner, avoiding a
+// Context scopes a fresh Zustand store to each mounted provider, avoiding a
 // module-global store and resetting its UI state on unmount. Zustand's
 // useStore handles subscriptions; Context only supplies the store instance.
-const TrainingPlannerStoreContext =
-  createContext<TrainingPlannerStoreApi | null>(null);
+const TrainingSessionDialogsStoreContext =
+  createContext<TrainingSessionDialogsStoreApi | null>(null);
 
-type TrainingPlannerStoreProviderProps = {
+type TrainingSessionDialogsStoreProviderProps = {
   children: ReactNode;
-  store?: TrainingPlannerStoreApi;
+  store?: TrainingSessionDialogsStoreApi;
 };
 
-export function TrainingPlannerStoreProvider({
+export function TrainingSessionDialogsStoreProvider({
   children,
   store,
-}: TrainingPlannerStoreProviderProps) {
-  const [trainingPlannerStore] = useState(
-    () => store ?? createTrainingPlannerStore(),
+}: TrainingSessionDialogsStoreProviderProps) {
+  const [trainingSessionDialogsStore] = useState(
+    () => store ?? createTrainingSessionDialogsStore(),
   );
 
   return (
-    <TrainingPlannerStoreContext.Provider value={trainingPlannerStore}>
+    <TrainingSessionDialogsStoreContext.Provider
+      value={trainingSessionDialogsStore}
+    >
       {children}
-    </TrainingPlannerStoreContext.Provider>
+    </TrainingSessionDialogsStoreContext.Provider>
   );
 }
 
-export function useTrainingPlannerStore<T>(
-  selector: (store: TrainingPlannerStore) => T,
+export function useTrainingSessionDialogsStore<T>(
+  selector: (store: TrainingSessionDialogsStore) => T,
 ): T {
-  const trainingPlannerStore = useContext(TrainingPlannerStoreContext);
+  const trainingSessionDialogsStore = useContext(
+    TrainingSessionDialogsStoreContext,
+  );
 
-  if (!trainingPlannerStore) {
+  if (!trainingSessionDialogsStore) {
     throw new Error(
-      "useTrainingPlannerStore must be used within TrainingPlannerStoreProvider",
+      "useTrainingSessionDialogsStore must be used within TrainingSessionDialogsStoreProvider",
     );
   }
 
-  return useStore(trainingPlannerStore, selector);
+  return useStore(trainingSessionDialogsStore, selector);
 }

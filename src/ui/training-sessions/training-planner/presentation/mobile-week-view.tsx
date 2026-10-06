@@ -9,7 +9,7 @@ import type {
   TimeOfDay,
   PlannerTrainingSession,
   TrainingDay,
-} from "../types/training-planner-types";
+} from "../calendar/training-calendar-types";
 
 type MobileWeekViewProps = {
   onAddTrainingSession?: (day: TrainingDay) => void;
