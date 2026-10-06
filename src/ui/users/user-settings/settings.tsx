@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { Button } from "@/ui/shared/button/button";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
-import { SettingsForm } from "./components/settings-form";
+import { SettingsForm } from "./form/settings-form";
 
 export function Settings() {
   const currentUser = useCurrentUserQuery();

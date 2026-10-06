@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 
 import SettingsPage from "./page";
 
-vi.mock("@/ui/settings/settings", () => ({
+vi.mock("@/ui/users/user-settings", () => ({
   Settings: () => <h1>Settings content</h1>,
 }));
 
