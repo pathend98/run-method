@@ -2,7 +2,7 @@ import {
   createTrainingGoalFormSchema,
   defaultTrainingGoalFormValues,
   toCreateTrainingGoalRequest,
-} from "./training-goal-form";
+} from "./training-goal-form-model";
 
 const defaults = { ...defaultTrainingGoalFormValues, title: "  My goal  " };
 

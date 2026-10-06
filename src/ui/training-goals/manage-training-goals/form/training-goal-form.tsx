@@ -10,7 +10,7 @@ import {
   defaultTrainingGoalFormValues,
   toCreateTrainingGoalRequest,
   type TrainingGoalFormValues,
-} from "../utils/training-goal-form";
+} from "./training-goal-form-model";
 
 type TrainingGoalFormProps = {
   unit: RunningMetricUnit;

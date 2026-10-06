@@ -7,12 +7,12 @@ import type {
 } from "@/domain/training-goals";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { Button } from "@/ui/shared/button/button";
-import { TrainingGoalForm } from "./components/training-goal-form";
-import { TrainingGoalDetails } from "./components/training-goal-details";
+import { TrainingGoalForm } from "./form/training-goal-form";
+import { TrainingGoalDetails } from "./presentation/training-goal-details";
 import {
   createTrainingGoal,
   fetchTrainingGoals,
-} from "./services/training-goals-api-client";
+} from "./api/training-goals-api-client";
 
 export function TrainingGoals() {
   const currentUser = useCurrentUserQuery();
