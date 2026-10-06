@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { TrainingPlanner } from "@/ui/training-sessions/training-planner/training-planner";
+import { TrainingPlanner } from "@/ui/training-sessions/training-planner";
 import { TrainingSessionDialogsStoreProvider } from "@/ui/training-sessions/training-session-dialogs";
 
 export default function TrainingPlannerPage() {

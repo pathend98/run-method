@@ -11,7 +11,7 @@ import type {
   PlannerTrainingSession,
   TrainingDay,
 } from "../calendar/training-calendar-types";
-import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session";
 
 type WeekGridProps = {
   onAddTrainingSession?: (day: TrainingDay) => void;

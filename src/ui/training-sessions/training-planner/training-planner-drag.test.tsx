@@ -4,7 +4,7 @@ import type {
   RunTrainingSession,
   TrainingSession,
 } from "@/domain/training-sessions";
-import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session/create-move-training-session-request";
+import type { TrainingSessionMoveDestination } from "@/ui/training-sessions/move-training-session";
 import type { PlannerTrainingSession } from "./calendar/training-calendar-types";
 import { QueryProvider } from "@/app/query-provider";
 import { createUser } from "@/test-support/fixtures/user";

@@ -4,10 +4,10 @@ import { format, subDays } from "date-fns";
 
 import { QueryProvider } from "@/app/query-provider";
 import { createRunTrainingSession } from "@/test-support/fixtures/training-session";
-import { fetchTrainingSessions } from "@/ui/training-sessions/api/training-sessions-api-client";
+import { fetchTrainingSessions } from "@/ui/training-sessions/api";
 import { useReviewTrainingSessionsQuery } from "./use-review-training-sessions-query";
 
-vi.mock("@/ui/training-sessions/api/training-sessions-api-client", () => ({
+vi.mock("@/ui/training-sessions/api", () => ({
   fetchTrainingSessions: vi.fn(),
 }));
 

@@ -5,7 +5,7 @@ import {
   TrainingSessionDialogsStoreProvider,
   createTrainingSessionDialogsStore,
   useTrainingSessionDialogsStore,
-} from "@/ui/training-sessions/training-session-dialogs";
+} from "./training-session-dialogs";
 
 const trainingSession = createRunTrainingSession({
   id: "training-session",

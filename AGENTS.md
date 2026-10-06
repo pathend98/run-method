@@ -32,11 +32,11 @@ The repo is organised around deep modules in the John Ousterhout sense: each mea
 
 ## Module Boundaries
 
-When a folder represents a module, its public interface is the set of concrete top-level files at that module's root. For example, `src/ui/training-sessions/training-planner/training-planner.tsx` is a public entrypoint for the training-planner capability.
+Each UI module declares its public API in an `index.ts` file at the module root. Use explicit named exports for runtime capabilities and `export type` for public types; do not use wildcard exports. For example, `src/ui/training-sessions/training-planner/index.ts` exposes the planner component while its calendar and presentation remain private.
 
-Code outside a module must import from that module's intended concrete top-level files. Do not reach into another capability's private implementation folders.
+Code outside a UI module must import through its index, using the module folder path. Within a module, import implementation files directly rather than importing its own index. Responsibility folders do not automatically need indexes, and domain folders do not need aggregate barrels.
 
-Do not use `index.ts` as the public interface for new or reorganised modules. Use concrete top-level files named after the capability they expose.
+Other UI domains may migrate incrementally. Outside the UI, retain concrete top-level public files and avoid re-export-only barrels or new `index.ts` interfaces.
 
 Organise UI code by ownership and reason to change, rather than primarily by technical type:
 
@@ -48,7 +48,7 @@ Organise UI code by ownership and reason to change, rather than primarily by tec
 
 Outside the UI, retain the existing browser/server/domain separation and server dependency injection conventions.
 
-Public top-level module files should contain the concrete components, functions, or types that other modules are meant to use. They should not be re-export-only barrels.
+UI implementations remain in concrete files behind their index. Outside the UI, public top-level module files contain the concrete components, functions, or types they expose.
 
 Keep public interfaces narrow. Expose the main component, function, or service capability, plus public props and types needed by consumers. Keep subcomponents, formatting helpers, utility functions, and service details private unless there is a concrete cross-module use case.
 
@@ -60,7 +60,7 @@ Single-file modules may remain as files until they grow enough to need a folder.
 
 Tests are implemented with `vitest` and `@testing-library/react`. Test files should be colocated alongside the file under test. Use `.test.ts` for TypeScript files and `.test.tsx` for React component files.
 
-Each file should have a colocated unit test file, with a small number of exceptions: `src/server/server.ts` does not require a colocated test file, and the `db/` folder does not require tests. Any files containing just types do not require tests either.
+Each file should have a colocated unit test file, with a small number of exceptions: `src/server/server.ts` does not require a colocated test file, and the `db/` folder does not require tests. Any files containing just types do not require tests either. UI indexes containing only public export declarations do not require colocated tests.
 
 Vitest globals are enabled, so do not import from `vitest` in test files.
 
