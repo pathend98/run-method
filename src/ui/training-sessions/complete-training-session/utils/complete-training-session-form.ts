@@ -12,7 +12,7 @@ import {
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
-} from "../../training-session-duration";
+} from "@/ui/shared/duration-form-input";
 
 export const completeTrainingSessionFormSchema = z
   .object({

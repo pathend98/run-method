@@ -2,12 +2,7 @@ import type { FocusEvent } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { DurationInput, type DurationInputValue } from "./duration-input";
-
-type DurationFormValues = {
-  durationHours: string;
-  durationMinutes: string;
-  durationSeconds: string;
-};
+import type { DurationFields } from "./duration-fields";
 
 type DurationFormInputProps = {
   autoFocus?: boolean;
@@ -31,9 +26,9 @@ export function DurationFormInput({
     formState: { errors },
     setValue,
     trigger,
-  } = useFormContext<DurationFormValues>();
+  } = useFormContext<DurationFields>();
   const fields = useWatch({ control, name: fieldNames });
-  const currentFields: DurationFormValues = {
+  const currentFields: DurationFields = {
     durationHours: fields[0],
     durationMinutes: fields[1],
     durationSeconds: fields[2],
@@ -45,7 +40,7 @@ export function DurationFormInput({
   };
 
   function changeValue(next: DurationInputValue) {
-    const nextFields: DurationFormValues = {
+    const nextFields: DurationFields = {
       durationHours: next.hours,
       durationMinutes: next.minutes,
       durationSeconds: next.seconds,

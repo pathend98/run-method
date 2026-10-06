@@ -4,7 +4,7 @@ import type { CreateTrainingGoalRequest } from "@/domain/training-goals";
 import type { RunningMetricUnit } from "@/ui/runs/run-metrics";
 import { Button } from "@/ui/shared/button/button";
 import { FormField } from "@/ui/shared/form-field/form-field";
-import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form-input";
+import { DurationFormInput } from "@/ui/shared/duration-form-input";
 import {
   createTrainingGoalFormSchema,
   defaultTrainingGoalFormValues,

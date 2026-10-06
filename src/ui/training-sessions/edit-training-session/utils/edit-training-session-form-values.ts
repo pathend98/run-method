@@ -1,6 +1,6 @@
 import type { TrainingSession } from "@/domain/training-sessions";
 import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
-import { durationSecondsToFields } from "../../training-session-duration";
+import { durationSecondsToFields } from "@/ui/shared/duration-form-input";
 import type { EditTrainingSessionFormValues } from "./edit-training-session-form-schema";
 
 export function getEditTrainingSessionFormValues(

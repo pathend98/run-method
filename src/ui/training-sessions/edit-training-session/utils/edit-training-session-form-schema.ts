@@ -6,7 +6,7 @@ import {
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
-} from "../../training-session-duration";
+} from "@/ui/shared/duration-form-input";
 import { runFieldIssueMessage } from "@/ui/runs/run-metrics";
 
 const editTrainingSessionFormBaseSchema = z.object({
