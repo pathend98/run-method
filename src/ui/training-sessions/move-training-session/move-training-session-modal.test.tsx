@@ -9,13 +9,13 @@ import {
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
 import {
-  useTrainingPlannerStore,
-  type TrainingPlannerStore,
-} from "@/ui/training-planner/training-planner-store";
+  useTrainingSessionDialogsStore,
+  type TrainingSessionDialogsStore,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { MoveTrainingSessionModal } from "./move-training-session-modal";
 
-vi.mock("@/ui/training-planner/training-planner-store", () => ({
-  useTrainingPlannerStore: vi.fn(),
+vi.mock("@/ui/training-sessions/training-session-dialogs", () => ({
+  useTrainingSessionDialogsStore: vi.fn(),
 }));
 vi.mock("@/ui/training-sessions/mutations", () => ({
   useEditTrainingSessionMutation: () => editMutation,
@@ -29,10 +29,9 @@ const trainingSession = {
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
   }),
-  day: "Thursday",
 } as const;
 
-let storeState: TrainingPlannerStore;
+let storeState: TrainingSessionDialogsStore;
 let editMutation: {
   mutateAsync: ReturnType<
     typeof vi.fn<
@@ -68,7 +67,7 @@ beforeEach(() => {
     finishTrainingSessionTransition: vi.fn(),
     openReviewTrainingSessions: vi.fn(),
   };
-  vi.mocked(useTrainingPlannerStore).mockImplementation((selector) =>
+  vi.mocked(useTrainingSessionDialogsStore).mockImplementation((selector) =>
     selector(storeState),
   );
 });
@@ -160,7 +159,7 @@ test("moves a strength training session with its original schedule and targets",
   });
   storeState.activeModal = {
     kind: "move",
-    trainingSession: { ...strengthTrainingSession, day: "Thursday" },
+    trainingSession: strengthTrainingSession,
   };
   renderModal();
   expect(screen.getByLabelText("Time")).toHaveProperty("value", "ANY");

@@ -5,7 +5,7 @@ import { format, subDays } from "date-fns";
 
 import { Button } from "@/ui/shared/button/button";
 import { fetchTrainingSessions } from "../api";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 
 type PastTrainingSessionsAttentionPanelProps = {
@@ -15,7 +15,7 @@ type PastTrainingSessionsAttentionPanelProps = {
 export function PastTrainingSessionsAttentionPanel({
   className,
 }: PastTrainingSessionsAttentionPanelProps) {
-  const openReviewTrainingSessions = useTrainingPlannerStore(
+  const openReviewTrainingSessions = useTrainingSessionDialogsStore(
     (state) => state.openReviewTrainingSessions,
   );
   const currentUser = useCurrentUserQuery();

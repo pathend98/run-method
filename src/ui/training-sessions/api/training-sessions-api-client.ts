@@ -8,7 +8,7 @@ import {
   type TrainingSession,
   type TrainingSessionsQuery,
 } from "@/domain/training-sessions";
-import { TrainingSessionsApiError } from "../errors/training-sessions-errors";
+import { TrainingSessionsApiError } from "../errors";
 
 export async function fetchTrainingSessions(
   athleteId: string,

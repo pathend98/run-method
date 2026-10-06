@@ -7,16 +7,16 @@ import {
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
 import {
-  useTrainingPlannerStore,
-  type TrainingPlannerStore,
-} from "@/ui/training-planner/training-planner-store";
+  useTrainingSessionDialogsStore,
+  type TrainingSessionDialogsStore,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { TrainingSessionDetailsModal } from "./training-session-details-modal";
 
-vi.mock("@/ui/training-planner/training-planner-store", () => ({
-  useTrainingPlannerStore: vi.fn(),
+vi.mock("@/ui/training-sessions/training-session-dialogs", () => ({
+  useTrainingSessionDialogsStore: vi.fn(),
 }));
 
-let storeState: TrainingPlannerStore;
+let storeState: TrainingSessionDialogsStore;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -37,7 +37,7 @@ beforeEach(() => {
     finishTrainingSessionTransition: vi.fn(),
     openReviewTrainingSessions: vi.fn(),
   };
-  vi.mocked(useTrainingPlannerStore).mockImplementation((selector) =>
+  vi.mocked(useTrainingSessionDialogsStore).mockImplementation((selector) =>
     selector(storeState),
   );
 });
@@ -65,7 +65,7 @@ const strength = createStrengthTrainingSession({
 function selectTrainingSession(trainingSession: TrainingSession) {
   storeState.activeModal = {
     kind: "details",
-    trainingSession: { ...trainingSession, day: "Monday" },
+    trainingSession: trainingSession,
   };
 }
 

@@ -7,7 +7,7 @@ import { FormField } from "@/ui/shared/form-field/form-field";
 import { Modal } from "@/ui/shared/modal/modal";
 import { RunTrainingSessionFields } from "./components/run-training-session-fields";
 import { StrengthTrainingSessionFields } from "./components/strength-training-session-fields";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { useCreateTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
@@ -20,8 +20,12 @@ import {
 export function AddTrainingSessionModal({ athleteId }: { athleteId: string }) {
   const unit = useDistanceDisplayUnit();
   const [runFieldsPending, setRunFieldsPending] = useState(false);
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const closeModal = useTrainingSessionDialogsStore(
+    (state) => state.closeModal,
+  );
   const createMutation = useCreateTrainingSessionMutation();
   const form = useForm<AddTrainingSessionFormValues>({
     defaultValues: defaultAddTrainingSessionFormValues,
@@ -38,7 +42,7 @@ export function AddTrainingSessionModal({ athleteId }: { athleteId: string }) {
   } = form;
   const activityType = useWatch({ control, name: "activityType" });
 
-  const dayDate = activeModal?.kind === "add" ? activeModal.day.date : null;
+  const dayDate = activeModal?.kind === "add" ? activeModal.date : null;
 
   if (activeModal?.kind !== "add" || typeof dayDate !== "string") {
     return null;

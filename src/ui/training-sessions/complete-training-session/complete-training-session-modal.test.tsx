@@ -6,9 +6,9 @@ import {
   createStrengthTrainingSession,
 } from "@/test-support/fixtures/training-session";
 import {
-  createTrainingPlannerStore,
-  TrainingPlannerStoreProvider,
-} from "@/ui/training-planner/training-planner-store";
+  createTrainingSessionDialogsStore,
+  TrainingSessionDialogsStoreProvider,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { CompleteTrainingSessionModal } from "./complete-training-session-modal";
 import { DistanceDisplayProvider } from "@/ui/users/measurement-unit-context";
 
@@ -24,14 +24,13 @@ const trainingSession = {
     targetDistanceMetres: 6000,
     targetDurationSeconds: 1530,
   }),
-  day: "Monday",
 } as const;
 
 function renderModal(
   measurementUnit: "KILOMETRES" | "MILES" = "KILOMETRES",
   fromReview = false,
 ) {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
   if (fromReview) {
     store.getState().openCompleteTrainingSessionFromReview(trainingSession);
   } else {
@@ -39,25 +38,25 @@ function renderModal(
     store.getState().openCompleteTrainingSession();
   }
   render(
-    <TrainingPlannerStoreProvider store={store}>
+    <TrainingSessionDialogsStoreProvider store={store}>
       <QueryProvider>
         <DistanceDisplayProvider measurementUnit={measurementUnit}>
           <CompleteTrainingSessionModal />
         </DistanceDisplayProvider>
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
   return store;
 }
 
 test("renders nothing when completion is not active", () => {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
   render(
-    <TrainingPlannerStoreProvider store={store}>
+    <TrainingSessionDialogsStoreProvider store={store}>
       <QueryProvider>
         <CompleteTrainingSessionModal />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
   expect(screen.queryByRole("dialog")).toBeNull();
 });
@@ -123,7 +122,7 @@ test("disables dismissal while completion is pending", async () => {
 });
 
 test("shows a duration-only completion dialog for strength", () => {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
   store.getState().openTrainingSessionDetails({
     ...createStrengthTrainingSession({
       id: trainingSession.id,
@@ -133,15 +132,14 @@ test("shows a duration-only completion dialog for strength", () => {
       description: trainingSession.description,
       targetDurationSeconds: 1800,
     }),
-    day: "Monday",
   });
   store.getState().openCompleteTrainingSession();
   render(
-    <TrainingPlannerStoreProvider store={store}>
+    <TrainingSessionDialogsStoreProvider store={store}>
       <QueryProvider>
         <CompleteTrainingSessionModal />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
   expect(screen.queryByText(/Planned:/)).toBeNull();
   expect(screen.getByLabelText("Actual duration (minutes)")).toHaveProperty(

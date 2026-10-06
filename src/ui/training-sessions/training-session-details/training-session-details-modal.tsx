@@ -6,7 +6,7 @@ import {
 } from "../formatters";
 import { RunDetails } from "./components/run-details";
 import { StrengthDetails } from "./components/strength-details";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import type { TrainingSession } from "@/domain/training-sessions";
 import { format } from "date-fns";
 
@@ -21,21 +21,25 @@ function canTransitionTrainingSession(
 }
 
 export function TrainingSessionDetailsModal() {
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const openEditTrainingSession = useTrainingPlannerStore(
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const closeModal = useTrainingSessionDialogsStore(
+    (state) => state.closeModal,
+  );
+  const openEditTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openEditTrainingSession,
   );
-  const openMoveTrainingSession = useTrainingPlannerStore(
+  const openMoveTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openMoveTrainingSession,
   );
-  const openCompleteTrainingSession = useTrainingPlannerStore(
+  const openCompleteTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openCompleteTrainingSession,
   );
-  const openSkipTrainingSession = useTrainingPlannerStore(
+  const openSkipTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openSkipTrainingSession,
   );
-  const openDeleteTrainingSession = useTrainingPlannerStore(
+  const openDeleteTrainingSession = useTrainingSessionDialogsStore(
     (state) => state.openDeleteTrainingSession,
   );
 

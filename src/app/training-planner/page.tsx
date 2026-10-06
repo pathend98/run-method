@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
-import { TrainingPlanner } from "@/ui/training-planner/training-planner";
-import { TrainingPlannerStoreProvider } from "@/ui/training-planner/training-planner-store";
+import { TrainingPlanner } from "@/ui/training-sessions/training-planner";
+import { TrainingSessionDialogsStoreProvider } from "@/ui/training-sessions/training-session-dialogs";
 
 export default function TrainingPlannerPage() {
   return (
@@ -19,9 +19,9 @@ export default function TrainingPlannerPage() {
           </section>
         }
       >
-        <TrainingPlannerStoreProvider>
+        <TrainingSessionDialogsStoreProvider>
           <TrainingPlanner />
-        </TrainingPlannerStoreProvider>
+        </TrainingSessionDialogsStoreProvider>
       </Suspense>
     </main>
   );

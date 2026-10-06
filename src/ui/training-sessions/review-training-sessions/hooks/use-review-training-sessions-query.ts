@@ -3,7 +3,7 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 
-import { fetchTrainingSessions } from "@/ui/training-sessions/api/training-sessions-api-client";
+import { fetchTrainingSessions } from "@/ui/training-sessions/api";
 
 export function useReviewTrainingSessionsQuery(
   athleteId: string | undefined,

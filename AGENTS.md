@@ -27,26 +27,28 @@ The repo is organised around deep modules in the John Ousterhout sense: each mea
 - `src/core/` contains genuinely cross-cutting utilities that can run in browser or server code.
 - `src/domain/` contains shared data models, schemas, and contracts used by both browser and server code.
 - `src/server/` contains server-only object-oriented TypeScript. Dependency injection belongs in `src/server/server.ts`.
-- `src/ui/` contains browser-side modules, including React feature modules and browser service modules.
-- `src/ui/components/` contains a deliberately small set of reusable, feature-agnostic React components. Only move a component here after it has demonstrated genuine reuse across feature modules; keep feature-specific components in the owning module's private `components/` folder.
+- `src/ui/` contains browser-side business domains such as `training-sessions`, `training-goals`, and `users`. Within a domain, organise code by capability, such as `add-training-session` or `training-planner`.
+- `src/ui/shared/` contains code with demonstrated reuse across unrelated domains. Keep code used by one capability local; promote it to its domain only when several capabilities use it.
 
 ## Module Boundaries
 
-When a folder represents a module, its public interface is the set of concrete top-level files at that module's root. For example, `src/ui/training-planner/training-planner.tsx` is a public entrypoint for `src/ui/training-planner/`.
+Each UI module declares its public API in an `index.ts` file at the module root. Use explicit named exports for runtime capabilities and `export type` for public types; do not use wildcard exports. For example, `src/ui/training-sessions/training-planner/index.ts` exposes the planner component while its calendar and presentation remain private.
 
-Code outside a module must import from that module's top-level files. Do not import from another module's private `components/`, `services/`, `types/`, `utils/`, or `hooks/` folders.
+Code outside a UI module must import through its index, using the module folder path. Within a module, import implementation files directly rather than importing its own index. Responsibility folders do not automatically need indexes, and domain folders do not need aggregate barrels.
 
-Do not use `index.ts` as the public interface for new or reorganised modules. Use concrete top-level files named after the capability they expose.
+Other UI domains may migrate incrementally. Outside the UI, retain concrete top-level public files and avoid re-export-only barrels or new `index.ts` interfaces.
 
-Inside a module, organise implementation files by kind:
+Organise UI code by ownership and reason to change, rather than primarily by technical type:
 
-- `components/` for React components.
-- `services/` for data fetching, orchestration, and browser/server service code.
-- `types/` for module-specific types.
-- `utils/` for private helper functions and constants.
-- `hooks/` for React hooks when needed.
+- Start with business domains, then capabilities. Keep the code needed for a capability close together.
+- Prefer locality over premature reuse. Promote code upward only when its ownership broadens: several capabilities to their domain, unrelated domains to `src/ui/shared/`.
+- Name private folders by responsibility, such as `presentation/`, `form/`, `api/`, `validation/`, `calendar/`, or `formatters/`. Avoid vague `utils/`, `helpers/`, or catch-all `services/` folders in new or reorganised UI code.
+- Separate business rules from presentation and infrastructure. Shared browser/server business rules belong in `src/domain/`; rendering and display formatting belong in the UI, and HTTP access belongs in API infrastructure.
+- Keep dependencies pointing inward toward more general concepts: capability → domain → shared. Domain-level code must not depend on a capability's private calendar or presentation models.
 
-Public top-level module files should contain the concrete components, functions, or types that other modules are meant to use. They should not be re-export-only barrels.
+Outside the UI, retain the existing browser/server/domain separation and server dependency injection conventions.
+
+UI implementations remain in concrete files behind their index. Outside the UI, public top-level module files contain the concrete components, functions, or types they expose.
 
 Keep public interfaces narrow. Expose the main component, function, or service capability, plus public props and types needed by consumers. Keep subcomponents, formatting helpers, utility functions, and service details private unless there is a concrete cross-module use case.
 
@@ -58,7 +60,7 @@ Single-file modules may remain as files until they grow enough to need a folder.
 
 Tests are implemented with `vitest` and `@testing-library/react`. Test files should be colocated alongside the file under test. Use `.test.ts` for TypeScript files and `.test.tsx` for React component files.
 
-Each file should have a colocated unit test file, with a small number of exceptions: `src/server/server.ts` does not require a colocated test file, and the `db/` folder does not require tests. Any files containing just types do not require tests either.
+Each file should have a colocated unit test file, with a small number of exceptions: `src/server/server.ts` does not require a colocated test file, and the `db/` folder does not require tests. Any files containing just types do not require tests either. UI indexes containing only public export declarations do not require colocated tests.
 
 Vitest globals are enabled, so do not import from `vitest` in test files.
 

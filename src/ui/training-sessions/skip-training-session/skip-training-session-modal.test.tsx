@@ -3,9 +3,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { QueryProvider } from "@/app/query-provider";
 import {
-  createTrainingPlannerStore,
-  TrainingPlannerStoreProvider,
-} from "@/ui/training-planner/training-planner-store";
+  createTrainingSessionDialogsStore,
+  TrainingSessionDialogsStoreProvider,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { SkipTrainingSessionModal } from "./skip-training-session-modal";
 
 const api = vi.hoisted(() => ({ skipTrainingSession: vi.fn() }));
@@ -20,11 +20,10 @@ const trainingSession = {
     timeOfDay: null,
     targetDurationSeconds: 2400,
   }),
-  day: "Monday",
 } as const;
 
 function renderModal(fromReview = false) {
-  const store = createTrainingPlannerStore();
+  const store = createTrainingSessionDialogsStore();
   if (fromReview) {
     store.getState().openSkipTrainingSessionFromReview(trainingSession);
   } else {
@@ -32,11 +31,11 @@ function renderModal(fromReview = false) {
     store.getState().openSkipTrainingSession();
   }
   render(
-    <TrainingPlannerStoreProvider store={store}>
+    <TrainingSessionDialogsStoreProvider store={store}>
       <QueryProvider>
         <SkipTrainingSessionModal />
       </QueryProvider>
-    </TrainingPlannerStoreProvider>,
+    </TrainingSessionDialogsStoreProvider>,
   );
   return store;
 }

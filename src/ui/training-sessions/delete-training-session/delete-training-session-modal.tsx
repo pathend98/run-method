@@ -1,11 +1,15 @@
 import { Modal } from "@/ui/shared/modal/modal";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { useDeleteTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 
 export function DeleteTrainingSessionModal() {
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const closeModal = useTrainingPlannerStore((state) => state.closeModal);
-  const returnToTrainingSessionDetails = useTrainingPlannerStore(
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const closeModal = useTrainingSessionDialogsStore(
+    (state) => state.closeModal,
+  );
+  const returnToTrainingSessionDetails = useTrainingSessionDialogsStore(
     (state) => state.returnToTrainingSessionDetails,
   );
   const deleteMutation = useDeleteTrainingSessionMutation();

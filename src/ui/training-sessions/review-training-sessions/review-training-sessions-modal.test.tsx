@@ -7,14 +7,14 @@ import {
 } from "@/test-support/fixtures/training-session";
 import { createUser } from "@/test-support/fixtures/user";
 import {
-  useTrainingPlannerStore,
-  type TrainingPlannerStore,
-} from "@/ui/training-planner/training-planner-store";
+  useTrainingSessionDialogsStore,
+  type TrainingSessionDialogsStore,
+} from "@/ui/training-sessions/training-session-dialogs";
 import { useReviewTrainingSessionsQuery } from "./hooks/use-review-training-sessions-query";
 import { ReviewTrainingSessionsModal } from "./review-training-sessions-modal";
 
-vi.mock("@/ui/training-planner/training-planner-store", () => ({
-  useTrainingPlannerStore: vi.fn(),
+vi.mock("@/ui/training-sessions/training-session-dialogs", () => ({
+  useTrainingSessionDialogsStore: vi.fn(),
 }));
 vi.mock("./hooks/use-review-training-sessions-query", () => ({
   useReviewTrainingSessionsQuery: vi.fn(() => queryState),
@@ -26,7 +26,7 @@ vi.mock("@/ui/users/measurement-unit-context", () => ({
   useDistanceDisplayUnit: () => measurementUnit,
 }));
 
-let storeState: TrainingPlannerStore;
+let storeState: TrainingSessionDialogsStore;
 let queryState: {
   data: TrainingSession[] | undefined;
   isPending: boolean;
@@ -72,7 +72,7 @@ beforeEach(() => {
     finishTrainingSessionTransition: vi.fn(),
     openReviewTrainingSessions: vi.fn(),
   };
-  vi.mocked(useTrainingPlannerStore).mockImplementation((selector) =>
+  vi.mocked(useTrainingSessionDialogsStore).mockImplementation((selector) =>
     selector(storeState),
   );
 });
@@ -110,13 +110,12 @@ test.each([
   ["Complete", "openCompleteTrainingSessionFromReview"],
   ["Skip", "openSkipTrainingSessionFromReview"],
 ] as const)(
-  "calls the %s action with the selected training session and weekday",
+  "calls the %s action with the selected training session",
   (label, action) => {
     renderModal();
     fireEvent.click(screen.getAllByRole("button", { name: label })[1]);
     expect(storeState[action]).toHaveBeenCalledExactlyOnceWith({
       ...sessions[1],
-      day: "Monday",
     });
   },
 );

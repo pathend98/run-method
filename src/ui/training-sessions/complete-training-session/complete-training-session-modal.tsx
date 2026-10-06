@@ -2,17 +2,19 @@ import { useState } from "react";
 
 import type { CompleteTrainingSessionRequest } from "@/domain/training-sessions";
 import { Modal } from "@/ui/shared/modal/modal";
-import { useTrainingPlannerStore } from "@/ui/training-planner/training-planner-store";
+import { useTrainingSessionDialogsStore } from "@/ui/training-sessions/training-session-dialogs";
 import { useCompleteTrainingSessionMutation } from "@/ui/training-sessions/mutations";
 import { CompleteTrainingSessionForm } from "./components/complete-training-session-form";
 import { PlannedRunSummary } from "./components/planned-run-summary";
 
 export function CompleteTrainingSessionModal() {
-  const activeModal = useTrainingPlannerStore((state) => state.activeModal);
-  const returnFromTrainingSessionTransition = useTrainingPlannerStore(
+  const activeModal = useTrainingSessionDialogsStore(
+    (state) => state.activeModal,
+  );
+  const returnFromTrainingSessionTransition = useTrainingSessionDialogsStore(
     (state) => state.returnFromTrainingSessionTransition,
   );
-  const finishTrainingSessionTransition = useTrainingPlannerStore(
+  const finishTrainingSessionTransition = useTrainingSessionDialogsStore(
     (state) => state.finishTrainingSessionTransition,
   );
   const completeMutation = useCompleteTrainingSessionMutation();
