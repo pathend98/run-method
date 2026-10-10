@@ -1,10 +1,10 @@
 import type { RunTrainingSession } from "@/domain/training-sessions";
-import { RunningMetrics } from "@/ui/runs/run-metrics";
+import { RunningMetrics } from "@/domain/running-metrics";
 import {
   formatDistance,
-  formatDuration,
   formatPace,
-} from "@/ui/training-sessions/formatters";
+} from "@/ui/shared/running-metric-formatters";
+import { formatDuration } from "@/ui/shared/duration-formatters";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type PlannedRunSummaryProps = { trainingSession: RunTrainingSession };

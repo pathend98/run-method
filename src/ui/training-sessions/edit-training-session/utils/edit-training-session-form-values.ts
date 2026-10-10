@@ -1,5 +1,8 @@
 import type { TrainingSession } from "@/domain/training-sessions";
-import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
+import {
+  RunMetricInputModel,
+  type RunningMetricUnit,
+} from "@/ui/training-sessions/run-metric-input";
 import { durationSecondsToFields } from "@/ui/shared/duration-form-input";
 import type { EditTrainingSessionFormValues } from "./edit-training-session-form-schema";
 
@@ -33,7 +36,7 @@ export function getEditTrainingSessionFormValues(
   return {
     ...values,
     derivedMetric: "pace",
-    ...new RunningMetrics(unit).prefill(
+    ...new RunMetricInputModel(unit).prefill(
       distanceMetres,
       isCompleted
         ? (trainingSession.actualDurationSeconds ??

@@ -5,12 +5,15 @@ import type {
   CompleteTrainingSessionRequest,
   TrainingSession,
 } from "@/domain/training-sessions";
-import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
+import {
+  RunMetricInputModel,
+  type RunningMetricUnit,
+} from "@/ui/training-sessions/run-metric-input";
 import {
   DurationFormInput,
   durationSecondsToFields,
 } from "@/ui/shared/duration-form-input";
-import { RunFieldFormInput } from "@/ui/runs/run-field-form-input/run-field-form-input";
+import { RunFieldFormInput } from "@/ui/training-sessions/run-metric-input";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import {
   createCompleteTrainingSessionFormSchema,
@@ -107,7 +110,7 @@ function defaultValues(
   return {
     ...duration,
     derivedMetric: "pace",
-    ...new RunningMetrics(unit).prefill(
+    ...new RunMetricInputModel(unit).prefill(
       trainingSession.targetDistanceMetres,
       trainingSession.targetDurationSeconds,
     ),

@@ -1,9 +1,9 @@
 import type { TrainingSession } from "@/domain/training-sessions";
 import {
   formatDistance,
-  formatDuration,
   formatPace,
-} from "@/ui/training-sessions/formatters";
+} from "@/ui/shared/running-metric-formatters";
+import { formatDuration } from "@/ui/shared/duration-formatters";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type SkippedTrainingSessionSummaryProps = { trainingSession: TrainingSession };

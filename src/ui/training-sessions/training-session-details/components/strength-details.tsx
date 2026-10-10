@@ -1,5 +1,5 @@
 import type { StrengthTrainingSession } from "@/domain/training-sessions";
-import { formatDuration } from "@/ui/training-sessions/formatters";
+import { formatDuration } from "@/ui/shared/duration-formatters";
 import { TrainingSessionDetailsBody } from "./training-session-details-body";
 
 type StrengthDetailsProps = {

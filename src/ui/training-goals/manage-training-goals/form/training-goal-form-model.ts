@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { readDistanceInput } from "@/ui/shared/distance-input-model";
 import {
   createTrainingGoalRequestSchema,
   trainingGoalTypeSchema,
 } from "@/domain/training-goals";
-import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
+import type { RunningMetricUnit } from "@/domain/running-metrics";
 import {
   defaultDurationFields,
   durationFieldsSchema,
@@ -24,10 +25,8 @@ export function createTrainingGoalFormSchema(unit: RunningMetricUnit) {
           (value) =>
             value === "" ||
             (/^\d+(?:\.\d{1,3})?$/.test(value) &&
-              new RunningMetrics(unit).readDistanceInput(value) > 0 &&
-              Number.isSafeInteger(
-                new RunningMetrics(unit).readDistanceInput(value),
-              )),
+              readDistanceInput(value, unit) > 0 &&
+              Number.isSafeInteger(readDistanceInput(value, unit))),
           "Enter a positive distance with up to three decimal places",
         ),
     })
@@ -61,7 +60,7 @@ export function toCreateTrainingGoalRequest(
     description: parsed.description || undefined,
     targetDate: parsed.targetDate || undefined,
     targetDistanceMetres: parsed.distance
-      ? new RunningMetrics(unit).readDistanceInput(parsed.distance)
+      ? readDistanceInput(parsed.distance, unit)
       : undefined,
     targetTimeSeconds: durationFieldsToSeconds(parsed) || undefined,
   });

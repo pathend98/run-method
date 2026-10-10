@@ -1,13 +1,16 @@
 import { z } from "zod";
 
 import type { TrainingSession } from "@/domain/training-sessions";
-import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
+import {
+  RunMetricInputModel,
+  type RunningMetricUnit,
+} from "@/ui/training-sessions/run-metric-input";
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
   type DurationFields,
 } from "@/ui/shared/duration-form-input";
-import { runFieldIssueMessage } from "@/ui/runs/run-metrics";
+import { runFieldIssueMessage } from "@/ui/training-sessions/run-metric-input";
 
 const editTrainingSessionFormBaseSchema = z.object({
   title: z.string().trim().min(1, "Enter a training session title"),
@@ -48,7 +51,7 @@ export function createEditTrainingSessionFormSchema(
       return;
     }
 
-    for (const issue of new RunningMetrics(unit).validate(values)) {
+    for (const issue of new RunMetricInputModel(unit).validate(values)) {
       context.addIssue({
         code: "custom",
         path: [issue.field],

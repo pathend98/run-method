@@ -4,7 +4,7 @@ import {
   DurationInput,
   type DurationInputValue,
 } from "@/ui/shared/duration-form-input";
-import type { RunningMetricInput as RunFieldInputValue } from "../../run-metrics";
+import type { RunningMetricInput as RunFieldInputValue } from "../run-metric-input-model";
 
 type RunDurationFieldProps = {
   auto: boolean;

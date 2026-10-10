@@ -1,4 +1,4 @@
-import { RunFieldFormInput } from "@/ui/runs/run-field-form-input/run-field-form-input";
+import { RunFieldFormInput } from "@/ui/training-sessions/run-metric-input";
 
 type RunTrainingSessionFieldsProps = {
   onPendingChange: (pending: boolean) => void;

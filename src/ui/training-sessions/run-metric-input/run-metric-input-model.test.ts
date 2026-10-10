@@ -1,4 +1,7 @@
-import { RunningMetrics, type RunningMetricInput } from "./run-metrics";
+import {
+  RunMetricInputModel,
+  type RunningMetricInput,
+} from "./run-metric-input-model";
 
 const input: RunningMetricInput = {
   distance: "8",
@@ -10,12 +13,11 @@ const input: RunningMetricInput = {
 };
 
 test("converts and validates distance in the selected unit", () => {
-  const kilometres = new RunningMetrics("KILOMETRES");
-  const miles = new RunningMetrics("MILES");
+  const kilometres = new RunMetricInputModel("KILOMETRES");
+  const miles = new RunMetricInputModel("MILES");
   expect(kilometres.readDistanceInput("6.25")).toBe(6250);
   expect(miles.readDistanceInput("1")).toBe(1609);
   expect(miles.readDistanceInput("1.001")).toBe(1611);
-  expect(miles.distanceInUnit(1609.344)).toBe(1);
   expect(kilometres.validate({ ...input, distance: "0" })[0]).toEqual({
     field: "distance",
     code: "distance-positive",
@@ -26,8 +28,8 @@ test("converts and validates distance in the selected unit", () => {
 });
 
 test("prefills all forms at up to three decimals and preserves unchanged metres", () => {
-  const miles = new RunningMetrics("MILES");
-  const kilometres = new RunningMetrics("KILOMETRES");
+  const miles = new RunMetricInputModel("MILES");
+  const kilometres = new RunMetricInputModel("KILOMETRES");
   expect(miles.prefill(6001, 1800)).toMatchObject({ distance: "3.729" });
   expect(kilometres.prefill(6001, 1800)).toMatchObject({ distance: "6.001" });
   expect(miles.readDistanceInput("3.729", 6001)).toBe(6001);
@@ -36,7 +38,7 @@ test("prefills all forms at up to three decimals and preserves unchanged metres"
 });
 
 test("derives each Auto metric from the two fixed values", () => {
-  const metrics = new RunningMetrics("KILOMETRES");
+  const metrics = new RunMetricInputModel("KILOMETRES");
   expect(metrics.derive(input, "pace")).toMatchObject({
     pace: "5:30",
     derivedMetric: "pace",
@@ -57,7 +59,7 @@ test("derives each Auto metric from the two fixed values", () => {
 });
 
 test("shares the Auto selection rule across frontends", () => {
-  const metrics = new RunningMetrics("KILOMETRES");
+  const metrics = new RunMetricInputModel("KILOMETRES");
   expect(metrics.firstDerived("distance", "duration")).toBe("pace");
   expect(
     metrics.chooseFixed({ ...input, pace: "5:20" }, "pace", "distance"),
@@ -74,7 +76,7 @@ test("shares the Auto selection rule across frontends", () => {
 });
 
 test("uses miles for the Auto calculation while keeping canonical pace", () => {
-  const metrics = new RunningMetrics("MILES");
+  const metrics = new RunMetricInputModel("MILES");
   const miles = {
     ...input,
     distance: "5",
@@ -86,12 +88,10 @@ test("uses miles for the Auto calculation while keeping canonical pace", () => {
     durationMinutes: "40",
   });
   expect(metrics.derive(miles, "distance")).toMatchObject({ distance: "5" });
-  expect(metrics.paceForRun(5900, 1500)).toBe(254);
-  expect(metrics.paceInUnit(300)).toBe(483);
 });
 
 test("validates run input as one set of metrics", () => {
-  const metrics = new RunningMetrics("KILOMETRES");
+  const metrics = new RunMetricInputModel("KILOMETRES");
   expect(metrics.validate(input)).toEqual([]);
   expect(metrics.inspect(input)).toEqual({
     distance: true,
@@ -111,4 +111,18 @@ test("validates run input as one set of metrics", () => {
     { field: "pace", code: "pace-positive" },
   ]);
   expect(metrics.validate({ ...input, pace: "" }, false)).toEqual([]);
+});
+
+test("reports only the first duration error for each malformed field", () => {
+  const metrics = new RunMetricInputModel("KILOMETRES");
+  expect(
+    metrics.validate({
+      ...input,
+      durationMinutes: "bad",
+      durationSeconds: "60",
+    }),
+  ).toEqual([
+    { field: "durationMinutes", code: "duration-integer" },
+    { field: "durationSeconds", code: "duration-range" },
+  ]);
 });

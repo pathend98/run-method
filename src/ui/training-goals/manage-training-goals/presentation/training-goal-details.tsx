@@ -2,10 +2,8 @@ import { format, parseISO } from "date-fns";
 
 import type { TrainingGoal } from "@/domain/training-goals";
 import type { User } from "@/domain/user-types";
-import {
-  formatDistance,
-  formatDuration,
-} from "@/ui/training-sessions/formatters";
+import { formatDistance } from "@/ui/shared/running-metric-formatters";
+import { formatDuration } from "@/ui/shared/duration-formatters";
 
 type TrainingGoalDetailsProps = {
   goal: TrainingGoal;

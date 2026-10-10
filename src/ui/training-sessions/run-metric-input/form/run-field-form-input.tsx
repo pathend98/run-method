@@ -1,14 +1,14 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
-import { RunFieldInput } from "./components/run-field-input";
-import type { RunningMetricInput as RunFieldInputValue } from "../run-metrics";
+import { RunFieldInput } from "./run-field-input";
+import type { RunningMetricInput as RunFieldInputValue } from "../run-metric-input-model";
 
 export type {
   RunningMetricInput as RunFieldInputValue,
   RunningMetric as RunFieldMetric,
-} from "@/ui/runs/run-metrics";
+} from "../run-metric-input-model";
 
-type RunFieldFormInputProps = {
+export type RunFieldFormInputProps = {
   disabled?: boolean;
   onPendingChange?: (pending: boolean) => void;
 };

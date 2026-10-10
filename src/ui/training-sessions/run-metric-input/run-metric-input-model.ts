@@ -1,13 +1,24 @@
-import type { User } from "@/domain/user-types";
+import {
+  RunningMetrics,
+  type RunningMetricUnit,
+} from "@/domain/running-metrics";
+import {
+  formatDistanceInput,
+  readDistanceInput,
+} from "@/ui/shared/distance-input-model";
+import {
+  durationFieldsSchema,
+  durationFieldsToSeconds,
+  durationSecondsToFields,
+  type DurationFields,
+} from "@/ui/shared/duration-form-input";
 
-export type RunningMetricUnit = User["measurementUnit"];
+export type { RunningMetricUnit } from "@/domain/running-metrics";
+
 export type RunningMetric = "distance" | "duration" | "pace";
 
-export type RunningMetricInput = {
+export type RunningMetricInput = DurationFields & {
   distance: string;
-  durationHours: string;
-  durationMinutes: string;
-  durationSeconds: string;
   pace: string;
   derivedMetric: RunningMetric | null;
 };
@@ -31,28 +42,13 @@ export type RunningMetricIssue = {
 
 const metricOrder: RunningMetric[] = ["distance", "duration", "pace"];
 
-export class RunningMetrics {
+export class RunMetricInputModel {
   constructor(private readonly unit: RunningMetricUnit) {}
 
-  distanceInUnit(metres: number) {
-    return metres / this.metresPerUnit();
-  }
-
-  paceInUnit(secondsPerKilometre: number) {
-    return this.unit === "MILES"
-      ? Math.round(secondsPerKilometre * 1.609344)
-      : secondsPerKilometre;
-  }
-
-  paceForRun(distanceMetres: number, durationSeconds: number) {
-    return Math.round((durationSeconds * 1000) / distanceMetres);
-  }
-
   prefill(distanceMetres: number, durationSeconds: number) {
-    const paceSeconds = Math.max(
-      1,
-      Math.round((durationSeconds * this.metresPerUnit()) / distanceMetres),
-    );
+    const paceSeconds = new RunningMetrics(
+      this.unit,
+    ).paceForDistanceAndDuration(distanceMetres, durationSeconds);
     return {
       distance: this.formatDistanceInput(distanceMetres),
       pace: formatPaceInput(paceSeconds),
@@ -60,24 +56,19 @@ export class RunningMetrics {
   }
 
   formatDistanceInput(metres: number) {
-    return String(Number(this.distanceInUnit(metres).toFixed(3)));
+    return formatDistanceInput(metres, this.unit);
   }
 
   readDistanceInput(distance: string, originalMetres?: number) {
-    if (
-      originalMetres !== undefined &&
-      distance === this.formatDistanceInput(originalMetres)
-    ) {
-      return originalMetres;
-    }
-    return Math.round(Number(distance) * this.metresPerUnit());
+    return readDistanceInput(distance, this.unit, originalMetres);
   }
 
   inspect(input: RunningMetricInput) {
     return {
       distance: this.distanceIssue(input.distance) === null,
       duration:
-        durationIssues(input).length === 0 && durationSeconds(input) > 0,
+        durationIssues(input).length === 0 &&
+        durationFieldsToSeconds(input) > 0,
       pace: paceIssue(input.pace) === null,
     };
   }
@@ -92,7 +83,7 @@ export class RunningMetrics {
     issues.push(...durationIssues(input));
     if (
       issues.every((issue) => !issue.field.startsWith("duration")) &&
-      durationSeconds(input) === 0
+      durationFieldsToSeconds(input) === 0
     ) {
       issues.push({
         field: "durationHours",
@@ -114,27 +105,27 @@ export class RunningMetrics {
     const distanceMetres = valid.distance
       ? this.readDistanceInput(input.distance)
       : null;
-    const seconds = valid.duration ? durationSeconds(input) : null;
+    const seconds = valid.duration ? durationFieldsToSeconds(input) : null;
     const paceSeconds = valid.pace ? parsePace(input.pace) : null;
 
     if (derivedMetric === "pace" && distanceMetres && seconds) {
-      const pace = Math.max(
-        1,
-        Math.round((seconds * this.metresPerUnit()) / distanceMetres),
+      const pace = new RunningMetrics(this.unit).paceForDistanceAndDuration(
+        distanceMetres,
+        seconds,
       );
       return { ...input, pace: formatPaceInput(pace), derivedMetric };
     }
     if (derivedMetric === "duration" && distanceMetres && paceSeconds) {
-      const duration = Math.max(
-        1,
-        Math.round((distanceMetres * paceSeconds) / this.metresPerUnit()),
+      const duration = new RunningMetrics(this.unit).durationForDistanceAndPace(
+        distanceMetres,
+        paceSeconds,
       );
-      return { ...input, ...formatDurationFields(duration), derivedMetric };
+      return { ...input, ...durationSecondsToFields(duration), derivedMetric };
     }
     if (derivedMetric === "distance" && seconds && paceSeconds) {
-      const metres = Math.max(
-        1,
-        Math.round((seconds * this.metresPerUnit()) / paceSeconds),
+      const metres = new RunningMetrics(this.unit).distanceForDurationAndPace(
+        seconds,
+        paceSeconds,
       );
       return {
         ...input,
@@ -176,34 +167,25 @@ export class RunningMetrics {
     }
     return Number(value) > 0 ? null : "distance-positive";
   }
-
-  private metresPerUnit() {
-    return this.unit === "MILES" ? 1609.344 : 1000;
-  }
 }
 
 function durationIssues(input: RunningMetricInput): RunningMetricIssue[] {
-  const fields = [
-    "durationHours",
-    "durationMinutes",
-    "durationSeconds",
-  ] as const;
+  const fields = Object.keys(
+    durationFieldsSchema.shape,
+  ) as (keyof DurationFields)[];
   return fields.flatMap((field): RunningMetricIssue[] => {
-    const value = input[field];
-    if (!/^\d+$/.test(value)) return [{ field, code: "duration-integer" }];
-    if (field !== "durationHours" && Number(value) > 59) {
-      return [{ field, code: "duration-range" }];
-    }
-    return [];
+    const result = durationFieldsSchema.shape[field].safeParse(input[field]);
+    if (result.success) return [];
+    return [
+      {
+        field,
+        code:
+          result.error.issues[0].code === "custom"
+            ? "duration-range"
+            : "duration-integer",
+      },
+    ];
   });
-}
-
-function durationSeconds(input: RunningMetricInput) {
-  return (
-    Number(input.durationHours) * 3600 +
-    Number(input.durationMinutes) * 60 +
-    Number(input.durationSeconds)
-  );
 }
 
 function paceIssue(value: string): "pace-format" | "pace-positive" | null {
@@ -218,12 +200,4 @@ function parsePace(value: string) {
 
 function formatPaceInput(seconds: number) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
-function formatDurationFields(seconds: number) {
-  return {
-    durationHours: String(Math.floor(seconds / 3600)).padStart(2, "0"),
-    durationMinutes: String(Math.floor((seconds % 3600) / 60)).padStart(2, "0"),
-    durationSeconds: String(seconds % 60).padStart(2, "0"),
-  };
 }

@@ -1,11 +1,11 @@
-import { FormField } from "@/ui/shared/form-field/form-field";
-import { Button } from "@/ui/shared/button/button";
+import { FormField } from "@/ui/shared/form-field";
+import { Button } from "@/ui/shared/button";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 import type {
   RunningMetric as RunFieldMetric,
   RunningMetricInput as RunFieldInputValue,
-} from "../../run-metrics";
-import { useRunFieldInputController } from "../hooks/use-run-field-input-controller";
+} from "../run-metric-input-model";
+import { useRunFieldInputController } from "./use-run-field-input-controller";
 import { RunDurationField } from "./run-duration-field";
 
 export type RunFieldInputErrors = Partial<

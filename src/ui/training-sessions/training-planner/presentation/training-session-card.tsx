@@ -6,11 +6,9 @@ import {
   Dumbbell,
   SportShoe,
 } from "lucide-react";
-import {
-  formatCompactDuration,
-  formatDistance,
-  formatStatus,
-} from "@/ui/training-sessions/formatters";
+import { formatDistance } from "@/ui/shared/running-metric-formatters";
+import { formatCompactDuration } from "@/ui/shared/duration-formatters";
+import { formatStatus } from "@/ui/training-sessions/formatters";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
 
 type TrainingSessionCardProps = {

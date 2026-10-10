@@ -1,8 +1,8 @@
-import { RunningMetrics } from "./run-metrics";
+import { RunMetricInputModel } from "../run-metric-input-model";
 import { runFieldIssueMessage } from "./run-field-issues";
 
 test("turns shared validation codes into web form messages", () => {
-  const kilometres = new RunningMetrics("KILOMETRES");
+  const kilometres = new RunMetricInputModel("KILOMETRES");
   const base = {
     distance: "5",
     durationHours: "00",
@@ -24,7 +24,7 @@ test("turns shared validation codes into web form messages", () => {
     const issue = kilometres.validate(input)[0];
     expect(runFieldIssueMessage(issue, "KILOMETRES")).toBe(message);
   }
-  const mileIssue = new RunningMetrics("MILES").validate({
+  const mileIssue = new RunMetricInputModel("MILES").validate({
     ...base,
     distance: "bad",
   })[0];

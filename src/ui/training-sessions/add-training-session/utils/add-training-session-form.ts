@@ -5,10 +5,10 @@ import {
   type CreateTrainingSessionRequest,
 } from "@/domain/training-sessions";
 import {
-  RunningMetrics,
+  RunMetricInputModel,
   runFieldIssueMessage,
   type RunningMetricUnit,
-} from "@/ui/runs/run-metrics";
+} from "@/ui/training-sessions/run-metric-input";
 import {
   defaultDurationFields,
   durationFieldsSchema,
@@ -38,7 +38,7 @@ export function createAddTrainingSessionFormSchema(unit: RunningMetricUnit) {
       return;
     }
 
-    for (const issue of new RunningMetrics(unit).validate(value)) {
+    for (const issue of new RunMetricInputModel(unit).validate(value)) {
       context.addIssue({
         code: "custom",
         path: [issue.field],
@@ -88,7 +88,9 @@ export function toCreateTrainingSessionRequest(
     });
   }
 
-  const distance = new RunningMetrics(unit).readDistanceInput(parsed.distance);
+  const distance = new RunMetricInputModel(unit).readDistanceInput(
+    parsed.distance,
+  );
   const duration = durationFieldsToSeconds(parsed);
   return createTrainingSessionRequestSchema.parse({
     ...base,

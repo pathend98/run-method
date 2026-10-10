@@ -5,10 +5,10 @@ import type {
   TrainingSession,
 } from "@/domain/training-sessions";
 import {
-  RunningMetrics,
+  RunMetricInputModel,
   runFieldIssueMessage,
   type RunningMetricUnit,
-} from "@/ui/runs/run-metrics";
+} from "@/ui/training-sessions/run-metric-input";
 import {
   durationFieldsSchema,
   durationFieldsToSeconds,
@@ -41,7 +41,7 @@ export function createCompleteTrainingSessionFormSchema(
 ) {
   return completeTrainingSessionFormSchema.superRefine((values, context) => {
     if (trainingSession.activityType !== "RUN") return;
-    const distanceIssue = new RunningMetrics(unit)
+    const distanceIssue = new RunMetricInputModel(unit)
       .validate(values, false)
       .find((issue) => issue.field === "distance");
     if (distanceIssue) {
@@ -63,7 +63,7 @@ export function toCompleteTrainingSessionRequest(
     trainingSession,
     unit,
   ).parse(values);
-  const metrics = new RunningMetrics(unit);
+  const metrics = new RunMetricInputModel(unit);
   return {
     actualDurationSeconds: durationFieldsToSeconds(parsed),
     ...(trainingSession.activityType === "RUN"

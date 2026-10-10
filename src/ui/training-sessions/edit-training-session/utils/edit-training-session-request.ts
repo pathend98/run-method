@@ -3,7 +3,10 @@ import {
   type EditTrainingSessionRequest,
   type TrainingSession,
 } from "@/domain/training-sessions";
-import { RunningMetrics, type RunningMetricUnit } from "@/ui/runs/run-metrics";
+import {
+  RunMetricInputModel,
+  type RunningMetricUnit,
+} from "@/ui/training-sessions/run-metric-input";
 import { durationFieldsToSeconds } from "@/ui/shared/duration-form-input";
 import {
   createEditTrainingSessionFormSchema,
@@ -19,7 +22,7 @@ export function toEditTrainingSessionRequest(
     trainingSession,
     unit,
   ).parse(values);
-  const metrics = new RunningMetrics(unit);
+  const metrics = new RunMetricInputModel(unit);
   const base = {
     title: parsed.title,
     description: parsed.description.trim() || null,

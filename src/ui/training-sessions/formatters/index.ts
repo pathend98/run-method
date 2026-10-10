@@ -1,10 +1,4 @@
 export {
-  formatPace,
-  formatDistance,
-  formatDuration,
-  formatCompactDuration,
-} from "./training-session-metric-formatters";
-export {
   formatActivityType,
   formatTimeOfDay,
   formatStatus,

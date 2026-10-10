@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
-  RunningMetrics,
+  RunMetricInputModel,
   type RunningMetricInput as RunFieldInputValue,
   type RunningMetric as RunFieldMetric,
   type RunningMetricUnit as RunFieldUnit,
-} from "../../run-metrics";
+} from "../run-metric-input-model";
 
 type UseRunFieldInputControllerOptions = {
   onChange: (value: RunFieldInputValue) => void;
@@ -22,7 +22,7 @@ export function useRunFieldInputController({
   unit,
   value,
 }: UseRunFieldInputControllerOptions) {
-  const runningMetrics = new RunningMetrics(unit);
+  const runningMetrics = new RunMetricInputModel(unit);
   const [enteredMetrics, setEnteredMetrics] = useState<RunFieldMetric[]>(() =>
     metricOrder.filter((metric) => runningMetrics.inspect(value)[metric]),
   );

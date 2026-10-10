@@ -1,5 +1,5 @@
 import type { User } from "@/domain/user-types";
-import { formatDistance } from "@/ui/training-sessions/formatters";
+import { formatDistance } from "@/ui/shared/running-metric-formatters";
 
 export function formatDistanceVariance(
   metres: number,

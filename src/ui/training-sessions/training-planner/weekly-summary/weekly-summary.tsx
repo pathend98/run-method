@@ -4,10 +4,8 @@ import type {
   TrainingSession,
   TrainingSessionDateRange,
 } from "@/domain/training-sessions";
-import {
-  formatCompactDuration,
-  formatDistance,
-} from "@/ui/training-sessions/formatters";
+import { formatDistance } from "@/ui/shared/running-metric-formatters";
+import { formatCompactDuration } from "@/ui/shared/duration-formatters";
 import { SummaryMetric } from "./presentation/summary-metric";
 import { getWeeklySummary } from "./calculation/weekly-summary";
 import {

@@ -7,10 +7,8 @@ import type { TrainingSession } from "@/domain/training-sessions";
 import type { User } from "@/domain/user-types";
 import { Button } from "@/ui/shared/button/button";
 import { Modal } from "@/ui/shared/modal/modal";
-import {
-  formatCompactDuration,
-  formatDistance,
-} from "@/ui/training-sessions/formatters";
+import { formatDistance } from "@/ui/shared/running-metric-formatters";
+import { formatCompactDuration } from "@/ui/shared/duration-formatters";
 import { useReviewTrainingSessionsQuery } from "./hooks/use-review-training-sessions-query";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { useDistanceDisplayUnit } from "@/ui/users/measurement-unit-context";
