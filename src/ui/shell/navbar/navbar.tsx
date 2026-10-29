@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Target, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -52,20 +52,20 @@ export function Navbar() {
         aria-label="Main navigation"
         className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex h-full items-stretch gap-2">
           <Link
-            aria-label="Training planner"
-            className="inline-flex size-11 items-center justify-center rounded-md text-teal-700 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+            aria-current={pathname === "/training-planner" ? "page" : undefined}
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center px-3 text-sm font-medium text-black after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 aria-[current=page]:after:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
             href="/training-planner"
           >
-            <CalendarDays aria-hidden="true" className="size-5" />
+            Schedule
           </Link>
           <Link
-            aria-label="Training goals"
-            className="inline-flex size-11 items-center justify-center rounded-md text-teal-700 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
+            aria-current={pathname === "/training-goals" ? "page" : undefined}
+            className="relative inline-flex min-h-11 min-w-11 items-center justify-center px-3 text-sm font-medium text-black after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 aria-[current=page]:after:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
             href="/training-goals"
           >
-            <Target aria-hidden="true" className="size-5" />
+            Goals
           </Link>
         </div>
         <div
@@ -123,7 +123,8 @@ export function Navbar() {
             >
               {kind === "REGISTERED" ? (
                 <Link
-                  className="flex min-h-11 items-center rounded px-3 text-sm text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-teal-600"
+                  aria-current={pathname === "/settings" ? "page" : undefined}
+                  className="flex min-h-11 items-center border-b-2 border-transparent px-3 text-sm text-black aria-[current=page]:border-teal-700 focus-visible:outline-2 focus-visible:outline-teal-600"
                   href="/settings"
                   onClick={() => setIsOpen(false)}
                   ref={settingsRef}

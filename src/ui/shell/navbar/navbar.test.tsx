@@ -34,7 +34,7 @@ test("renders accessible navigation with the menu initially closed", () => {
     screen.getByRole("navigation", { name: "Main navigation" }),
   ).toBeTruthy();
   expect(
-    screen.getByRole("link", { name: "Training planner" }).getAttribute("href"),
+    screen.getByRole("link", { name: "Schedule" }).getAttribute("href"),
   ).toBe("/training-planner");
   expect(trigger().getAttribute("aria-expanded")).toBe("false");
   expect(trigger().textContent).toContain("Ada");
@@ -55,7 +55,7 @@ test.each(["GUEST", "REGISTERED"] as const)(
     render(<Navbar />);
 
     expect(
-      screen.getByRole("link", { name: "Training goals" }).getAttribute("href"),
+      screen.getByRole("link", { name: "Goals" }).getAttribute("href"),
     ).toBe("/training-goals");
   },
 );
@@ -210,7 +210,7 @@ test("keeps the menu open for internal focus and closes when focus leaves", () =
   fireEvent.click(trigger());
   act(() => trigger().focus());
   expect(screen.getByRole("menu")).toBeTruthy();
-  act(() => screen.getByRole("link", { name: "Training planner" }).focus());
+  act(() => screen.getByRole("link", { name: "Schedule" }).focus());
   expect(screen.queryByRole("menu")).toBeNull();
 
   fireEvent.click(trigger());
@@ -228,4 +228,50 @@ test("removes outside interaction listeners on unmount", () => {
     expect.any(Function),
   );
   removeListener.mockRestore();
+});
+
+test.each([
+  ["/training-planner", "Schedule"],
+  ["/training-goals", "Goals"],
+  ["/settings", "Settings"],
+  ["/", null],
+  ["/training-planner/other", null],
+  ["/training-goals/other", null],
+])("marks only the current page on %s", (pathname, currentLabel) => {
+  account.pathname = pathname!;
+  render(<Navbar />);
+  if (!trigger().hasAttribute("disabled")) fireEvent.click(trigger());
+
+  for (const label of ["Schedule", "Goals", "Settings"]) {
+    const link = screen.queryByRole(
+      label === "Settings" ? "menuitem" : "link",
+      {
+        name: label,
+      },
+    );
+    expect(link?.getAttribute("aria-current") ?? null).toBe(
+      label === currentLabel ? "page" : null,
+    );
+  }
+  expect(screen.getByRole("link", { name: "Schedule" }).textContent).toBe(
+    "Schedule",
+  );
+  expect(screen.getByRole("link", { name: "Goals" }).textContent).toBe("Goals");
+});
+
+test("updates the current page after navigation", () => {
+  const view = render(<Navbar />);
+  expect(
+    screen.getByRole("link", { name: "Schedule" }).getAttribute("aria-current"),
+  ).toBe("page");
+
+  account.pathname = "/training-goals";
+  view.rerender(<Navbar />);
+
+  expect(
+    screen.getByRole("link", { name: "Schedule" }).hasAttribute("aria-current"),
+  ).toBe(false);
+  expect(
+    screen.getByRole("link", { name: "Goals" }).getAttribute("aria-current"),
+  ).toBe("page");
 });
