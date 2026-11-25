@@ -1,30 +1,41 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { TrainingGoalForm } from "./training-goal-form";
 
-function fillTitle() {
-  fireEvent.change(screen.getByLabelText("Title"), {
-    target: { value: "  Marathon  " },
-  });
+function fillForm() {
+  for (const [label, value] of Object.entries({
+    Title: "  Marathon  ",
+    Purpose: "  Build fitness  ",
+    "Training intentions": "  Run consistently  ",
+    "Start date": "2026-11-01",
+    "Target date": "2026-12-01",
+  })) {
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+  }
 }
 
-test("renders all fields with optional targets and race selected", () => {
-  render(<TrainingGoalForm unit="KILOMETRES" onSubmit={vi.fn()} />);
-  expect(screen.getByLabelText("Goal type")).toHaveProperty("value", "RACE");
-  expect(screen.getAllByRole("option")).toHaveLength(4);
-  expect(screen.getByLabelText("Target distance (km, optional)")).toBeDefined();
-  expect(screen.getByLabelText("Target date (optional)")).toBeDefined();
-  expect(screen.getByLabelText("Description (optional)")).toBeDefined();
+test("renders the five required fields with empty defaults", () => {
+  render(<TrainingGoalForm onSubmit={vi.fn()} />);
+  for (const label of [
+    "Title",
+    "Purpose",
+    "Training intentions",
+    "Start date",
+    "Target date",
+  ]) {
+    expect(screen.getByLabelText(label)).toHaveProperty("value", "");
+  }
+  expect(screen.queryByLabelText("Goal type")).toBeNull();
 });
 
 test("shows validation errors without submitting", async () => {
   const onSubmit = vi.fn();
-  render(<TrainingGoalForm unit="KILOMETRES" onSubmit={onSubmit} />);
+  render(<TrainingGoalForm onSubmit={onSubmit} />);
   fireEvent.click(screen.getByRole("button", { name: "Create training goal" }));
-  expect(await screen.findByText("Enter a goal title")).toBeDefined();
+  await waitFor(() => expect(screen.getAllByRole("alert")).toHaveLength(5));
   expect(onSubmit).not.toHaveBeenCalled();
 });
 
-test("submits targets in miles and disables controls while saving", async () => {
+test("submits the five trimmed fields and disables controls while saving", async () => {
   let finish!: () => void;
   const onSubmit = vi.fn(
     () =>
@@ -32,23 +43,17 @@ test("submits targets in miles and disables controls while saving", async () => 
         finish = resolve;
       }),
   );
-  render(<TrainingGoalForm unit="MILES" onSubmit={onSubmit} />);
-  fillTitle();
-  fireEvent.change(screen.getByLabelText("Target distance (mi, optional)"), {
-    target: { value: "10" },
-  });
-  fireEvent.change(screen.getByLabelText("Target time (minutes, optional)"), {
-    target: { value: "45" },
-  });
+  render(<TrainingGoalForm onSubmit={onSubmit} />);
+  fillForm();
   fireEvent.click(screen.getByRole("button", { name: "Create training goal" }));
   await waitFor(() =>
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: "Marathon",
-        targetDistanceMetres: 16093,
-        targetTimeSeconds: 2700,
-      }),
-    ),
+    expect(onSubmit).toHaveBeenCalledWith({
+      title: "Marathon",
+      purpose: "Build fitness",
+      trainingIntentions: "Run consistently",
+      startDate: "2026-11-01",
+      targetDate: "2026-12-01",
+    }),
   );
   expect(screen.getByRole("button", { name: "Creating…" })).toHaveProperty(
     "disabled",
@@ -68,8 +73,8 @@ test("preserves values on failure and allows retry", async () => {
     .fn()
     .mockRejectedValueOnce(new Error("Failed"))
     .mockResolvedValue(undefined);
-  render(<TrainingGoalForm unit="KILOMETRES" onSubmit={onSubmit} />);
-  fillTitle();
+  render(<TrainingGoalForm onSubmit={onSubmit} />);
+  fillForm();
   fireEvent.click(screen.getByRole("button", { name: "Create training goal" }));
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",

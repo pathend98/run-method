@@ -1,5 +1,7 @@
 "use client";
 
+import { format } from "date-fns";
+import { isTrainingGoalActive } from "@/domain/training-goals";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CreateTrainingGoalRequest,
@@ -45,7 +47,10 @@ export function TrainingGoals() {
       </p>
     );
   }
-  const activeGoal = goals.data.find((goal) => goal.status === "ACTIVE");
+  const today = format(new Date(), "yyyy-MM-dd");
+  const activeGoal = goals.data.find((goal) =>
+    isTrainingGoalActive(goal, today),
+  );
   const user = currentUser.data;
   const currentGoals = goals.data;
 
@@ -61,13 +66,9 @@ export function TrainingGoals() {
         Training goals
       </h1>
       {activeGoal ? (
-        <TrainingGoalDetails goal={activeGoal} unit={user.measurementUnit} />
+        <TrainingGoalDetails goal={activeGoal} />
       ) : (
-        <TrainingGoalForm
-          key={athleteId}
-          unit={user.measurementUnit}
-          onSubmit={submit}
-        />
+        <TrainingGoalForm key={athleteId} onSubmit={submit} />
       )}
     </section>
   );

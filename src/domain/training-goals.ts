@@ -55,3 +55,14 @@ export type CreateTrainingGoalRequest = z.infer<
 export type EditTrainingGoalRequest = z.infer<
   typeof editTrainingGoalRequestSchema
 >;
+
+export function isTrainingGoalActive(
+  goal: TrainingGoal,
+  today: string,
+): boolean {
+  return (
+    goal.resolution === null &&
+    goal.startDate <= today &&
+    goal.targetDate >= today
+  );
+}

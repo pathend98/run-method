@@ -1,5 +1,6 @@
 import {
   createTrainingGoalRequestSchema,
+  isTrainingGoalActive,
   editTrainingGoalRequestSchema,
   trainingGoalSchema,
 } from "./training-goals";
@@ -129,4 +130,19 @@ test.each([
     trainingGoalSchema.safeParse({ ...createTrainingGoal(), ...fields })
       .success,
   ).toBe(false);
+});
+
+test.each([
+  [{}, true],
+  [{ startDate: "2026-11-25" }, true],
+  [{ targetDate: "2026-11-25" }, true],
+  [{ startDate: "2026-11-25", targetDate: "2026-11-25" }, true],
+  [{ startDate: "2026-11-26" }, false],
+  [{ targetDate: "2026-11-24" }, false],
+  [{ resolution: "completed" as const }, false],
+  [{ resolution: "discarded" as const }, false],
+])("derives active state for %j", (fields, expected) => {
+  expect(isTrainingGoalActive(createTrainingGoal(fields), "2026-11-25")).toBe(
+    expected,
+  );
 });

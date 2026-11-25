@@ -4,7 +4,14 @@ import { createUser } from "@/test-support/fixtures/user";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 import TrainingGoalsPage from "./page";
 
-afterEach(() => vi.unstubAllGlobals());
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 25, 12));
+});
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 test("renders training goals inside the main landmark", async () => {
   vi.stubGlobal(

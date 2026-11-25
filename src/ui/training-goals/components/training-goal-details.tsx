@@ -1,71 +1,41 @@
 import { format, parseISO } from "date-fns";
-
 import type { TrainingGoal } from "@/domain/training-goals";
-import type { User } from "@/domain/user-types";
 import { Button } from "@/ui/shared/button/button";
-import {
-  formatDistance,
-  formatDuration,
-} from "@/ui/training-sessions/formatters";
 
-type TrainingGoalDetailsProps = {
-  goal: TrainingGoal;
-  unit: User["measurementUnit"];
-};
+type TrainingGoalDetailsProps = { goal: TrainingGoal };
 
-const goalTypeLabels: Record<TrainingGoal["type"], string> = {
-  RACE: "Race",
-  DISTANCE: "Distance",
-  CONSISTENCY: "Consistency",
-  OPEN: "Open",
-};
-
-export function TrainingGoalDetails({ goal, unit }: TrainingGoalDetailsProps) {
+export function TrainingGoalDetails({ goal }: TrainingGoalDetailsProps) {
   return (
     <article className="max-w-xl space-y-4 rounded-lg border border-zinc-200 bg-white p-6">
       <h2 className="text-xl font-semibold text-zinc-950">{goal.title}</h2>
       <dl className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <dt className="text-sm text-zinc-500">Goal type</dt>
-          <dd className="font-medium text-zinc-950">
-            {goalTypeLabels[goal.type]}
+        <div className="sm:col-span-2">
+          <dt className="text-sm text-zinc-500">Purpose</dt>
+          <dd className="whitespace-pre-wrap text-zinc-700">{goal.purpose}</dd>
+        </div>
+        <div className="sm:col-span-2">
+          <dt className="text-sm text-zinc-500">Training intentions</dt>
+          <dd className="whitespace-pre-wrap text-zinc-700">
+            {goal.trainingIntentions}
           </dd>
         </div>
-        {goal.targetDate !== undefined ? (
-          <div>
-            <dt className="text-sm text-zinc-500">Target date</dt>
-            <dd className="font-medium text-zinc-950">
-              <time dateTime={goal.targetDate}>
-                {format(parseISO(goal.targetDate), "d MMMM yyyy")}
-              </time>
-            </dd>
-          </div>
-        ) : null}
-        {goal.targetDistanceMetres !== undefined ? (
-          <div>
-            <dt className="text-sm text-zinc-500">Target distance</dt>
-            <dd className="font-medium text-zinc-950">
-              {formatDistance(goal.targetDistanceMetres, unit)}
-            </dd>
-          </div>
-        ) : null}
-        {goal.targetTimeSeconds !== undefined ? (
-          <div>
-            <dt className="text-sm text-zinc-500">Target finish time</dt>
-            <dd className="font-medium text-zinc-950">
-              {formatDuration(goal.targetTimeSeconds)}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
-      {goal.description !== undefined ? (
         <div>
-          <h3 className="text-sm text-zinc-500">Description</h3>
-          <p className="whitespace-pre-wrap text-zinc-700">
-            {goal.description}
-          </p>
+          <dt className="text-sm text-zinc-500">Start date</dt>
+          <dd className="font-medium text-zinc-950">
+            <time dateTime={goal.startDate}>
+              {format(parseISO(goal.startDate), "d MMMM yyyy")}
+            </time>
+          </dd>
         </div>
-      ) : null}
+        <div>
+          <dt className="text-sm text-zinc-500">Target date</dt>
+          <dd className="font-medium text-zinc-950">
+            <time dateTime={goal.targetDate}>
+              {format(parseISO(goal.targetDate), "d MMMM yyyy")}
+            </time>
+          </dd>
+        </div>
+      </dl>
       <div className="flex flex-wrap gap-3">
         <Button variant="primary">Complete goal</Button>
         <Button variant="destructive">Discard goal</Button>
