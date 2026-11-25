@@ -37,7 +37,11 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.findBySessionKey.mockResolvedValue(createUser({ id: goal.athleteId }));
   mocks.findById.mockResolvedValue(goal);
-  mocks.complete.mockResolvedValue({ ...goal, status: "COMPLETED" });
+  mocks.complete.mockResolvedValue({
+    ...goal,
+    resolution: "completed",
+    resolvedAt: "2026-11-25T12:00:00.000Z",
+  });
 });
 function post(
   body: string | undefined = undefined,
@@ -63,7 +67,8 @@ test("returns the updated goal with private headers and unchanged metadata", asy
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   await expect(response.json()).resolves.toEqual({
     ...goal,
-    status: "COMPLETED",
+    resolution: "completed",
+    resolvedAt: "2026-11-25T12:00:00.000Z",
   });
   expect(mocks.complete).toHaveBeenCalledExactlyOnceWith(
     goal.athleteId,
@@ -101,11 +106,12 @@ test("returns 404 for a missing goal", async () => {
   expect(mocks.complete).not.toHaveBeenCalled();
 });
 
-test("returns 403 for another athlete before checking status", async () => {
+test("returns 403 for another athlete before checking resolution", async () => {
   mocks.findById.mockResolvedValue(
     createTrainingGoal({
       athleteId: "44444444-4444-4444-8444-444444444444",
-      status: "COMPLETED",
+      resolution: "completed",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
     }),
   );
   const response = await post();
@@ -113,14 +119,18 @@ test("returns 403 for another athlete before checking status", async () => {
   expect(mocks.complete).not.toHaveBeenCalled();
 });
 
-test.each(["COMPLETED", "DISCARDED"] as const)(
+test.each(["completed", "discarded"] as const)(
   "returns 409 for %s goals",
-  async (status) => {
-    mocks.findById.mockResolvedValue({ ...goal, status });
+  async (resolution) => {
+    mocks.findById.mockResolvedValue({
+      ...goal,
+      resolution,
+      resolvedAt: "2026-11-25T12:00:00.000Z",
+    });
     const response = await post();
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toEqual({
-      error: "Only active training goals can be completed",
+      error: "Only unresolved training goals can be completed",
     });
     expect(mocks.complete).not.toHaveBeenCalled();
   },

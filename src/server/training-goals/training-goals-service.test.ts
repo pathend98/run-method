@@ -2,7 +2,13 @@ import { DefaultTrainingGoalsService } from "./training-goals-service";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 
-const request = { title: "Goal", type: "RACE" as const };
+const request = {
+  title: "Goal",
+  purpose: "Fitness",
+  trainingIntentions: "Run regularly",
+  startDate: "2026-10-02",
+  targetDate: "2026-12-01",
+};
 
 test("delegates creation without additional validation", async () => {
   const goal = createTrainingGoal();
@@ -113,7 +119,7 @@ function setupEdit(goal = createTrainingGoal()) {
   };
 }
 
-test("edits an owned active goal", async () => {
+test("edits an owned unresolved goal", async () => {
   const { service, goal, findById, edit } = setupEdit();
   const request = { title: "New title" };
   await expect(service.edit(goal.athleteId, goal.id, request)).resolves.toBe(
@@ -136,9 +142,12 @@ test("rejects a missing goal before editing", async () => {
   expect(edit).not.toHaveBeenCalled();
 });
 
-test("checks ownership before goal status", async () => {
+test("checks ownership before goal resolution", async () => {
   const { service, goal, edit } = setupEdit(
-    createTrainingGoal({ status: "COMPLETED" }),
+    createTrainingGoal({
+      resolution: "completed",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
+    }),
   );
   await expect(
     service.edit("other", goal.id, { title: "New" }),
@@ -146,13 +155,18 @@ test("checks ownership before goal status", async () => {
   expect(edit).not.toHaveBeenCalled();
 });
 
-test.each(["COMPLETED", "DISCARDED"] as const)(
+test.each(["completed", "discarded"] as const)(
   "rejects %s goals",
-  async (status) => {
-    const { service, goal, edit } = setupEdit(createTrainingGoal({ status }));
+  async (resolution) => {
+    const { service, goal, edit } = setupEdit(
+      createTrainingGoal({
+        resolution,
+        resolvedAt: "2026-11-25T12:00:00.000Z",
+      }),
+    );
     await expect(
       service.edit(goal.athleteId, goal.id, { title: "New" }),
-    ).rejects.toThrow("Only active training goals can be edited");
+    ).rejects.toThrow("Only unresolved training goals can be edited");
     expect(edit).not.toHaveBeenCalled();
   },
 );
@@ -162,7 +176,7 @@ test("rejects a goal that changes during editing", async () => {
   edit.mockResolvedValue(null);
   await expect(
     service.edit(goal.athleteId, goal.id, { title: "New" }),
-  ).rejects.toThrow("Only active training goals can be edited");
+  ).rejects.toThrow("Only unresolved training goals can be edited");
 });
 
 test.each(["lookup", "update"])("propagates %s failures", async (stage) => {
@@ -176,7 +190,11 @@ test.each(["lookup", "update"])("propagates %s failures", async (stage) => {
 
 function setupComplete(goal = createTrainingGoal()) {
   const findById = vi.fn().mockResolvedValue(goal);
-  const completed = { ...goal, status: "COMPLETED" as const };
+  const completed = {
+    ...goal,
+    resolution: "completed",
+    resolvedAt: "2026-11-25T12:00:00.000Z" as const,
+  };
   const complete = vi.fn().mockResolvedValue(completed);
   return {
     service: new DefaultTrainingGoalsService({
@@ -194,7 +212,7 @@ function setupComplete(goal = createTrainingGoal()) {
   };
 }
 
-test("completes an owned active goal", async () => {
+test("completes an owned unresolved goal", async () => {
   const { service, goal, completed, complete, findById } = setupComplete();
   await expect(service.complete(goal.athleteId, goal.id)).resolves.toBe(
     completed,
@@ -210,23 +228,29 @@ test("rejects a missing goal before completion", async () => {
   );
   expect(complete).not.toHaveBeenCalled();
 });
-test("checks completion ownership before status", async () => {
+test("checks completion ownership before resolution", async () => {
   const { service, goal, complete } = setupComplete(
-    createTrainingGoal({ status: "COMPLETED" }),
+    createTrainingGoal({
+      resolution: "completed",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
+    }),
   );
   await expect(service.complete("other", goal.id)).rejects.toThrow(
     ForbiddenError,
   );
   expect(complete).not.toHaveBeenCalled();
 });
-test.each(["COMPLETED", "DISCARDED"] as const)(
+test.each(["completed", "discarded"] as const)(
   "rejects completion of %s goals",
-  async (status) => {
+  async (resolution) => {
     const { service, goal, complete } = setupComplete(
-      createTrainingGoal({ status }),
+      createTrainingGoal({
+        resolution,
+        resolvedAt: "2026-11-25T12:00:00.000Z",
+      }),
     );
     await expect(service.complete(goal.athleteId, goal.id)).rejects.toThrow(
-      "Only active training goals can be completed",
+      "Only unresolved training goals can be completed",
     );
     expect(complete).not.toHaveBeenCalled();
   },
@@ -235,7 +259,7 @@ test("rejects concurrent completion transitions", async () => {
   const { service, goal, complete } = setupComplete();
   complete.mockResolvedValue(null);
   await expect(service.complete(goal.athleteId, goal.id)).rejects.toThrow(
-    "Only active training goals can be completed",
+    "Only unresolved training goals can be completed",
   );
 });
 test.each(["lookup", "update"])(
@@ -250,7 +274,11 @@ test.each(["lookup", "update"])(
 
 function setupDiscard(goal = createTrainingGoal()) {
   const findById = vi.fn().mockResolvedValue(goal);
-  const discarded = { ...goal, status: "DISCARDED" as const };
+  const discarded = {
+    ...goal,
+    resolution: "discarded",
+    resolvedAt: "2026-11-25T12:00:00.000Z" as const,
+  };
   const discard = vi.fn().mockResolvedValue(discarded);
   return {
     service: new DefaultTrainingGoalsService({
@@ -268,7 +296,7 @@ function setupDiscard(goal = createTrainingGoal()) {
   };
 }
 
-test("discards an owned active goal", async () => {
+test("discards an owned unresolved goal", async () => {
   const { service, goal, discarded, discard, findById } = setupDiscard();
   await expect(service.discard(goal.athleteId, goal.id)).resolves.toBe(
     discarded,
@@ -284,23 +312,29 @@ test("rejects a missing goal before discarding", async () => {
   );
   expect(discard).not.toHaveBeenCalled();
 });
-test("checks discarding ownership before status", async () => {
+test("checks discarding ownership before resolution", async () => {
   const { service, goal, discard } = setupDiscard(
-    createTrainingGoal({ status: "DISCARDED" }),
+    createTrainingGoal({
+      resolution: "discarded",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
+    }),
   );
   await expect(service.discard("other", goal.id)).rejects.toThrow(
     ForbiddenError,
   );
   expect(discard).not.toHaveBeenCalled();
 });
-test.each(["COMPLETED", "DISCARDED"] as const)(
+test.each(["completed", "discarded"] as const)(
   "rejects discarding of %s goals",
-  async (status) => {
+  async (resolution) => {
     const { service, goal, discard } = setupDiscard(
-      createTrainingGoal({ status }),
+      createTrainingGoal({
+        resolution,
+        resolvedAt: "2026-11-25T12:00:00.000Z",
+      }),
     );
     await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
-      "Only active training goals can be discarded",
+      "Only unresolved training goals can be discarded",
     );
     expect(discard).not.toHaveBeenCalled();
   },
@@ -309,7 +343,7 @@ test("rejects concurrent discarding transitions", async () => {
   const { service, goal, discard } = setupDiscard();
   discard.mockResolvedValue(null);
   await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
-    "Only active training goals can be discarded",
+    "Only unresolved training goals can be discarded",
   );
 });
 test.each(["lookup", "update"])(
@@ -319,5 +353,27 @@ test.each(["lookup", "update"])(
     const error = new Error("Database unavailable");
     (stage === "lookup" ? findById : discard).mockRejectedValue(error);
     await expect(service.discard(goal.athleteId, goal.id)).rejects.toBe(error);
+  },
+);
+
+test.each([
+  { startDate: "2000-01-01", targetDate: "2000-02-01" },
+  { startDate: "2099-01-01", targetDate: "2099-02-01" },
+])(
+  "allows editing and explicit resolution outside a goal's period %j",
+  async (dates) => {
+    const goal = createTrainingGoal(dates);
+    const edited = setupEdit(goal);
+    await expect(
+      edited.service.edit(goal.athleteId, goal.id, { title: "Updated" }),
+    ).resolves.toBe(goal);
+    const completed = setupComplete(goal);
+    await expect(
+      completed.service.complete(goal.athleteId, goal.id),
+    ).resolves.toBe(completed.completed);
+    const discarded = setupDiscard(goal);
+    await expect(
+      discarded.service.discard(goal.athleteId, goal.id),
+    ).resolves.toBe(discarded.discarded);
   },
 );

@@ -8,7 +8,7 @@ import {
   TrainingGoalCannotCompleteError,
   TrainingGoalCannotDiscardError,
   TrainingGoalNotFoundError,
-  TrainingGoalNotActiveError,
+  TrainingGoalAlreadyResolvedError,
 } from "./training-goals-errors";
 import type { TrainingGoalsRepository } from "./training-goals-repository";
 
@@ -37,7 +37,7 @@ export class DefaultTrainingGoalsService implements TrainingGoalsService {
 
     if (actorId !== current.athleteId) throw new ForbiddenError();
 
-    if (current.status !== "ACTIVE") throw new TrainingGoalCannotDiscardError();
+    if (current.resolution !== null) throw new TrainingGoalCannotDiscardError();
 
     const discarded = await this.repository.discard(actorId, id);
     if (!discarded) throw new TrainingGoalCannotDiscardError();
@@ -51,7 +51,7 @@ export class DefaultTrainingGoalsService implements TrainingGoalsService {
 
     if (actorId !== current.athleteId) throw new ForbiddenError();
 
-    if (current.status !== "ACTIVE")
+    if (current.resolution !== null)
       throw new TrainingGoalCannotCompleteError();
 
     const completed = await this.repository.complete(actorId, id);
@@ -70,10 +70,11 @@ export class DefaultTrainingGoalsService implements TrainingGoalsService {
 
     if (actorId !== current.athleteId) throw new ForbiddenError();
 
-    if (current.status !== "ACTIVE") throw new TrainingGoalNotActiveError();
+    if (current.resolution !== null)
+      throw new TrainingGoalAlreadyResolvedError();
 
     const edited = await this.repository.edit(actorId, id, request);
-    if (!edited) throw new TrainingGoalNotActiveError();
+    if (!edited) throw new TrainingGoalAlreadyResolvedError();
 
     return edited;
   }

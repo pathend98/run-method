@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 import { createUser } from "@/test-support/fixtures/user";
 import { UserNotFoundError } from "@/server/user/user-errors";
-import { ActiveTrainingGoalAlreadyExistsError } from "@/server/training-goals/training-goals-errors";
+import { TrainingGoalOverlapError } from "@/server/training-goals/training-goals-errors";
 import { GET, POST } from "./route";
 
 const find = vi.hoisted(() => vi.fn());
@@ -34,7 +34,13 @@ vi.mock("@/server/server", async (importOriginal) => {
 });
 
 const goal = createTrainingGoal();
-const body = { title: goal.title, type: goal.type };
+const body = {
+  title: goal.title,
+  purpose: goal.purpose,
+  trainingIntentions: goal.trainingIntentions,
+  startDate: goal.startDate,
+  targetDate: goal.targetDate,
+};
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -74,29 +80,20 @@ test("returns the created goal with 201 and private headers", async () => {
   });
 });
 
-test("accepts past dates and all optional targets even for OPEN goals", async () => {
+test("accepts past periods and trims text", async () => {
   const input = {
+    ...body,
     title: " Goal ",
-    type: "OPEN",
-    targetDate: "2000-01-01",
-    targetDistanceMetres: 5000,
-    targetTimeSeconds: 1200,
-    description: " Details ",
+    purpose: " Fitness ",
+    startDate: "2000-01-01",
+    targetDate: "2000-01-02",
   };
-  create.mockResolvedValue(
-    createTrainingGoal({
-      ...input,
-      type: "OPEN",
-      title: "Goal",
-      description: "Details",
-    }),
-  );
   const response = await post(JSON.stringify(input));
   expect(response.status).toBe(201);
   expect(create).toHaveBeenCalledExactlyOnceWith({
     ...input,
     title: "Goal",
-    description: "Details",
+    purpose: "Fitness",
     athleteId: goal.athleteId,
   });
 });
@@ -104,7 +101,7 @@ test("accepts past dates and all optional targets even for OPEN goals", async ()
 test.each([
   ["{", "body"],
   [JSON.stringify({ ...body, title: " " }), "title"],
-  [JSON.stringify({ ...body, targetTimeSeconds: -1 }), "targetTimeSeconds"],
+  [JSON.stringify({ ...body, targetDate: "bad" }), "targetDate"],
   [JSON.stringify({ ...body, athleteId: goal.athleteId }), "athleteId"],
 ])(
   "returns structured 400 errors for invalid input %s",
@@ -176,11 +173,13 @@ test("returns all goals in repository order with 200 and private headers", async
   const goals = [
     createTrainingGoal({ createdAt: "2026-10-03T12:00:00.000Z" }),
     createTrainingGoal({
-      status: "COMPLETED",
+      resolution: "completed",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
       createdAt: "2026-10-02T12:00:00.000Z",
     }),
     createTrainingGoal({
-      status: "DISCARDED",
+      resolution: "discarded",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
       createdAt: "2026-10-01T12:00:00.000Z",
     }),
   ];
@@ -242,13 +241,13 @@ test("handles goal lookup failures with private headers", async () => {
   expect(response.headers.get("cache-control")).toBe("private, no-store");
 });
 
-test("returns 409 when the athlete already has an active goal", async () => {
-  create.mockRejectedValue(new ActiveTrainingGoalAlreadyExistsError());
+test("returns 409 when the athlete has an overlapping unresolved goal", async () => {
+  create.mockRejectedValue(new TrainingGoalOverlapError());
   const response = await post();
   expect(response.status).toBe(409);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   await expect(response.json()).resolves.toEqual({
-    error: "Athlete already has an active training goal",
+    error: "Training goal overlaps an unresolved training goal",
   });
 });
 

@@ -1,10 +1,10 @@
 import { NotFoundError } from "@/server/errors/not-found-error";
 import { ConflictError } from "@/server/errors/conflict-error";
 
-export class ActiveTrainingGoalAlreadyExistsError extends ConflictError {
+export class TrainingGoalOverlapError extends ConflictError {
   constructor() {
-    super("Athlete already has an active training goal");
-    this.name = "ActiveTrainingGoalAlreadyExistsError";
+    super("Training goal overlaps an unresolved training goal");
+    this.name = "TrainingGoalOverlapError";
   }
 }
 
@@ -15,23 +15,23 @@ export class TrainingGoalNotFoundError extends NotFoundError {
   }
 }
 
-export class TrainingGoalNotActiveError extends ConflictError {
+export class TrainingGoalAlreadyResolvedError extends ConflictError {
   constructor() {
-    super("Only active training goals can be edited");
-    this.name = "TrainingGoalNotActiveError";
+    super("Only unresolved training goals can be edited");
+    this.name = "TrainingGoalAlreadyResolvedError";
   }
 }
 
 export class TrainingGoalCannotCompleteError extends ConflictError {
   constructor() {
-    super("Only active training goals can be completed");
+    super("Only unresolved training goals can be completed");
     this.name = "TrainingGoalCannotCompleteError";
   }
 }
 
 export class TrainingGoalCannotDiscardError extends ConflictError {
   constructor() {
-    super("Only active training goals can be discarded");
+    super("Only unresolved training goals can be discarded");
     this.name = "TrainingGoalCannotDiscardError";
   }
 }
