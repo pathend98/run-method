@@ -6,12 +6,12 @@ test("creates a valid independent goal with defaults and overrides", () => {
   expect(trainingGoalSchema.parse(original)).toEqual(original);
   const updated = createTrainingGoal({
     title: "Run regularly",
-    type: "CONSISTENCY",
+    purpose: "Run consistently",
   });
   expect(updated).toEqual({
     ...original,
     title: "Run regularly",
-    type: "CONSISTENCY",
+    purpose: "Run consistently",
   });
   updated.title = "Changed";
   expect(createTrainingGoal()).toEqual(original);

@@ -1,3 +1,4 @@
+import type { TrainingGoalsStore } from "@/server/training-goals/training-goals-repository";
 import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
@@ -16,20 +17,33 @@ vi.mock("@/server/server", async (importOriginal) => {
     await import("@/server/http/request-authentication-service");
   const { DefaultTrainingGoalsService } =
     await import("@/server/training-goals/training-goals-service");
+  const { DefaultTrainingGoalsValidator } =
+    await import("@/server/training-goals/training-goals-validator");
+  const repository = {
+    complete: vi.fn(),
+    find: vi.fn(),
+    create: vi.fn(),
+    findById: mocks.findById,
+    edit: vi.fn(),
+    discard: mocks.discard,
+    findUnresolved: async () => [],
+  };
   return {
     ...actual,
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey: mocks.findBySessionKey }),
     ),
     getTrainingGoalsService: () =>
-      new DefaultTrainingGoalsService({
-        complete: vi.fn(),
-        find: vi.fn(),
-        create: vi.fn(),
-        findById: mocks.findById,
-        edit: vi.fn(),
-        discard: mocks.discard,
-      }),
+      new DefaultTrainingGoalsService(
+        {
+          ...repository,
+          withAthleteLock: async <T>(
+            _actorId: string,
+            action: (repository: TrainingGoalsStore) => Promise<T>,
+          ): Promise<T> => action(repository),
+        },
+        new DefaultTrainingGoalsValidator(),
+      ),
   };
 });
 const goal = createTrainingGoal();
@@ -37,7 +51,11 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.findBySessionKey.mockResolvedValue(createUser({ id: goal.athleteId }));
   mocks.findById.mockResolvedValue(goal);
-  mocks.discard.mockResolvedValue({ ...goal, status: "DISCARDED" });
+  mocks.discard.mockResolvedValue({
+    ...goal,
+    resolution: "discarded",
+    resolvedAt: "2026-11-25T12:00:00.000Z",
+  });
 });
 function post(
   body: string | undefined = undefined,
@@ -63,7 +81,8 @@ test("returns the updated goal with private headers and unchanged metadata", asy
   expect(response.headers.get("cache-control")).toBe("private, no-store");
   await expect(response.json()).resolves.toEqual({
     ...goal,
-    status: "DISCARDED",
+    resolution: "discarded",
+    resolvedAt: "2026-11-25T12:00:00.000Z",
   });
   expect(mocks.discard).toHaveBeenCalledExactlyOnceWith(
     goal.athleteId,
@@ -101,11 +120,12 @@ test("returns 404 for a missing goal", async () => {
   expect(mocks.discard).not.toHaveBeenCalled();
 });
 
-test("returns 403 for another athlete before checking status", async () => {
+test("returns 403 for another athlete before checking resolution", async () => {
   mocks.findById.mockResolvedValue(
     createTrainingGoal({
       athleteId: "44444444-4444-4444-8444-444444444444",
-      status: "DISCARDED",
+      resolution: "discarded",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
     }),
   );
   const response = await post();
@@ -113,14 +133,18 @@ test("returns 403 for another athlete before checking status", async () => {
   expect(mocks.discard).not.toHaveBeenCalled();
 });
 
-test.each(["COMPLETED", "DISCARDED"] as const)(
+test.each(["completed", "discarded"] as const)(
   "returns 409 for %s goals",
-  async (status) => {
-    mocks.findById.mockResolvedValue({ ...goal, status });
+  async (resolution) => {
+    mocks.findById.mockResolvedValue({
+      ...goal,
+      resolution,
+      resolvedAt: "2026-11-25T12:00:00.000Z",
+    });
     const response = await post();
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toEqual({
-      error: "Only active training goals can be discarded",
+      error: "Only unresolved training goals can be discarded",
     });
     expect(mocks.discard).not.toHaveBeenCalled();
   },

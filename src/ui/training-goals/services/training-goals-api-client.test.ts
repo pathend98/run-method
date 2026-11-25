@@ -23,7 +23,13 @@ test("fetches and validates the athlete's goals", async () => {
 
 test("creates and validates a goal", async () => {
   const goal = goalFixture();
-  const request = { title: goal.title, type: goal.type };
+  const request = {
+    title: goal.title,
+    purpose: goal.purpose,
+    trainingIntentions: goal.trainingIntentions,
+    startDate: goal.startDate,
+    targetDate: goal.targetDate,
+  };
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify(goal), { status: 201 }),
   );
@@ -58,7 +64,13 @@ test.each([null, "error", {}, { error: 42 }, { error: "Forbidden" }])(
 test("handles a non-JSON creation error", async () => {
   fetchMock.mockResolvedValue(new Response("Unavailable", { status: 503 }));
   await expect(
-    createTrainingGoal("athlete", { title: "Goal", type: "OPEN" }),
+    createTrainingGoal("athlete", {
+      title: "Goal",
+      purpose: "Fitness",
+      trainingIntentions: "Run",
+      startDate: "2026-11-01",
+      targetDate: "2026-12-01",
+    }),
   ).rejects.toThrow("Unable to create training goal");
 });
 
@@ -71,7 +83,13 @@ test.each(["fetch", "create"])(
     await expect(
       operation === "fetch"
         ? fetchTrainingGoals("athlete")
-        : createTrainingGoal("athlete", { title: "Goal", type: "RACE" }),
+        : createTrainingGoal("athlete", {
+            title: "Goal",
+            purpose: "Fitness",
+            trainingIntentions: "Run",
+            startDate: "2026-11-01",
+            targetDate: "2026-12-01",
+          }),
     ).rejects.toThrow();
   },
 );

@@ -1,54 +1,45 @@
 import { z } from "zod";
-import {
-  positiveIntegerSchema,
-  trimmedNonEmptyStringSchema,
-} from "./field-schemas";
+import { trimmedNonEmptyStringSchema } from "./field-schemas";
 
-export const trainingGoalTypeSchema = z.enum([
-  "RACE",
-  "DISTANCE",
-  "CONSISTENCY",
-  "OPEN",
-]);
-export const trainingGoalStatusSchema = z.enum([
-  "ACTIVE",
-  "COMPLETED",
-  "DISCARDED",
-]);
-
-export const createTrainingGoalRequestSchema = z
+const editableFieldsSchema = z
   .object({
     title: trimmedNonEmptyStringSchema,
-    type: trainingGoalTypeSchema,
-    targetDistanceMetres: positiveIntegerSchema.optional(),
-    targetDate: z.iso.date().optional(),
-    targetTimeSeconds: positiveIntegerSchema.optional(),
-    description: trimmedNonEmptyStringSchema.optional(),
+    purpose: trimmedNonEmptyStringSchema,
+    trainingIntentions: trimmedNonEmptyStringSchema,
+    startDate: z.iso.date(),
+    targetDate: z.iso.date(),
   })
   .strict();
 
-export const trainingGoalSchema = createTrainingGoalRequestSchema.extend({
-  id: z.uuid(),
-  athleteId: z.uuid(),
-  status: trainingGoalStatusSchema,
-  createdAt: z.iso.datetime(),
-});
+export const createTrainingGoalRequestSchema = editableFieldsSchema.refine(
+  (goal) => goal.startDate <= goal.targetDate,
+  {
+    message: "Target date must be on or after start date",
+    path: ["targetDate"],
+  },
+);
 
-export type TrainingGoal = z.infer<typeof trainingGoalSchema>;
-export type CreateTrainingGoalRequest = z.infer<
-  typeof createTrainingGoalRequestSchema
->;
+export const trainingGoalResolutionSchema = z.enum(["completed", "discarded"]);
 
-export const editTrainingGoalRequestSchema = z
-  .object({
-    title: trimmedNonEmptyStringSchema.optional(),
-    type: trainingGoalTypeSchema.optional(),
-    description: trimmedNonEmptyStringSchema.nullable().optional(),
-    targetDistanceMetres: positiveIntegerSchema.nullable().optional(),
-    targetTimeSeconds: positiveIntegerSchema.nullable().optional(),
-    targetDate: z.iso.date().nullable().optional(),
+export const trainingGoalSchema = editableFieldsSchema
+  .extend({
+    id: z.uuid(),
+    athleteId: z.uuid(),
+    createdAt: z.iso.datetime(),
+    resolution: trainingGoalResolutionSchema.nullable(),
+    resolvedAt: z.iso.datetime().nullable(),
   })
-  .strict()
+  .refine((goal) => goal.startDate <= goal.targetDate, {
+    message: "Target date must be on or after start date",
+    path: ["targetDate"],
+  })
+  .refine((goal) => (goal.resolution === null) === (goal.resolvedAt === null), {
+    message: "Resolution and resolvedAt must both be null or both be populated",
+    path: ["resolvedAt"],
+  });
+
+export const editTrainingGoalRequestSchema = editableFieldsSchema
+  .partial()
   .refine(
     (request) => Object.values(request).some((value) => value !== undefined),
     {
@@ -57,6 +48,21 @@ export const editTrainingGoalRequestSchema = z
     },
   );
 
+export type TrainingGoal = z.infer<typeof trainingGoalSchema>;
+export type CreateTrainingGoalRequest = z.infer<
+  typeof createTrainingGoalRequestSchema
+>;
 export type EditTrainingGoalRequest = z.infer<
   typeof editTrainingGoalRequestSchema
 >;
+
+export function isTrainingGoalActive(
+  goal: TrainingGoal,
+  today: string,
+): boolean {
+  return (
+    goal.resolution === null &&
+    goal.startDate <= today &&
+    goal.targetDate >= today
+  );
+}

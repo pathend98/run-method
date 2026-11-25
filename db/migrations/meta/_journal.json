@@ -92,6 +92,13 @@
       "when": 1791009194825,
       "tag": "0012_blue_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795607888062,
+      "tag": "0013_talented_blue_shield",
+      "breakpoints": true
     }
   ]
 }

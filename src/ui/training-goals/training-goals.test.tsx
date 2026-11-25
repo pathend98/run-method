@@ -10,10 +10,16 @@ function json(body: unknown) {
   return new Response(JSON.stringify(body));
 }
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 25, 12));
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 function renderGoals() {
   const client = new QueryClient({
@@ -29,10 +35,18 @@ function renderGoals() {
 
 test.each([
   { goals: [] },
+  { goals: [createTrainingGoal({ startDate: "2026-11-26" })] },
+  { goals: [createTrainingGoal({ targetDate: "2026-11-24" })] },
   {
     goals: [
-      createTrainingGoal({ status: "COMPLETED" }),
-      createTrainingGoal({ status: "DISCARDED" }),
+      createTrainingGoal({
+        resolution: "completed",
+        resolvedAt: "2026-11-24T12:00:00Z",
+      }),
+      createTrainingGoal({
+        resolution: "discarded",
+        resolvedAt: "2026-11-24T12:00:00Z",
+      }),
     ],
   },
 ])("shows the form when no goal is active", async ({ goals }) => {
@@ -54,15 +68,21 @@ test.each([
 });
 
 test("shows only the active goal details and hides the form", async () => {
-  fetchMock
-    .mockResolvedValueOnce(json(user))
-    .mockResolvedValueOnce(
-      json([
-        createTrainingGoal({ status: "COMPLETED", title: "Previous goal" }),
-        createTrainingGoal({ status: "DISCARDED", title: "Discarded goal" }),
-        createTrainingGoal(),
-      ]),
-    );
+  fetchMock.mockResolvedValueOnce(json(user)).mockResolvedValueOnce(
+    json([
+      createTrainingGoal({
+        resolution: "completed",
+        resolvedAt: "2026-11-24T12:00:00Z",
+        title: "Previous goal",
+      }),
+      createTrainingGoal({
+        resolution: "discarded",
+        resolvedAt: "2026-11-24T12:00:00Z",
+        title: "Discarded goal",
+      }),
+      createTrainingGoal(),
+    ]),
+  );
   renderGoals();
   expect(
     await screen.findByRole("heading", { name: "Run a marathon" }),
@@ -108,33 +128,68 @@ test.each(["user", "goals"])("retries a failed %s request", async (failure) => {
   expect(await screen.findByLabelText("Title")).toBeDefined();
 });
 
-test("creates a goal, shows its details immediately and refetches the list", async () => {
-  const goal = createTrainingGoal({ athleteId: user.id });
-  fetchMock
-    .mockResolvedValueOnce(json(user))
-    .mockResolvedValueOnce(json([]))
-    .mockResolvedValueOnce(json(goal))
-    .mockReturnValueOnce(new Promise(() => {}));
-  const { client } = renderGoals();
-  fireEvent.change(await screen.findByLabelText("Title"), {
-    target: { value: "My goal" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Create training goal" }));
-  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
-  expect(fetchMock).toHaveBeenNthCalledWith(
-    3,
-    `/api/v1/athletes/${user.id}/training-goals`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "My goal", type: "RACE" }),
-    },
-  );
-  expect(client.getQueryData(["training-goals", user.id])).toEqual([goal]);
-  expect(
-    await screen.findByRole("heading", { name: goal.title }),
-  ).toBeDefined();
-  expect(
-    screen.queryByRole("button", { name: "Create training goal" }),
-  ).toBeNull();
-});
+test.each(["2026-10-02", "2026-11-26"])(
+  "creates a goal starting %s and refetches the list",
+  async (startDate) => {
+    const goal = createTrainingGoal({ athleteId: user.id, startDate });
+    let finishRefetch!: (response: Response) => void;
+    fetchMock
+      .mockResolvedValueOnce(json(user))
+      .mockResolvedValueOnce(json([]))
+      .mockResolvedValueOnce(json(goal))
+      .mockReturnValueOnce(
+        new Promise<Response>((resolve) => {
+          finishRefetch = resolve;
+        }),
+      );
+    const { client } = renderGoals();
+    fireEvent.change(await screen.findByLabelText("Title"), {
+      target: { value: "My goal" },
+    });
+    for (const [label, value] of Object.entries({
+      Purpose: goal.purpose,
+      "Training intentions": goal.trainingIntentions,
+      "Start date": goal.startDate,
+      "Target date": goal.targetDate,
+    })) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    }
+    fireEvent.click(
+      screen.getByRole("button", { name: "Create training goal" }),
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      `/api/v1/athletes/${user.id}/training-goals`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "My goal",
+          purpose: goal.purpose,
+          trainingIntentions: goal.trainingIntentions,
+          startDate: goal.startDate,
+          targetDate: goal.targetDate,
+        }),
+      },
+    );
+    expect(client.getQueryData(["training-goals", user.id])).toEqual([goal]);
+    if (startDate <= "2026-11-25") {
+      expect(
+        await screen.findByRole("heading", { name: goal.title }),
+      ).toBeDefined();
+      expect(
+        screen.queryByRole("button", { name: "Create training goal" }),
+      ).toBeNull();
+    } else {
+      expect(screen.queryByRole("heading", { name: goal.title })).toBeNull();
+      expect(screen.getByLabelText("Title")).toBeDefined();
+    }
+    finishRefetch(json([goal]));
+    if (startDate > "2026-11-25") {
+      expect(
+        await screen.findByRole("button", { name: "Create training goal" }),
+      ).toBeDefined();
+    }
+  },
+);

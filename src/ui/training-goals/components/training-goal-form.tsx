@@ -1,26 +1,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import type { CreateTrainingGoalRequest } from "@/domain/training-goals";
-import type { RunningMetricUnit } from "@/ui/runs/run-metrics";
 import { Button } from "@/ui/shared/button/button";
 import { FormField } from "@/ui/shared/form-field/form-field";
-import { DurationFormInput } from "@/ui/shared/duration-form-input/duration-form-input";
 import {
-  createTrainingGoalFormSchema,
+  trainingGoalFormSchema,
   defaultTrainingGoalFormValues,
-  toCreateTrainingGoalRequest,
-  type TrainingGoalFormValues,
-} from "../utils/training-goal-form";
+} from "../form/training-goal-form";
 
 type TrainingGoalFormProps = {
-  unit: RunningMetricUnit;
   onSubmit: (request: CreateTrainingGoalRequest) => Promise<void>;
 };
 
-export function TrainingGoalForm({ unit, onSubmit }: TrainingGoalFormProps) {
-  const form = useForm<TrainingGoalFormValues>({
+export function TrainingGoalForm({ onSubmit }: TrainingGoalFormProps) {
+  const form = useForm<CreateTrainingGoalRequest>({
     defaultValues: defaultTrainingGoalFormValues,
-    resolver: zodResolver(createTrainingGoalFormSchema(unit)),
+    resolver: zodResolver(trainingGoalFormSchema),
     mode: "onBlur",
     reValidateMode: "onBlur",
   });
@@ -31,9 +26,9 @@ export function TrainingGoalForm({ unit, onSubmit }: TrainingGoalFormProps) {
     formState: { errors, isSubmitting },
   } = form;
 
-  async function submit(values: TrainingGoalFormValues) {
+  async function submit(values: CreateTrainingGoalRequest) {
     try {
-      await onSubmit(toCreateTrainingGoalRequest(values, unit));
+      await onSubmit(values);
     } catch {
       setError("root", {
         message: "Unable to create training goal. Please try again.",
@@ -57,36 +52,24 @@ export function TrainingGoalForm({ unit, onSubmit }: TrainingGoalFormProps) {
           <FormField label="Title" error={errors.title?.message}>
             <input {...register("title")} />
           </FormField>
-          <FormField label="Goal type" error={errors.type?.message}>
-            <select {...register("type")}>
-              <option value="RACE">Race</option>
-              <option value="DISTANCE">Distance</option>
-              <option value="CONSISTENCY">Consistency</option>
-              <option value="OPEN">Open</option>
-            </select>
+          <FormField label="Purpose" error={errors.purpose?.message}>
+            <textarea className="min-h-24" {...register("purpose")} />
           </FormField>
           <FormField
-            label="Description (optional)"
-            error={errors.description?.message}
+            label="Training intentions"
+            error={errors.trainingIntentions?.message}
           >
-            <textarea className="min-h-24" {...register("description")} />
+            <textarea
+              className="min-h-24"
+              {...register("trainingIntentions")}
+            />
           </FormField>
-          <FormField
-            label="Target date (optional)"
-            error={errors.targetDate?.message}
-          >
+          <FormField label="Start date" error={errors.startDate?.message}>
+            <input type="date" {...register("startDate")} />
+          </FormField>
+          <FormField label="Target date" error={errors.targetDate?.message}>
             <input type="date" {...register("targetDate")} />
           </FormField>
-          <FormField
-            label={`Target distance (${unit === "MILES" ? "mi" : "km"}, optional)`}
-            error={errors.distance?.message}
-          >
-            <input inputMode="decimal" {...register("distance")} />
-          </FormField>
-          <DurationFormInput
-            label="Target time (hh:mm:ss, optional)"
-            disabled={isSubmitting}
-          />
           <Button type="submit" variant="primary" disabled={isSubmitting}>
             {isSubmitting ? "Creating…" : "Create training goal"}
           </Button>

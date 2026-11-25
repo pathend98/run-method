@@ -8,9 +8,10 @@ import {
   TrainingGoalCannotCompleteError,
   TrainingGoalCannotDiscardError,
   TrainingGoalNotFoundError,
-  TrainingGoalNotActiveError,
+  TrainingGoalAlreadyResolvedError,
 } from "./training-goals-errors";
 import type { TrainingGoalsRepository } from "./training-goals-repository";
+import type { TrainingGoalsValidator } from "./training-goals-validator";
 
 export interface TrainingGoalsService {
   discard(actorId: string, id: string): Promise<TrainingGoal>;
@@ -29,35 +30,43 @@ export interface TrainingGoalsService {
 }
 
 export class DefaultTrainingGoalsService implements TrainingGoalsService {
-  constructor(private readonly repository: TrainingGoalsRepository) {}
+  constructor(
+    private readonly repository: TrainingGoalsRepository,
+    private readonly validator: TrainingGoalsValidator,
+  ) {}
 
   async discard(actorId: string, id: string): Promise<TrainingGoal> {
-    const current = await this.repository.findById(id);
-    if (!current) throw new TrainingGoalNotFoundError();
+    return this.repository.withAthleteLock(actorId, async (repository) => {
+      const current = await repository.findById(id);
+      if (!current) throw new TrainingGoalNotFoundError();
 
-    if (actorId !== current.athleteId) throw new ForbiddenError();
+      if (actorId !== current.athleteId) throw new ForbiddenError();
 
-    if (current.status !== "ACTIVE") throw new TrainingGoalCannotDiscardError();
+      if (current.resolution !== null)
+        throw new TrainingGoalCannotDiscardError();
 
-    const discarded = await this.repository.discard(actorId, id);
-    if (!discarded) throw new TrainingGoalCannotDiscardError();
+      const discarded = await repository.discard(actorId, id);
+      if (!discarded) throw new TrainingGoalCannotDiscardError();
 
-    return discarded;
+      return discarded;
+    });
   }
 
   async complete(actorId: string, id: string): Promise<TrainingGoal> {
-    const current = await this.repository.findById(id);
-    if (!current) throw new TrainingGoalNotFoundError();
+    return this.repository.withAthleteLock(actorId, async (repository) => {
+      const current = await repository.findById(id);
+      if (!current) throw new TrainingGoalNotFoundError();
 
-    if (actorId !== current.athleteId) throw new ForbiddenError();
+      if (actorId !== current.athleteId) throw new ForbiddenError();
 
-    if (current.status !== "ACTIVE")
-      throw new TrainingGoalCannotCompleteError();
+      if (current.resolution !== null)
+        throw new TrainingGoalCannotCompleteError();
 
-    const completed = await this.repository.complete(actorId, id);
-    if (!completed) throw new TrainingGoalCannotCompleteError();
+      const completed = await repository.complete(actorId, id);
+      if (!completed) throw new TrainingGoalCannotCompleteError();
 
-    return completed;
+      return completed;
+    });
   }
 
   async edit(
@@ -65,17 +74,22 @@ export class DefaultTrainingGoalsService implements TrainingGoalsService {
     id: string,
     request: EditTrainingGoalRequest,
   ): Promise<TrainingGoal> {
-    const current = await this.repository.findById(id);
-    if (!current) throw new TrainingGoalNotFoundError();
+    return this.repository.withAthleteLock(actorId, async (repository) => {
+      const current = await repository.findById(id);
+      if (!current) throw new TrainingGoalNotFoundError();
 
-    if (actorId !== current.athleteId) throw new ForbiddenError();
+      if (actorId !== current.athleteId) throw new ForbiddenError();
 
-    if (current.status !== "ACTIVE") throw new TrainingGoalNotActiveError();
+      if (current.resolution !== null)
+        throw new TrainingGoalAlreadyResolvedError();
 
-    const edited = await this.repository.edit(actorId, id, request);
-    if (!edited) throw new TrainingGoalNotActiveError();
+      const outstanding = await repository.findUnresolved(actorId);
+      const fields = this.validator.validateEdit(current, request, outstanding);
+      const edited = await repository.edit(actorId, id, fields);
+      if (!edited) throw new TrainingGoalAlreadyResolvedError();
 
-    return edited;
+      return edited;
+    });
   }
 
   async find(actorId: string, athleteId: string): Promise<TrainingGoal[]> {
@@ -89,6 +103,10 @@ export class DefaultTrainingGoalsService implements TrainingGoalsService {
     request: CreateTrainingGoalRequest,
   ): Promise<TrainingGoal> {
     if (actorId !== athleteId) throw new ForbiddenError();
-    return this.repository.create({ ...request, athleteId });
+    return this.repository.withAthleteLock(athleteId, async (repository) => {
+      const outstanding = await repository.findUnresolved(athleteId);
+      const fields = this.validator.validateCreate(request, outstanding);
+      return repository.create({ ...fields, athleteId });
+    });
   }
 }

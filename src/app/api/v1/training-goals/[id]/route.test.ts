@@ -1,3 +1,4 @@
+import type { TrainingGoalsStore } from "@/server/training-goals/training-goals-repository";
 import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
@@ -8,6 +9,7 @@ import { PATCH } from "./route";
 const mocks = vi.hoisted(() => ({
   findById: vi.fn(),
   edit: vi.fn(),
+  findUnresolved: vi.fn(),
   findBySessionKey: vi.fn(),
 }));
 vi.mock("@/server/server", async (importOriginal) => {
@@ -16,20 +18,33 @@ vi.mock("@/server/server", async (importOriginal) => {
     await import("@/server/http/request-authentication-service");
   const { DefaultTrainingGoalsService } =
     await import("@/server/training-goals/training-goals-service");
+  const { DefaultTrainingGoalsValidator } =
+    await import("@/server/training-goals/training-goals-validator");
+  const repository = {
+    discard: vi.fn(),
+    complete: vi.fn(),
+    find: vi.fn(),
+    create: vi.fn(),
+    findById: mocks.findById,
+    edit: mocks.edit,
+    findUnresolved: mocks.findUnresolved,
+  };
   return {
     ...actual,
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey: mocks.findBySessionKey }),
     ),
     getTrainingGoalsService: () =>
-      new DefaultTrainingGoalsService({
-        discard: vi.fn(),
-        complete: vi.fn(),
-        find: vi.fn(),
-        create: vi.fn(),
-        findById: mocks.findById,
-        edit: mocks.edit,
-      }),
+      new DefaultTrainingGoalsService(
+        {
+          ...repository,
+          withAthleteLock: async <T>(
+            _actorId: string,
+            action: (repository: TrainingGoalsStore) => Promise<T>,
+          ): Promise<T> => action(repository),
+        },
+        new DefaultTrainingGoalsValidator(),
+      ),
   };
 });
 const goal = createTrainingGoal();
@@ -37,6 +52,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.findBySessionKey.mockResolvedValue(createUser({ id: goal.athleteId }));
   mocks.findById.mockResolvedValue(goal);
+  mocks.findUnresolved.mockResolvedValue([]);
   mocks.edit.mockResolvedValue({ ...goal, title: "Updated" });
 });
 function patch(
@@ -64,17 +80,20 @@ test("returns the updated goal with private headers and unchanged metadata", asy
   await expect(response.json()).resolves.toEqual({ ...goal, title: "Updated" });
   expect(mocks.edit).toHaveBeenCalledExactlyOnceWith(goal.athleteId, goal.id, {
     title: "Updated",
+    purpose: goal.purpose,
+    trainingIntentions: goal.trainingIntentions,
+    startDate: goal.startDate,
+    targetDate: goal.targetDate,
   });
 });
 
-test("accepts all editable fields and null clearing", async () => {
+test("accepts all editable fields", async () => {
   const input = {
     title: " Updated ",
-    description: null,
-    targetDate: null,
-    targetTimeSeconds: null,
-    targetDistanceMetres: null,
-    type: "DISTANCE",
+    purpose: "Fitness",
+    trainingIntentions: "Run",
+    startDate: "2026-10-01",
+    targetDate: "2026-12-01",
   };
   const response = await patch(JSON.stringify(input));
   expect(response.status).toBe(200);
@@ -131,11 +150,12 @@ test("returns 404 for a missing goal", async () => {
   expect(mocks.edit).not.toHaveBeenCalled();
 });
 
-test("returns 403 for another athlete before checking status", async () => {
+test("returns 403 for another athlete before checking resolution", async () => {
   mocks.findById.mockResolvedValue(
     createTrainingGoal({
       athleteId: "44444444-4444-4444-8444-444444444444",
-      status: "COMPLETED",
+      resolution: "completed",
+      resolvedAt: "2026-11-25T12:00:00.000Z",
     }),
   );
   const response = await patch();
@@ -143,14 +163,18 @@ test("returns 403 for another athlete before checking status", async () => {
   expect(mocks.edit).not.toHaveBeenCalled();
 });
 
-test.each(["COMPLETED", "DISCARDED"] as const)(
+test.each(["completed", "discarded"] as const)(
   "returns 409 for %s goals",
-  async (status) => {
-    mocks.findById.mockResolvedValue({ ...goal, status });
+  async (resolution) => {
+    mocks.findById.mockResolvedValue({
+      ...goal,
+      resolution,
+      resolvedAt: "2026-11-25T12:00:00.000Z",
+    });
     const response = await patch();
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toEqual({
-      error: "Only active training goals can be edited",
+      error: "Only unresolved training goals can be edited",
     });
     expect(mocks.edit).not.toHaveBeenCalled();
   },
@@ -183,4 +207,29 @@ test("handles authentication lookup failures", async () => {
     error: "Unable to determine user session",
   });
   expect(mocks.findById).not.toHaveBeenCalled();
+});
+
+test("returns structured 400 for invalid merged dates", async () => {
+  const response = await patch(JSON.stringify({ startDate: "2027-01-01" }));
+  expect(response.status).toBe(400);
+  expect((await response.json()).fieldErrors.targetDate).toEqual([
+    "Target date must be on or after start date",
+  ]);
+  expect(mocks.edit).not.toHaveBeenCalled();
+});
+
+test("returns 409 for overlapping date edits", async () => {
+  mocks.findUnresolved.mockResolvedValue([
+    createTrainingGoal({
+      id: "22222222-2222-4222-8222-222222222222",
+      startDate: "2027-01-01",
+      targetDate: "2027-01-10",
+    }),
+  ]);
+  const response = await patch(JSON.stringify({ targetDate: "2027-01-01" }));
+  expect(response.status).toBe(409);
+  await expect(response.json()).resolves.toEqual({
+    error: "Training goal overlaps an unresolved training goal",
+  });
+  expect(mocks.edit).not.toHaveBeenCalled();
 });

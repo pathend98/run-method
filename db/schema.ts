@@ -205,23 +205,45 @@ export const trainingGoals = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
-    type: text("type", {
-      enum: ["RACE", "DISTANCE", "CONSISTENCY", "OPEN"],
-    }).notNull(),
-    targetDistanceMetres: integer("target_distance_metres"),
-    targetDate: date("target_date"),
-    targetTimeSeconds: integer("target_time_seconds"),
-    description: text("description"),
-    status: text("status", { enum: ["ACTIVE", "COMPLETED", "DISCARDED"] })
-      .notNull()
-      .default("ACTIVE"),
+    purpose: text("purpose").notNull(),
+    trainingIntentions: text("training_intentions").notNull(),
+    startDate: date("start_date").notNull(),
+    targetDate: date("target_date").notNull(),
+    resolution: text("resolution", { enum: ["completed", "discarded"] }),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("training_goals_active_athlete_idx")
-      .on(table.athleteId)
-      .where(sql`${table.status} = 'ACTIVE'`),
+    check(
+      "training_goals_title_not_empty",
+      sql`length(trim(${table.title})) > 0`,
+    ),
+    check(
+      "training_goals_purpose_not_empty",
+      sql`length(trim(${table.purpose})) > 0`,
+    ),
+    check(
+      "training_goals_intentions_not_empty",
+      sql`length(trim(${table.trainingIntentions})) > 0`,
+    ),
+    check(
+      "training_goals_dates_valid",
+      sql`${table.startDate} <= ${table.targetDate}`,
+    ),
+    check(
+      "training_goals_resolution_valid",
+      sql`${table.resolution} is null or ${table.resolution} in ('completed', 'discarded')`,
+    ),
+    check(
+      "training_goals_resolved_at_valid",
+      sql`(${table.resolution} is null) = (${table.resolvedAt} is null)`,
+    ),
+    index("training_goals_athlete_dates_idx").on(
+      table.athleteId,
+      table.startDate,
+      table.targetDate,
+    ),
   ],
 );
