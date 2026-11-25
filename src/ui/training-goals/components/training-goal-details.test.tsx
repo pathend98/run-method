@@ -3,6 +3,16 @@ import { render, screen } from "@testing-library/react";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 import { TrainingGoalDetails } from "./training-goal-details";
 
+test("renders complete and discard goal buttons", () => {
+  render(<TrainingGoalDetails goal={createTrainingGoal()} unit="KILOMETRES" />);
+
+  for (const name of ["Complete goal", "Discard goal"]) {
+    expect(screen.getByRole("button", { name }).getAttribute("type")).toBe(
+      "button",
+    );
+  }
+});
+
 test("displays all goal details and preserves description line breaks", () => {
   const goal = createTrainingGoal({
     description: "Run confidently.\nFinish strong.",

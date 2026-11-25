@@ -2,6 +2,7 @@ import { format, parseISO } from "date-fns";
 
 import type { TrainingGoal } from "@/domain/training-goals";
 import type { User } from "@/domain/user-types";
+import { Button } from "@/ui/shared/button/button";
 import {
   formatDistance,
   formatDuration,
@@ -65,6 +66,10 @@ export function TrainingGoalDetails({ goal, unit }: TrainingGoalDetailsProps) {
           </p>
         </div>
       ) : null}
+      <div className="flex flex-wrap gap-3">
+        <Button variant="primary">Complete goal</Button>
+        <Button variant="destructive">Discard goal</Button>
+      </div>
     </article>
   );
 }
