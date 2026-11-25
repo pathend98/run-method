@@ -6,6 +6,10 @@ import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { RequestValidationError } from "@/server/errors/request-validation-error";
 import { TrainingGoalOverlapError } from "./training-goals-errors";
+import { ForbiddenError } from "@/server/errors/forbidden-error";
+import { DefaultTrainingGoalsService } from "./training-goals-service";
+import { DefaultTrainingGoalsValidator } from "./training-goals-validator";
+import type { CreateTrainingGoalInput } from "./training-goals-repository";
 import { DrizzleTrainingGoalsRepository } from "./training-goals-repository";
 import { DefaultTrainingGoalsTransformer } from "./training-goals-transformer";
 
@@ -15,6 +19,12 @@ describe.skipIf(!databaseUrl)("training goal PostgreSQL integration", () => {
   let admin: Pool;
   let pool: Pool;
   let repository: DrizzleTrainingGoalsRepository;
+  let service: DefaultTrainingGoalsService;
+
+  function create(request: CreateTrainingGoalInput) {
+    const { athleteId, ...fields } = request;
+    return service.create(athleteId, athleteId, fields);
+  }
   const databaseName = `training_goals_test_${randomUUID().replaceAll("-", "")}`;
   const athleteId = randomUUID();
   const otherId = randomUUID();
@@ -66,6 +76,10 @@ describe.skipIf(!databaseUrl)("training goal PostgreSQL integration", () => {
     repository = new DrizzleTrainingGoalsRepository(
       drizzle(pool),
       new DefaultTrainingGoalsTransformer(),
+    );
+    service = new DefaultTrainingGoalsService(
+      repository,
+      new DefaultTrainingGoalsValidator(),
     );
   });
 
@@ -160,70 +174,73 @@ describe.skipIf(!databaseUrl)("training goal PostgreSQL integration", () => {
     ])(
       "rejects overlapping creation %s through %s",
       async (startDate, targetDate) => {
-        await repository.create(input);
+        await create(input);
         await expect(
-          repository.create({ ...input, startDate, targetDate }),
+          create({ ...input, startDate, targetDate }),
         ).rejects.toBeInstanceOf(TrainingGoalOverlapError);
       },
     );
 
     test("accepts adjacent periods, other athletes, and same-day goals", async () => {
-      await repository.create(input);
-      await repository.create({ ...input, athleteId: otherId });
-      await repository.create({
+      await create(input);
+      await create({ ...input, athleteId: otherId });
+      await create({
         ...input,
         startDate: "2026-06-11",
         targetDate: "2026-06-11",
       });
-      expect(await repository.find(athleteId)).toHaveLength(2);
+      expect(await service.find(athleteId, athleteId)).toHaveLength(2);
     });
 
     test("validates merged dates and excludes itself during date edits", async () => {
-      const goal = await repository.create(input);
+      const goal = await create(input);
       await expect(
-        repository.edit(athleteId, goal.id, { startDate: "2026-07-01" }),
+        service.edit(athleteId, goal.id, { startDate: "2026-07-01" }),
       ).rejects.toBeInstanceOf(RequestValidationError);
       await expect(
-        repository.edit(athleteId, goal.id, { targetDate: "2026-05-01" }),
+        service.edit(athleteId, goal.id, { targetDate: "2026-05-01" }),
       ).rejects.toBeInstanceOf(RequestValidationError);
       expect(
-        await repository.edit(athleteId, goal.id, { targetDate: "2026-06-12" }),
+        await service.edit(athleteId, goal.id, { targetDate: "2026-06-12" }),
       ).toMatchObject({ targetDate: "2026-06-12", purpose: input.purpose });
-      const next = await repository.create({
+      const next = await create({
         ...input,
         startDate: "2026-06-13",
         targetDate: "2026-06-20",
       });
       await expect(
-        repository.edit(athleteId, next.id, { startDate: "2026-06-12" }),
+        service.edit(athleteId, next.id, { startDate: "2026-06-12" }),
       ).rejects.toBeInstanceOf(TrainingGoalOverlapError);
     });
 
     test.each(["complete", "discard"] as const)(
       "%s records timestamp, frees dates, and prevents later mutations",
       async (operation) => {
-        const goal = await repository.create(input);
+        const goal = await create(input);
         expect(goal).toMatchObject({ resolution: null, resolvedAt: null });
-        expect(await repository[operation](otherId, goal.id)).toBeNull();
-        const resolved = await repository[operation](athleteId, goal.id);
+        await expect(service[operation](otherId, goal.id)).rejects.toThrow(
+          ForbiddenError,
+        );
+        const resolved = await service[operation](athleteId, goal.id);
         expect(resolved?.resolution).toBe(
           operation === "complete" ? "completed" : "discarded",
         );
         expect(resolved?.resolvedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-        expect(await repository.complete(athleteId, goal.id)).toBeNull();
-        expect(await repository.discard(athleteId, goal.id)).toBeNull();
-        expect(
-          await repository.edit(athleteId, goal.id, { title: "No" }),
-        ).toBeNull();
-        await repository.create(input);
+        await expect(service.complete(athleteId, goal.id)).rejects.toThrow(
+          "Only unresolved training goals",
+        );
+        await expect(service.discard(athleteId, goal.id)).rejects.toThrow(
+          "Only unresolved training goals",
+        );
+        await expect(
+          service.edit(athleteId, goal.id, { title: "No" }),
+        ).rejects.toThrow("Only unresolved training goals");
+        await create(input);
       },
     );
 
     test("serializes concurrent overlapping creates", async () => {
-      const results = await Promise.allSettled([
-        repository.create(input),
-        repository.create(input),
-      ]);
+      const results = await Promise.allSettled([create(input), create(input)]);
       expect(
         results.filter((result) => result.status === "fulfilled"),
       ).toHaveLength(1);
@@ -233,15 +250,15 @@ describe.skipIf(!databaseUrl)("training goal PostgreSQL integration", () => {
     });
 
     test("serializes concurrent date edits which would overlap", async () => {
-      const a = await repository.create(input);
-      const b = await repository.create({
+      const a = await create(input);
+      const b = await create({
         ...input,
         startDate: "2026-06-20",
         targetDate: "2026-06-30",
       });
       const results = await Promise.allSettled([
-        repository.edit(athleteId, a.id, { targetDate: "2026-06-15" }),
-        repository.edit(athleteId, b.id, { startDate: "2026-06-15" }),
+        service.edit(athleteId, a.id, { targetDate: "2026-06-15" }),
+        service.edit(athleteId, b.id, { startDate: "2026-06-15" }),
       ]);
       expect(
         results.filter((result) => result.status === "fulfilled"),
@@ -252,10 +269,10 @@ describe.skipIf(!databaseUrl)("training goal PostgreSQL integration", () => {
     });
 
     test("uses the latest row for concurrent partial edits", async () => {
-      const goal = await repository.create(input);
+      const goal = await create(input);
       const results = await Promise.allSettled([
-        repository.edit(athleteId, goal.id, { startDate: "2026-06-08" }),
-        repository.edit(athleteId, goal.id, { targetDate: "2026-06-05" }),
+        service.edit(athleteId, goal.id, { startDate: "2026-06-08" }),
+        service.edit(athleteId, goal.id, { targetDate: "2026-06-05" }),
       ]);
       expect(
         results.filter((result) => result.status === "fulfilled"),
@@ -263,6 +280,17 @@ describe.skipIf(!databaseUrl)("training goal PostgreSQL integration", () => {
       expect(
         results.find((result) => result.status === "rejected"),
       ).toMatchObject({ reason: expect.any(RequestValidationError) });
+    });
+
+    test("rolls back writes if the locked callback fails", async () => {
+      const error = new Error("Abort transaction");
+      await expect(
+        repository.withAthleteLock(athleteId, async (transactionRepository) => {
+          await transactionRepository.create(input);
+          throw error;
+        }),
+      ).rejects.toBe(error);
+      expect(await repository.find(athleteId)).toEqual([]);
     });
   });
 });

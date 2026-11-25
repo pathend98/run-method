@@ -1,3 +1,4 @@
+import type { TrainingGoalsStore } from "@/server/training-goals/training-goals-repository";
 import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
@@ -16,20 +17,33 @@ vi.mock("@/server/server", async (importOriginal) => {
     await import("@/server/http/request-authentication-service");
   const { DefaultTrainingGoalsService } =
     await import("@/server/training-goals/training-goals-service");
+  const { DefaultTrainingGoalsValidator } =
+    await import("@/server/training-goals/training-goals-validator");
+  const repository = {
+    complete: vi.fn(),
+    find: vi.fn(),
+    create: vi.fn(),
+    findById: mocks.findById,
+    edit: vi.fn(),
+    discard: mocks.discard,
+    findUnresolved: async () => [],
+  };
   return {
     ...actual,
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey: mocks.findBySessionKey }),
     ),
     getTrainingGoalsService: () =>
-      new DefaultTrainingGoalsService({
-        complete: vi.fn(),
-        find: vi.fn(),
-        create: vi.fn(),
-        findById: mocks.findById,
-        edit: vi.fn(),
-        discard: mocks.discard,
-      }),
+      new DefaultTrainingGoalsService(
+        {
+          ...repository,
+          withAthleteLock: async <T>(
+            _actorId: string,
+            action: (repository: TrainingGoalsStore) => Promise<T>,
+          ): Promise<T> => action(repository),
+        },
+        new DefaultTrainingGoalsValidator(),
+      ),
   };
 });
 const goal = createTrainingGoal();

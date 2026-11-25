@@ -1,3 +1,4 @@
+import { DefaultTrainingGoalsValidator } from "./training-goals/training-goals-validator";
 import { DefaultTrainingGoalsTransformer } from "./training-goals/training-goals-transformer";
 import { DefaultTrainingGoalsService } from "./training-goals/training-goals-service";
 import { DrizzleTrainingGoalsRepository } from "./training-goals/training-goals-repository";
@@ -128,6 +129,7 @@ export function getTrainingGoalsService(): DefaultTrainingGoalsService {
       getDatabase(),
       new DefaultTrainingGoalsTransformer(),
     ),
+    new DefaultTrainingGoalsValidator(),
   );
   return trainingGoalsService;
 }

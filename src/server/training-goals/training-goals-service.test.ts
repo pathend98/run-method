@@ -1,5 +1,7 @@
 import { DefaultTrainingGoalsService } from "./training-goals-service";
+import type { TrainingGoalsStore } from "./training-goals-repository";
 import { ForbiddenError } from "@/server/errors/forbidden-error";
+import { TrainingGoalOverlapError } from "./training-goals-errors";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
 
 const request = {
@@ -9,371 +11,289 @@ const request = {
   startDate: "2026-10-02",
   targetDate: "2026-12-01",
 };
+const goal = createTrainingGoal();
 
-test("delegates creation without additional validation", async () => {
-  const goal = createTrainingGoal();
-  const create = vi.fn().mockResolvedValue(goal);
-  const service = new DefaultTrainingGoalsService({
-    discard: vi.fn(),
-    complete: vi.fn(),
-    create,
+function setup(current = goal) {
+  const store = {
+    create: vi.fn().mockResolvedValue(goal),
+    edit: vi.fn().mockResolvedValue(goal),
+    complete: vi.fn().mockResolvedValue(goal),
+    discard: vi.fn().mockResolvedValue(goal),
+    findById: vi.fn().mockResolvedValue(current),
     find: vi.fn(),
-    findById: vi.fn(),
+    findUnresolved: vi.fn().mockResolvedValue([current]),
+  };
+  const lock = vi.fn();
+  const repository = {
+    create: vi.fn(),
     edit: vi.fn(),
-  });
+    complete: vi.fn(),
+    discard: vi.fn(),
+    findById: vi.fn(),
+    find: vi.fn().mockResolvedValue([goal]),
+    findUnresolved: vi.fn(),
+    withAthleteLock: async <T>(
+      athleteId: string,
+      action: (repository: TrainingGoalsStore) => Promise<T>,
+    ): Promise<T> => {
+      await lock(athleteId, action);
+      return action(store);
+    },
+  };
+  const fields = { ...request, title: "Validated" };
+  const validator = {
+    validateCreate: vi.fn().mockReturnValue(fields),
+    validateEdit: vi.fn().mockReturnValue(fields),
+  };
+  return {
+    service: new DefaultTrainingGoalsService(repository, validator),
+    repository,
+    lock,
+    store,
+    validator,
+    fields,
+  };
+}
+
+test("retrieves outstanding goals, validates, and creates using the locked repository", async () => {
+  const s = setup();
   await expect(
-    service.create(goal.athleteId, goal.athleteId, request),
+    s.service.create(goal.athleteId, goal.athleteId, request),
   ).resolves.toBe(goal);
-  expect(create).toHaveBeenCalledExactlyOnceWith({
-    ...request,
+  expect(s.lock).toHaveBeenCalledWith(goal.athleteId, expect.any(Function));
+  expect(s.store.findUnresolved).toHaveBeenCalledExactlyOnceWith(
+    goal.athleteId,
+  );
+  expect(s.validator.validateCreate).toHaveBeenCalledExactlyOnceWith(request, [
+    goal,
+  ]);
+  expect(s.store.findUnresolved.mock.invocationCallOrder[0]).toBeLessThan(
+    s.validator.validateCreate.mock.invocationCallOrder[0],
+  );
+  expect(s.validator.validateCreate.mock.invocationCallOrder[0]).toBeLessThan(
+    s.store.create.mock.invocationCallOrder[0],
+  );
+  expect(s.store.create).toHaveBeenCalledExactlyOnceWith({
+    ...s.fields,
     athleteId: goal.athleteId,
   });
+  expect(s.repository.create).not.toHaveBeenCalled();
+  expect(s.repository.findUnresolved).not.toHaveBeenCalled();
 });
 
-test("forbids another athlete before persistence", async () => {
-  const create = vi.fn();
-  const service = new DefaultTrainingGoalsService({
-    discard: vi.fn(),
-    complete: vi.fn(),
-    create,
-    find: vi.fn(),
-    findById: vi.fn(),
-    edit: vi.fn(),
+test("rejects another athlete's creation before locking, reading, or validating", async () => {
+  const s = setup();
+  await expect(
+    s.service.create("other", goal.athleteId, request),
+  ).rejects.toThrow(ForbiddenError);
+  expect(s.lock).not.toHaveBeenCalled();
+  expect(s.store.findUnresolved).not.toHaveBeenCalled();
+  expect(s.validator.validateCreate).not.toHaveBeenCalled();
+});
+
+test("validation failure prevents creation", async () => {
+  const s = setup();
+  const error = new TrainingGoalOverlapError();
+  s.validator.validateCreate.mockImplementation(() => {
+    throw error;
   });
-  await expect(service.create("actor", "other", request)).rejects.toThrow(
-    ForbiddenError,
-  );
-  expect(create).not.toHaveBeenCalled();
+  await expect(
+    s.service.create(goal.athleteId, goal.athleteId, request),
+  ).rejects.toBe(error);
+  expect(s.store.create).not.toHaveBeenCalled();
 });
 
-test("propagates repository failure", async () => {
-  const error = new Error("Database unavailable");
-  const service = new DefaultTrainingGoalsService({
-    discard: vi.fn(),
-    complete: vi.fn(),
-    create: vi.fn().mockRejectedValue(error),
-    find: vi.fn(),
-    findById: vi.fn(),
-    edit: vi.fn(),
-  });
-  await expect(service.create("actor", "actor", request)).rejects.toBe(error);
+test.each(["findUnresolved", "create"] as const)(
+  "propagates creation %s failure",
+  async (operation) => {
+    const s = setup();
+    const error = new Error("Database unavailable");
+    s.store[operation].mockRejectedValue(error);
+    await expect(
+      s.service.create(goal.athleteId, goal.athleteId, request),
+    ).rejects.toBe(error);
+    if (operation === "findUnresolved") {
+      expect(s.validator.validateCreate).not.toHaveBeenCalled();
+      expect(s.store.create).not.toHaveBeenCalled();
+    }
+  },
+);
+
+test("propagates transaction failure", async () => {
+  const s = setup();
+  const error = new Error("Lock failed");
+  s.lock.mockRejectedValue(error);
+  await expect(
+    s.service.create(goal.athleteId, goal.athleteId, request),
+  ).rejects.toBe(error);
+  expect(s.store.findUnresolved).not.toHaveBeenCalled();
 });
 
-test("delegates finding all goals for the authenticated athlete", async () => {
-  const goals = [createTrainingGoal()];
-  const find = vi.fn().mockResolvedValue(goals);
-  const service = new DefaultTrainingGoalsService({
-    discard: vi.fn(),
-    complete: vi.fn(),
-    create: vi.fn(),
-    find,
-    findById: vi.fn(),
-    edit: vi.fn(),
-  });
-  await expect(service.find("actor", "actor")).resolves.toBe(goals);
-  expect(find).toHaveBeenCalledExactlyOnceWith("actor");
-});
-
-test("forbids finding another athlete's goals before querying", async () => {
-  const find = vi.fn();
-  const service = new DefaultTrainingGoalsService({
-    discard: vi.fn(),
-    complete: vi.fn(),
-    create: vi.fn(),
-    find,
-    findById: vi.fn(),
-    edit: vi.fn(),
-  });
-  await expect(service.find("actor", "other")).rejects.toThrow(ForbiddenError);
-  expect(find).not.toHaveBeenCalled();
-});
-
-test("propagates goal lookup failure", async () => {
-  const error = new Error("Database unavailable");
-  const service = new DefaultTrainingGoalsService({
-    discard: vi.fn(),
-    complete: vi.fn(),
-    create: vi.fn(),
-    findById: vi.fn(),
-    edit: vi.fn(),
-    find: vi.fn().mockRejectedValue(error),
-  });
-  await expect(service.find("actor", "actor")).rejects.toBe(error);
-});
-
-function setupEdit(goal = createTrainingGoal()) {
-  const findById = vi.fn().mockResolvedValue(goal);
-  const edit = vi.fn().mockResolvedValue(goal);
-  return {
-    service: new DefaultTrainingGoalsService({
-      discard: vi.fn(),
-      complete: vi.fn(),
-      findById,
-      edit,
-      find: vi.fn(),
-      create: vi.fn(),
-    }),
-    findById,
-    edit,
-    goal,
-  };
-}
-
-test("edits an owned unresolved goal", async () => {
-  const { service, goal, findById, edit } = setupEdit();
-  const request = { title: "New title" };
-  await expect(service.edit(goal.athleteId, goal.id, request)).resolves.toBe(
+test("retrieves the latest goal and outstanding goals before validating and editing", async () => {
+  const s = setup();
+  const edit = { title: "Updated" };
+  await expect(s.service.edit(goal.athleteId, goal.id, edit)).resolves.toBe(
     goal,
   );
-  expect(findById).toHaveBeenCalledExactlyOnceWith(goal.id);
-  expect(edit).toHaveBeenCalledExactlyOnceWith(
+  expect(s.store.findById).toHaveBeenCalledExactlyOnceWith(goal.id);
+  expect(s.store.findUnresolved).toHaveBeenCalledExactlyOnceWith(
+    goal.athleteId,
+  );
+  expect(s.validator.validateEdit).toHaveBeenCalledExactlyOnceWith(goal, edit, [
+    goal,
+  ]);
+  expect(s.store.findById.mock.invocationCallOrder[0]).toBeLessThan(
+    s.store.findUnresolved.mock.invocationCallOrder[0],
+  );
+  expect(s.store.findUnresolved.mock.invocationCallOrder[0]).toBeLessThan(
+    s.validator.validateEdit.mock.invocationCallOrder[0],
+  );
+  expect(s.validator.validateEdit.mock.invocationCallOrder[0]).toBeLessThan(
+    s.store.edit.mock.invocationCallOrder[0],
+  );
+  expect(s.store.edit).toHaveBeenCalledExactlyOnceWith(
     goal.athleteId,
     goal.id,
-    request,
+    s.fields,
   );
+  expect(s.repository.findById).not.toHaveBeenCalled();
+  expect(s.repository.edit).not.toHaveBeenCalled();
 });
 
-test("rejects a missing goal before editing", async () => {
-  const { service, goal, findById, edit } = setupEdit();
-  findById.mockResolvedValue(null);
+test("validation failure prevents editing", async () => {
+  const s = setup();
+  const error = new TrainingGoalOverlapError();
+  s.validator.validateEdit.mockImplementation(() => {
+    throw error;
+  });
   await expect(
-    service.edit(goal.athleteId, goal.id, { title: "New" }),
-  ).rejects.toThrow("Training goal not found");
-  expect(edit).not.toHaveBeenCalled();
-});
-
-test("checks ownership before goal resolution", async () => {
-  const { service, goal, edit } = setupEdit(
-    createTrainingGoal({
-      resolution: "completed",
-      resolvedAt: "2026-11-25T12:00:00.000Z",
-    }),
-  );
-  await expect(
-    service.edit("other", goal.id, { title: "New" }),
-  ).rejects.toThrow(ForbiddenError);
-  expect(edit).not.toHaveBeenCalled();
-});
-
-test.each(["completed", "discarded"] as const)(
-  "rejects %s goals",
-  async (resolution) => {
-    const { service, goal, edit } = setupEdit(
-      createTrainingGoal({
-        resolution,
-        resolvedAt: "2026-11-25T12:00:00.000Z",
-      }),
-    );
-    await expect(
-      service.edit(goal.athleteId, goal.id, { title: "New" }),
-    ).rejects.toThrow("Only unresolved training goals can be edited");
-    expect(edit).not.toHaveBeenCalled();
-  },
-);
-
-test("rejects a goal that changes during editing", async () => {
-  const { service, goal, edit } = setupEdit();
-  edit.mockResolvedValue(null);
-  await expect(
-    service.edit(goal.athleteId, goal.id, { title: "New" }),
-  ).rejects.toThrow("Only unresolved training goals can be edited");
-});
-
-test.each(["lookup", "update"])("propagates %s failures", async (stage) => {
-  const { service, goal, findById, edit } = setupEdit();
-  const error = new Error("Database unavailable");
-  (stage === "lookup" ? findById : edit).mockRejectedValue(error);
-  await expect(
-    service.edit(goal.athleteId, goal.id, { title: "New" }),
+    s.service.edit(goal.athleteId, goal.id, { targetDate: "2027-01-01" }),
   ).rejects.toBe(error);
+  expect(s.store.edit).not.toHaveBeenCalled();
 });
 
-function setupComplete(goal = createTrainingGoal()) {
-  const findById = vi.fn().mockResolvedValue(goal);
-  const completed = {
-    ...goal,
-    resolution: "completed",
-    resolvedAt: "2026-11-25T12:00:00.000Z" as const,
-  };
-  const complete = vi.fn().mockResolvedValue(completed);
-  return {
-    service: new DefaultTrainingGoalsService({
-      discard: vi.fn(),
-      findById,
-      complete,
-      edit: vi.fn(),
-      create: vi.fn(),
-      find: vi.fn(),
-    }),
-    findById,
-    complete,
-    goal,
-    completed,
-  };
-}
+test("outstanding-goal lookup failure prevents edit validation and persistence", async () => {
+  const s = setup();
+  const error = new Error("Lookup failed");
+  s.store.findUnresolved.mockRejectedValue(error);
+  await expect(
+    s.service.edit(goal.athleteId, goal.id, { title: "New" }),
+  ).rejects.toBe(error);
+  expect(s.validator.validateEdit).not.toHaveBeenCalled();
+  expect(s.store.edit).not.toHaveBeenCalled();
+});
 
-test("completes an owned unresolved goal", async () => {
-  const { service, goal, completed, complete, findById } = setupComplete();
-  await expect(service.complete(goal.athleteId, goal.id)).resolves.toBe(
-    completed,
+describe.each(["edit", "complete", "discard"] as const)(
+  "%s lifecycle",
+  (operation) => {
+    function invoke(
+      service: DefaultTrainingGoalsService,
+      actorId = goal.athleteId,
+    ) {
+      return operation === "edit"
+        ? service.edit(actorId, goal.id, { title: "New" })
+        : service[operation](actorId, goal.id);
+    }
+
+    test("uses the athlete lock and transaction-bound read/write operations", async () => {
+      const s = setup();
+      await expect(invoke(s.service)).resolves.toBe(goal);
+      expect(s.lock).toHaveBeenCalledWith(goal.athleteId, expect.any(Function));
+      expect(s.store.findById).toHaveBeenCalledExactlyOnceWith(goal.id);
+      expect(s.store[operation]).toHaveBeenCalledOnce();
+      expect(s.repository[operation]).not.toHaveBeenCalled();
+    });
+
+    test("rejects missing goals before writing", async () => {
+      const s = setup();
+      s.store.findById.mockResolvedValue(null);
+      await expect(invoke(s.service)).rejects.toThrow(
+        "Training goal not found",
+      );
+      expect(s.store[operation]).not.toHaveBeenCalled();
+      expect(s.store.findUnresolved).not.toHaveBeenCalled();
+    });
+
+    test("checks ownership before resolution", async () => {
+      const s = setup(
+        createTrainingGoal({
+          resolution: "completed",
+          resolvedAt: "2026-11-25T12:00:00Z",
+        }),
+      );
+      await expect(invoke(s.service, "other")).rejects.toThrow(ForbiddenError);
+      expect(s.store[operation]).not.toHaveBeenCalled();
+      expect(s.store.findUnresolved).not.toHaveBeenCalled();
+    });
+
+    test.each(["completed", "discarded"] as const)(
+      "rejects %s goals",
+      async (resolution) => {
+        const s = setup(
+          createTrainingGoal({
+            resolution,
+            resolvedAt: "2026-11-25T12:00:00Z",
+          }),
+        );
+        await expect(invoke(s.service)).rejects.toThrow(
+          "Only unresolved training goals",
+        );
+        expect(s.store[operation]).not.toHaveBeenCalled();
+        expect(s.store.findUnresolved).not.toHaveBeenCalled();
+        expect(s.validator.validateEdit).not.toHaveBeenCalled();
+      },
+    );
+
+    test("rejects a conditional write which no longer matches", async () => {
+      const s = setup();
+      s.store[operation].mockResolvedValue(null);
+      await expect(invoke(s.service)).rejects.toThrow(
+        "Only unresolved training goals",
+      );
+    });
+
+    test.each(["read", "write"])("propagates %s failures", async (stage) => {
+      const s = setup();
+      const error = new Error("Database unavailable");
+      (stage === "read"
+        ? s.store.findById
+        : s.store[operation]
+      ).mockRejectedValue(error);
+      await expect(invoke(s.service)).rejects.toBe(error);
+    });
+
+    test.each([
+      { startDate: "2000-01-01", targetDate: "2000-02-01" },
+      { startDate: "2099-01-01", targetDate: "2099-02-01" },
+    ])("allows unresolved goals outside their period %j", async (dates) => {
+      const s = setup(createTrainingGoal(dates));
+      await expect(invoke(s.service)).resolves.toBe(goal);
+    });
+  },
+);
+
+test("lists goals for the authenticated athlete without opening a transaction", async () => {
+  const s = setup();
+  await expect(s.service.find(goal.athleteId, goal.athleteId)).resolves.toEqual(
+    [goal],
   );
-  expect(findById).toHaveBeenCalledExactlyOnceWith(goal.id);
-  expect(complete).toHaveBeenCalledExactlyOnceWith(goal.athleteId, goal.id);
+  expect(s.repository.find).toHaveBeenCalledExactlyOnceWith(goal.athleteId);
+  expect(s.lock).not.toHaveBeenCalled();
 });
-test("rejects a missing goal before completion", async () => {
-  const { service, goal, complete, findById } = setupComplete();
-  findById.mockResolvedValue(null);
-  await expect(service.complete(goal.athleteId, goal.id)).rejects.toThrow(
-    "Training goal not found",
-  );
-  expect(complete).not.toHaveBeenCalled();
-});
-test("checks completion ownership before resolution", async () => {
-  const { service, goal, complete } = setupComplete(
-    createTrainingGoal({
-      resolution: "completed",
-      resolvedAt: "2026-11-25T12:00:00.000Z",
-    }),
-  );
-  await expect(service.complete("other", goal.id)).rejects.toThrow(
+
+test("rejects listing another athlete's goals", async () => {
+  const s = setup();
+  await expect(s.service.find("other", goal.athleteId)).rejects.toThrow(
     ForbiddenError,
   );
-  expect(complete).not.toHaveBeenCalled();
+  expect(s.repository.find).not.toHaveBeenCalled();
 });
-test.each(["completed", "discarded"] as const)(
-  "rejects completion of %s goals",
-  async (resolution) => {
-    const { service, goal, complete } = setupComplete(
-      createTrainingGoal({
-        resolution,
-        resolvedAt: "2026-11-25T12:00:00.000Z",
-      }),
-    );
-    await expect(service.complete(goal.athleteId, goal.id)).rejects.toThrow(
-      "Only unresolved training goals can be completed",
-    );
-    expect(complete).not.toHaveBeenCalled();
-  },
-);
-test("rejects concurrent completion transitions", async () => {
-  const { service, goal, complete } = setupComplete();
-  complete.mockResolvedValue(null);
-  await expect(service.complete(goal.athleteId, goal.id)).rejects.toThrow(
-    "Only unresolved training goals can be completed",
-  );
-});
-test.each(["lookup", "update"])(
-  "propagates completion %s failures",
-  async (stage) => {
-    const { service, goal, complete, findById } = setupComplete();
-    const error = new Error("Database unavailable");
-    (stage === "lookup" ? findById : complete).mockRejectedValue(error);
-    await expect(service.complete(goal.athleteId, goal.id)).rejects.toBe(error);
-  },
-);
 
-function setupDiscard(goal = createTrainingGoal()) {
-  const findById = vi.fn().mockResolvedValue(goal);
-  const discarded = {
-    ...goal,
-    resolution: "discarded",
-    resolvedAt: "2026-11-25T12:00:00.000Z" as const,
-  };
-  const discard = vi.fn().mockResolvedValue(discarded);
-  return {
-    service: new DefaultTrainingGoalsService({
-      complete: vi.fn(),
-      findById,
-      discard,
-      edit: vi.fn(),
-      create: vi.fn(),
-      find: vi.fn(),
-    }),
-    findById,
-    discard,
-    goal,
-    discarded,
-  };
-}
-
-test("discards an owned unresolved goal", async () => {
-  const { service, goal, discarded, discard, findById } = setupDiscard();
-  await expect(service.discard(goal.athleteId, goal.id)).resolves.toBe(
-    discarded,
-  );
-  expect(findById).toHaveBeenCalledExactlyOnceWith(goal.id);
-  expect(discard).toHaveBeenCalledExactlyOnceWith(goal.athleteId, goal.id);
-});
-test("rejects a missing goal before discarding", async () => {
-  const { service, goal, discard, findById } = setupDiscard();
-  findById.mockResolvedValue(null);
-  await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
-    "Training goal not found",
-  );
-  expect(discard).not.toHaveBeenCalled();
-});
-test("checks discarding ownership before resolution", async () => {
-  const { service, goal, discard } = setupDiscard(
-    createTrainingGoal({
-      resolution: "discarded",
-      resolvedAt: "2026-11-25T12:00:00.000Z",
-    }),
-  );
-  await expect(service.discard("other", goal.id)).rejects.toThrow(
-    ForbiddenError,
-  );
-  expect(discard).not.toHaveBeenCalled();
-});
-test.each(["completed", "discarded"] as const)(
-  "rejects discarding of %s goals",
-  async (resolution) => {
-    const { service, goal, discard } = setupDiscard(
-      createTrainingGoal({
-        resolution,
-        resolvedAt: "2026-11-25T12:00:00.000Z",
-      }),
-    );
-    await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
-      "Only unresolved training goals can be discarded",
-    );
-    expect(discard).not.toHaveBeenCalled();
-  },
-);
-test("rejects concurrent discarding transitions", async () => {
-  const { service, goal, discard } = setupDiscard();
-  discard.mockResolvedValue(null);
-  await expect(service.discard(goal.athleteId, goal.id)).rejects.toThrow(
-    "Only unresolved training goals can be discarded",
+test("propagates listing failure", async () => {
+  const s = setup();
+  const error = new Error("Lookup failed");
+  s.repository.find.mockRejectedValue(error);
+  await expect(s.service.find(goal.athleteId, goal.athleteId)).rejects.toBe(
+    error,
   );
 });
-test.each(["lookup", "update"])(
-  "propagates discarding %s failures",
-  async (stage) => {
-    const { service, goal, discard, findById } = setupDiscard();
-    const error = new Error("Database unavailable");
-    (stage === "lookup" ? findById : discard).mockRejectedValue(error);
-    await expect(service.discard(goal.athleteId, goal.id)).rejects.toBe(error);
-  },
-);
-
-test.each([
-  { startDate: "2000-01-01", targetDate: "2000-02-01" },
-  { startDate: "2099-01-01", targetDate: "2099-02-01" },
-])(
-  "allows editing and explicit resolution outside a goal's period %j",
-  async (dates) => {
-    const goal = createTrainingGoal(dates);
-    const edited = setupEdit(goal);
-    await expect(
-      edited.service.edit(goal.athleteId, goal.id, { title: "Updated" }),
-    ).resolves.toBe(goal);
-    const completed = setupComplete(goal);
-    await expect(
-      completed.service.complete(goal.athleteId, goal.id),
-    ).resolves.toBe(completed.completed);
-    const discarded = setupDiscard(goal);
-    await expect(
-      discarded.service.discard(goal.athleteId, goal.id),
-    ).resolves.toBe(discarded.discarded);
-  },
-);

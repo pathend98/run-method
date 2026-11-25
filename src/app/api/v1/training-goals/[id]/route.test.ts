@@ -1,3 +1,4 @@
+import type { TrainingGoalsStore } from "@/server/training-goals/training-goals-repository";
 import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
@@ -8,6 +9,7 @@ import { PATCH } from "./route";
 const mocks = vi.hoisted(() => ({
   findById: vi.fn(),
   edit: vi.fn(),
+  findUnresolved: vi.fn(),
   findBySessionKey: vi.fn(),
 }));
 vi.mock("@/server/server", async (importOriginal) => {
@@ -16,20 +18,33 @@ vi.mock("@/server/server", async (importOriginal) => {
     await import("@/server/http/request-authentication-service");
   const { DefaultTrainingGoalsService } =
     await import("@/server/training-goals/training-goals-service");
+  const { DefaultTrainingGoalsValidator } =
+    await import("@/server/training-goals/training-goals-validator");
+  const repository = {
+    discard: vi.fn(),
+    complete: vi.fn(),
+    find: vi.fn(),
+    create: vi.fn(),
+    findById: mocks.findById,
+    edit: mocks.edit,
+    findUnresolved: mocks.findUnresolved,
+  };
   return {
     ...actual,
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey: mocks.findBySessionKey }),
     ),
     getTrainingGoalsService: () =>
-      new DefaultTrainingGoalsService({
-        discard: vi.fn(),
-        complete: vi.fn(),
-        find: vi.fn(),
-        create: vi.fn(),
-        findById: mocks.findById,
-        edit: mocks.edit,
-      }),
+      new DefaultTrainingGoalsService(
+        {
+          ...repository,
+          withAthleteLock: async <T>(
+            _actorId: string,
+            action: (repository: TrainingGoalsStore) => Promise<T>,
+          ): Promise<T> => action(repository),
+        },
+        new DefaultTrainingGoalsValidator(),
+      ),
   };
 });
 const goal = createTrainingGoal();
@@ -37,6 +52,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.findBySessionKey.mockResolvedValue(createUser({ id: goal.athleteId }));
   mocks.findById.mockResolvedValue(goal);
+  mocks.findUnresolved.mockResolvedValue([]);
   mocks.edit.mockResolvedValue({ ...goal, title: "Updated" });
 });
 function patch(
@@ -64,6 +80,10 @@ test("returns the updated goal with private headers and unchanged metadata", asy
   await expect(response.json()).resolves.toEqual({ ...goal, title: "Updated" });
   expect(mocks.edit).toHaveBeenCalledExactlyOnceWith(goal.athleteId, goal.id, {
     title: "Updated",
+    purpose: goal.purpose,
+    trainingIntentions: goal.trainingIntentions,
+    startDate: goal.startDate,
+    targetDate: goal.targetDate,
   });
 });
 
@@ -190,27 +210,26 @@ test("handles authentication lookup failures", async () => {
 });
 
 test("returns structured 400 for invalid merged dates", async () => {
-  const { RequestValidationError } =
-    await import("@/server/errors/request-validation-error");
-  mocks.edit.mockRejectedValue(
-    new RequestValidationError({
-      targetDate: ["Target date must be on or after start date"],
-    }),
-  );
   const response = await patch(JSON.stringify({ startDate: "2027-01-01" }));
   expect(response.status).toBe(400);
   expect((await response.json()).fieldErrors.targetDate).toEqual([
     "Target date must be on or after start date",
   ]);
+  expect(mocks.edit).not.toHaveBeenCalled();
 });
 
 test("returns 409 for overlapping date edits", async () => {
-  const { TrainingGoalOverlapError } =
-    await import("@/server/training-goals/training-goals-errors");
-  mocks.edit.mockRejectedValue(new TrainingGoalOverlapError());
+  mocks.findUnresolved.mockResolvedValue([
+    createTrainingGoal({
+      id: "22222222-2222-4222-8222-222222222222",
+      startDate: "2027-01-01",
+      targetDate: "2027-01-10",
+    }),
+  ]);
   const response = await patch(JSON.stringify({ targetDate: "2027-01-01" }));
   expect(response.status).toBe(409);
   await expect(response.json()).resolves.toEqual({
     error: "Training goal overlaps an unresolved training goal",
   });
+  expect(mocks.edit).not.toHaveBeenCalled();
 });

@@ -1,3 +1,4 @@
+import type { TrainingGoalsStore } from "@/server/training-goals/training-goals-repository";
 import type * as ServerModule from "@/server/server";
 import { NextRequest } from "next/server";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
@@ -7,6 +8,7 @@ import { TrainingGoalOverlapError } from "@/server/training-goals/training-goals
 import { GET, POST } from "./route";
 
 const find = vi.hoisted(() => vi.fn());
+const findUnresolved = vi.hoisted(() => vi.fn());
 const create = vi.hoisted(() => vi.fn());
 const findBySessionKey = vi.hoisted(() => vi.fn());
 
@@ -16,20 +18,33 @@ vi.mock("@/server/server", async (importOriginal) => {
     await import("@/server/http/request-authentication-service");
   const { DefaultTrainingGoalsService } =
     await import("@/server/training-goals/training-goals-service");
+  const { DefaultTrainingGoalsValidator } =
+    await import("@/server/training-goals/training-goals-validator");
+  const repository = {
+    discard: vi.fn(),
+    complete: vi.fn(),
+    create,
+    find,
+    findById: vi.fn(),
+    edit: vi.fn(),
+    findUnresolved,
+  };
   return {
     ...actual,
     requestAuthenticationService: new DefaultRequestAuthenticationService(
       () => ({ findBySessionKey }),
     ),
     getTrainingGoalsService: () =>
-      new DefaultTrainingGoalsService({
-        discard: vi.fn(),
-        complete: vi.fn(),
-        create,
-        find,
-        findById: vi.fn(),
-        edit: vi.fn(),
-      }),
+      new DefaultTrainingGoalsService(
+        {
+          ...repository,
+          withAthleteLock: async <T>(
+            _actorId: string,
+            action: (repository: TrainingGoalsStore) => Promise<T>,
+          ): Promise<T> => action(repository),
+        },
+        new DefaultTrainingGoalsValidator(),
+      ),
   };
 });
 
@@ -47,6 +62,7 @@ beforeEach(() => {
   findBySessionKey.mockResolvedValue(createUser({ id: goal.athleteId }));
   create.mockResolvedValue(goal);
   find.mockResolvedValue([goal]);
+  findUnresolved.mockResolvedValue([]);
 });
 
 function post(
@@ -277,3 +293,13 @@ test.each(["GET", "POST"])(
     expect(create).not.toHaveBeenCalled();
   },
 );
+
+test("rejects an overlapping outstanding goal before attempting creation", async () => {
+  findUnresolved.mockResolvedValue([goal]);
+  const response = await post();
+  expect(response.status).toBe(409);
+  await expect(response.json()).resolves.toEqual({
+    error: "Training goal overlaps an unresolved training goal",
+  });
+  expect(create).not.toHaveBeenCalled();
+});
