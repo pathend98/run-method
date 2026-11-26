@@ -9,14 +9,14 @@ import type {
 } from "@/domain/training-goals";
 import { useCurrentUserQuery } from "@/ui/users/current-user-query";
 import { Button } from "@/ui/shared/button/button";
-import { TrainingGoalForm } from "./components/training-goal-form";
-import { TrainingGoalDetails } from "./components/training-goal-details";
+import { CreateTrainingGoal } from "../create-training-goal";
+import { TrainingGoalDetails } from "./training-goal-details";
 import {
   createTrainingGoal,
   fetchTrainingGoals,
-} from "./services/training-goals-api-client";
+} from "../api/training-goals-api-client";
 
-export function TrainingGoals() {
+export function TrainingGoalsOverview() {
   const currentUser = useCurrentUserQuery();
   const athleteId = currentUser.data?.id;
   const queryClient = useQueryClient();
@@ -68,7 +68,11 @@ export function TrainingGoals() {
       {activeGoal ? (
         <TrainingGoalDetails goal={activeGoal} />
       ) : (
-        <TrainingGoalForm key={athleteId} onSubmit={submit} />
+        <CreateTrainingGoal
+          key={athleteId}
+          showIntroduction={goals.data.length === 0}
+          onSubmit={submit}
+        />
       )}
     </section>
   );

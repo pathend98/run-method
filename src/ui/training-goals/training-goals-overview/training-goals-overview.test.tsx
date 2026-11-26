@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createUser } from "@/test-support/fixtures/user";
 import { createTrainingGoal } from "@/test-support/fixtures/training-goal";
-import { TrainingGoals } from "./training-goals";
+import { TrainingGoalsOverview } from "./index";
 
 const user = createUser({ id: createTrainingGoal().athleteId });
 const fetchMock = vi.fn();
@@ -27,7 +27,7 @@ function renderGoals() {
   });
   const result = render(
     <QueryClientProvider client={client}>
-      <TrainingGoals />
+      <TrainingGoalsOverview />
     </QueryClientProvider>,
   );
   return { ...result, client };
@@ -57,8 +57,16 @@ test.each([
   expect(
     await screen.findByRole("heading", { name: "Training goals" }),
   ).toBeDefined();
+  if (goals.length === 0) {
+    expect(
+      screen.getByRole("heading", { name: "Give your training direction" }),
+    ).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Get started" }));
+  } else {
+    expect(screen.queryByRole("button", { name: "Get started" })).toBeNull();
+  }
   expect(
-    screen.getByRole("button", { name: "Create training goal" }),
+    screen.getByRole("heading", { name: "Training purpose" }),
   ).toBeDefined();
   expect(fetchMock).toHaveBeenNthCalledWith(
     2,
@@ -125,7 +133,9 @@ test.each(["user", "goals"])("retries a failed %s request", async (failure) => {
   if (failure === "user") fetchMock.mockResolvedValueOnce(json(user));
   fetchMock.mockResolvedValueOnce(json([]));
   fireEvent.click(screen.getByRole("button", { name: "Retry" }));
-  expect(await screen.findByLabelText("Title")).toBeDefined();
+  expect(
+    await screen.findByRole("button", { name: "Get started" }),
+  ).toBeDefined();
 });
 
 test.each(["2026-10-02", "2026-11-26"])(
@@ -143,17 +153,28 @@ test.each(["2026-10-02", "2026-11-26"])(
         }),
       );
     const { client } = renderGoals();
-    fireEvent.change(await screen.findByLabelText("Title"), {
+    fireEvent.click(await screen.findByRole("button", { name: "Get started" }));
+    fireEvent.change(
+      screen.getByLabelText(
+        "What do you want this period of training to help you develop?",
+      ),
+      { target: { value: goal.purpose } },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(
+      await screen.findByLabelText("How will you approach your training?"),
+      { target: { value: goal.trainingIntentions } },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(await screen.findByLabelText("Goal name"), {
       target: { value: "My goal" },
     });
-    for (const [label, value] of Object.entries({
-      Purpose: goal.purpose,
-      "Training intentions": goal.trainingIntentions,
-      "Start date": goal.startDate,
-      "Target date": goal.targetDate,
-    })) {
-      fireEvent.change(screen.getByLabelText(label), { target: { value } });
-    }
+    fireEvent.change(screen.getByLabelText("Start date"), {
+      target: { value: goal.startDate },
+    });
+    fireEvent.change(screen.getByLabelText("Target date"), {
+      target: { value: goal.targetDate },
+    });
     fireEvent.click(
       screen.getByRole("button", { name: "Create training goal" }),
     );
@@ -183,7 +204,7 @@ test.each(["2026-10-02", "2026-11-26"])(
       ).toBeNull();
     } else {
       expect(screen.queryByRole("heading", { name: goal.title })).toBeNull();
-      expect(screen.getByLabelText("Title")).toBeDefined();
+      expect(screen.getByLabelText("Goal name")).toBeDefined();
     }
     finishRefetch(json([goal]));
     if (startDate > "2026-11-25") {
